@@ -1,0 +1,66 @@
+DiagRAG replication data — download links
+==========================================
+
+Data files are NOT in the Git repo. Download them from the links
+below, then run: python3 download_data.py --check-only
+That check must pass (exact sizes) before any run.
+
+1. Google Drive (interim mirror — works now, NOT the permanent archive)
+---------------------------------------------------------------------
+Corpus:
+  File: kb_tier3_186k.jsonl.gz — 186,290 docs, 53,518,791 bytes
+  Drive ID: 1zksoRmKjBn3VKRweFM1pLfDDNAIpnzxm
+  Direct link: https://drive.google.com/uc?export=download&id=1zksoRmKjBn3VKRweFM1pLfDDNAIpnzxm
+  Command: gdown --id 1zksoRmKjBn3VKRweFM1pLfDDNAIpnzxm -O data/kb_tier3_186k.jsonl.gz
+
+Embeddings cache:
+  File: embeddings_cache_186k.npz — (186290, 768) float32, 533,012,659 bytes
+  Drive ID: 1xKaTyYx3qxFFzmRYQQuPmLnKEtygNx2s
+  Direct link: https://drive.google.com/uc?export=download&id=1xKaTyYx3qxFFzmRYQQuPmLnKEtygNx2s
+  Command: gdown --id 1xKaTyYx3qxFFzmRYQQuPmLnKEtygNx2s -O data/embeddings_cache_186k.npz
+
+Benchmark:
+  File: benchmark_1000_multidomain.xlsx — 419,917 bytes
+  (fetch from the same Drive folder as the corpus; its Drive ID
+  is to be added here when that folder link is published)
+
+IMPORTANT — Drive sharing: these links only work if the Drive
+files are set to "Anyone with the link can view". If a reviewer
+gets "Request access", the sharing setting is the problem, not
+the file. Drive is also not permanent: if the owner moves,
+deletes, or unshares the file, the link dies, and large-file
+downloads can hit a Drive download quota. Use Drive as a
+mirror, not as the sole archive for a submitted paper.
+
+2. Zenodo (permanent public archive — the route for the paper)
+---------------------------------------------------------------
+  Record: TO BE PUBLISHED — do not invent a DOI or URL here.
+  When published, this section will carry the Zenodo DOI and
+  the direct file URLs, and download_data.py will be updated
+  to fetch from them. Zenodo is run by CERN, gives a DOI,
+  allows up to 50 GB per record (100 files), and is meant to
+  stay available for the long term. That is why it is the
+  Gap 8 route, ahead of Drive.
+
+3. GitHub Release asset (alternative mirror, if Zenodo is delayed)
+------------------------------------------------------------------
+  Each release asset may be under 2 GiB, with no total-size
+  or bandwidth limit stated in GitHub's docs. The 533 MB
+  embeddings cache fits as a release asset. A private repo's
+  release assets need an authenticated token to download;
+  a public repo's assets are directly downloadable. This is
+  distribution, not version control — the file is not in
+  the repo history.
+
+4. Other free, long-term public options (in order of fit)
+-----------------------------------------------------------
+  - Hugging Face Hub / Datasets: free, built for large ML
+    files, versioned, widely used for corpora and embeddings.
+    Good second choice after Zenodo, especially if the data
+    is later used as a benchmark.
+  - OSF (Open Science Framework): free, academic, long-term,
+    good for project files and preprints, less standard for
+    a 500 MB embeddings cache than Zenodo.
+  - Figshare: free tier is smaller (about 20 GB total in
+    the free tier, 5 GB per file in some accounts), so it
+    fits the corpus but is tighter for the cache than Zenodo.
