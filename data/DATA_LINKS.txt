@@ -15,9 +15,10 @@ Corpus:
 
 Embeddings cache:
   File: embeddings_cache_186k.npz — (186290, 768) float32, 533,012,659 bytes
-  Drive ID: 1xKaTyYx3qxFFzmRYQQuPmLnKEtygNx2s
-  Direct link: https://drive.google.com/uc?export=download&id=1xKaTyYx3qxFFzmRYQQuPmLnKEtygNx2s
-  Command: gdown --id 1xKaTyYx3qxFFzmRYQQuPmLnKEtygNx2s -O data/embeddings_cache_186k.npz
+  Drive FOLDER link: https://drive.google.com/drive/folders/1xKaTyYx3qxFFzmRYQQuPmLnKEtygNx2s
+  Open that folder and download the cache file from inside it.
+  Correction: 1xKaTyYx3qxFFzmRYQQuPmLnKEtygNx2s is a FOLDER ID,
+  not a file ID, so do not use it as a direct file download ID.
 
 Benchmark:
   File: benchmark_1000_multidomain.xlsx — 419,917 bytes
