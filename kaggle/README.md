@@ -63,20 +63,21 @@ Outside Kaggle, `bash run_local.sh <workdir>` re-runs the script until it finish
 `N_BASE_ESCI` (default 4000 on GPU), `N_HARD` (80), `MAX_ATT` (2500), `N_HARM` (60),
 `N_PRDC` (528), `RERANKER`, `CE_MAXLEN`, `TIME_BUDGET` (0 = no limit).
 
-## CPU judged run, 14 Nov 2026 (`judged_cpu_run/`)
+## CPU judged runs, 14 Nov 2026
 
-Settings: MiniLM-L6 reranker instead of bge-reranker-large, 2,400 real ESCI queries +
-885 ShopNova queries, 50 hard episodes per fault (25 train / 25 held-out). Code SHA-256
-b60462fb…163ad, which equals the shipped `diagrag_core28.py`.
+`judged_cpu_run_seed42/` and `judged_cpu_run_seed43/`. Settings: MiniLM-L6 reranker, 2,400 ESCI
+queries + 885 ShopNova queries, 50 hard episodes per fault (25 held out). Each folder's
+`JUDGED_PROTOCOL.json` holds the SHA-256 of the code that produced it. Seed 43's hash equals the
+shipped `diagrag_core28.py`.
 
-| | Result |
-|---|---|
-| Detectors passing | 28 / 28 (lowest AUROC: C2 0.81, K04 0.84, Q03 0.87) |
-| Repairs passing | 27 / 28. Q03 fails: 28/50 rescued, Wilson lower bound 0.42 |
-| Solved (both) | 27 / 28 |
-| Verdict | ADOPTED (targets 24 repairs, 27 detectors) |
-| Clean successes lost to any repair | 0 of 20 per fault |
-| Closed loop on clean held-out traffic | 10.3% of queries get a repair, net Hit@5 −1.1 points |
+| | Seed 42 | Seed 43 |
+|---|---|---|
+| Detectors / repairs passing | 28 / 27 | 28 / 28 |
+| Verdict | ADOPTED | ADOPTED |
+| Closed loop, mean closure (τ 5% FPR) | — (old dispatch) | 0.82, clean Hit@5 −0.07 points |
+| Do-no-harm guarantee (α 0.005) | — | FAIL: held-out loss 0.0075 |
+| Natural misspellings (n = 46) | — | Hit@5 0.283 → 0.304 (corrected query 0.348) |
+| Unseen faults, mean closure | — | 0.21 |
 
-This run used the CPU stack. The Kaggle notebook's default GPU stack (bge-reranker-large)
-has to be judged on its own run.
+Details and the cause of the guarantee failure: `../docs/CORE28_FAULTS.md`. These runs used the
+CPU stack. The default GPU stack (bge-reranker-large) needs its own judged run.

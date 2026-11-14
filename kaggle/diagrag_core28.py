@@ -29,7 +29,7 @@ GPU = DEV == 'cuda'
 print('device', DEV, 'kaggle', ON_KAGGLE)
 
 CFG = dict(
-    SEED=42, QUERY_DATE='2026-11-14', K_FINAL=5, DEPTH=25, RRF_K=60, CAND=100,
+    SEED=int(os.environ.get('SEED', 42)), QUERY_DATE='2026-11-14', K_FINAL=5, DEPTH=25, RRF_K=60, CAND=100,
     ENCODER='BAAI/bge-base-en-v1.5', ENCODER_V1='BAAI/bge-base-en',
     QPROMPT='Represent this sentence for searching relevant passages: ',
     RERANKER=os.environ.get('RERANKER', 'BAAI/bge-reranker-large' if GPU else 'BAAI/bge-reranker-base'),
@@ -39,7 +39,7 @@ CFG = dict(
     MAX_ATT=int(os.environ.get('MAX_ATT', 2500 if GPU else 70)),   # injection attempts per fault
     TEST_FRAC=0.5, CLEAN_FPR=0.05, IVF_NLIST=1024,
     N_PRDC=int(os.environ.get('N_PRDC', 528 if GPU else 120)), PROBE_K=20 if GPU else 8,
-    N_HARM=int(os.environ.get('N_HARM', 60 if GPU else 8)),
+    N_HARM=int(os.environ.get('N_HARM', 60 if GPU else 8)), N_NAT=int(os.environ.get('N_NAT', 400 if GPU else 200)),
     TIME_BUDGET=int(os.environ.get('TIME_BUDGET', 0)),               # seconds per invocation; 0 = no limit (Kaggle Run All)
 )
 # Judged-run gates, fixed BEFORE any result exists (written to JUDGED_PROTOCOL.json on first start).
@@ -48,7 +48,15 @@ GATES = dict(
     repair='>= 20 hard episodes AND Wilson 95% lower bound of rescue rate >= 0.50 AND <= 10% of clean successes lost when the repair is forced on them',
     solved='detector PASS and repair PASS',
     targets='ADOPTED if repairs PASS >= 24/28 AND detectors PASS >= 27/28, else NOT_ADOPTED',
-    AUROC_BAR=0.70, MIN_TEST_POS=20, RESCUE_BAR_LB=0.50, MIN_REPAIR_N=20, MAX_HARM=0.10, REPAIR_TARGET=24, DETECT_TARGET=27)
+    AUROC_BAR=0.70, MIN_TEST_POS=20, RESCUE_BAR_LB=0.50, MIN_REPAIR_N=20, MAX_HARM=0.10, REPAIR_TARGET=24, DETECT_TARGET=27,
+    guarantee=('do-no-harm dispatch: threshold lambda fitted by conformal risk control on out-of-fold clean TRAIN queries so that '
+               'E[Hit@5 lost on a clean query] <= ALPHA; PASS if held-out clean loss <= ALPHA; also report 200 calibration re-splits'),
+    ALPHA=0.005, ALPHAS=[0.0025, 0.005, 0.01, 0.02],
+    natural=('report, not gated: (a) real misspelled ESCI queries whose corrected spelling was typed by another ESCI user, '
+             'gold from ESCI labels; (b) in-corpus superseded policy versions with the validity filter off, no injected docs. '
+             'Metrics: Hit@5 before, after closed loop (guarded and unguarded), after oracle repair, oracle-referenced closure'),
+    unseen=('report, not gated: leave-one-fault-out attributor; on the held-out fault test episodes report flagged rate, '
+            'right-group rate and Hit after dispatch'))
 random.seed(CFG['SEED']); np.random.seed(CFG['SEED']); torch.manual_seed(CFG['SEED'])
 if not GPU: torch.set_num_threads(os.cpu_count() or 4)
 T0 = time.time()
@@ -61,7 +69,7 @@ RES = pickle.load(open(CKPT, 'rb')) if os.path.exists(CKPT) else {}
 if RES: print('resuming from checkpoint, stage:', RES.get('stage'))
 def over_budget(): return CFG['TIME_BUDGET'] > 0 and time.time() - T0 > CFG['TIME_BUDGET']
 def save_ckpt(stage):
-    keep = {k: globals()[k] for k in ('CLEAN', 'EPIS', 'GEN', 'GSTATE', 'SEEN', 'HARM') if k in globals()}
+    keep = {k: globals()[k] for k in ('CLEAN', 'EPIS', 'GEN', 'GSTATE', 'SEEN', 'HARM', 'CAL', 'NATR', 'LOFO') if k in globals()}
     keep.update(stage=stage, caches=dict(QC=globals().get('_QC', {}), CEC=globals().get('_CEC', {}), DC=globals().get('_DC', {})))
     with open(CKPT + '.tmp', 'wb') as fh: pickle.dump(keep, fh, protocol=4)
     os.replace(CKPT + '.tmp', CKPT); log('checkpoint saved:', stage)
@@ -632,7 +640,7 @@ for s_ in _allq:
     for a_ in ws_:
         for b2 in ws_:
             if a_ != b2: QLOG_CO[a_][b2] += 1
-PUR['query_log_queries'] = int(sum(1 for s_ in _allq if s_ not in _used)); del _allq
+PUR['query_log_queries'] = int(sum(1 for s_ in _allq if s_ not in _used)); ALLQ = set(_allq); del _allq
 
 def succ(tr, gold, k): return any(i in gold for i in tr['final'][:k])
 def grank(tr, gold):
@@ -897,12 +905,15 @@ def rep_Q01(st, tr):   # complete the unfinished last word: corpus completions r
 def rep_Q02(st, tr):
     q = re.sub(r'\b(who|that)\s+(loves|likes|enjoys)\s+\w+', ' ', st['q'])
     ws = [w for w in q.split() if w not in FILLER]; return with_q(st, ' '.join(ws) or st['q'])
-def rep_Q03(st, tr):   # map catalogue-rare words to their catalogue-common synonyms, CE-verified per word
+def rep_Q03(st, tr):   # map catalogue-rare words to the synonym real users type with this context (query log), then df
     cur = st
     for w in st['q'].split():
         if not (w.isalpha() and df_of(w) < 30): continue
         sy = [s for s in synonyms(w) if df_of(s) >= 300]
-        if sy: cur = with_q(cur, re.sub(rf'\b{w}\b', cooc_rank(sy, [t for t in cur['q'].split() if t != w], 1)[0], cur['q'], count=1))
+        if not sy: continue
+        ctx = [t for t in cur['q'].split() if t != w and t not in FILLER]
+        best = max(sy, key=lambda c_: (sum(QLOG_CO[t][c_] for t in ctx), QLOG_UNI[c_], df_of(c_)))   # the word real users type here
+        cur = with_q(cur, re.sub(rf'\b{w}\b', best, cur['q'], count=1))
     return cur
 def rep_Q04(st, tr):   # corpus spelling candidates, ranked by co-occurrence with the rest of the query, CE-verified per word
     cur = st
@@ -1125,42 +1136,151 @@ save_ckpt('repair_done')
 # ## 14. Closed loop on the held-out split: telemetry -> rules + attributor -> dispatch -> repair -> re-score.
 
 # %%
-RULE_PRIO = ['R23', 'R15', 'K07', 'Q04']
-def dispatch(fe):
-    """Primary fault: a fired tier-0 rule, else the attributor's top fault if P(fault) clears TAU_NONE.
-    C2 rule: add the best fault of a second factor group if two rules from different groups fire or the
-    second group's probability mass clears TAU_C2."""
-    p = ATT.predict_proba(np.array([[fe[k] for k in FEATS]], dtype=np.float32))[0]
+RULE_PRIO = ['R23', 'R15', 'K07']   # precise rules override dispatch. The Q04 rule stays Q04's detector but no longer overrides
+                                    # (in the seed-42 run it took over 24/25 Q01 episodes).
+def dispatch_full(p, fe, cls=None, inone=None):
+    """Repair set and dispatch score s, before thresholding. A precise rule gives s = 1; otherwise s = P(fault) = 1 - P(NONE)."""
+    cls = cls or CLS; inone = iN if inone is None else inone
+    def gm(g): return sum(p[j] for j, c_ in enumerate(cls) if c_ != 'NONE' and c_[0] == g)
+    top = lambda g=None: cls[max((j for j, c_ in enumerate(cls) if c_ != 'NONE' and (g is None or c_[0] == g)), key=lambda j: p[j])]
     rules = [f for f in RULE_PRIO if RULE_FIRE[f](fe)]
-    top = lambda g=None: CLS[max((j for j, c_ in enumerate(CLS) if c_ != 'NONE' and (g is None or c_[0] == g)), key=lambda j: p[j])]
-    if rules: out = [rules[0]]
-    elif 1 - p[iN] >= TAU_NONE: out = [top()]
-    else: return []
+    if rules: out, s = [rules[0]], 1.0
+    else: out, s = [top()], float(1 - p[inone])
     other = [f for f in rules[1:] if GROUP[f] != GROUP[out[0]]]
+    gms = {g: gm(g) for g in 'QKR'}
     if other: out.append(other[0])
-    elif sec(p) >= TAU_C2:
-        gm = gmass(p); gs = [g for g in sorted(gm, key=gm.get, reverse=True) if g != GROUP[out[0]]]
+    elif sorted(gms.values())[-2] >= TAU_C2:
+        gs = [g for g in sorted(gms, key=gms.get, reverse=True) if g != GROUP[out[0]]]
         if gs: out.append(top(gs[0]))
-    return out
+    return out, s
+def proba(fe): return ATT.predict_proba(np.array([[fe[k] for k in FEATS]], dtype=np.float32))[0]
 SAME = {'R03': 'ENC', 'R10': 'ENC', 'R11': 'ENC'}
-LOOP = collections.defaultdict(lambda: dict(n=0, rescued=0, attributed=0, dispatched=0))
+
+# --- Do-no-harm calibration: conformal risk control (Angelopoulos et al. 2022) on out-of-fold clean TRAIN queries ---
+CAL = RES.get('CAL', {})
+cal_rows = [(e, oof[j]) for j, e in enumerate(TR) if e['fault'] == 'NONE']
+for n_, (e, p) in enumerate(cal_rows):
+    if e['bid'] in CAL: continue
+    fs, s = dispatch_full(p, e['feats'])
+    lost = int(e['clean_h5'] and not succ(run(apply_repairs(e['st'], fs)), e['st']['gold'], 5)) if e['clean_h5'] else 0
+    CAL[e['bid']] = (s, lost)
+    if n_ % 50 == 0: maybe_stop('calibration')
+cs_ = np.array([v[0] for v in CAL.values()]); cl_ = np.array([v[1] for v in CAL.values()])
+def crc_lambda(s_arr, l_arr, alpha):
+    """Smallest threshold lam with (n/(n+1)) * mean(1[s>=lam] * loss) + 1/(n+1) <= alpha (loss in [0,1], nonincreasing in lam)."""
+    n = len(s_arr)
+    for lam in sorted(set(s_arr.tolist())) + [float('inf')]:
+        if n / (n + 1) * np.mean((s_arr >= lam) * l_arr) + 1 / (n + 1) <= alpha: return lam
+    return float('inf')
+LAMS = {a: crc_lambda(cs_, cl_, a) for a in GATES['ALPHAS']}
+rs = np.random.default_rng(CFG['SEED']); RESPLIT = []
+for _ in range(200):
+    m_ = rs.random(len(cs_)) < 0.5; lam = crc_lambda(cs_[m_], cl_[m_], GATES['ALPHA'])
+    RESPLIT.append(float(np.mean((cs_[~m_] >= lam) * cl_[~m_])))
+log('CRC lambdas', LAMS, 'calibration n', len(cs_), 'resplit loss mean', np.mean(RESPLIT), 'p95', np.percentile(RESPLIT, 95))
+save_ckpt('calibration_done')
+
+# --- Closed loop on held-out episodes: outcome if repaired and if not, so every threshold is scored without re-running ---
 for n_, e in enumerate([x for x in EPIS if x['split'] == 'test']):
-    if 'loop' not in e:
-        fs = dispatch(e['feats']); tr2 = run(apply_repairs(e['st'], fs)) if fs else run(e['st'])
-        e['loop'] = dict(fs=fs, ok=bool(succ(tr2, e['st']['gold'], 5 if e['fault'] == 'NONE' else e['st']['k'])))
+    if 'loop2' not in e:
+        fs, s = dispatch_full(proba(e['feats']), e['feats'])
+        ok_rep = bool(succ(run(apply_repairs(e['st'], fs)), e['st']['gold'], 5 if e['fault'] == 'NONE' else e['st']['k']))
+        e['loop2'] = dict(fs=fs, s=s, ok_rep=ok_rep, ok_none=bool(e['clean_h5']) if e['fault'] == 'NONE' else False)
         if n_ % 25 == 0: maybe_stop('closed_loop')
-    fs = e['loop']['fs']; L = LOOP[e['fault']]; L['n'] += 1; L['dispatched'] += bool(fs)
-    truth = e['meta']['combo'] if e['fault'] == 'C2' else [e['fault']]
-    L['attributed'] += (not fs) if e['fault'] == 'NONE' else (bool(fs) and {SAME.get(x, x) for x in fs} == {SAME.get(x, x) for x in truth})
-    L['rescued'] += (e['loop']['ok'] - e['clean_h5']) if e['fault'] == 'NONE' else e['loop']['ok']   # NONE: net change on clean traffic
-save_ckpt('loop_done')
-CLOSED = []
-for f in FAULTS + ['NONE']:
-    L = LOOP[f]
-    if not L['n']: continue
-    CLOSED.append(dict(fault=f, n_test=L['n'], dispatch_rate=L['dispatched'] / L['n'], attribution_acc=L['attributed'] / L['n'],
-                       closure=(L['rescued'] / L['n']) if f != 'NONE' else None, clean_net_hit_change=(L['rescued'] / L['n']) if f == 'NONE' else None))
-    log('loop', CLOSED[-1])
+POLICIES = {'tau_none_5pct_fpr': TAU_NONE, **{f'crc_alpha_{a}': LAMS[a] for a in GATES['ALPHAS']}}
+CLOSED, POLICY = [], []
+for pol, thr in POLICIES.items():
+    for f in FAULTS + ['NONE']:
+        es = [e for e in EPIS if e['split'] == 'test' and e['fault'] == f]
+        if not es: continue
+        disp = [e['loop2']['s'] >= thr for e in es]
+        ok = [e['loop2']['ok_rep'] if d else e['loop2']['ok_none'] for e, d in zip(es, disp)]
+        truth = lambda e: e['meta']['combo'] if e['fault'] == 'C2' else [e['fault']]
+        att = [(not d) if f == 'NONE' else (d and {SAME.get(x, x) for x in e['loop2']['fs']} == {SAME.get(x, x) for x in truth(e)})
+               for e, d in zip(es, disp)]
+        row = dict(policy=pol, threshold=thr, fault=f, n_test=len(es), dispatch_rate=float(np.mean(disp)), attribution_acc=float(np.mean(att)))
+        if f == 'NONE':
+            row['clean_loss'] = float(np.mean([e['clean_h5'] and not o for e, o in zip(es, ok)]))
+            row['clean_net_hit_change'] = float(np.mean([o - e['clean_h5'] for e, o in zip(es, ok)]))
+        else: row['closure'] = float(np.mean(ok))
+        CLOSED.append(row)
+    fault_rows = [r for r in CLOSED if r['policy'] == pol and r['fault'] != 'NONE']; nr = [r for r in CLOSED if r['policy'] == pol and r['fault'] == 'NONE'][0]
+    POLICY.append(dict(policy=pol, threshold=thr, mean_closure=float(np.mean([r['closure'] for r in fault_rows])),
+                       mean_attribution=float(np.mean([r['attribution_acc'] for r in fault_rows])),
+                       clean_dispatch_rate=nr['dispatch_rate'], clean_loss=nr['clean_loss'], clean_net_hit_change=nr['clean_net_hit_change']))
+    log('policy', POLICY[-1])
+main_pol = POLICY[[p_['policy'] for p_ in POLICY].index(f'crc_alpha_{GATES["ALPHA"]}')]
+GUARANTEE = dict(alpha=GATES['ALPHA'], lam=LAMS[GATES['ALPHA']], heldout_clean_loss=main_pol['clean_loss'],
+                 resplit_mean=float(np.mean(RESPLIT)), resplit_p95=float(np.percentile(RESPLIT, 95)),
+                 status='PASS' if main_pol['clean_loss'] <= GATES['ALPHA'] else 'FAIL')
+log('GUARANTEE', GUARANTEE); save_ckpt('loop_done')
+
+# %% [markdown]
+# ## 14b. Natural faults (no injection) and unseen-fault generalization
+
+# %%
+NATR = RES.get('NATR', {})
+if 'typo' not in NATR:
+    used = {b['q'] for b in BASE}; nat = []
+    for r in qg.itertuples():
+        if r.query in used or len(nat) >= CFG['N_NAT']: continue
+        for t in r.query.split():
+            c_ = spell(t) if (t.isalpha() and len(t) >= 4 and df_of(t) < 3) else None
+            q2 = re.sub(rf'\b{re.escape(t)}\b', c_, r.query, count=1) if c_ else None
+            if q2 and q2 in ALLQ:                         # another real user typed the corrected query
+                nat.append(dict(q=r.query, q_fixed=q2, gold=gold_set([j for p in r.product_id for j in BY_PKEY[p]]), split=r.split)); break
+    rows = []
+    for n_, x in enumerate(nat):
+        st = dict(q=x['q'], tenant='ALL', cfg=mkcfg(), ov=None, gold=x['gold'], k=5, meta={})
+        tr = run(st); fe = features(tr); fs, s = dispatch_full(proba(fe), fe)
+        rows.append(dict(q=x['q'], q_fixed=x['q_fixed'], before=succ(tr, x['gold'], 5), s=s, fs=fs,
+                         after_dispatch=succ(run(apply_repairs(st, fs)), x['gold'], 5),
+                         after_q04=succ(run(rep_Q04(st, tr)), x['gold'], 5),
+                         fixed_query=succ(run(dict(st, q=x['q_fixed'])), x['gold'], 5)))
+        if n_ % 25 == 0: maybe_stop('natural_typos')
+    NATR['typo'] = rows
+if 'k09' not in NATR:
+    rows = []
+    for b in [b for b in BASE if b['src'] == 'inp' and b['h1']]:
+        st = S(b, cfg=mkcfg(validity=False), k=1); tr = run(st); fe = features(tr); fs, s = dispatch_full(proba(fe), fe)
+        rows.append(dict(q=b['q'], before=succ(tr, b['gold'], 1), s=s, fs=fs, after_dispatch=succ(run(apply_repairs(st, fs)), b['gold'], 1),
+                         after_k09=succ(run(rep_K09(st, tr)), b['gold'], 1)))
+    NATR['k09'] = rows
+save_ckpt('natural_done')
+def nat_summary(rows, ref_key):
+    out = {}
+    for pol, thr in POLICIES.items():
+        aft = [r['after_dispatch'] if r['s'] >= thr else r['before'] for r in rows]
+        out[pol] = float(np.mean(aft))
+    b0 = float(np.mean([r['before'] for r in rows])) if rows else float('nan'); ref = float(np.mean([r[ref_key] for r in rows])) if rows else float('nan')
+    return b0, ref, out
+NAT = []
+for name, rows, ref_key, oracle_key, want_g in [('natural_typos_esci', NATR['typo'], 'fixed_query', 'after_q04', 'Q'),
+                                                 ('natural_superseded_policies', NATR['k09'], 'after_k09', 'after_k09', 'K')]:
+    b0, ref, aft = nat_summary(rows, ref_key)
+    for pol, a_ in aft.items():
+        NAT.append(dict(set=name, policy=pol, n=len(rows), n_fail_before=int(sum(not r['before'] for r in rows)), hit_before=b0, hit_after=a_, hit_oracle_repair=float(np.mean([r[oracle_key] for r in rows])) if rows else None,
+                        hit_reference=ref, closure_vs_reference=(a_ - b0) / (ref - b0) if rows and ref > b0 else None,
+                        dispatched=float(np.mean([r['s'] >= POLICIES[pol] for r in rows])) if rows else None,
+                        to_right_group=float(np.mean([r['s'] >= POLICIES[pol] and GROUP[r['fs'][0]] == want_g for r in rows])) if rows else None))
+for r in NAT: log('natural', r)
+
+LOFO = RES.get('LOFO', {})
+for f in SINGLE:
+    if f in LOFO or f in RULE_PRIO: continue
+    keep_ = ytr != f; mf = hgb().fit(Xtr[keep_], ytr[keep_]); clf = list(mf.classes_); inf_ = clf.index('NONE')
+    thr_f = float(np.quantile(1 - mf.predict_proba(Xtr[(ytr == 'NONE')])[:, inf_], 1 - CFG['CLEAN_FPR']))
+    rows = []
+    for e in [x for x in EPIS if x['fault'] == f and x['split'] == 'test']:
+        fs, s = dispatch_full(mf.predict_proba(np.array([[e['feats'][k] for k in FEATS]], dtype=np.float32))[0], e['feats'], clf, inf_)
+        flagged = s >= thr_f
+        rows.append(dict(flagged=flagged, right_group=flagged and GROUP[fs[0]] == GROUP[f],
+                         ok=flagged and bool(succ(run(apply_repairs(e['st'], fs)), e['st']['gold'], e['st']['k']))))
+    LOFO[f] = rows; maybe_stop(f'lofo:{f}')
+save_ckpt('lofo_done')
+UNSEEN = [dict(fault=f, n_test=len(r), flagged=float(np.mean([x['flagged'] for x in r])), right_group=float(np.mean([x['right_group'] for x in r])),
+               closure=float(np.mean([x['ok'] for x in r]))) for f, r in LOFO.items() if r]
+for r in UNSEEN: log('unseen', r)
 
 # %% [markdown]
 # ## 15. Write results (JSON + CSV + Markdown report) to diagrag_out/
@@ -1178,14 +1298,17 @@ dstat = {r['fault']: r['status'] for r in DET}; rstat = {r['fault']: r['status']
 sol_df = pd.DataFrame([dict(fault=f, detector=dstat.get(f, 'MISSING'), repair=rstat.get(f, 'MISSING'),
                             solved=dstat.get(f) == 'PASS' and rstat.get(f) == 'PASS') for f in FAULTS])
 n_det, n_rep, n_sol = int((sol_df.detector == 'PASS').sum()), int((sol_df.repair == 'PASS').sum()), int(sol_df.solved.sum())
-clean_row = [r for r in CLOSED if r['fault'] == 'NONE']
+clean_row = [r for r in CLOSED if r['fault'] == 'NONE' and r['policy'] == f'crc_alpha_{GATES["ALPHA"]}']
 VERDICT = dict(detectors_pass=n_det, repairs_pass=n_rep, solved_both=n_sol, of=len(FAULTS),
                verdict='ADOPTED' if n_rep >= GATES['REPAIR_TARGET'] and n_det >= GATES['DETECT_TARGET'] else 'NOT_ADOPTED',
                clean_net_hit_change=clean_row[0]['clean_net_hit_change'] if clean_row else None,
+               guarantee=GUARANTEE, policies=POLICY, natural=NAT, unseen_mean_closure=float(np.mean([r['closure'] for r in UNSEEN])) if UNSEEN else None,
                not_solved=sol_df[~sol_df.solved].fault.tolist(), device=DEV, reranker=CFG['RERANKER'], protocol=json.load(open(PROTO)))
 json.dump(VERDICT, open(os.path.join(OUT, 'VERDICT.json'), 'w'), indent=1, default=str); sol_df.to_csv(os.path.join(OUT, 'solved.csv'), index=False)
 log('VERDICT', {k_: v_ for k_, v_ in VERDICT.items() if k_ != 'protocol'})
-for name, df_ in [('episodes_summary', gen_df), ('detector_gates', det_df), ('repair_gates', rep_df), ('closed_loop', loop_df)]:
+pol_df, nat_df, uns_df = pd.DataFrame(POLICY), pd.DataFrame(NAT), pd.DataFrame(UNSEEN)
+for name, df_ in [('episodes_summary', gen_df), ('detector_gates', det_df), ('repair_gates', rep_df), ('closed_loop', loop_df),
+                  ('policies', pol_df), ('natural_faults', nat_df), ('unseen_faults', uns_df)]:
     df_.to_csv(os.path.join(OUT, f'{name}.csv'), index=False)
 with open(os.path.join(OUT, 'data_verification.json'), 'w') as fh:
     json.dump(dict(files=VERIFY, purity=PUR, cfg=CFG, tau_none=TAU_NONE, tau_c2=TAU_C2, ce_floor=CE_FLOOR[0],
@@ -1206,6 +1329,10 @@ md = ['# DiagRAG core-28 judged run report', '', f'Device: {DEV}. Reranker: {CFG
       '## Episode generation (hard = clean succeeds, faulted fails)', '', gen_df.to_markdown(index=False), '',
       f'## Detector gates (AUROC bar {GATES["AUROC_BAR"]}, min test positives {GATES["MIN_TEST_POS"]})', '', det_df.to_markdown(index=False, floatfmt='.4f'), '',
       f'## Repair gates (Wilson lower bound >= {GATES["RESCUE_BAR_LB"]})', '', rep_df.to_markdown(index=False, floatfmt='.3f'), '',
-      '## Closed loop (held-out split)', '', loop_df.to_markdown(index=False, floatfmt='.3f'), '']
+      '## Dispatch policies (held-out)', '', pol_df.to_markdown(index=False, floatfmt='.4f'), '',
+      '## Do-no-harm guarantee', '', '```', json.dumps(GUARANTEE, indent=1), '```', '',
+      '## Natural faults (no injection)', '', nat_df.to_markdown(index=False, floatfmt='.3f'), '',
+      '## Unseen faults (leave-one-fault-out attributor)', '', uns_df.to_markdown(index=False, floatfmt='.3f'), '',
+      '## Closed loop per fault and policy (held-out split)', '', loop_df.to_markdown(index=False, floatfmt='.3f'), '']
 open(os.path.join(OUT, 'REPORT.md'), 'w').write('\n'.join(md))
 log('done. outputs in', OUT); print('\n'.join(md[-12:]))

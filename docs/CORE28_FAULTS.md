@@ -103,29 +103,50 @@ get a repair. Dispatch order: a fired tier-0 rule first, then the attributor's t
 then the C2 check. The loop reports closure per fault, attribution accuracy, and the net
 Hit change on clean held-out traffic.
 
-## Judged CPU run, 14 Nov 2026
+## Judged CPU runs, 14 Nov 2026
 
-The full table is in `kaggle/judged_cpu_run/`. The run used the MiniLM-L6 reranker, 50 hard
-episodes per fault and 25 held-out positives per fault.
+Both runs used the CPU stack (MiniLM-L6 reranker) with 50 hard episodes per fault, 25 of
+them held out. Full outputs: `kaggle/judged_cpu_run_seed42/` and `kaggle/judged_cpu_run_seed43/`.
 
-- **Detectors: 28/28 pass.** The lowest AUROCs are C2 0.81, K04 0.84, Q03 0.87 and R22 0.94.
-  K03 was 0.51 in V4 and is now 1.00. K05 was 0.69 and is now 1.00.
-- **Repairs: 27/28 pass.** No repair lost any of its 20 clean successes. Q03 fails:
-  28/50 rescued, Wilson lower bound 0.42. WordNet synonyms are ambiguous, so mapping a rare
-  word back to a common synonym often picks the wrong sense.
-- **Verdict: ADOPTED.** 27/28 faults are solved, meaning both their detector and their repair pass.
+| | Seed 42 (code b60462fb) | Seed 43 (code 591a323d) |
+|---|---|---|
+| Detectors passing | 28/28 | 28/28 (lowest: K04 0.80, R24 0.92, Q03 0.93) |
+| Repairs passing | 27/28 (Q03 fails, lower bound 0.42) | 28/28 (Q03 passes only just, 32/50, lower bound 0.501) |
+| Verdict | ADOPTED | ADOPTED |
 
-The closed loop is not gated, and it is weaker than the gates. The gates score each detector
-one-vs-rest and dispatch each repair by oracle. The loop must also choose the exact fault.
-- The Q04 typo rule has priority, so it takes over Q01 (attribution 0.04, closure 0.16) and
-  Q03 (0.08, 0.16). Truncated words and rare synonyms also look like correctable typos.
-- In 24 of 25 held-out Q01 cases the Q04 rule fired. K04 (attribution 0.28) and R07 (0.32), both
-  stale-vector faults, are often dispatched together as a two-fault repair, which counts as a
-  wrong attribution. C2 (0.24) often gets only its Q04 half (10 of 25).
-- On clean held-out traffic, 10.3% of queries get a repair, for a net Hit@5 change of −1.1 points.
+Between the runs: the Q03 repair now chooses the synonym from the search query log, and the
+Q04 rule no longer overrides dispatch. Seed 43 is the run that judges both changes.
 
-The next fix is to let the Q04 rule fire only when the attributor's top Q fault is Q04.
-That fix needs a new judged run with a new seed before it counts.
+**Closed loop on held-out episodes (seed 43)**
+
+| Policy | Mean closure | Attribution | Clean queries repaired | Clean Hit@5 lost |
+|---|---|---|---|---|
+| τ at 5% FPR (out of fold) | 0.82 | 0.80 | 3.7% | 0.22 points |
+| Conformal, α = 0.005 | 0.85 | 0.81 | 9.2% | 0.75 points |
+
+Seed 42 under the old dispatch: Q01 closure 0.16 and clean Hit@5 −1.1 points.
+
+**Do-no-harm guarantee: FAIL.** The pre-registered check was held-out clean loss ≤ α = 0.005.
+- The measured loss was 0.0075.
+- Across 200 re-splits of the calibration set the mean was 0.0043, but the 95th percentile was 0.0100.
+- The cause is a design flaw. Calibration scores come from 5-fold out-of-fold models, while
+  held-out scores come from the attributor trained on all of train. The two sets of scores
+  aren't exchangeable, and conformal risk control needs them to be.
+- The fix is a separate calibration split scored by the same model, judged in a new run.
+
+**Natural faults (no injection), seed 43**
+- **Real misspellings:** 46 ESCI queries had a misspelled token whose corrected spelling
+  another user typed. 33 of them failed before repair.
+  - Hit@5 went from 0.283 to 0.304 after the closed loop and to 0.326 with the oracle Q04 repair.
+  - The corrected query itself scores 0.348.
+  - The loop recovers one third of the reachable gain on 46 queries, which is weak and thin evidence.
+- **Superseded policies:** only 3 of the 36 in-corpus V1/V2 pairs fail with the validity filter
+  off, too few to judge. At lower thresholds the dispatcher made them worse.
+
+**Unseen faults (each fault left out of attributor training), seed 43:** mean closure 0.21 over 24 faults.
+- Recovery happens only where a sibling fault shares the repair: R03, R10 and R11 (one encoder
+  reset, 0.88–0.96) and K04/R07 (vector refresh, 0.72–0.76).
+- The other faults recover almost nothing. Repairs are specific to each fault; they don't generalize.
 
 ## What the numbers mean
 
