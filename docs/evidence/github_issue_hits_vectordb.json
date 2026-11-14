@@ -1,0 +1,912 @@
+{
+ "pgvector_filter_fewer": [
+  {
+   "title": "Understanding HNSW + filtering",
+   "url": "https://github.com/pgvector/pgvector/issues/259",
+   "state": "closed",
+   "comments": 87,
+   "created": "2023-09-11",
+   "body": "Hi, I would like to understand how the current implementation handles HNSW + filtering.\r\n\r\nImagine you have a table:\r\n\r\n```sql\r\nCREATE TABLE document (\r\n  id UUID PRIMARY KEY,\r\n  text TEXT NOT NULL,\r\n  embedding REAL[] NOT NULL,\r\n  category TEXT NOT NULL\r\n)\r\n```\r\n\r\nAnd that you even have an index on `category`:\r\n\r\n```sql\r\nCREATE INDEX document_category ON document (category);\r\n```\r\n\r\nAnd then you want to do a query like:\r\n\r\n```sql\r\nSELECT id, text\r\nFROM document\r\nWHERE category = $1\r\nORDER BY embedding <-> $2\r\nLIMIT 10;\r\n```\r\n\r\nTo do this efficiently is not straightforward -- ideally we want to do the expensive HNSW ANN on the already pruned subset (https://qdrant.tech/articles/filtrable-hnsw/). Can pgvector do this, or is there plan to enable such optimization in the future?\r\n\r\n(In this case the condition is simple enough that you might be able to use table partitioning, but that's not always the case)"
+  },
+  {
+   "title": "No results when using index",
+   "url": "https://github.com/pgvector/pgvector/issues/263",
+   "state": "closed",
+   "comments": 15,
+   "created": "2023-09-12",
+   "body": "I have a table of quotes with vector embeddings. There are two columns in the table, one is indexed one is not, they are otherwise identical. When I query against the unindexed column for the 5 nearest neighbors to a given embedding, I get 5 results. However, when I run the same query using the indexed column I get no results. \r\n\r\n```\r\nconn = psycopg2.connect(connectionStr)\r\nregister_vector(conn)\r\n\r\nembedding = model.encode([\"I can't do that\"])\r\n\r\nwith conn.cursor() as cur:\r\n    t0 = time.time()\r\n    cur.execute(\"\"\"\r\n        select movie_line\r\n        from quotes\r\n        where  character = 'hal'\r\n            and movie_line like '%%Dave%%'\r\n        order by (embedding <=> %s)\r\n        limit 1\r\n        \"\"\", embedding)\r\n    \r\n    rows = cur.fetchall()\r\n    t1 = time.time()\r\n    \r\n    print(f\"Time: {t1 - t0}s\")\r\n    \r\n    for r in rows:\r\n        print(r)\r\nconn.close()\r\n```\r\n\r\nProduces: \r\n\r\n```\r\nTime: 4.286221981048584s\r\n(\"I'm sorry, Dave, but in accordance with sub-routine C1532/4, quote, When the crew are dead or incapacitated, the computer must assume control, unquote. I must, therefore, override your authority now since you are not in any condition to intel- ligently exercise it.\",)\r\n```\r\n\r\nBut changing to use the indexed column, embedding2, in the order by clause, and setting the probes parameter\r\n\r\n```\r\ncur.execute(\"set ivfflat.probes = 28;\")\r\n...\r\norder by (embedding2 <=> %s)\r\n...\r\n```\r\n\r\nReturns no results. \r\n\r\nHow can using an index in an order by clause lead to no resul"
+  },
+  {
+   "title": "Strange pg optimizer behavior with hnsw index (inappropriate seq scans)",
+   "url": "https://github.com/pgvector/pgvector/issues/317",
+   "state": "closed",
+   "comments": 2,
+   "created": "2023-10-27",
+   "body": "I have a large (ca 500 gib total) partitioned table storing webpages. \r\n\r\nThe table `pages` has an HNSW index (m=32, ef_construction=256) on the column `embedding` on all partitions. Each partition is ~30gib and the index itself per partition is ~12gib. Partition key is the column `last_seen_date` as you'll see below.  All partitions contains about an equal number of rows.\r\n\r\nUsing a query like this:\r\n\r\n```\r\nexplain analyze\r\nselect id, url,\r\ncosine_distance(embedding, %s::vector(768)) as dist,\r\nembedding, source_file, bp_strings, domain\r\nfrom pages where last_seen_date >= now() at time zone 'America/New_York' - interval '6 months'\r\nand last_seen_date < now() at time zone 'America/New_York' - interval '4 month'\r\norder by embedding <=> %s::vector(768)\r\n```\r\n\r\nresults in a query plan with seq scans on all the partitions:\r\n\r\n```\r\nGather Merge  (cost=5222447.70..6249750.41 rows=8361766 width=555) (actual time=128727.746..131859.686 rows=8363415 loops=1)\r\n  Workers Planned: 7\r\n  Workers Launched: 6\r\n  ->  Sort  (cost=5221447.58..5224433.96 rows=1194550 width=555) (actual time=128089.581..128442.991 rows=1194774 loops=7)\r\n        Sort Key: ((pages.embedding <=> '<long vector not shown>'::vector(768)))\r\n        Sort Method: external merge  Disk: 640288kB\r\n        Worker 0:  Sort Method: external merge  Disk: 644568kB\r\n        Worker 1:  Sort Method: external merge  Disk: 682144kB\r\n        Worker 2:  Sort Method: external merge  Disk: 634640kB\r\n        Worker 3:  Sort Method: external"
+  },
+  {
+   "title": "Proposal: add an llms.txt",
+   "url": "https://github.com/pgvector/pgvector/issues/1039",
+   "state": "closed",
+   "comments": 1,
+   "created": "2026-10-05",
+   "body": "Hi! We would like to offer pgvector an `llms.txt`: a short, plain-markdown guide at the root of the repository that tells AI assistants what the project is and where its documentation lives ([the llms.txt format](https://llmstxt.org)). We drafted one with our open-source generator [brethof-llms-txt](https://github.com/BrethofAI/brethof-llms-txt); an AI model (GLM 5.3 Flash) wrote the summary and descriptions. It is below.\n\nWould you like it as a pull request? If yes, reply here and we will open one. If not, close this issue and we will not ask again.\n\n<details><summary>The proposed llms.txt (28 links)</summary>\n\n```markdown\n# pgvector\n\n> An open-source Postgres extension for vector similarity search, supporting exact and approximate nearest neighbor search with multiple vector types and distance functions.\n\nIt is a Postgres extension supporting Postgres 13+, installable by compiling from source or via Docker, Homebrew, PGXN, APT, Yum, pkg, APK, or conda-forge. It supports single-precision, half-precision, binary, and sparse vectors with L2, inner product, cosine, L1, Hamming, and Jaccard distances. Indexing uses HNSW or IVFFlat for approximate nearest neighbor search, with quantization for scaling to many vectors.\n\n## Docs\n\n- [pgvector](https://raw.githubusercontent.com/pgvector/pgvector/master/README.md): Open-source vector similarity search for Postgres with exact and approximate nearest neighbor search, multiple vector types, and distance functions.\n- [Installation](https:"
+  }
+ ],
+ "pgvector_ivf_recall": [
+  {
+   "title": "Understanding HNSW + filtering",
+   "url": "https://github.com/pgvector/pgvector/issues/259",
+   "state": "closed",
+   "comments": 87,
+   "created": "2023-09-11",
+   "body": "Hi, I would like to understand how the current implementation handles HNSW + filtering.\r\n\r\nImagine you have a table:\r\n\r\n```sql\r\nCREATE TABLE document (\r\n  id UUID PRIMARY KEY,\r\n  text TEXT NOT NULL,\r\n  embedding REAL[] NOT NULL,\r\n  category TEXT NOT NULL\r\n)\r\n```\r\n\r\nAnd that you even have an index on `category`:\r\n\r\n```sql\r\nCREATE INDEX document_category ON document (category);\r\n```\r\n\r\nAnd then you want to do a query like:\r\n\r\n```sql\r\nSELECT id, text\r\nFROM document\r\nWHERE category = $1\r\nORDER BY embedding <-> $2\r\nLIMIT 10;\r\n```\r\n\r\nTo do this efficiently is not straightforward -- ideally we want to do the expensive HNSW ANN on the already pruned subset (https://qdrant.tech/articles/filtrable-hnsw/). Can pgvector do this, or is there plan to enable such optimization in the future?\r\n\r\n(In this case the condition is simple enough that you might be able to use table partitioning, but that's not always the case)"
+  },
+  {
+   "title": "Iterative index scans",
+   "url": "https://github.com/pgvector/pgvector/issues/678",
+   "state": "closed",
+   "comments": 44,
+   "created": "2024-09-22",
+   "body": "Hi all, I wanted to share some work on iterative index scans to get feedback.\r\n\r\n- [hnsw-streaming branch](https://github.com/pgvector/pgvector/compare/hnsw-streaming)\r\n- [ivfflat-streaming branch](https://github.com/pgvector/pgvector/compare/ivfflat-streaming)\r\n\r\nYou can enable this functionality (naming TDB) with:\r\n\r\n```sql\r\nSET hnsw.streaming = on;\r\nSET ivfflat.streaming = on;\r\n```\r\n\r\nFor HNSW, it keeps track of discarded candidates at layer 0. When more tuples are needed, it calls `HnswSearchLayer` /  Algorithm 2 with the nearest discarded candidates as entry points (in batches of `ef_search`). The scan terminates when enough tuples are found, `hnsw.ef_stream` elements are visited, or `work_mem` is exceeded.\r\n\r\nFor IVFFlat, it scans the next closest lists in groups of `ivfflat.probes`, up to `ivfflat.max_probes`.\r\n\r\n---\r\n\r\nOne issue I'm having trouble addressing is how to terminate scans for queries with distance filters. In the query below, if only 9 records are within the distance, it'll continue scanning the index. I've tried using `xs_orderbyvals` on `IndexScanDesc`, but it doesn't seem to help.\r\n\r\n```sql\r\nSELECT * FROM items WHERE embedding <-> $1 < 0.1 ORDER BY embedding <-> $1 LIMIT 10;\r\n```"
+  },
+  {
+   "title": "IVFFLAT QPS too low",
+   "url": "https://github.com/pgvector/pgvector/issues/661",
+   "state": "closed",
+   "comments": 20,
+   "created": "2024-08-26",
+   "body": "I am using IVFFLAT for 1200 dimensional embeddings of vector type. I have 20 million rows.\r\n\r\nThe query that is slow takes a user provided vector and finds the top 100 matching vectors. There are 4200 lists and 10 probes. The query **takes 30 seconds** when it's cold and 100ms if it's a repeat query. I confirmed with EXPLAIN that the index is being used. \r\n\r\nThe issue is very slow IO. All of the query time is spent reading in the blocks that are buffer misses during the `Index Scan` operation. The throughput is about 6 mb/s. The hardware configuration is r5.2xlarge from AWS RDS.\r\n\r\nHere is an example `EXPLAIN (ANALYZE, BUFFERS)` result:\r\n\r\n```\r\nLimit  (cost=106671.48..106680.48 rows=800 width=57) (actual time=11957.952..13229.665 rows=800 loops=1)\r\n  Buffers: shared hit=17539 read=16834\r\n  I/O Timings: shared/local read=13154.684\r\n  ->  Index Scan using table_name_idx on table_name\r\n        Buffers: shared hit=17539 read=16834\r\n        I/O Timings: shared/local read=13154.684\r\nPlanning:\r\n  Buffers: shared hit=104\r\nPlanning Time: 1.011 ms\r\nExecution Time: 13230.135 ms\r\n```\r\n\r\nGiven that the IO should be on SSD, I am puzzled at the extremely low throughput.\r\n\r\nWhat am I doing wrong? Should I be using HNSW? Is it a huge performacne issue that most of my rows are stored as TOAST?\r\n "
+  },
+  {
+   "title": "HNSW testing",
+   "url": "https://github.com/pgvector/pgvector/issues/239",
+   "state": "closed",
+   "comments": 15,
+   "created": "2023-08-25",
+   "body": "_Originally posted by @alanwli in https://github.com/pgvector/pgvector/issues/181#issuecomment-1693821662_\r\n\r\n@ankane, not sure if you've run into this in your testing. When I ran it with 86c29b3bf038de50bb2aec21b6d896823ff1fbbe on an usecases, I was hitting what looks like some kind of race condition with the index.\r\n\r\nI simplified it down to the following python script - where there is a table with 1k vectors, inserts+deletes workload that always keeps the table at 1k vectors. But when doing an index scan with ef_search set to 1k, I see that the index will not have all 1k vectors - quite a number of occasions where it's missing 10%+ of what should be there, the worst I saw was ~24% missing. Note that I don't see this with ivfflat (uncomment the ivfflat line). Is this expected?\r\n\r\n```python\r\nfrom collections.abc import Sequence\r\n\r\nimport psycopg\r\nimport pgvector.psycopg\r\nimport sys\r\nimport numpy as np\r\n\r\ndef main(argv: Sequence[str]) -> None:\r\n  conn = psycopg.connect(host='localhost', port=5432, user=\"postgres\", dbname=\"postgres\", password=\"postgres\")\r\n  conn.autocommit = False\r\n  pgvector.psycopg.register_vector(conn)\r\n  cur = conn.cursor()\r\n  cur.execute(\"CREATE TABLE items (id int, embedding vector(1024))\")\r\n  cur.execute(\"ALTER TABLE items ALTER COLUMN embedding SET STORAGE PLAIN\")\r\n  cur.execute(\"CREATE INDEX ON items USING hnsw (embedding vector_cosine_ops) WITH (m = 12, ef_construction=40)\")\r\n  #cur.execute(\"CREATE INDEX ON items USING ivfflat (embedding vector_cosin"
+  },
+  {
+   "title": "Support RabitQ in pgvector",
+   "url": "https://github.com/pgvector/pgvector/issues/1003",
+   "state": "open",
+   "comments": 11,
+   "created": "2026-07-28",
+   "body": "## Summary\n\nI noticed pgvector maintainer mentioned supporting RaBitQ in #989. \n\nWe have implemented RaBitQ quantization for both the IVFFlat and HNSW access method\nin pgvector. The implementation supports cosine distance and does not change the existing\nquery flow or SQL interface.\n\nIt has seen some internal use in IVF RaBitQ, supporting cosine-distance search\non single heap table containing hundreds of millions of vectors.\n\nWe would like to ask whether the maintainers are interested in accepting this work into pgvector.\n\n## Benchmark\n\nOur ann-benchmark results show that RaBitQ reduces index storage and improves\nquery performance while maintaining competitive recall.\n\n- After each index was built, `pg_prewarm` was used to load it into the PostgreSQL buffer cache before running search benchmarks.\n- `shared_buffers` was configured to be large enough to hold the indexes. This minimizes storage I/O during search and makes the benchmark focus on the distance-computation speedup provided by RaBitQ. \n\n### Environment\n\n- Hardware:\n   - CPU: Intel Xeon Platinum 8269CY @ 2.50GHz\n   - OS kernel version: Linux 5.10.134\n- Software:\n   - PostgreSQL\n      - version: v17.9\n      - shared_buffers = 10GB\n      - max_parallel_workers = 4\n   - pgvector base version: v0.8.0\n- Benchmark configuration\n   - TopK = 10\n   - dataset: dbpedia-openai-1000k-angular (1536D1M)\n- IVFFlat configuration:\n   - lists = 1000\n   - probes = 1, 2, 5, 10, 20, 50, 100\n   - quantization_bit = 1\n- HNSW configuration: \n"
+  },
+  {
+   "title": "Suggestions to keep IVFFlat index updated",
+   "url": "https://github.com/pgvector/pgvector/issues/139",
+   "state": "closed",
+   "comments": 7,
+   "created": "2023-05-27",
+   "body": "I have been using pg_vector in a project and so far I'm loving it!\r\n\r\nOne thing that I've noticed is that, when using an IVFFlat index, new insertions are more difficult to find (i.e, for 100 lists they require probes to go to a huge number, like 80-90). I guess that's because, while these new entries get added to the index, they don't run k-means in order to be placed in the proper inverted list. \r\n\r\nThe issue goes away by reindexing often. I have added a cronjob that runs a reindex every X new rows, but I was wondering if there's any way to achieve the same thing (or maybe whether there are plans to do it) without this cronjob?\r\n\r\nI have seen that https://github.com/pgvector/pgvector/issues/105 and https://github.com/pgvector/pgvector/issues/136 touch a similar subject, so I guess for now the best option would be the cronjob?\r\nJust to clarify, I did create the index after all the initial data was in the table. It's the new rows added after that who worry me."
+  },
+  {
+   "title": "enhancement(?): support for other size datatypes",
+   "url": "https://github.com/pgvector/pgvector/issues/95",
+   "state": "closed",
+   "comments": 7,
+   "created": "2023-04-16",
+   "body": "I'm wondering if it would be possible to add support for other datatypes in the `vector` type, beyond `float4`. I am wondering if I could use the extension to search bit arrays (rather than float arrays). "
+  },
+  {
+   "title": "Impact of Indexes on Query Result Sets",
+   "url": "https://github.com/pgvector/pgvector/issues/77",
+   "state": "closed",
+   "comments": 6,
+   "created": "2023-03-31",
+   "body": "Thanks for this project! I I have been using it and have successfully integrated it with AI-related projects such as LangChain and ChatGPT plugins.\r\n\r\nOne thing that I noticed is the impact of indexes on the result. It's not my standard thinking that an index would change the result set of a query, so I'd like to confirm it and shed more light into the matter to other users."
+  }
+ ],
+ "faiss_recall_nprobe": [
+  {
+   "title": "Search returns low recall even with small data",
+   "url": "https://github.com/facebookresearch/faiss/issues/600",
+   "state": "closed",
+   "comments": 11,
+   "created": "2018-09-26",
+   "body": "# Summary\r\n\r\n<!-- Facebook has a bounty program for the safe disclosure of security bugs. In\r\nthose cases, please go through the process outlined on that page and do not\r\nfile a public issue. -->\r\n\r\nfaiss search return low recall even with database with 100 vectors with brute-force option `IndexFlatL2`\r\n\r\n# Platform\r\n\r\n<!-- if the question/problem is not platform-specific, please ignore this -->\r\n\r\nOS: <!-- e.g. macOS 10.13.3 -->\r\n\r\nFaiss version: <!-- git commit, e.g. 56383610bcb982d6591e2e2bea3516cb7723e04a -->\r\n\r\nFaiss compilation options: <!-- e.g. using MKL with compile flags ... -->\r\n\r\nRunning on:\r\n- [x ] CPU\r\n- [ ] GPU\r\n\r\nInterface: \r\n- [ ] C++\r\n- [ x] Python\r\n\r\n# Reproduction instructions\r\n## 1. Low recall\r\nDownload xb.dat, xq.dat https://drive.google.com/drive/folders/1OKM9QjqzxZWUci8l91dROuwGRX_UVAto?usp=sharing\r\n<!-- Please provide specific and comprehensive instructions to reproduce the\r\ndescribed behavior. -->\r\n```\r\nimport numpy as np\r\nimport faiss\r\n\r\nxb = np.load('xb.dat')\r\nxq = np.load('xq.dat')\r\nindex = faiss.IndexFlatL2(d)\r\nindex.train(xb)\r\nindex.add(xb)\r\nindex.nprobe = 1              # default nprobe is 1, try a few more\r\n\r\nt0 = time.time()\r\nD, I = index.search(xq, 10)\r\nt1 = time.time()\r\n\r\nks = [1,10]\r\nfor k in ks: \r\n    recall_at_1 = (I[:, :k] == gt[:, :k]).sum() / float(nq) / k\r\n    print(\"\\t %7.3f ms per query, R@%-2d %.4f\" % (\r\n    (t1 - t0) * 1000.0 / nq, k, recall_at_1))\r\n```\r\n\r\nThe result will be\r\n```\r\n0.054 ms per query, R@1  0.8000\r\n0.054 ms per que"
+  },
+  {
+   "title": "Low recall for large datasets using IMI",
+   "url": "https://github.com/facebookresearch/faiss/issues/743",
+   "state": "closed",
+   "comments": 11,
+   "created": "2019-03-14",
+   "body": "# Summary\r\nUsing the recommended settings for IMI, the recall obtained for Deep50M is around 0.4, however it drops to 0.07 for Deep500M. The index factory strings and training sizes used for Deep50M and Deep500M respectively are: OPQ32_128,IMI2x12,PQ32 (training size = 262K) and OPQ32_128,IMI2x14,PQ32 (training size = 1M). The recall is calculated based on the 100 candidates returned by a 100NN query.\r\n\r\nWhat could be the explanation for such a drop? Could it be that the candidate list needs to be reranked. Does the faiss library apply reranking by default on top of IMI, if not, how can we achieve it?\r\n\r\nCould the reason be the training sizes? Can you please specify the training sizes used to obtain the high recalls in the benchmarks?\r\n\r\n(BTW, using IVF_HNSW is not an option, since I am using the CPU and index building was too slow.)\r\n\r\n<!-- Facebook has a bounty program for the safe disclosure of security bugs. In\r\nthose cases, please go through the process outlined on that page and do not\r\nfile a public issue. -->\r\n\r\n# Platform\r\n\r\n<!-- if the question/problem is not platform-specific, please ignore this -->\r\n\r\nOS: <!-- e.g. macOS 10.13.3 -->\r\n\r\nFaiss version: <!-- git commit, e.g. 56383610bcb982d6591e2e2bea3516cb7723e04a -->\r\n\r\nFaiss compilation options: <!-- e.g. using MKL with compile flags ... -->\r\n\r\nRunning on:\r\n- [x] CPU\r\n- [ ] GPU\r\n\r\nInterface: \r\n- [x] C++\r\n- [ ] Python\r\n\r\n# Reproduction instructions\r\n\r\n<!-- Please provide specific and comprehensive instructions to re"
+  },
+  {
+   "title": "some problem about fastscan",
+   "url": "https://github.com/facebookresearch/faiss/issues/3792",
+   "state": "closed",
+   "comments": 9,
+   "created": "2024-08-26",
+   "body": "# Summary\r\n\r\ni make three index with faiss Cpp to find the most accurate index, to be as quickly as possible, i use python to test the index accuracy, I use flat as the baseline and ivfpq, fastscan as the be tested, but i find the fastscan accuracy is very very low\r\n\r\n# Platform\r\n\r\nRunning on:\r\n- [*] CPU\r\n- [ ] GPU\r\n\r\nInterface: \r\n- [*] C++\r\n- [*] Python\r\n\r\n# Reproduction instructions\r\n\r\nHere is my test code:\r\n```python\r\n    #  baseline res use flat\r\n    b_idx = read_idx(baseline_idx_path)\r\n    D, I = b_idx.search(query_vecs, recall_num)\r\n    b_rets_ids = I.tolist()\r\n\r\n    # generate flat res id-map\r\n    baseline_map = {}\r\n    for i in range(len(b_rets_ids)):\r\n        baseline_map[i] = {}\r\n        for ret_id in b_rets_ids[i]:\r\n            baseline_map[i][ret_id] = 1\r\n\r\n    # use ivfpq & scann search and print acc\r\n    print(\"Top{} recall acc rate:\".format(recall_num))\r\n    for idx_path in idx_paths:\r\n        m_idx = read_idx(idx_path)\r\n        start = time.time()\r\n        m_idx.nprobe = 20\r\n        D, I = m_idx.search(query_vecs, recall_num)\r\n        end = time.time()\r\n        print(\"time: {}\".format(end -start))\r\n        m_rets_ids = I.tolist()\r\n\r\n        recall_contain = 0\r\n        sum_recall = len(I) * len(I[0])\r\n        for i in range(len(m_rets_ids)):\r\n            for m_ret_id in m_rets_ids[i]:\r\n                if m_ret_id in baseline_map[i]:\r\n                    recall_contain += 1\r\n        \r\n        print(idx_path + ':' + str(float(recall_contain) / sum_recall * 100) +"
+  },
+  {
+   "title": "knn-graph build time measurement - clarification",
+   "url": "https://github.com/facebookresearch/faiss/issues/745",
+   "state": "closed",
+   "comments": 8,
+   "created": "2019-03-22",
+   "body": "Hi,\r\nI wanted to ask for clarification on the \"Construction of a knn-graph\" benchmark in the following link. [https://github.com/facebookresearch/faiss/wiki/Low-level-benchmarks](https://github.com/facebookresearch/faiss/wiki/Low-level-benchmarks)\r\nWhy the build time for each knn-graph method changes in y axis? Also, the intersection measure in x axis does not vary according to nprobe? I can't understand exactly how the graph build time measurement is done here.\r\n\r\nThanks in advance."
+  },
+  {
+   "title": "[Feature Request] Saving GPU-Translated States for Fast CPU-to-GPU Transfers",
+   "url": "https://github.com/facebookresearch/faiss/issues/5039",
+   "state": "open",
+   "comments": 6,
+   "created": "2026-04-03",
+   "body": "# [Feature Request] Saving GPU-Translated States for Fast CPU-to-GPU Transfers\n\nHello FAISS community and developers, we were curious whether there would be interest in implementing a version of our faster CPU-GPU translation modifications to FAISS.\n\n## Motivation\nNew architectures like the **NVIDIA GH200** tightly couple the CPU and GPU with a fast **NVLink** interconnect (900 GB/s). While with traditional PCIe-based systems it does not make sense to improve the upload path (as the current approach just moves indices once and reuses them once in GPU memory), the GH200 provides some unique optimization opportunities. We have developed a hardware-software co-design based on our work published at [ISCA '25](https://dl.acm.org/doi/10.1145/3695053.3731076) that hierarchically searches subsets of massive indices.\n\nThis approach allows a single GPU to effectively serve an index much larger than its own memory capacity by utilizing CPU memory and NVLink to host and serve portions of **FAISS** IVF indices. On coupled CPU-GPU systems, we have demonstrated and tested a latency improvement of up to **10x** for large-scale index serving over CPU-only implementations.\n\n---\n\n## Hardware-Software Co-design\n1.  **Baseline Construction:** A monolithic index is constructed using **K-means clustering**, after which all IVF lists (`nLists`) and centroids are extracted and stored (e.g., in a NumPy array) for efficient lookup.\n2.  **Sizing & Grouping:** The distribution of `nList` sizes is analyze"
+  },
+  {
+   "title": "The accuracy and time problems of indexivfpq",
+   "url": "https://github.com/facebookresearch/faiss/issues/1522",
+   "state": "closed",
+   "comments": 4,
+   "created": "2020-11-12",
+   "body": "Hello, I'm sorry to disturb you. I have encountered some problems in using vfpq method. The problems are as follows:\r\nWhen setting parameter: **metric: inner product**, M: 8, code_ Size: 8, the precision is very low, and the time is very short; when m increases, the accuracy is improved and the time becomes longer (under the same condition, when nprobe = nlist, the search time: t (PQ) > t (SQ) > t (ivfflat))\r\nThe problems are as follows:\r\n**1. When nprobe = nlist, the search time of PQ is longer than that of the other two methods?\r\n2. In practical application, how to balance precision and time, and how to determine the value of M? (when m = d, the accuracy is the best and the time is the longest)\r\n3. What other parameters will significantly affect the accuracy of PQ detection?**"
+  },
+  {
+   "title": "Problems on IMI MultiIndexQuantizer Inner Product metric",
+   "url": "https://github.com/facebookresearch/faiss/issues/665",
+   "state": "closed",
+   "comments": 4,
+   "created": "2018-12-20",
+   "body": "# Summary\r\nHello,\r\n1. I'm using \"IMI2x10,Flat\" index, the performance for recall rate and search time is pretty good. However, the MultiIndexQuantizer is implemented only for L2_METRIC, could  MultiIndexQuantizer support INNER_PRODUCT_METRIC? \r\n\r\n2. I have read the paper The Inverted Multi-Index, and in the end it is said \"it is straightforward to replace the (square of the) Euclidean distance within the multi-index with any other additive distance measure or kernel\", so I think MultiIndexQuantizer should  support METRIC_INNER_PRODUCT.\r\nFirst, I tested the IMI2x10,Flat, with INNER_PRODUCT_METRIC by force, I found the recall rate(top100) is very low even set nprobe very big.\r\n\r\nThen, I made modify of code to support METRIC_INNER_PRODUCT, please refer to https://github.com/superlong/faiss/commit/92f2b75bfed8c3e93159ecfe54bb43a7099ea456\r\n\r\nUsing this code, the recall rate is good, but the searching costs very long compared to L2_METRIC. I printed the debug info and I found that the vectors were not assigned scattered\uff0c all of the vectors were assigned to only a few of list numbers. So, it seems it does the  exhaustive search.\r\n\r\nI wonder it is wrong using IndexFlatL2 to cluster, I change the IndexFlatL2 to IndexFlatIP for the pq's cluster, the result is terrible. I don't know what is going wrong?\r\n\r\n3. There maybe problem on MinSumK algorithm, In my understanding, the output terms of  MinSumK::run(const T *x, long ldx, T * sums, long * terms)   should has no same value, but I tes"
+  },
+  {
+   "title": "[Question] Low Performance of 4-bit PQ",
+   "url": "https://github.com/facebookresearch/faiss/issues/1761",
+   "state": "closed",
+   "comments": 2,
+   "created": "2021-03-15",
+   "body": "# Summary\r\n\r\nI'm trying to reproduce 4-bit PQ benchmark on SIFT1M (mentioned [here](https://github.com/facebookresearch/faiss/wiki/Indexing-1M-vectors#4-bit-pq-comparison-with-scann)). The result on Wiki says QPS is over 10000 with recall > 0.9. However, I only get QPS 8000 with a very low recall on my Intel(R) i7-8700 desktop. I wonder if I missed some sth.\r\n\r\nHere is my testing code:\r\n\r\n```python\r\n# load dataset\r\nxb = np.load('xb.npy')\r\nxq = np.load('xq.npy')\r\nd = 128\r\n\r\nindex = faiss.index_factory(d, 'IVF2000,PQ64x4fs')\r\nindex.train(xb)\r\nindex.add(xb)\r\nindex.nprobe = 1 # set nprobe to 1 to achieve max performance\r\n\r\nfaiss.omp_set_num_threads(1) # single thread\r\n\r\n%timeit index.search(xq, 100)\r\n\r\n# output\r\n# \r\n# 1.7 s \u00b1 31.2 ms per loop (mean \u00b1 std. dev. of 7 runs, 1 loop each)\r\n# qps = xq.shape[0] / 1.7 = 5882.3529\r\n```\r\n\r\n"
+  }
+ ],
+ "faiss_wrong_ids": [
+  {
+   "title": "Indexing 1B vectors by creating smaller indexes on batches and merging them",
+   "url": "https://github.com/facebookresearch/faiss/issues/642",
+   "state": "closed",
+   "comments": 16,
+   "created": "2018-11-20",
+   "body": "Need guidance...\r\n\r\nWe'll have an application where we will stream a set of vectors (on the order of a billion). We cannot wait until we collect all the vectors to train an index (you recommend IMI at this scale). We are thinking of building indexes for smaller batches of vectors... once we have a batch ready, we could train the index from a sample, create an index for the batch and in the end merge all the indexes. I understand only IVF supports merging of indexes, wanted your thoughts on this approach.\r\n\r\nThanks "
+  },
+  {
+   "title": " remove_ids  function's return  in index IVFPQ",
+   "url": "https://github.com/facebookresearch/faiss/issues/582",
+   "state": "closed",
+   "comments": 8,
+   "created": "2018-09-07",
+   "body": " I use remove_ids function in index IVFPQ. \r\n But the function returns 1 or 2 or -1. \r\n I want to know what's the difference between 1 and 2. "
+  },
+  {
+   "title": "Makefile example in faiss/tutorials/cpp missing GPU part ?",
+   "url": "https://github.com/facebookresearch/faiss/issues/791",
+   "state": "closed",
+   "comments": 4,
+   "created": "2019-04-14",
+   "body": "# Summary\r\n\r\n<!-- Facebook has a bounty program for the safe disclosure of security bugs. In\r\nthose cases, please go through the process outlined on that page and do not\r\nfile a public issue. -->\r\n\r\n# Platform\r\n\r\n<!-- if the question/problem is not platform-specific, please ignore this -->\r\n\r\nOS: <!-- e.g. macOS 10.13.3 -->\r\n\r\nFaiss version: <!-- git commit, e.g. 56383610bcb982d6591e2e2bea3516cb7723e04a -->\r\n\r\nFaiss compilation options: <!-- e.g. using MKL with compile flags ... -->\r\n\r\nRunning on:\r\n- [ ] CPU\r\n- [ v] GPU\r\n\r\nInterface: \r\n- [ v] C++\r\n- [ ] Python\r\n\r\n# Reproduction instructions\r\n\r\n<!-- Please provide specific and comprehensive instructions to reproduce the\r\ndescribed behavior. -->\r\n\r\n<!-- Please *do not* post screenshots of logs. They are not searchable. Copy/paste \r\nthe text or make a gist if the text is too bulky. --> \r\nwhen run \"Makefile\" in faiss/tutorials/cpp/, 4-GPU.cpp and 5-Multiple-GPUs.cpp do not be compiled successfully. \r\nCould you please provide an example of the Makefile for GPU complication? "
+  },
+  {
+   "title": "Undefined reference to faiss::Index",
+   "url": "https://github.com/facebookresearch/faiss/issues/120",
+   "state": "closed",
+   "comments": 4,
+   "created": "2017-05-24",
+   "body": "I created my cpp script but it failed due to many errors (eg underfined reference to).  Then I compile 1-Flat.cpp (g++ -std=gnu++11 -I.. 1-Flat.cpp -o 1-Flat) and got the following errors \r\n\r\n/tmp/cc8jS9iT.o: In function `main':\r\n1-Flat.cpp:(.text+0x2e2): undefined reference to `faiss::IndexFlat::add(long, float const*)'\r\n1-Flat.cpp:(.text+0x3a7): undefined reference to `faiss::IndexFlat::search(long, float const*, long, float*, long*) const'\r\n1-Flat.cpp:(.text+0x59a): undefined reference to `faiss::IndexFlat::search(long, float const*, long, float*, long*) const'\r\n/tmp/cc8jS9iT.o: In function `faiss::Index::~Index()':\r\n1-Flat.cpp:(.text._ZN5faiss5IndexD2Ev[_ZN5faiss5IndexD5Ev]+0xd): undefined reference to `vtable for faiss::Index'\r\n/tmp/cc8jS9iT.o: In function `faiss::IndexFlat::~IndexFlat()':\r\n1-Flat.cpp:(.text._ZN5faiss9IndexFlatD2Ev[_ZN5faiss9IndexFlatD5Ev]+0xd): undefined reference to `vtable for faiss::IndexFlat'\r\n/tmp/cc8jS9iT.o: In function `faiss::IndexFlatL2::IndexFlatL2(long)':\r\n1-Flat.cpp:(.text._ZN5faiss11IndexFlatL2C2El[_ZN5faiss11IndexFlatL2C5El]+0x24): undefined reference to `faiss::IndexFlat::IndexFlat(long, faiss::MetricType)'\r\n/tmp/cc8jS9iT.o:(.rodata._ZTVN5faiss11IndexFlatL2E[_ZTVN5faiss11IndexFlatL2E]+0x28): undefined reference to `faiss::IndexFlat::add(long, float const*)'\r\n/tmp/cc8jS9iT.o:(.rodata._ZTVN5faiss11IndexFlatL2E[_ZTVN5faiss11IndexFlatL2E]+0x30): undefined reference to `faiss::Index::add_with_ids(long, float const*, long const*)'\r\n/tmp/cc8jS9i"
+  },
+  {
+   "title": "Remove_ids on sharded gpu index",
+   "url": "https://github.com/facebookresearch/faiss/issues/245",
+   "state": "closed",
+   "comments": 2,
+   "created": "2017-11-08",
+   "body": "Hi,\r\n\r\nI have managed to create a sharded IVFFlat index on multiple gpu. But I wonder if it is possible to remove vectors from the sharded index ? Trying to access directly from the IndexShards instance doesn't work. I tried to copy the index using index_gpu_to_cpu and then remove the vectors but it crashes. I have no problem removing vectors on a cpu index. \r\n\r\n```ngpu = faiss.get_num_gpus()\r\nivfflat_config = []\r\ngpu_resources = []\r\nsindex = faiss.IndexShards(dim, True, False)\r\nfor gpu in range(ngpu):\r\n    resources = faiss.StandardGpuResources()\r\n    gpu_resources.append(resources)\r\n    cfg = faiss.GpuIndexIVFFlatConfig()\r\n    cfg.device = gpu\r\n    ivfflat_config.append(cfg)\r\n\r\nindexes = [faiss.GpuIndexIVFFlat(gpu_resources[i], dim, 100, faiss.METRIC_L2,ivfflat_config[i]) for i in range(ngpu)]```\r\n\r\nAm I doing something wrong or is this functionality not supported yet ?\r\n\r\nThanks :) "
+  },
+  {
+   "title": "IndexIDMap needs resize on remove_ids",
+   "url": "https://github.com/facebookresearch/faiss/issues/255",
+   "state": "closed",
+   "comments": 2,
+   "created": "2017-11-17",
+   "body": "When adding, removing, and adding again with IndexIDMap, the indices get out of sync:\r\n\r\n```python\r\nIn [1]: import faiss\r\n   ...: import numpy as np\r\n   ...: X = np.random.randn(10,10).astype(np.float32)\r\n   ...: idx = np.array([0,10,20,30,40,5,15,25,35,45], np.int64)\r\n   ...: remove_set = np.array([10,30], dtype=np.int64)\r\n   ...: index = faiss.index_factory(10,'IDMap,Flat')\r\n   ...: index.add_with_ids(X[:5,:], idx[:5])\r\n   ...: index.remove_ids(remove_set)\r\n   ...: index.add_with_ids(X[5:,:], idx[5:])\r\n   ...: for i in range(10):\r\n   ...:     if idx[i] in remove_set:\r\n   ...:         print('_')\r\n   ...:         continue\r\n   ...:     print(index.search(X[i,:][np.newaxis,:].astype(np.float32), 1)[1][0,0])\r\n   ...:     \r\n0\r\n_\r\n20\r\n_\r\n40\r\n30\r\n40\r\n5\r\n15\r\n25\r\n```\r\n\r\nThe problem is in this function: https://github.com/facebookresearch/faiss/blob/8e3dc6f2b0b736d043370eb1ee23892bcf2838b9/MetaIndexes.cpp#L95-L113\r\n\r\nThere should be a `id_map.resize(ntotal)` call at line 112. What happens is that the entries are shifted, but `id_map` still thinks that it has its original size. So when new entries are added with `push_back`, they're added too far down the vector and are in the wrong place."
+  },
+  {
+   "title": "IndexBinaryIVF::reconstruct_n uses d instead of code_size and corrupts binary reconstruction output",
+   "url": "https://github.com/facebookresearch/faiss/issues/5386",
+   "state": "closed",
+   "comments": 1,
+   "created": "2026-07-07",
+   "body": "## Summary\n\n`IndexBinaryIVF::reconstruct_n()` writes reconstructed binary vectors using `d` as a byte stride. For binary indexes, `d` represents the number of bits, while reconstruction buffers are sized in bytes as `ni * d / 8`.\n\nAs a result, `IndexBinaryIVF.reconstruct_n()` returns incorrect compact output through the Python API and may write beyond the bounds of the caller-provided reconstruction buffer.\n\n## Bug type\n\nIncorrect result \n\n## Environment\n\n* FAISS version: 1.14.2\n* Python version: 3.13.9\n* OS: Windows 11\n\n## Expected behavior\n\n`IndexBinary::reconstruct_n` specifies that the output buffer size should be `ni * d / 8`.\n\nThe Python API for binary indexes allocates reconstruction output as:\n\n```python\nnp.empty((ni, self.code_size), dtype=np.uint8)\n```\n\nTherefore, `IndexBinaryIVF.reconstruct_n(i0, ni)` should write each reconstructed binary vector contiguously using:\n\n```cpp\nstride = code_size;  // d / 8 bytes\n```\n\nFor the reproducer below, `index.reconstruct_n(0, 3)` should return exactly:\n\n```text\n[[ 0  1  2  3  4  5  6  7]\n [ 8  9 10 11 12 13 14 15]\n [16 17 18 19 20 21 22 23]]\n```\n\n## Actual behavior\n\nOnly the first vector appears in the compact Python output. Subsequent vectors are not written at offsets `8` and `16`, but instead appear at offsets `64` and `128`, because `d` is used as a byte stride.\n\nThis leads to incorrect reconstruction results and may cause writes beyond the intended buffer region.\n\n## Minimal reproducer\n\n```python\nimport faiss\nimport numpy "
+  }
+ ],
+ "faiss_hnsw_recall": [
+  {
+   "title": "We propose a simple yet efficient optimization that we hope to implement in Faiss.",
+   "url": "https://github.com/facebookresearch/faiss/issues/4326",
+   "state": "open",
+   "comments": 10,
+   "created": "2025-05-02",
+   "body": "Hello, we are a research team from Donghua University. On May 20th, at the ICDE conference, we will present our paper titled \"Boosting Accuracy and Efficiency for Vector Retrieval with Local Scaling Graph.\"\nThe paper introduces a method called **LSG (Local Scaling Graph)**, which optimizes several widely-used ANNS algorithms (including HNSW, NSG, and DiskANN, among others) with just a dozen lines of core code. Our approach achieves **nearly two orders of magnitude improvement in query efficiency across 12 real-world datasets.** \nWe have provided the open-source implementation of LSG based on Faiss-1.5.0 on GitHub (https://github.com/19-hanhan/LSG), with the paper stored in the root directory of the project. Currently, our method has been integrated into Huawei\u2019s openGauss and Infiniflow\u2019s Infinity.\nIf you find this method interesting, we would be delighted to see LSG implemented in Faiss. If you have any other questions, feel free to contact me via email at hanhan_708@163.com."
+  },
+  {
+   "title": "Clarifications on `Indexing 1G vectors` results",
+   "url": "https://github.com/facebookresearch/faiss/issues/1223",
+   "state": "closed",
+   "comments": 4,
+   "created": "2020-05-19",
+   "body": "# Question\r\nFor the plots in \r\nhttps://github.com/facebookresearch/faiss/wiki/Indexing-1G-vectors\r\nFor example let's focus on the plot for `bigann1B, 64 bytes / code`\r\n\r\n### Question1) Why there are multiple data points for each index_factory string?\r\nFor certain index_factory string, (eg `OPQ64_128,IVF1048576_HNSW32,PQ64`), what parameter I would change to get data points for different `recall@1` and `search time per query`? It is just `nprobe`?\r\n\r\n### Question2) the relationship between `RR128,IVF4194304_HNSW32,SQ4` and the title `64 bytes / code`\r\nFor example, in `bigann1B, 64 bytes / code` plot, I see data points for, `RR128,IVF4194304_HNSW32,SQ4`. Is there any relation between `RR128,IVF4194304_HNSW32,SQ4` and `64 bytes / code`?\r\nOr is `RR128,IVF4194304_HNSW32,SQ4`  just there in the plot just for comparison?\r\nI want to confirm this, in order to confirm my understanding of `index_factory` is correct."
+  },
+  {
+   "title": "HNSW auto tune doesn't work",
+   "url": "https://github.com/facebookresearch/faiss/issues/419",
+   "state": "closed",
+   "comments": 4,
+   "created": "2018-04-25",
+   "body": "# Summary\r\n\r\nHNSW auto tune doesn't work. Following exception is thrown:\r\n`AutoTune.cpp:520: ParameterSpace::set_index_parameter:could not set parameter efSearch`\r\n\r\n# Platform\r\n\r\nOS: CentOS 7.5, x86_64\r\n\r\nFaiss version: ed809ce183ba549b4e87c15ab9ab86db05e8bcec\r\n\r\nRunning on :\r\n- [X] CPU\r\n\r\n# Reproduction instructions\r\n\r\nOpen demo_sift1M.cpp, change the index_key line to:\r\n\r\n`    const char* index_key = \"IVF4096_HNSW32,PQ32\";\r\n`\r\n\r\n```\r\n[0.000 s] Loading train set\r\n[0.032 s] Preparing index \"IVF4096_HNSW32,PQ32\" d=128\r\n[0.033 s] Training on 100000 vectors\r\nWARNING clustering 100000 points to 4096 centroids: please provide at least 159744 training points\r\n[58.968 s] Loading database\r\n[59.166 s] Indexing database, size 1000000*128\r\n[69.673 s] Loading queries\r\n[69.674 s] Loading ground truth for 10000 queries\r\n[69.677 s] Preparing auto-tune criterion 1-recall at 1 criterion, with k=100 nq=10000\r\n[69.679 s] Preparing auto-tune parameters\r\n[69.679 s] Auto-tuning over 3 parameters (6240 combinations)\r\nterminate called after throwing an instance of 'faiss::FaissException'\r\n  what():  Error in virtual void faiss::ParameterSpace::set_index_parameter(faiss::Index*, const string&, double) const at AutoTune.cpp:520: ParameterSpace::set_index_parameter:could not set parameter efSearch\r\n  0/500: cno=0 nprobe=1,efSearch=4,ht=2 bounds [perf<=1.000 t>=0.000] Aborted (core dumped)\r\n\r\n\r\n```"
+  },
+  {
+   "title": "IndexHNSW ignores SearchParameters.sel when bounded_queue=False",
+   "url": "https://github.com/facebookresearch/faiss/issues/5504",
+   "state": "closed",
+   "comments": 2,
+   "created": "2026-08-06",
+   "body": "## Summary\n\nWhen searching an `IndexHNSW` index with `SearchParameters.sel`, the ID selector works correctly when `bounded_queue=True`.\n\nHowever, when `bounded_queue=False`, the selector is ignored and the search may return IDs that are explicitly excluded.\n\nThis violates the contract of `SearchParameters.sel`: when it is non-null, only IDs accepted by the selector should be returned.\n\n## Bug type\n\nIncorrect result\n\n## Environment\n\n```text\nFAISS version: 1.14.2\nPython: 3.x\nOS: Windows\nInstallation: pip faiss-cpu\nIndex: IndexHNSWFlat\nMetric: METRIC_L2\n```\n\n## Minimal reproducer\n\n```python\nimport faiss\nimport numpy as np\n\nxb = np.array(\n    [\n        [0.0, 0.0],\n        [10.0, 0.0],\n        [20.0, 0.0],\n        [30.0, 0.0],\n    ],\n    dtype=np.float32,\n)\n\nxq = np.array([[0.0, 0.0]], dtype=np.float32)\n\nindex = faiss.IndexHNSWFlat(2, 4, faiss.METRIC_L2)\nindex.hnsw.efConstruction = 40\nindex.add(xb)\n\n# Only ID 1 is allowed.\nselector = faiss.IDSelectorRange(1, 2)\n\nparams = faiss.SearchParametersHNSW(\n    efSearch=40,\n    bounded_queue=False,\n    sel=selector,\n)\n\nD, I = index.search(xq, 1, params=params)\n\nprint(\"labels:\", I.tolist())\nprint(\"distances:\", D.tolist())\n\nassert I.tolist() == [[1]]\nassert D.tolist() == [[100.0]]\n```\n\n## Expected behavior\n\nBecause the selector only allows ID 1, the result should be:\n\n```text\nlabels: [[1]]\ndistances: [[100.0]]\n```\n\nEvery returned label must satisfy:\n\n```text\nsel->is_member(label)\n```\n\nThis requirement should not depend on the value of `bound"
+  },
+  {
+   "title": "How to achieve good recall for Product Quantization ",
+   "url": "https://github.com/facebookresearch/faiss/issues/742",
+   "state": "closed",
+   "comments": 2,
+   "created": "2019-03-11",
+   "body": "Hi, I am using HNSW_PQ256 and get a good method for searching. Recall for 20 nearest neighbours is around 50% and the query time is fast.\r\nI am trying to build the code from scratch. However, I am wondering how the approximate distance based on product quantization can show reliable results. My concern is that the data has been compressed a lot and the distance will be affected significantly.\r\nI have tried to use Inverted index and residual but the performance is so low (less than 5%). Even though I can find a set of points located in Voronoi cells near the query point, I can not use the distance generated by PQ to get the acceptable list of nearest neighbours. So my questions are:\r\n- Do you use any other method from PQ (such as OPQ or Polysemous) in HNSW_PQ256 to retain the recall?\r\n- What is the most important factor to reach a good recall? Is that the K-means process in quantization? Should I increase the number of iteration in K-means of PQ to increase recall"
+  },
+  {
+   "title": "IndexBinaryHNSW violates Hamming XOR invariance with parallel HNSW construction",
+   "url": "https://github.com/facebookresearch/faiss/issues/5387",
+   "state": "closed",
+   "comments": 1,
+   "created": "2026-07-08",
+   "body": "## Summary\n\n`IndexBinaryHNSW` can return different Top-k results after applying the same XOR mask to every binary database vector and query.\n\nThis transform preserves every Hamming distance exactly:\n\n```text\npopcount((q ^ mask) ^ (r ^ mask)) == popcount(q ^ r)\n```\n\nTherefore, the Top-k IDs and Hamming distances should remain unchanged.\n\n`IndexBinaryFlat` confirms the invariant on the same data, returning identical Top-10 IDs and distances before and after the XOR transform. However, `IndexBinaryHNSW` returns different Top-k IDs and distances.\n\nThis suggests a correctness issue in the binary HNSW add/search behavior under this Hamming-isometric transform.\n\n## Metamorphic Relation\n\n**MR:** Binary XOR mask invariance for Hamming search\n\nGiven a binary query `q`, binary database vector `r`, and mask `m`:\n\n```text\nHamming(q ^ m, r ^ m) == Hamming(q, r)\n```\n\nApplying the same XOR mask to all database vectors and all queries is an isometry of Hamming space. Search results should therefore be identical, including both Top-k IDs and distances.\n\n## Environment\n\nObserved through the Faiss Python API with:\n\n```python\nfaiss.omp_set_num_threads(4)\n```\n\nIndex configuration:\n\n```python\nIndexBinaryHNSW(d=8, M=16)\nefConstruction = 4\nefSearch = 2\n```\n\nThe issue is easiest to reproduce with a small binary dataset and low HNSW construction/search parameters.\n\n## Minimal Reproduction\n\n```python\nimport faiss\nimport numpy as np\n\nfaiss.omp_set_num_threads(4)\n\nd = 8\nk = 5\nmask = np.array([[39]], dtype"
+  },
+  {
+   "title": "How to update efSearch  Lesson Learned:  ParameterSpace().set_index_parameter(index, \"quantizer_efSearch\")",
+   "url": "https://github.com/facebookresearch/faiss/issues/3041",
+   "state": "closed",
+   "comments": 1,
+   "created": "2023-09-04",
+   "body": "# Summary\r\n\r\nI'm not sure if I'm updating efSearch correctly.\r\n\r\n```\r\nndex65536_ivf = faiss.extract_index_ivf(index65536)\r\nindex65536_ivf.nprobe=1024\r\nindex65536_ivf.efSearch=256\r\n```\r\n\r\nThe index was \"OPQ64_512,IVF65536_HNSW,PQ64\" and the recall rate is very inferior to \"OPQ64_512,IVF65536,PQ64\"\r\n\r\nI was hoping boosting the efSearch would help, but I am not sure if I am doing it right.\r\n\r\nIt's (6800000,1024) embeddings\r\n\r\n<!-- Facebook has a bounty program for the safe disclosure of security bugs. In\r\nthose cases, please go through the process outlined on that page and do not\r\nfile a public issue. -->\r\n\r\n# Platform\r\n\r\n<!-- if the question/problem is not platform-specific, please ignore this -->\r\n\r\nOS: <!-- e.g. macOS 10.13.3 -->\r\n\r\nFaiss version: 1.7.4<!-- git commit, e.g. 56383610bcb982d6591e2e2bea3516cb7723e04a -->\r\n\r\nInstalled from: anaconda <!-- anaconda? compiled by yourself ? --> \r\n\r\nFaiss compilation options: <!-- e.g. using MKL with compile flags ... -->\r\n\r\nRunning on:\r\n- [ x] CPU\r\n- [x ] GPU\r\n\r\nInterface: \r\n- [ ] C++\r\n- [ x] Python\r\n\r\n# Reproduction instructions\r\n\r\n<!-- Please provide specific and comprehensive instructions to reproduce the\r\ndescribed behavior. -->\r\n\r\n<!-- Please *do not* post screenshots of logs. They are not searchable. Copy/paste \r\nthe text or make a gist if the text is too bulky. --> \r\n"
+  },
+  {
+   "title": "The recall will be low when efSearch is smaller than k",
+   "url": "https://github.com/facebookresearch/faiss/issues/1244",
+   "state": "closed",
+   "comments": 1,
+   "created": "2020-06-05",
+   "body": "When `efSearch` is smaller thant `k`, `ef` will set to `k`\r\nhttps://github.com/facebookresearch/faiss/blob/e8c8db85aeb72d80f4c83e8003ca778fab575092/impl/HNSW.cpp#L692\r\n\r\nBut here you still use `efSearch`, my experiments find that this will make the recall lower than when `efSearch` is set to `k`\r\nhttps://github.com/facebookresearch/faiss/blob/e8c8db85aeb72d80f4c83e8003ca778fab575092/impl/HNSW.cpp#L587"
+  }
+ ],
+ "qdrant_inconsistent": [
+  {
+   "title": "Inconsistent results when querying with filters",
+   "url": "https://github.com/qdrant/qdrant/issues/2374",
+   "state": "closed",
+   "comments": 26,
+   "created": "2023-08-02",
+   "body": "Hello,\r\n\r\nWhen executing the same query on the same index (unchanged) multiple times, the results are not consistent (not the same) like if the query execution wasn't deterministic.\r\n\r\nIt's very difficult in my context to identify the root cause (as I have something like 10+ must and must not filters in my query) but I think I found a minimal exemple that reproduce the issue (see below). It seems to be related to the filtering (didn't notice the issue without filters in my query).\r\n\r\nNote that the exemple give small variations (in term of score and occurence) but it my case it happens more frequently and sometime the score is very different (like 0.99 for the first execution of the query and -0.01 for the second execution for the top result).\r\n\r\n\r\n## Current Behavior\r\nResults returned are not consistent, I don't have the same results for each execution\r\n\r\n## Steps to Reproduce\r\n1. Create an index and add random data using this Python script\r\n\r\n```python\r\nfrom random import randint\r\n\r\nimport numpy as np\r\nfrom qdrant_client import QdrantClient\r\nfrom qdrant_client.http.models import VectorParams\r\n\r\nqdrant_client: QdrantClient = QdrantClient('127.0.0.1', port=6333, grpc_port=6334, prefer_grpc=True)\r\nqdrant_client.recreate_collection(\r\n    collection_name='qdrant_issue',\r\n    vectors_config=VectorParams(\r\n        size=512,\r\n        distance='Cosine'\r\n    ),\r\n    on_disk_payload=False\r\n)\r\npossible_languages = [\r\n    ['fr'],\r\n    ['es'],\r\n    ['en'],\r\n    ['fr', 'es'],\r\n    ['fr', '"
+  },
+  {
+   "title": "Inconsistent data in cluster",
+   "url": "https://github.com/qdrant/qdrant/issues/7079",
+   "state": "closed",
+   "comments": 18,
+   "created": "2025-08-18",
+   "body": "<!--- Provide a general summary of the issue in the Title above -->\n\n## Current Behavior\n\nData is returned inconsistently from different nodes.\n\n```\n$ for i in 1 2 3 4 5 6; do curl -sk  -H \"Authorization: Bearer $QDRANT_TOKEN\" https://qdrant$i:6333/collections/OUR_COLLECTION/points  -H \"Content-Type: application/json\" -d '{ \"ids\": [\"d70af059-60ea-3d5e-97da-32bf3ff2dbcd\"],  \"with_payload\": true }'  | jq '.result[0].payload.LOCATION_COUNTRY_ID'; done\n\"3\"\n\"1\"\n\"1\"\n\"3\"\n\"1\"\n\"1\"\n```\n\nTrying to update this field, causes only those `3`s to be changed to new value. But for some nodes, value `1` is still the same wrong.\n\nWhat's worse, it's random which node returns `\"3\"` and which `\"1\"` except Node 1 and Node 4.\n\nI was trying to find out in which shard this point is placed with the help of this Python code (I have no idea if this is correct way to find out this to be honest...):\n\n```py\nimport mmh3  # pip install mmh3\nimport sys\n\npoint_id = \"d70af059-60ea-3d5e-97da-32bf3ff2dbcd\"\nshard_count = 12  # all collections have 12 shards as per documentation recommendation for future expansion\n\nshard_index = mmh3.hash(point_id, signed=False) % shard_count\nprint(f\"Shard index: {shard_index}\")\n```\n\nAnd this returns me info that this point should be on Shard 4 which exists on Node 1 and Node 4.\n\nThe problem occurs for random points, we can not find any pattern. For some point we can update (upsert) data and it works through all the nodes, for some points problem is similar.\n\nWe are connecting to the"
+  },
+  {
+   "title": "Data inconsistent after migration",
+   "url": "https://github.com/qdrant/qdrant/issues/5101",
+   "state": "closed",
+   "comments": 15,
+   "created": "2024-09-18",
+   "body": "## Qdrant version\r\nv1.10.1\r\n\r\nI have 2 collections in a 2-node cluster, and I wrote a python script to migrate data from collection 1 to collection 2, after migration, when I performing search on collection 2, I got inconsistency result when request deliver to different node.\r\n\r\n## Current Behavior\r\n### Cluster nodes: 2\r\n### Collection 1 configuration:\r\n1. Sharding method: auto\r\n2. Shard number: 2\r\n### Collection 2 configuration\r\n1. Sharding method: custom\r\n2. Sharding number: 1\r\n3. Shard keys: [shard_0 to shard_29], total 30 shard keys.\r\n4. Replica factor: 2\r\n\r\nI wrote a python script to read points from collection 1 and transform the format of payload, then write to collection 2 (by batch, batch size 15).\r\n\r\nAfter migration, I got some issue when searching collection 2:\r\n1. Some data cannot be searched, but when scroll it, we can find the data, we compared the vectors, they are same. If add exact param, we can get the result.\r\n2. Some data are consistent in 2 nodes, when search comes to node 1, it works fine, but when comes to node 2, it return empty result.\r\n3. Some data are consistent in 2 nodes, when search comes to node 1, it return some result, but when comes to node 2, it return different results. If I set consistency=2 for searching, it return empty results.\r\n\r\nI checked the cluster API, raft term/commit are same on 2 nodes.\r\n\r\n\r\n## Steps to Reproduce\r\n1. Migrate data from old collection to new collection.\r\n2. Perform search.\r\n\r\n<!--- Please make sure to include the "
+  },
+  {
+   "title": "Possibility to query multiple collections in a single query",
+   "url": "https://github.com/qdrant/qdrant/issues/1322",
+   "state": "open",
+   "comments": 13,
+   "created": "2023-01-06",
+   "body": "**Is your feature request related to a problem? Please describe.**\r\nThe use case we would like to tackle is that in two different collections we have items that are complementary to each other. One collection contains metadata that can be useful to query the points in the other collection. As exemple, filter the results of a query run on one collection and filter the results accordingly to the metadata contained in the other collection.\r\n\r\n**Describe the solution you'd like**\r\nI can imagine a query that looks like:\r\n```\r\nPOST /collections/{collection_name_1},{collection_name_2}/points/search\r\n\r\n{\r\n    \"filter\": {\r\n        \"must\": [\r\n            {\r\n               \"collection_name_1\": {\r\n                    \"key\": \"city\",\r\n                    \"match\": {\r\n                        \"value\": \"London\"\r\n                    }\r\n                }\r\n            },\r\n            {\r\n                \"collection_name_2\": {\r\n                    \"key\": \"inhabitants\",\r\n                    \"range\": {\r\n                        \"gt\": null,\r\n                        \"gte\": 1000,\r\n                        \"lt\": null,\r\n                        \"lte\": 4500\r\n                    }\r\n                }\r\n            }\r\n        ]\r\n    },\r\n    \"params\": {\r\n        \"hnsw_ef\": 128,\r\n        \"exact\": false\r\n    },\r\n    \"collection_name_1\": {\r\n        \"vector\": [0.2, 0.1, 0.9, 0.7],\r\n        \"limit\": 3\r\n    }\r\n}\r\n```\r\n\r\nIn this example we want the similar vectors in the collections `collection_name_1` and we filter on t"
+  },
+  {
+   "title": "About Add fuzzy Match Support for Text Fields in Payload Filter",
+   "url": "https://github.com/qdrant/qdrant/issues/8278",
+   "state": "open",
+   "comments": 8,
+   "created": "2026-03-03",
+   "body": "## Overview\n\nThis issue proposes adding **fuzzy match** support for text fields within the payload filter section. Fuzzy matching allows queries to tolerate minor spelling variations, typos, and OCR errors by leveraging the [Levenshtein distance](https://en.wikipedia.org/wiki/Levenshtein_distance) metric to find terms that are \"close enough\" to the query term.\n\nThis is a purely additive change \u2014 all existing query types and behaviors remain unaffected.\n\n---\n\n## Motivation\n\nCurrently, payload filter text matching requires an exact token match. This is too strict in many real-world scenarios:\n\n- User-submitted search queries may contain typos (e.g., `\"recieve\"` instead of `\"receive\"`).\n- Data ingested from OCR pipelines may have character-level noise.\n- Multilingual content may have transliteration inconsistencies.\n\nFuzzy matching addresses all of these cases by expanding a query term into a set of candidate terms within a configurable edit distance.\n\n---\n\n## Solution\n\n### 1. New Query Type Variants\n\nWe will extend `TextQueryType` with new fuzzy variants. These mirror the existing variants but apply fuzzy term expansion before matching:\n\n| New Variant     | Fuzzy counterpart of |\n|-----------------|----------------------|\n| `FuzzyText`     | `Text` (all tokens must match) |\n| `FuzzyTextAny`  | `TextAny` (any token must match) |\n| `FuzzyPhrase`   | `Phrase` (ordered proximity match) |\n\n### 2. Extending the Query Dispatch Branch\n\nThe core change is to add new arms to the existing"
+  },
+  {
+   "title": "Why doesn't NFS work with Qdrant? It works with PostgreSQL.",
+   "url": "https://github.com/qdrant/qdrant/issues/6135",
+   "state": "open",
+   "comments": 8,
+   "created": "2025-03-10",
+   "body": "According to the [qdrant docs](https://qdrant.tech/documentation/guides/installation/#storage), Qdrant should not be run on NFS:\n\n> For persistent storage, Qdrant requires block-level access to storage devices with a [POSIX-compatible file system](https://www.quobyte.com/storage-explained/posix-filesystem/). Network systems such as [iSCSI](https://en.wikipedia.org/wiki/ISCSI) that provide block-level access are also acceptable. Qdrant won\u2019t work with [Network file systems](https://en.wikipedia.org/wiki/File_system#Network_file_systems) such as NFS\n\nIs there a specific technical reason why Qdrant will not work with NFS? \n\nI'm still a beginner to Qdrant, but my guess would be that if a fully ACID compliant RDBMS can be safely run on NFS, then Qdrant should also work.\n\n"
+  },
+  {
+   "title": "Indexed vector count is 0",
+   "url": "https://github.com/qdrant/qdrant/issues/2659",
+   "state": "closed",
+   "comments": 8,
+   "created": "2023-09-14",
+   "body": "Hi Team,\r\n\r\nI have created collection with below configuration\r\n\r\n```\r\n{\r\n  \"result\": {\r\n    \"status\": \"green\",\r\n    \"optimizer_status\": \"ok\",\r\n    \"vectors_count\": 10373,\r\n    \"indexed_vectors_count\": 0,\r\n    \"points_count\": 10373,\r\n    \"segments_count\": 10,\r\n    \"config\": {\r\n      \"params\": {\r\n        \"vectors\": {\r\n          \"size\": 1536,\r\n          \"distance\": \"Cosine\"\r\n        },\r\n        \"shard_number\": 2,\r\n        \"replication_factor\": 2,\r\n        \"write_consistency_factor\": 1,\r\n        \"on_disk_payload\": false\r\n      },\r\n      \"hnsw_config\": {\r\n        \"m\": 16,\r\n        \"ef_construct\": 100,\r\n        \"full_scan_threshold\": 10000,\r\n        \"max_indexing_threads\": 0,\r\n        \"on_disk\": false\r\n      },\r\n      \"optimizer_config\": {\r\n        \"deleted_threshold\": 0.2,\r\n        \"vacuum_min_vector_number\": 1000,\r\n        \"default_segment_number\": 8,\r\n        \"max_segment_size\": 800000,\r\n        \"memmap_threshold\": 800000,\r\n        \"indexing_threshold\": 20000,\r\n        \"flush_interval_sec\": 5,\r\n        \"max_optimization_threads\": 1\r\n      },\r\n      \"wal_config\": {\r\n        \"wal_capacity_mb\": 32,\r\n        \"wal_segments_ahead\": 0\r\n      },\r\n      \"quantization_config\": {\r\n        \"binary\": {\r\n          \"always_ram\": true\r\n        }\r\n      }\r\n    },\r\n    \"payload_schema\": {}\r\n  },\r\n  \"status\": \"ok\",\r\n  \"time\": 0.001475618\r\n}\r\n```\r\n\r\nindexed_vectors_count value is 0 \r\n\r\nNot sure what i am doing wrong here\r\n\r\nCan someone help please\r\n"
+  },
+  {
+   "title": "Docs suggestion: Vector store failure mode checklist for RAG users (ingest, index, drift)",
+   "url": "https://github.com/qdrant/qdrant/issues/8130",
+   "state": "closed",
+   "comments": 6,
+   "created": "2026-02-14",
+   "body": "Hi maintainers, thank you for Qdrant.\n\nProblem Description\nMany RAG failures blamed on the LLM are actually vector store level issues:\ningestion incomplete, index fragmentation, payload filters excluding correct docs,\ndimension mismatch, update skew, and silent drift after re ingest.\nUsers need a checklist to detect these early.\n\nDesired Solution you'd like\nAdd a docs page: \u201cVector store failure mode checklist for RAG\u201d.\nInclude:\n1) symptom patterns (what users see in answers and retrieval)\n2) what to check in Qdrant (collections, payload filters, indexing, update patterns)\n3) minimal remediation steps and safe practices\n\nI can contribute a docs PR if you agree.\n\nAlternatives Considered\nScattered troubleshooting answers across issues.\nHard to reuse and not systematic.\n\nAdditional Context\nI have a compact failure map used in RAG debugging.\nI can adapt it into a Qdrant focused checklist, docs only.\n\nhttps://github.com/onestardao/WFGY/blob/main/ProblemMap/README.md"
+  }
+ ],
+ "qdrant_missing_points": [
+  {
+   "title": "cluster got into an unrecoverable state after deleting and recreating a collection",
+   "url": "https://github.com/qdrant/qdrant/issues/1662",
+   "state": "closed",
+   "comments": 33,
+   "created": "2023-04-04",
+   "body": "## Current Behavior\r\nCalls to, scroll, insert points, create collections and delete collections start to timeout. After a little bit all calls start 500ing with ` too many replicas returned an error` Errors from logs in detailed description.\r\n\r\n## Steps to Reproduce\r\n1. Have a couple collections loaded with 10k+ points each\r\n2. Have 4 nodes in cluster configuration\r\n3. Delete collections\r\n4. Create collections with same name\r\n5. Start reinserting points*\r\n\\* we insert about 25 points per call. concurrently between multiple application servers. \r\n\r\n## Expected Behavior\r\nI should be able to delete and recreate indexes without consensus algorithm putting cluster into a unrecoverable state.\r\n\r\n## Possible Solution\r\nThis isnt a fix but as a work around Im going to rewrite the index rebuild to create a new collection and cut over to it. Its a better implementation but was trying to avoid versioning collections.\r\n\r\nHow we recovered from this incident was uninstalling the helm application, removing the persistent volume claims, installing the helm application. Then updating running application server to point at the new empty cluster. Rebuild each collection one at a time. \ud83d\ude22 \r\n\r\n## Context (Environment)\r\nOur application workflow is primarily search based. The search cluster returning no data or timing out means that we had a site wide outage for about an hour.\r\n\r\nQdrant 1.1.0, 4x nodes in kube.\r\ncollections\r\nshard 8\r\nreplication_factor 2\r\n\r\n\r\n## Detailed Description\r\n```\r\n[2023-04-04"
+  },
+  {
+   "title": "terminate called without an active exception terminate called recursively terminate called recursively",
+   "url": "https://github.com/qdrant/qdrant/issues/4195",
+   "state": "closed",
+   "comments": 28,
+   "created": "2024-05-07",
+   "body": "Our service has been running fine, however, it has recently started to experience the following problem:\r\n\r\n![image](https://github.com/qdrant/qdrant/assets/79587688/35e21de8-6cc3-4842-846b-38ec0bbd35f3)\r\n\r\nIt will appear every time we restart\r\n\r\n![image](https://github.com/qdrant/qdrant/assets/79587688/ee066192-9cf1-45c0-8d64-f55293fe26c2)\r\n\r\nFrom docker, he is running fine, but cannot be accessed through any port\r\n\r\n![image](https://github.com/qdrant/qdrant/assets/79587688/a927a6b3-5075-4024-b137-2a8c03653978)\r\n"
+  },
+  {
+   "title": "TTL",
+   "url": "https://github.com/qdrant/qdrant/issues/1327",
+   "state": "open",
+   "comments": 23,
+   "created": "2023-01-09",
+   "body": "It would be good for many reasons to have a TTL feature. For example, to automatically remove time-expiring results."
+  },
+  {
+   "title": "[rocksdb] Investigate compression scheme for RocksDB",
+   "url": "https://github.com/qdrant/qdrant/issues/804",
+   "state": "closed",
+   "comments": 23,
+   "created": "2022-07-12",
+   "body": "**Is your feature request related to a problem? Please describe.**\r\nA quick profiling session on a heavy write workload shows that Snappy can take up to 2% of CPU time.\r\n![snappy](https://user-images.githubusercontent.com/606963/178513624-622407d2-c69f-49d8-83e8-58237b5a3a02.png)\r\n\r\nThe official doc says:\r\n\r\n```\r\nUse options.compression to specify the compression to use. \r\nBy default it is Snappy. We believe LZ4 is almost always better than Snappy.\r\n```\r\nhttps://github.com/facebook/rocksdb/wiki/Compression\r\n\r\n**Describe the solution you'd like**\r\nInvestigate if it can be beneficial to switch to another compression scheme.\r\n\r\ne.g.\r\n\r\n```rust\r\noptions.set_compression_type(DBCompressionType::Lz4);\r\n```\r\n"
+  },
+  {
+   "title": "Verbose logging to indicate when optimizer / vacuum / indexing process is triggered, plus number of workers as they are dynamically allocated. ",
+   "url": "https://github.com/qdrant/qdrant/issues/3926",
+   "state": "closed",
+   "comments": 23,
+   "created": "2024-03-27",
+   "body": "**Is your feature request related to a problem? Please describe.**\r\n\r\nETL Indexing operation is preventing con-current searching.\r\n\r\nIn its most basic form, a single indexing operation involves deleting a set of points from a collection, before inserting their replacements. This represents a set of document pages that have changed. Multiple indexing operations can be executed at the same time. Both the point deletion and insertion calls (made via the Python qdrant-client package) DO NOT wait for their task to complete and instead just check for an acknowledged message (i.e. we don't want to hold up the ETL process and qdrant can just work its way through its back log).\r\n\r\nHowever, if an attempt is made to carry out a search on the the same collection targeted by the indexing operation, the search either takes a very long time to complete (> 30s), or it just gives up and times out. If an indexing operation is not being undertaken, the same search returns more or less instantaneously. \r\n\r\nIf the point deletion and insertion calls are changed to wait until their respective calls are completed the log output from qdrant seems to suggest that the deletion operation is the one taking a considerable amount of time to complete (30+s). So let's consider the possible issues that might cause this...\r\n\r\n- Is the filter used by the point deletion targeting indexed fields from the payload? Yes its targeting the field 'pageId':\r\n\r\nCollection details:\r\n\r\n{\r\n\t\"result\": {\r\n\t\t\"status\": \"green\","
+  },
+  {
+   "title": "on_disk payload is not decreasing RAM on system ",
+   "url": "https://github.com/qdrant/qdrant/issues/3956",
+   "state": "open",
+   "comments": 20,
+   "created": "2024-04-02",
+   "body": "Hi , I am trying out mnist dataset with rust client, and I have qdrant release code v1.8.1 and built from source with command\r\n``` \r\ncargo build \r\ncargo run\r\n```\r\nI have configured on_disk_payload = true, but I have seen RAM is increasing with the number of rows in the dataset, I have started to insert 100 rows to 10k, 20k, 30k\r\nIdeally RAM shouldn't increase as parameter is already configured\r\n\r\nIt looks like on_disk_payload itself is not working "
+  },
+  {
+   "title": "After I insert the data, I do a search, and the search results are empty",
+   "url": "https://github.com/qdrant/qdrant/issues/1722",
+   "state": "closed",
+   "comments": 20,
+   "created": "2023-04-13",
+   "body": "After I insert the data, I do a search, and the search results are empty.\r\n\r\ncreate Collection\r\n```\r\n\t\t\tif createCollectionRes, err = qdrantClient.CollectionClient.Create(context.Background(), &qdrant.CreateCollection{\r\n\t\t\t\tCollectionName: collectionName,\r\n\t\t\t\tVectorsConfig: &qdrant.VectorsConfig{Config: &qdrant.VectorsConfig_Params{\r\n\t\t\t\t\tParams: &qdrant.VectorParams{\r\n\t\t\t\t\t\tSize:     512,\r\n\t\t\t\t\t\tDistance: qdrant.Distance_Euclid,\r\n\t\t\t\t\t},\r\n\t\t\t\t}},\r\n\t\t\t\tOnDiskPayload: &onDisk,\r\n\t\t\t\tHnswConfig: &qdrant.HnswConfigDiff{\r\n\t\t\t\t\tOnDisk:   &onDisk,\r\n\t\t\t\t\tPayloadM: &payloadM,\r\n\t\t\t\t\tM:        &m,\r\n\t\t\t\t},\r\n\t\t\t\tOptimizersConfig: &qdrant.OptimizersConfigDiff{\r\n\t\t\t\t\tMemmapThreshold: &memmapThreshold,\r\n\t\t\t\t},\r\n\t\t\t\tQuantizationConfig: &qdrant.QuantizationConfig{\r\n\t\t\t\t\tQuantization: &qdrant.QuantizationConfig_Scalar{\r\n\t\t\t\t\t\tScalar: &qdrant.ScalarQuantization{\r\n\t\t\t\t\t\t\tType:      qdrant.QuantizationType_Int8,\r\n\t\t\t\t\t\t\tAlwaysRam: &alwaysRam,\r\n\t\t\t\t\t\t},\r\n\t\t\t\t\t},\r\n\t\t\t\t},\r\n\t\t\t},\r\n\t\t\t); err != nil {\r\n\t\t\t\tlogger.Error(err.Error())\r\n\r\n\t\t\t}\r\n```\r\n\r\ncreate index\r\n```\r\n\t\t\tfieldIndexType := qdrant.FieldType_FieldTypeKeyword\r\n\t\t\tvar createIndexRes *qdrant.PointsOperationResponse\r\n\t\t\tif createIndexRes, err = qdrantClient.PointClient.CreateFieldIndex(context.Background(), &qdrant.CreateFieldIndexCollection{\r\n\t\t\t\tCollectionName: collectionName,\r\n\t\t\t\tFieldName:      \"user_id\",\r\n\t\t\t\tFieldType:      &fieldIndexType,\r\n\t\t\t}); err != nil {\r\n\t\t\t\tlogger.Error(err.Error())\r\n\t\t\t} else {\r\n\t\t\t\tlogger.Sugar().Info(createIn"
+  },
+  {
+   "title": "Inconsistent data in cluster",
+   "url": "https://github.com/qdrant/qdrant/issues/7079",
+   "state": "closed",
+   "comments": 18,
+   "created": "2025-08-18",
+   "body": "<!--- Provide a general summary of the issue in the Title above -->\n\n## Current Behavior\n\nData is returned inconsistently from different nodes.\n\n```\n$ for i in 1 2 3 4 5 6; do curl -sk  -H \"Authorization: Bearer $QDRANT_TOKEN\" https://qdrant$i:6333/collections/OUR_COLLECTION/points  -H \"Content-Type: application/json\" -d '{ \"ids\": [\"d70af059-60ea-3d5e-97da-32bf3ff2dbcd\"],  \"with_payload\": true }'  | jq '.result[0].payload.LOCATION_COUNTRY_ID'; done\n\"3\"\n\"1\"\n\"1\"\n\"3\"\n\"1\"\n\"1\"\n```\n\nTrying to update this field, causes only those `3`s to be changed to new value. But for some nodes, value `1` is still the same wrong.\n\nWhat's worse, it's random which node returns `\"3\"` and which `\"1\"` except Node 1 and Node 4.\n\nI was trying to find out in which shard this point is placed with the help of this Python code (I have no idea if this is correct way to find out this to be honest...):\n\n```py\nimport mmh3  # pip install mmh3\nimport sys\n\npoint_id = \"d70af059-60ea-3d5e-97da-32bf3ff2dbcd\"\nshard_count = 12  # all collections have 12 shards as per documentation recommendation for future expansion\n\nshard_index = mmh3.hash(point_id, signed=False) % shard_count\nprint(f\"Shard index: {shard_index}\")\n```\n\nAnd this returns me info that this point should be on Shard 4 which exists on Node 1 and Node 4.\n\nThe problem occurs for random points, we can not find any pattern. For some point we can update (upsert) data and it works through all the nodes, for some points problem is similar.\n\nWe are connecting to the"
+  }
+ ],
+ "qdrant_filter": [
+  {
+   "title": "Timeout on collection deletion",
+   "url": "https://github.com/qdrant/qdrant/issues/3121",
+   "state": "open",
+   "comments": 34,
+   "created": "2023-12-01",
+   "body": "Hey guys!\r\n\r\n## Current Behavior\r\n### HTTP deletion with default timeout\r\n```bash\r\ncurl -X DELETE 127.0.0.1:6333/collections/collection-to-be-deleted\r\n\r\n{\"status\":{\"error\":\"Service internal error: Waiting for consensus operation commit failed. Timeout set at: 10 seconds\"},\"time\":10.001176907}\r\n```\r\n\r\n### gRPC deletion with timeout set to 100 seconds\r\n```bash\r\ngrpcurl -plaintext -d '{\"timeout\": 100, \"collection_name\": \"collection-to-be-deleted\"}' 127.0.0.1:6334 qdrant.Collections/Delete\r\nERROR:\r\n  Code: Internal\r\n  Message: Service internal error: Waiting for consensus operation commit failed. Timeout set at: 100 seconds\r\n```\r\n\r\n## Steps to Reproduce\r\n<!--- Provide a link to a live example, or an unambiguous set of steps to -->\r\n<!--- reproduce this bug. Include code to reproduce, if relevant -->\r\n1.  Create a collection using gRPC: \r\n```bash\r\ngrpcurl -plaintext \\\r\n  -d '{\"collection_name\": \"delete-me\", \"hnsw_config\": {\"m\": 16, \"ef_construct\": 100}, \"optimizers_config\": {\"indexing_threshold\": 100000}, \"replication_factor\": 2, \"write_consistency_factor\": 2, \"vectors_config\": {\"params\": {\"size\": 512, \"distance\": \"Cosine\"}}}'  \\\r\n  localhost:6334 qdrant.Collections/Create \r\n```\r\n2. Create two integer indexes (foo, bar):\r\n```bash\r\ngrpcurl -plaintext \\\r\n  -d '{\"collection_name\": \"delete-me\", \"field_name\": \"foo\", \"field_type\": 1, \"wait\": true}' \\\r\n  localhost:6334 qdrant.Points/CreateFieldIndex\r\n```\r\n3. Fill the collection with some (415 in our case) bunch of points like in the foll"
+  },
+  {
+   "title": "TTL",
+   "url": "https://github.com/qdrant/qdrant/issues/1327",
+   "state": "open",
+   "comments": 23,
+   "created": "2023-01-09",
+   "body": "It would be good for many reasons to have a TTL feature. For example, to automatically remove time-expiring results."
+  },
+  {
+   "title": "Inconsistent data in cluster",
+   "url": "https://github.com/qdrant/qdrant/issues/7079",
+   "state": "closed",
+   "comments": 18,
+   "created": "2025-08-18",
+   "body": "<!--- Provide a general summary of the issue in the Title above -->\n\n## Current Behavior\n\nData is returned inconsistently from different nodes.\n\n```\n$ for i in 1 2 3 4 5 6; do curl -sk  -H \"Authorization: Bearer $QDRANT_TOKEN\" https://qdrant$i:6333/collections/OUR_COLLECTION/points  -H \"Content-Type: application/json\" -d '{ \"ids\": [\"d70af059-60ea-3d5e-97da-32bf3ff2dbcd\"],  \"with_payload\": true }'  | jq '.result[0].payload.LOCATION_COUNTRY_ID'; done\n\"3\"\n\"1\"\n\"1\"\n\"3\"\n\"1\"\n\"1\"\n```\n\nTrying to update this field, causes only those `3`s to be changed to new value. But for some nodes, value `1` is still the same wrong.\n\nWhat's worse, it's random which node returns `\"3\"` and which `\"1\"` except Node 1 and Node 4.\n\nI was trying to find out in which shard this point is placed with the help of this Python code (I have no idea if this is correct way to find out this to be honest...):\n\n```py\nimport mmh3  # pip install mmh3\nimport sys\n\npoint_id = \"d70af059-60ea-3d5e-97da-32bf3ff2dbcd\"\nshard_count = 12  # all collections have 12 shards as per documentation recommendation for future expansion\n\nshard_index = mmh3.hash(point_id, signed=False) % shard_count\nprint(f\"Shard index: {shard_index}\")\n```\n\nAnd this returns me info that this point should be on Shard 4 which exists on Node 1 and Node 4.\n\nThe problem occurs for random points, we can not find any pattern. For some point we can update (upsert) data and it works through all the nodes, for some points problem is similar.\n\nWe are connecting to the"
+  },
+  {
+   "title": "TurboQuant quantization (ICLR 2026)",
+   "url": "https://github.com/qdrant/qdrant/issues/8524",
+   "state": "closed",
+   "comments": 11,
+   "created": "2026-03-27",
+   "body": "**Is your feature request related to a problem? Please describe.**\n\nThe current quantization options don't give a great path for aggressive compression without big tradeoffs. Scalar is solid but tops out at 4\u00d7. Binary falls apart below 1024d. PQ needs codebook training and still underperforms at low bit-widths. If you want to push past 4\u00d7 compression on something like OpenAI 1536d embeddings, the options are limited.\n\n**Describe the solution you'd like**\n\nGoogle just published [TurboQuant](https://arxiv.org/abs/2504.19874) (ICLR 2026) and it looks like a pretty big deal for vector search. It's a data-oblivious quantization method \u2014 no codebook training needed \u2014 that compresses to 3-bit with basically no recall loss. It beat PQ on recall at every bit-width they tested.\n\nThe interesting part for Qdrant specifically: they actually benchmarked their ANN experiments on Qdrant-hosted datasets on HuggingFace (`Qdrant/dbpedia-entities-openai3-text-embedding-3-large-1536-1M` and the 3072 variant). So the results map directly to what Qdrant users are working with.\n\nThe algorithm itself is pretty simple \u2014 random rotation via Hadamard transform, scalar quantize with precomputed codebooks, then a 1-bit error correction. Codebooks can be baked in at compile time. Feels like it'd be a natural addition next to the 1.5-bit/2-bit work in v1.15.\n\nBlog post: https://research.google/blog/turboquant-redefining-ai-efficiency-with-extreme-compression/\n\n**Describe alternatives you've considered**\n\nTh"
+  },
+  {
+   "title": "Payload filter returns points with missing payload field (payload=None)",
+   "url": "https://github.com/qdrant/qdrant/issues/9255",
+   "state": "closed",
+   "comments": 5,
+   "created": "2026-06-01",
+   "body": "<!--- Provide a general summary of the issue in the Title above -->\n\n## Current Behavior\n<!--- Tell us what happens instead of the expected behavior -->\n\nWhen performing a search with a payload filter (e.g., `{\"must\":[{\"key\":\"color\",\"match\":{\"value\":\"red\"}}]}`), the response includes points where the `payload` field is `None` or the filtered key is entirely absent. These points do not satisfy the filter condition, yet they are returned in the search results alongside points that genuinely match.\n\nObserved output: `filter color=red returned point with color=None`\n\n## Steps to Reproduce\n<!--- Provide a link to a live example, or an unambiguous set of steps to -->\n<!--- reproduce this bug. Include code to reproduce, if relevant -->\n\n1. Start Qdrant v1.18.1:\n\n```\ndocker run -d --name qdrant-payload-bug -p 6333:6333 -p 6334:6334 qdrant/qdrant:v1.18.1\n```\n\n2. Create a collection:\n\n```\ncurl -X PUT 'http://localhost:6333/collections/test_payload_filter' -H 'Content-Type: application/json' -d '{\"vectors\": {\"size\": 4, \"distance\": \"Cosine\"}}'\n```\n\n3. Insert 10 points \u2014 even IDs have `color=red`, odd IDs have `color=blue`, and point id=3 and id=6 have no `color` payload at all:\n\n```\ncurl -X PUT 'http://localhost:6333/collections/test_payload_filter/points?wait=true' -H 'Content-Type: application/json' -d '{\"points\": [{\"id\": 1, \"vector\": [0.1, 0.2, 0.3, 0.4], \"payload\": {\"color\": \"red\"}}, {\"id\": 2, \"vector\": [0.5, 0.6, 0.7, 0.8], \"payload\": {\"color\": \"blue\"}}, {\"id\": 3, \"vector\": [0.9, 0."
+  },
+  {
+   "title": "Payload keyword index desynchronizes from stored payloads under concurrent set_payload by-filter",
+   "url": "https://github.com/qdrant/qdrant/issues/10302",
+   "state": "closed",
+   "comments": 4,
+   "created": "2026-08-23",
+   "body": "[docker-compose.qdrant-repro.yml](https://github.com/user-attachments/files/31344139/docker-compose.qdrant-repro.yml)\n[repro_qdrant_index_desync.py](https://github.com/user-attachments/files/31344140/repro_qdrant_index_desync.py)\n\n## Current Behavior\n\nUnder concurrent writes, a **payload keyword index** (`metadata.source`) loses entries it should\ncontain. Points are physically present in the collection \u2014 an **unfiltered `scroll` returns them** \u2014\nbut a filtered `count`/`scroll`/`search` using `MatchValue` on the indexed field returns **0** for\nthat exact value. The index and the stored payloads become silently inconsistent.\n\nConsequences of the desync:\n- Filtered reads (`count`, `scroll`, `search` with a `Filter`) miss points that exist.\n- `delete` by filter silently skips the affected values (returns success, deletes nothing), leaving\n  orphan points the user believes were removed.\n- `set_payload` by filter on those values updates nothing.\n\nIt is a **race condition**: non-deterministic, and on the affected value it typically manifests as\n\"all N chunks present, index returns 0\". The affected value changes from run to run; some runs are\nclean.\n\n## Steps to Reproduce\n\nThe reproduction script (`repro_qdrant_index_desync.py`, only `qdrant-client`, no application\nframework) and a compose file (`docker-compose.qdrant-repro.yml`) are attached. The script mirrors a\ntwo-phase ingestion pipeline: for each \"source\", one worker `upsert`s N chunks and then issues a\n`set_payload` **filtered"
+  },
+  {
+   "title": "For some search queries Qdrant instance will retrieve only 1 document or a small subset",
+   "url": "https://github.com/qdrant/qdrant/issues/3094",
+   "state": "open",
+   "comments": 3,
+   "created": "2023-11-27",
+   "body": "I have a Qdrant instance deployed in AKS. I use it to process docx files (custom chunking) and save paragraph embeddings with some id so I can later filter specific documents (through metadata) when searching for relevant paragaphs to a give question/query, i.e., a RAG system.\r\n\r\nLet's say I have a file \"abc.docx\" which ends up generating 2000 paragraph embeddings saved in Qdrant DB. When I make a search query like this:\r\n\r\n```python\r\nsearch_result = client.search(\r\n    collection_name=collection_name\r\n    query_filter=models.Filter(\r\n        must=[\r\n            models.FieldCondition(\r\n                key=\"metadata.doc_id\",\r\n                match=models.MatchValue(value=\"some_uuid\")\r\n            )\r\n        ]\r\n    ),\r\n    query_vector=my_question_emb,\r\n    limit=5000,\r\n)\r\n```\r\n\r\nI only get back 1 document, although I have verified I have all my 2000 embeddings associated to that file. Also notice that I specify `limit` to 5000 on purpose to try to force the client to retrieve the whole 2000 points but I only get 1 back. I verify this by running this query:\r\n\r\n```python\r\npoints_count = client.count(\r\n    collection_name=collection_name,\r\n    count_filter=models.Filter(\r\n        must=[\r\n            models.FieldCondition(\r\n                key=\"metadata.doc_id\",\r\n                match=models.MatchValue(value=\"some_uuid\")\r\n            ),\r\n        ]\r\n    ),\r\n)\r\nprint(f\"Total points: {points_count.count}\\n\")\r\n```\r\n\r\nWhich effectively returns the value 2000.\r\n\r\n## Expected Behavior\r\n\r"
+  },
+  {
+   "title": "gRPC ingestion accepts NaN / +Inf / extreme-magnitude vectors \u2014 NaN scores rank above finite (silent HNSW corruption)",
+   "url": "https://github.com/qdrant/qdrant/issues/9201",
+   "state": "closed",
+   "comments": 3,
+   "created": "2026-05-27",
+   "body": "# gRPC ingestion accepts NaN / +Inf / extreme-magnitude vectors \u2014 NaN scores rank above finite (silent HNSW corruption)\n\n## Summary\n\nThe default Qdrant ingestion path (REST `PUT /collections/{c}/points` and gRPC `Upsert`) accepts vectors containing `NaN`, `+Inf`, `-Inf`, or extreme magnitudes (e.g. `1e30`) with no server-side validation beyond dimension. Once persisted:\n\n- `cosine_preprocess` propagates the corruption rather than detecting it (`sqrt(NaN) = NaN`, `Inf/Inf = NaN`, `1e30/Inf = 0`).\n- `ScoredPointOffset::cmp` orders results via `OrderedFloat`, which places `NaN` **strictly above** every finite score. Consequence: a single poison point lands at the **top** of every unfiltered top-k.\n- No log entry is emitted server-side.\n\nTested on `qdrant/qdrant:v1.18.1` (HEAD commit `e01c207`), `qdrant-client 1.18.0`.\n\nThis generalises and amplifies previously-reported issues #2530 (NAN vector \u2192 empty search), #4654 (Score NaN for zeroed uint8 vectors), and #9039 (async upsert silently discards dim-mismatched vectors). The pattern that #8130 asks for documentation about \u2014 *\"ingestion incomplete \u2026 silent drift after re-ingest\"* \u2014 is exactly this class.\n\n## Reproduction\n\nFull repro (docker-compose + Python): https://gist.github.com/Adelagric/285960fb998a3aa1247db03ff3e2e76d\n\nTerminal recording (asciinema, 60s, anonymous upload, expires in 7 days): https://asciinema.org/a/Bn62N6QR6htNAZTx\n\nMinimal inline:\n\n```python\nimport numpy as np\nfrom qdrant_client import QdrantClient\nfrom qdr"
+  }
+ ],
+ "milvus_deleted": [
+  {
+   "title": "[Bug]: [Benchmark][Standalone] Query Timestamp lag too large during concurrent Strong count(*) query with upsert on streaming standalone",
+   "url": "https://github.com/milvus-io/milvus/issues/49435",
+   "state": "closed",
+   "comments": 47,
+   "created": "2026-04-29",
+   "body": "- [x] I have searched the existing issues\n\n### Environment\n\n- Milvus version: `2.6-20260428-20aa94f2` (failed)\n- Deployment mode: standalone, streaming enabled\n- MQ type: streaming mode, `pulsarv3.enabled=false`\n- SDK version: `pymilvus==2.6.11rc6` installed in client; fouram global `client_version=2.6.0`\n- OS: Linux (4AM cluster)\n- CPU/Memory: standalone `8 CPU / 16Gi`\n- Deploy config: `standalone_8c16m`, 1 standalone replica\n- Collection: `fouram_OBB3RRWf`\n- Release: `upsert-count-170-1-v26-14-7691`\n\n### Current Behavior\n\nDuring a benchmark run with concurrent `Strong` consistency `count(*)` query and upsert, query requests intermittently fail with `Timestamp lag too large`. The benchmark records 26 query failures and eventually fails in teardown because `param_info.test_status` is set to false.\n\n```\n[setup_method] Test case: test_concurrent_locust_custom_parameters, Test run_id: 2026042828377417 (base.py:76)\n```\n\nWorkload configuration:\n\n```text\ndataset: sift, dim=128, dataset_size=2m, ni_per=5000, metric_type=L2\ncollection: shards_num=2, num_partitions=16, partition key field varchar_1\nindex: HNSW, M=8, efConstruction=200\nconcurrent_params: concurrent_number=1, during_time=5h, interval=20\nconcurrent_tasks:\n  - query:\n      expr: \"\"\n      output_fields: [\"count(*)\"]\n      consistency_level: Strong\n      check_task: check_query_output_count\n      check_items: query_count=2000000\n  - upsert:\n      nb=2000\n      random_id=false\n      start_id=1\nquota config:\n  dml.upsertRate."
+  },
+  {
+   "title": "[Bug]: Significant slowdown in Milvus standalone insertion rate with Woodpecker as MQ and Woodpecker storage set to local",
+   "url": "https://github.com/milvus-io/milvus/issues/46067",
+   "state": "closed",
+   "comments": 41,
+   "created": "2025-12-04",
+   "body": "### Is there an existing issue for this?\n\n- [x] I have searched the existing issues\n\n### Environment\n\n```markdown\n- Milvus version: 2.6.1\n- Deployment mode(standalone or cluster): standalone\n- MQ type(rocksmq, pulsar or kafka):    \n- SDK version(e.g. pymilvus v2.0.0rc2): pyMilvus\n- OS(Ubuntu or CentOS): Ubuntu\n- CPU/Memory: 32GB 12 core CPU\n- GPU: N/A\n- Others:\n```\n\n### Current Behavior\n\nWhen I switched to Woodpecker as my MQ and switched Woodpecker's storage type to local, I saw the vector insertion rate drop from 421 vec/sec to only 30 vec/sec. I am not sure what is causing this, but this does not seem like intended behavior. \n\n### Expected Behavior\n\nI would expect the vector insertion rate to at least be comparable if not better. \n\n### Steps To Reproduce\n\n```markdown\n1. wget `https://raw.githubusercontent.com/milvus-io/milvus/master/scripts/standalone_embed.sh`\n2. Edit the standalone_embed script to not create an empty user.yaml file.\n3. Create a user.yaml with the config listed below.\n4. Start the milvus standalone instance using standalone_embed.sh\n5. Create a collection and insert data using pymilvus. Record the insertion rate \n7. Edit the user.yaml to be blank. \n8. Restart the milvus instance\n9. Recreate the collection and insert again. Record the insertion rate. It should be much better than when woodpecker was used.  \n\n\nmq:\n  # Default value: \"default\"\n  # Valid values: [default, pulsar, kafka, rocksmq, woodpecker]\n  type: woodpecker\n  enablePursuitMode: true # Defau"
+  },
+  {
+   "title": "[Bug]: Create collection hangs and cannot create producer on topic with backlog quota exceeded",
+   "url": "https://github.com/milvus-io/milvus/issues/16114",
+   "state": "closed",
+   "comments": 32,
+   "created": "2022-03-18",
+   "body": "### Is there an existing issue for this?\r\n\r\n- [X] I have searched the existing issues\r\n\r\n### Environment\r\n\r\n```markdown\r\n- Milvus version: master-20220316-d4ad785b\r\n- Deployment mode(standalone or cluster): cluster\r\n- SDK version(e.g. pymilvus v2.0.0rc2): 2.0.2.dev5\r\n- OS(Ubuntu or CentOS): CentOS\r\n- CPU/Memory: \r\n- GPU: \r\n- Others:\r\n```\r\n\r\n\r\n### Current Behavior\r\n\r\n1. deploy milvus cluster by operator, and all replicas are 1\r\n2. Run the following script multiple times: create a collection and insert 10 million vectors in multiples.\r\nHowever, during this period, the disk of the node was filled many times, causing many pods to be evicted and restarted.\r\nAnd I'm not sure if I ever dropped the collection.\r\n```\r\n        host = \"10.100.32.xxx\"\r\n        port = 31746\r\n        hdf5_source_file = \"/Users/nausicca/Downloads/vectors/sift-128-euclidean.hdf5\"\r\n        ni = 50000\r\n        nb = 1000000      \r\n        # define field and schema\r\n        collection_w = ApiCollectionWrapper()\r\n        filed_w = ApiFieldSchemaWrapper()\r\n        schema_w = ApiCollectionSchemaWrapper()\r\n        fields = [filed_w.init_field_schema(name=\"id\", dtype=DataType.INT64, is_primary=True)[0],\r\n                  filed_w.init_field_schema(name=\"vec\", dtype=DataType.FLOAT_VECTOR, dim=128)[0]]\r\n        schema = schema_w.init_collection_schema(fields, auto_id=True)[0]\r\n\r\n        # create collection\r\n        collection_w.init_collection(name=cf.gen_unique_str(\"disk\"), schema=schema, shards_num=1, timeout=20)\r\n   "
+  },
+  {
+   "title": "[Bug]: Searching and deleting vectors is not stable",
+   "url": "https://github.com/milvus-io/milvus/issues/15744",
+   "state": "closed",
+   "comments": 28,
+   "created": "2022-02-24",
+   "body": "### Is there an existing issue for this?\n\n- [X] I have searched the existing issues\n\n### Environment\n\n```markdown\n- Milvus version: 2.0.1\r\n- Deployment mode(standalone or cluster): standalone\r\n- SDK version(e.g. pymilvus v2.0.0rc2): pymilvus 2.0.1\r\n- OS(Ubuntu or CentOS): Ubuntu\r\n- CPU/Memory: i5-6500 / 16Gb\n```\n\n\n### Current Behavior\n\nHello! Faced a problem that was not in version 1.1.1.\r\n\r\n**Number of vectors:** 10000\r\n**dimension:** 512\r\n**Index:** FLAT\r\n**nlist:** 2048\r\n**nprobe:** 16\r\n\r\nWhen it becomes necessary to update the vector, I delete the vector by its id and add a new id for this. A subsequent vector lookup doesn't return the vector that was just added to me.\r\n\r\nThe same applies if you delete a vector and immediately search for the deleted vector. He will be found.\r\n\r\nImmediately after the CRUD action, I call the num_entities property method, as I noticed that the flush method is used under the hood, but this does not always help either.\r\n\r\nWhat am I doing wrong, please tell me.\n\n### Expected Behavior\n\nAfter any CRUD operation, the search returns the correct results.\n\n### Steps To Reproduce\n\n```markdown\n# create a collection\r\nperson_id = FieldSchema(name=\"person_id\", dtype=DataType.INT64, is_primary=True)\r\nperson_vector = FieldSchema(name=\"person_vector\", dtype=DataType.FLOAT_VECTOR, dim=512)\r\nschema = CollectionSchema(fields=[person_id, person_vector], description=\"Persons Vectors\")\r\n\r\nCollection(name='test_collection', schema=schema, consistency_level=\"Strong\""
+  },
+  {
+   "title": "[Bug]: Failed to search data after reloadding collection",
+   "url": "https://github.com/milvus-io/milvus/issues/16657",
+   "state": "closed",
+   "comments": 28,
+   "created": "2022-04-26",
+   "body": "### Is there an existing issue for this?\n\n- [X] I have searched the existing issues\n\n### Environment\n\n```markdown\n- Milvus version: 2.0.1\r\n- Deployment mode(standalone or cluster): cluster\r\n- SDK version(e.g. pymilvus v2.0.0rc2): attu and milvus-cpp-sdk\r\n- OS(Ubuntu or CentOS): CentOS\r\n- CPU/Memory: Total:125G, Used:25G, Free:27G, Shared:375M, buff/cache:72G, Available:98G\r\n- GPU: \r\n- Others:\n```\n\n\n### Current Behavior\n\nWhen I release collection and load collection, I can not search data in the colleciton.\n\n### Expected Behavior\n\nWhen I release collection and load collection, I can search data in the colleciton successfully.\n\n### Steps To Reproduce\n\n```markdown\n1. release collection\r\n2. load collection\r\n3. search data in the collection\r\n4. can not search data in the collection, the error is \"Timeout\"\r\n5. log file as shown below\n```\n\n\n### Anything else?\n\n[milvus_log.zip](https://github.com/milvus-io/milvus/files/8559397/milvus_log.zip)\r\n"
+  },
+  {
+   "title": "[Bug]: Built-in CDC target stops at about half of source row_count in Milvus cluster with Woodpecker and no manual flush during large import",
+   "url": "https://github.com/milvus-io/milvus/issues/49712",
+   "state": "closed",
+   "comments": 25,
+   "created": "2026-05-12",
+   "body": "### Is there an existing issue for this?\n\n- [x] I have searched the existing issues\n\n### Environment\n\n```markdown\n- Deployment mode: cluster\n- Deployment method: Milvus Operator on Kubernetes\n- Milvus image/version: milvusdb/milvus:v2.6.15\n- Milvus build version shown by Attu: 2.6.15\n- MQ / WAL: Woodpecker\n- CDC mode: built-in CDC\n- Source cluster name: source-cluster\n- Target cluster name: target-cluster\n- Namespace: milvus\n- Source-side CDC: enabled\n- Target-side CDC: disabled\n- Source and target are deployed on different Kubernetes nodes:\n  - Source node: k8s-master / 10.20.20.1\n  - Target node: k8s-worker-1 / 10.20.20.2\n- Source external access:\n  - http://10.20.20.1:30031\n- Target external access:\n  - http://10.20.20.2:30032\n- Source Attu:\n  - http://10.20.20.1:18031\n- Target Attu:\n  - http://10.20.20.1:18032\n- Python SDK:\n  - pymilvus 2.6.12\n- OS:\n  - Rocky Linux 9.7\n- Docker:\n  - Docker 29.4.1\n- Hardware:\n  - Source node: 64 CPU cores, about 512 GB memory, /data 3 TB disk\n  - Target node: 64 CPU cores, about 512 GB memory, /data 3 TB disk\n\nCurrent disk status after the test:\n\n- Source /data:\n  - 3.0T total, 2.9T used, 113G available, 97% used\n- Target /data:\n  - 3.0T total, 2.6T used, 399G available, 87% used\n\nI also checked disk-related evidence and did not find direct disk-full errors:\n\n- Source CDC logs did not show no space, ENOSPC, write failed, append WAL failed, replicate failed, or flush failed.\n- Target MinIO logs did not show no space, ENOSPC, write failed, o"
+  },
+  {
+   "title": "[Bug]: [nightly] query returns not empty after delete operation",
+   "url": "https://github.com/milvus-io/milvus/issues/16961",
+   "state": "closed",
+   "comments": 24,
+   "created": "2022-05-13",
+   "body": "### Is there an existing issue for this?\r\n\r\n- [X] I have searched the existing issues\r\n\r\n### Environment\r\n\r\n```markdown\r\n- Milvus version: \r\n- Deployment mode(standalone or cluster): standalone\r\n- SDK version(e.g. pymilvus v2.0.0rc2):\r\n- OS(Ubuntu or CentOS): \r\n- CPU/Memory: \r\n- GPU: \r\n- Others:\r\n```\r\n\r\n\r\n### Current Behavior\r\n\r\nquery returns not empty after delete operation\r\n\r\n```\r\n\r\n[2022-05-12T20:50:02.188Z] [2022-05-12 19:02:15 - DEBUG - ci_test]: (api_request)  : [Collection.delete] args: ['int64 in [1]', None, 20], kwargs: {} (api_request.py:55)\r\n\r\n[2022-05-12T20:50:02.188Z] [2022-05-12 19:02:16 - DEBUG - ci_test]: (api_response) : (insert count: 0, delete count: 1, upsert count: 0, timestamp: 433162062718828546)  (api_request.py:27)\r\n\r\n[2022-05-12T20:50:02.188Z] [2022-05-12 19:02:16 - DEBUG - ci_test]: (api_request)  : [Collection.query] args: ['int64 in [0, 1]', None, None, 20], kwargs: {} (api_request.py:55)\r\n\r\n[2022-05-12T20:50:02.188Z] [2022-05-12 19:02:16 - DEBUG - ci_test]: (api_response) : [{'int64': 1}]  (api_request.py:27)\r\n```\r\n\r\n### Expected Behavior\r\n\r\nquery returns empty after delete operation\r\n\r\n### Steps To Reproduce\r\n\r\nRunning nightly:\r\nhttps://ci.milvus.io:18080/jenkins/blue/organizations/jenkins/milvus-nightly-ci/detail/master/526/pipeline/124\r\n\r\ncases:\r\n1. testcases/test_delete.py::TestDeleteOperation::test_delete_entity_loop\r\n\r\n```python\r\n    def test_delete_entity_loop(self):\r\n        \"\"\"\r\n        target: test delete all entities one by one in a lo"
+  },
+  {
+   "title": "[Bug]: Search results become less and less if keep deleting the search results",
+   "url": "https://github.com/milvus-io/milvus/issues/21785",
+   "state": "closed",
+   "comments": 23,
+   "created": "2023-01-18",
+   "body": "### Is there an existing issue for this?\r\n\r\n- [X] I have searched the existing issues\r\n\r\n### Environment\r\n\r\n```markdown\r\n- Milvus version:  2.2.0-20230116-7e2121e6\r\n- Deployment mode(standalone or cluster): cluster\r\n- MQ type(rocksmq, pulsar or kafka):    pulsar\r\n```\r\n\r\n\r\n### Current Behavior\r\n\r\ni have one collection with 13+ million vectors, and i want to delete 2.6 million vectors. \r\nSo I \r\n1. search a random vector with top=10000\r\n2. get the 10000 ids from search results\r\n3. delete the entities with the ids\r\n4. repeat search and delete for 260 times\r\nsearch results becomes less and less, and to 0 after deleting for several rounds.\r\n\r\n![image](https://user-images.githubusercontent.com/82361606/213075991-af1664cb-d0b3-4310-afd9-8a3d8f1d9fa3.png)\r\n\r\n\r\n### Expected Behavior\r\n\r\nsearch always returns top=10000 \r\nreproduce code:\r\n```\r\nfor r in range(rounds):\r\n            search_vector = [[random.random() for _ in range(dim)] for _ in range(1)]\r\n            results = c.search(data=search_vector, anns_field=vector_field_name,\r\n                               param=search_params, limit=nb)\r\n            for hits in results:\r\n                ids = hits.ids\r\n                c.delete(expr=f\"{primary_field_name} in {ids}\")\r\n                logging.info(f\"deleted {len(ids)} entities\")\r\n```\r\n\r\n### Steps To Reproduce\r\ncheck reproduce code above\r\n\r\n\r\n\r\n### Milvus Log\r\n\r\ncheck the logs around 01/17/2023 08:01:40 AM \r\n```\r\nyanliang-cluster-1cu-milvus-datanode-69f6f588c5-g4x2h        1/1     Run"
+  }
+ ],
+ "milvus_inconsistent": [
+  {
+   "title": "[Bug]: [benchmark]  nq = 10000 topk = 10 , concurrent search performance drops",
+   "url": "https://github.com/milvus-io/milvus/issues/25396",
+   "state": "closed",
+   "comments": 40,
+   "created": "2023-07-07",
+   "body": "### Is there an existing issue for this?\n\n- [X] I have searched the existing issues\n\n### Environment\n\n```markdown\n- Milvus version:2.2.0-20230707-5e38b5e1\r\n- Deployment mode(standalone or cluster):cluster\r\n- MQ type(rocksmq, pulsar or kafka):    pulsar\r\n- SDK version(e.g. pymilvus v2.0.0rc2):\r\n- OS(Ubuntu or CentOS): \r\n- CPU/Memory: \r\n- GPU: \r\n- Others:\n```\n\n\n### Current Behavior\n\nargo task : fouramf-696v9\r\ncase : test_concurrent_locust_ivf_sq8_search_cluster \r\n\r\nserver:\r\n```\r\nfouramf-696v9-41-8652-etcd-0                                      1/1     Running            0                4m12s   10.104.15.41    4am-node20   <none>           <none>\r\nfouramf-696v9-41-8652-etcd-1                                      1/1     Running            0                4m12s   10.104.17.211   4am-node23   <none>           <none>\r\nfouramf-696v9-41-8652-etcd-2                                      1/1     Running            0                4m12s   10.104.16.231   4am-node21   <none>           <none>\r\nfouramf-696v9-41-8652-milvus-datacoord-7df7bdbc66-xj6dj           1/1     Running            0                4m12s   10.104.16.227   4am-node21   <none>           <none>\r\nfouramf-696v9-41-8652-milvus-datanode-758c4644b4-dscpn            1/1     Running            0                4m12s   10.104.23.146   4am-node27   <none>           <none>\r\nfouramf-696v9-41-8652-milvus-indexcoord-6474996cb6-j6frh          1/1     Running            0                4m12s   10.104.17.195   4am-node23   <none>     "
+  },
+  {
+   "title": "[Bug]: Scalar indexes cannot search out data",
+   "url": "https://github.com/milvus-io/milvus/issues/34548",
+   "state": "closed",
+   "comments": 31,
+   "created": "2024-07-09",
+   "body": "### Is there an existing issue for this?\n\n- [X] I have searched the existing issues\n\n### Environment\n\n```markdown\n- Milvus version: v2.3.15\r\n- Deployment mode(standalone or cluster): cluster\r\n- MQ type(rocksmq, pulsar or kafka):   kafka \r\n- SDK version(e.g. pymilvus v2.0.0rc2): java sdk 2.3.4  , attu\r\n- OS(Ubuntu or CentOS): CentOS\r\n- CPU/Memory: \r\n- GPU: \r\n- Others:\n```\n\n\n### Current Behavior\n\nHybrid search cannot find out data, but a separate query can find out data\r\n![img_3](https://github.com/milvus-io/milvus/assets/48277927/f7bc02b7-61de-4564-b176-c9b753f766c0)\r\n![img_4](https://github.com/milvus-io/milvus/assets/48277927/95e5651e-1560-45bf-a264-f3ea0764b97e)\r\nThis scalar query has data\r\n![img_5](https://github.com/milvus-io/milvus/assets/48277927/bc4cfbc5-d69e-43ed-b972-63c379cfc1a2)\r\n\r\n\n\n### Expected Behavior\n\n_No response_\n\n### Steps To Reproduce\n\n_No response_\n\n### Milvus Log\n\n[milvus-log (1).tar.gz](https://github.com/user-attachments/files/16144447/milvus-log.1.tar.gz)\r\n\n\n### Anything else?\n\n_No response_"
+  },
+  {
+   "title": "[Bug]: [benchmark][cluster] hybrid_search raises error `incomplete query result, missing id %!s(int64=0), len(searchIDs) = 100, len(queryIDs) = 99, collection=***: inconsistent requery result` in concurrent DML & DQL scene",
+   "url": "https://github.com/milvus-io/milvus/issues/38126",
+   "state": "closed",
+   "comments": 26,
+   "created": "2024-12-02",
+   "body": "### Is there an existing issue for this?\r\n\r\n- [X] I have searched the existing issues\r\n\r\n### Environment\r\n\r\n```markdown\r\n- Milvus version:master-20241129-10843496-amd64\r\n- Deployment mode(standalone or cluster):cluster\r\n- MQ type(rocksmq, pulsar or kafka):pulsar    \r\n- SDK version(e.g. pymilvus v2.0.0rc2):2.5.0rc124\r\n- OS(Ubuntu or CentOS): \r\n- CPU/Memory: \r\n- GPU: \r\n- Others:\r\n```\r\n\r\n\r\n### Current Behavior\r\n\r\nargo task: multi-vector-corn-1-1732888800\r\ntest case name: test_hybrid_search_locust_dml_dql_cluster\r\n\r\nserver: \r\n```\r\nNAME                                                              READY   STATUS        RESTARTS          AGE     IP              NODE         NOMINATED NODE   READINESS GATES\r\nmulti-vector-corn-1-1732888800-4-etcd-0                           1/1     Running       0                 12h     10.104.21.238   4am-node24   <none>           <none>\r\nmulti-vector-corn-1-1732888800-4-etcd-1                           1/1     Running       0                 12h     10.104.15.217   4am-node20   <none>           <none>\r\nmulti-vector-corn-1-1732888800-4-etcd-2                           1/1     Running       0                 12h     10.104.30.206   4am-node38   <none>           <none>\r\nmulti-vector-corn-1-1732888800-4-milvus-datanode-5bbbcd756xj292   1/1     Running       4 (12h ago)       12h     10.104.34.19    4am-node37   <none>           <none>\r\nmulti-vector-corn-1-1732888800-4-milvus-indexnode-6876495ds5bc4   1/1     Running       5 (12h ago)       12h     10.1"
+  },
+  {
+   "title": "[Bug]: Built-in CDC target stops at about half of source row_count in Milvus cluster with Woodpecker and no manual flush during large import",
+   "url": "https://github.com/milvus-io/milvus/issues/49712",
+   "state": "closed",
+   "comments": 25,
+   "created": "2026-05-12",
+   "body": "### Is there an existing issue for this?\n\n- [x] I have searched the existing issues\n\n### Environment\n\n```markdown\n- Deployment mode: cluster\n- Deployment method: Milvus Operator on Kubernetes\n- Milvus image/version: milvusdb/milvus:v2.6.15\n- Milvus build version shown by Attu: 2.6.15\n- MQ / WAL: Woodpecker\n- CDC mode: built-in CDC\n- Source cluster name: source-cluster\n- Target cluster name: target-cluster\n- Namespace: milvus\n- Source-side CDC: enabled\n- Target-side CDC: disabled\n- Source and target are deployed on different Kubernetes nodes:\n  - Source node: k8s-master / 10.20.20.1\n  - Target node: k8s-worker-1 / 10.20.20.2\n- Source external access:\n  - http://10.20.20.1:30031\n- Target external access:\n  - http://10.20.20.2:30032\n- Source Attu:\n  - http://10.20.20.1:18031\n- Target Attu:\n  - http://10.20.20.1:18032\n- Python SDK:\n  - pymilvus 2.6.12\n- OS:\n  - Rocky Linux 9.7\n- Docker:\n  - Docker 29.4.1\n- Hardware:\n  - Source node: 64 CPU cores, about 512 GB memory, /data 3 TB disk\n  - Target node: 64 CPU cores, about 512 GB memory, /data 3 TB disk\n\nCurrent disk status after the test:\n\n- Source /data:\n  - 3.0T total, 2.9T used, 113G available, 97% used\n- Target /data:\n  - 3.0T total, 2.6T used, 399G available, 87% used\n\nI also checked disk-related evidence and did not find direct disk-full errors:\n\n- Source CDC logs did not show no space, ENOSPC, write failed, append WAL failed, replicate failed, or flush failed.\n- Target MinIO logs did not show no space, ENOSPC, write failed, o"
+  },
+  {
+   "title": "[Bug]: [flush state] unflushed segment ids loop on restart and non-responsive to gRPC client",
+   "url": "https://github.com/milvus-io/milvus/issues/16451",
+   "state": "closed",
+   "comments": 24,
+   "created": "2022-04-11",
+   "body": "### Is there an existing issue for this?\n\n- [X] I have searched the existing issues\n\n### Environment\n\n```markdown\n- Milvus version: v2.0.2\r\n- Deployment mode(standalone or cluster): standalone\r\n- SDK version(e.g. pymilvus v2.0.0rc2): pymilvus v2.0.1\r\n- OS(Ubuntu or CentOS): Ubuntu and CentOS\r\n- CPU/Memory: 64 GB\r\n- GPU: N/A\r\n- Others:\n```\n\n\n### Current Behavior\n\nI created six collections in my app, and it works well the first time the data are inserted into the index. However, when I restart the app, the application hangs. I checked Milvus, and I found that it seems to show the log below continuously repeatedly:\r\n\r\n```[2022/04/09 09:02:41.683 +00:00] [INFO] [services.go:931] [\"received get flush state request\"] [segmentIDs=\"[432402286159069187,432400859715338241,432402286159069185,432400859715338243,432400863608438786,432402286159069188,432400859715338244,432402286159069186,432400863621545985,432400863608438785,432400863621545986,432400859715338242,432400863621545987,432400859715338245,432402286159069189]\"] [len=15]\r\n[2022/04/09 09:02:41.683 +00:00] [INFO] [services.go:954] [\"[flush state] unflushed segment ids\"] [segmentIDs=\"[432402286159069187,432400859715338241,432402286159069185,432400859715338243,432400863608438786,432402286159069188,432400859715338244,432402286159069186,432400863621545985,432400863608438785,432400863621545986,432400859715338242,432400863621545987,432400859715338245,432402286159069189]\"] [len=15]\r\n[2022/04/09 09:02:41.683 +00:00] [INFO] [impl.go:3924] [\""
+  },
+  {
+   "title": "Bug: Inconsistent behavior with IN and NOT IN operators in filter expressions",
+   "url": "https://github.com/milvus-io/milvus/issues/43494",
+   "state": "closed",
+   "comments": 23,
+   "created": "2025-07-22",
+   "body": "# Bug Report: Inconsistent behavior with IN and NOT IN operators in filter expressions\n\n## Environment\n- **Milvus version**: v2.5.14~v2.5.15\n- **Image tag**: milvusdb/milvus:v2.5.15\n- **SDK**: pymilvus (Python)\n- **Deployment**: Standalone\n\n## Bug Description\n\nThe `IN` and `NOT IN` operators in Milvus filter expressions exhibit inconsistent behavior depending on their position in the expression and context. Specifically:\n\n1. **Position-dependent behavior**: The same logical expression produces different results when operands are reordered\n2. **Incomplete filtering**: `NOT IN` operations don't properly exclude all specified values, especially in hybrid search scenarios\n3. **False positives**: `IN` operations sometimes return results that don't match the specified criteria\n\n## Reproduction Steps\n\n### Test Case 1: Position-dependent IN operator\n\n```python\nfrom datetime import datetime, timedelta\nfrom pymilvus import MilvusClient\n\n# Setup\nclient = MilvusClient()\ntimestamp = int((datetime.now() - timedelta(days=5)).timestamp())\n\n# This works correctly:\nfilter1 = f\"(story_id IN [36394721, 3639473]) and created_at >= {timestamp}\"\n\n# This doesn't work (returns unexpected results):\nfilter2 = f\"(created_at >= {timestamp}) and (story_id IN [36394721, 3639473])\"\n\n# Alternative syntax also works:\nfilter3 = f\"(created_at >= {timestamp}) and (story_id == 36394721 or story_id == 3639473)\"\n\n# But this equivalent expression works:\nfilter4 = f\"(story_id == 36394721 or story_id == 3639473) and ("
+  },
+  {
+   "title": "[Enhancement]: The documentation of Milvus is really bad.",
+   "url": "https://github.com/milvus-io/milvus/issues/33387",
+   "state": "closed",
+   "comments": 23,
+   "created": "2024-05-26",
+   "body": "### Is there an existing issue for this?\r\n\r\n- [x] I have searched the existing issues\r\n\r\n### What would you like to be added?\r\n\r\nThe underlying design of Milvus is completely unacceptable, as illustrated by:\r\n\r\n```python\r\nimport random\r\ndata = [\r\n  [i for i in range(2000)],\r\n  [str(i) for i in range(2000)],\r\n  [i for i in range(10000, 12000)],\r\n  [[random.random() for _ in range(2)] for _ in range(2000)],\r\n  # use `default_value` for a field\r\n  [], \r\n  # or\r\n  None,\r\n  # or just omit the field\r\n]\r\n\r\ndata.append([str(\"dy\"*i) for i in range(2000)])\r\n```\r\n- It even requires strictly adhering to the dataset's attributes in sequence. I completely fail to understand why it doesn't support directly passing a JSON object, instead requiring the conversion to a file, which then needs to be read into the system. This is utterly nonsensical.\r\n\r\n- Furthermore, why is a significant portion of content, including creating collections, creating indexes, and search parameters, not fully reflected in the corresponding sections of the documentation? It's all over the place, with some parts available in one version of the documentation and missing in the next.\r\n\r\n- Moreover, the documentation for version 2.3 uses specific methods, while version 2.4 switches to a unified interface, but in reality, it's a mess and not user-friendly at all. It's bewildering.\r\n\r\n- Even basic definitions are missing, there's no consolidated summary of performance issues, and the use of functions is not systematically "
+  },
+  {
+   "title": "[Bug]: Milvus stops responding after a couple of hours of light load",
+   "url": "https://github.com/milvus-io/milvus/issues/16804",
+   "state": "closed",
+   "comments": 20,
+   "created": "2022-05-06",
+   "body": "### Is there an existing issue for this?\n\n- [X] I have searched the existing issues\n\n### Environment\n\n```markdown\n- Milvus version: v2.0.2\r\n- Deployment mode(standalone or cluster): cluster\r\n- SDK version(e.g. pymilvus v2.0.0rc2): pymilvus v2.0.2\r\n- OS(Ubuntu or CentOS): Container-Optimized OS with containerd (cos_containerd) ( GCP k8s cluster)\r\n- CPU/Memory: 4 cpu / 27GB memory\r\n- GPU: No\r\n- Others: Running in GCP Kubernetes cluster version 1.20.15-gke.3400\n```\n\n\n### Current Behavior\n\nI've loaded approx 1.4M embeddings of size 512 into a new collection and created a `RHNSW_PQ` index. This is then loaded on to 4 query-nodes and I start to loop: For each embedding, search for 100 candidates of most similar.\r\n\r\nThis seems to work OK up until after a few hours, where it just hangs on fetching new embeddings. This is the log from 1 of 4 query nodes:\r\n\r\n```json\r\nl/querynode.(*QueryNode).ReleaseCollection.func1\\n\\t/go/src/github.com/milvus-io/milvus/internal/querynode/impl.go:388\\ngithub.com/milvus-io/milvus/internal/querynode.(*QueryNode).ReleaseCollection\\n\\t/go/src/github.com/milvus-io/milvus/internal/querynode/impl.go:392\\ngithub.com/milvus-io/milvus/internal/distributed/querynode.(*Server).ReleaseCollection\\n\\t/go/src/github.com/milvus-io/milvus/internal/distributed/querynode/service.go:287\\ngithub.com/milvus-io/milvus/internal/proto/querypb._QueryNode_ReleaseCollection_Handler.func1\\n\\t/go/src/github.com/milvus-io/milvus/internal/proto/querypb/query_coord.pb.go:3558\\ngithub.c"
+  }
+ ],
+ "milvus_recall": [
+  {
+   "title": "[Bug]: I do not get the rt result displayed in \"Milvus 2.1 Benchmark Test Report\"",
+   "url": "https://github.com/milvus-io/milvus/issues/18709",
+   "state": "closed",
+   "comments": 31,
+   "created": "2022-08-18",
+   "body": "### Is there an existing issue for this?\n\n- [X] I have searched the existing issues\n\n### Environment\n\n```markdown\n- Milvus version:2.1.1\r\n- Deployment mode(standalone or cluster): cluster\r\n- SDK version(e.g. pymilvus v2.0.0rc2):pymilvus v2.1\r\n- OS(Ubuntu or CentOS): centos\r\n- CPU/Memory: 32 cores/756gb\r\n- GPU: \r\n- Others:\n```\n\n\n### Current Behavior\n\nI have tested the milvus2.1.0 in sift1m dataset flowing the steps in here \"https://milvus.io/docs/v2.1.x/benchmark.md\" and I got a different rt and Relatively low recall.\r\nHere are my result:\r\n(1)oncall\r\noncall@10~94%\r\n![2fd6f1775581806643577bdc2e74ac1](https://user-images.githubusercontent.com/8862305/185328890-a5d33ef0-12c8-4819-b582-daecf7ccffdc.jpg)\r\n(2)rt\r\navg~40ms and p99>100ms\r\n![image](https://user-images.githubusercontent.com/8862305/185329206-43ca526f-38b0-4550-a487-5e902bb411eb.png)\r\n\r\nps:querynode\u2019s cpu and memory is still rich.\r\n![image](https://user-images.githubusercontent.com/8862305/185330263-1e053ffd-e9d5-4398-92f7-0b77607f843b.png)\r\n![image](https://user-images.githubusercontent.com/8862305/185330614-1556356d-3bcc-4548-b068-83ec1d7be55d.png)\r\n\r\n\n\n### Expected Behavior\n\nrt(p99)<60ms and oncall@10 >98%\n\n### Steps To Reproduce\n\n_No response_\n\n### Milvus Log\n\n_No response_\n\n### Anything else?\n\n_No response_"
+  },
+  {
+   "title": "QPS is not good in Milvus 0.11.0 comparing to the post in offical site",
+   "url": "https://github.com/milvus-io/milvus/issues/4557",
+   "state": "closed",
+   "comments": 26,
+   "created": "2020-12-31",
+   "body": "**Please state your issue using the following template and, most importantly, in English.**\r\nuser milvus 0.11.0 with default milvus.yaml config. change the cpu.cache_size to 72G \r\n\r\nrun the perfomance test with wrk .\r\nthe collection is. sift 128. with datasize. 1000000.  index: ivf_pq nlist 512 , m 4 nprobe 1 , topk 10\r\nthe QPS is \r\n![image](https://user-images.githubusercontent.com/1088645/103402080-812f6580-4b86-11eb-8c1b-7fcffcb926a6.png)\r\n\r\n\r\nthe collection is. sift 128. with datasize. 10000000.  index: ivf_pq nlist 512 , m 4 nprobe 1 , topk 10\r\nthe QPS is \r\n![image](https://user-images.githubusercontent.com/1088645/103402140-c18ee380-4b86-11eb-82ea-8678a742e0be.png)\r\n\r\nanother collection  query 768. datasize. 6000000. index: ivf_pq nlist 512 , m 4 , nprobe 1, topk 10\r\nthe QPS is also poor\r\n![image](https://user-images.githubusercontent.com/1088645/103402196-0581e880-4b87-11eb-8975-e01ebf095845.png)\r\n\r\n\r\nhow could you get the qps 2000/s in this test. https://www.milvus.io/cn/docs/benchmarks_azure\r\n\r\nAnd even poor result got in locust test in benchamark with sift_1m dataset. \r\n![image](https://user-images.githubusercontent.com/1088645/103402217-2ba78880-4b87-11eb-82ea-3b33adc32c8b.png)\r\n\r\n```\r\nlocust_search_performance:\r\n  collections:\r\n    -\r\n      milvus:\r\n        cache_config.cpu_cache_capacity: 8GB\r\n        cache_config.insert_buffer_size: 2GB\r\n        engine_config.use_blas_threshold: 1100\r\n        engine_config.gpu_search_threshold: 1\r\n        gpu_resource_config.ena"
+  },
+  {
+   "title": "[Bug]: Search results become less and less if keep deleting the search results",
+   "url": "https://github.com/milvus-io/milvus/issues/21785",
+   "state": "closed",
+   "comments": 23,
+   "created": "2023-01-18",
+   "body": "### Is there an existing issue for this?\r\n\r\n- [X] I have searched the existing issues\r\n\r\n### Environment\r\n\r\n```markdown\r\n- Milvus version:  2.2.0-20230116-7e2121e6\r\n- Deployment mode(standalone or cluster): cluster\r\n- MQ type(rocksmq, pulsar or kafka):    pulsar\r\n```\r\n\r\n\r\n### Current Behavior\r\n\r\ni have one collection with 13+ million vectors, and i want to delete 2.6 million vectors. \r\nSo I \r\n1. search a random vector with top=10000\r\n2. get the 10000 ids from search results\r\n3. delete the entities with the ids\r\n4. repeat search and delete for 260 times\r\nsearch results becomes less and less, and to 0 after deleting for several rounds.\r\n\r\n![image](https://user-images.githubusercontent.com/82361606/213075991-af1664cb-d0b3-4310-afd9-8a3d8f1d9fa3.png)\r\n\r\n\r\n### Expected Behavior\r\n\r\nsearch always returns top=10000 \r\nreproduce code:\r\n```\r\nfor r in range(rounds):\r\n            search_vector = [[random.random() for _ in range(dim)] for _ in range(1)]\r\n            results = c.search(data=search_vector, anns_field=vector_field_name,\r\n                               param=search_params, limit=nb)\r\n            for hits in results:\r\n                ids = hits.ids\r\n                c.delete(expr=f\"{primary_field_name} in {ids}\")\r\n                logging.info(f\"deleted {len(ids)} entities\")\r\n```\r\n\r\n### Steps To Reproduce\r\ncheck reproduce code above\r\n\r\n\r\n\r\n### Milvus Log\r\n\r\ncheck the logs around 01/17/2023 08:01:40 AM \r\n```\r\nyanliang-cluster-1cu-milvus-datanode-69f6f588c5-g4x2h        1/1     Run"
+  },
+  {
+   "title": "Please promote mixed query performance",
+   "url": "https://github.com/milvus-io/milvus/issues/4361",
+   "state": "closed",
+   "comments": 22,
+   "created": "2020-12-03",
+   "body": "**Please state your issue using the following template and, most importantly, in English.**\r\n\r\n**Is your feature request related to a problem? Please describe.**\r\nI know Milvus 0.11 supports mixed query(it is a killer feature), but it is so slow when applied to big data since it is a violence search.\r\n\r\n**Describe the solution you'd like**\r\nFor simple scenarios, of course I can split milvus partitions by structured fields but milvus partitions is limited to 4096. It is better to have indexes for structured fields to have a good search performance. \r\n\r\n**Describe alternatives you've considered**\r\nAliyun PASE\r\n\r\n**Additional context**"
+  },
+  {
+   "title": "[Bug]: The recall rate of IVF_PQ on IP is much lower than FLAT",
+   "url": "https://github.com/milvus-io/milvus/issues/27334",
+   "state": "closed",
+   "comments": 18,
+   "created": "2023-09-24",
+   "body": "### Is there an existing issue for this?\n\n- [X] I have searched the existing issues\n\n### Environment\n\n```markdown\n- Milvus version:\r\n- Deployment mode(standalone or cluster):\r\n- MQ type(rocksmq, pulsar or kafka):    \r\n- SDK version(e.g. pymilvus v2.0.0rc2):\r\n- OS(Ubuntu or CentOS): \r\n- CPU/Memory: \r\n- GPU: \r\n- Others:\n```\n\n\n### Current Behavior\n\nI am testing the recall rate of IVF_PQ. And my default setting is set as the following logs. \r\n\r\n```\r\n{'index_type': 'IVF_PQ', 'metric_type': 'IP', 'params': {'nlist': 108, 'm': 16, 'nbits': 2, 'M': 29, 'efConstruction': 403}}\r\n{'metric_type': 'IP', 'params': {'nprobe': 86, 'reorder_k': 3, 'ef': 12}}\r\nDoes collection hello_milvus exist in Milvus: True\r\nNumber of entities in Milvus: 10000\r\nic| first_index: {'index_type': 'FLAT',\r\n                  'metric_type': 'IP',\r\n                  'params': {'M': 29, 'efConstruction': 403, 'm': 16, 'nbits': 2, 'nlist': 108}}\r\nsearch latency = 19.6109s\r\n\r\n=== Start searching based on vector similarity ===\r\n\r\nsearch latency = 0.5080s\r\nDoes collection hello_milvus exist in Milvus: True\r\nNumber of entities in Milvus: 10000\r\nic| index: {'index_type': 'IVF_PQ',\r\n            'metric_type': 'IP',\r\n            'params': {'M': 29, 'efConstruction': 403, 'm': 16, 'nbits': 2, 'nlist': 108}}\r\nsearch latency = 13.2730s\r\n\r\n=== Start searching based on vector similarity ===\r\n\r\n724\t3420\t8911\t1233\t8383\t2777\t6753\t2347\t4833\t1551\t1726\t8400\t4194\t659\t581\t5251\t8261\t5906\t4871\t1203\t774\t6822\t8078\t2979\t4233\t139\t204\t4893\t675"
+  },
+  {
+   "title": "[Bug]: The query performance of databases with small amounts of data is poor",
+   "url": "https://github.com/milvus-io/milvus/issues/24425",
+   "state": "closed",
+   "comments": 17,
+   "created": "2023-05-26",
+   "body": "### Is there an existing issue for this?\n\n- [X] I have searched the existing issues\n\n### Environment\n\n```markdown\n- Milvus version: v2.2.3\r\n- Deployment mode(standalone or cluster): cluster\r\n- MQ type(rocksmq, pulsar or kafka): pulsar\r\n- SDK version(e.g. pymilvus v2.0.0rc2): pymilvus v2.2.3\r\n- OS(Ubuntu or CentOS): CentOS\r\n- CPU/Memory: CPU(s):32, Mem:64G\r\n- GPU: No\r\n- Others: Three node k8s cluster\n```\n\n\n### Current Behavior\n\nI have two Milvus databases, one with only 2000 pieces of data and the other with a data volume of 2 million.\r\n\r\nThe sdk used is pymilvus, when the loaded database is 2 million, the QPS of the query performance tested is about 12700 req/s.\r\nHowever, when the loaded database is 2000, the QPS of the tested query is less than 700 req/s. I can ensure that all hardware environments are consistent, only the databases are different. \r\n\r\nAccording to common sense, databases with less data theoretically have better query performance because they require less computation. But according to my testing results, the query performance of databases with low data volume is very, very, very poor! The resource utilization rate of the server is very low!\r\n\r\nI don't know if this is a bug or if the cluster configuration is incorrect.\n\n### Expected Behavior\n\nThe correct situation should be that the query performance of a database with less data volume is greater than that of a database with 2 million data volumes.\r\n\r\nThe explanation is:\r\n1. label_ test_ 128 databases only hav"
+  },
+  {
+   "title": "[Bug]: HNSW + IP range filter: recall \u2264 ~0.5 , while unfiltered \u2248 1.0 and IVF_FLAT(filtered)=1.0",
+   "url": "https://github.com/milvus-io/milvus/issues/44854",
+   "state": "closed",
+   "comments": 16,
+   "created": "2025-10-14",
+   "body": "### Is there an existing issue for this?\n\n- [x] I have searched the existing issues\n\n### Environment\n\n```markdown\n- Milvus version:2.6.3\n- Deployment mode(standalone or cluster):standalone\n- MQ type(rocksmq, pulsar or kafka):  \n- SDK version(e.g. pymilvus v2.0.0rc2):pymilvus 2.6.2\n- OS(Ubuntu or CentOS): ubuntu 22.04\n- CPU/Memory: \n- GPU: \n- Others: - Metric: IP\n  - HNSW: M=128, efConstruction=10000, search ef=15000 (15000 rows of datas inserted)\n  - IVF_FLAT: nlist=1024, nprobe=1024\n  - evaluate recall@{10,25,50,100}\n```\n\n### Current Behavior\n\nUsing the attached script and data, HNSW (IP) with a range filter\n(radius, range] = (-7.8296000, -7.8254000] shows low and run-to-run varying\nrecall@{10,25,50,100} vs FLAT(filtered), while multiple sanity checks pass:\n\n1) HNSW(unfiltered) vs FLAT(unfiltered): recall \u2248 1.0 (occasionally 0.97@100).\n\n2) Crucially, we choose OFFSET=9047 so that the unfiltered lists align with the\n   same narrow dense band that the filter selects.\n   At OFFSET=9047, the unfiltered results should be the same as the filtered.\n   In our runs, they are:\n     FLAT(filtered)[:10] == FLAT(unfiltered)[OFFSET:OFFSET+10] == HNSW(unfiltered)[OFFSET:OFFSET+10]\n   (IDs & distances are identical.)\n\n3) IVF_FLAT(filtered) vs FLAT(filtered) @100: recall = 1.0 (every run).\n\n4) FLAT(unfiltered)[OFFSET=9047] vs HNSW(unfiltered)[OFFSET=9047] recall@{10,25,50,100} = 1.0 (every run).\n\nDespite the above, HNSW(filtered) differs on that same band, and recall remains low (lower than "
+  },
+  {
+   "title": "[Bug]: [benchmark][multi-replicas-loadbalance] queryNode panic and restart, client raise error when queryNode restarts and 10 minutes after restart",
+   "url": "https://github.com/milvus-io/milvus/issues/25905",
+   "state": "closed",
+   "comments": 16,
+   "created": "2023-07-25",
+   "body": "### Is there an existing issue for this?\n\n- [X] I have searched the existing issues\n\n### Environment\n\n```markdown\n- Milvus version:master-20230725-a6808e64\r\n- Deployment mode(standalone or cluster):cluster\r\n- MQ type(rocksmq, pulsar or kafka):pulsar    \r\n- SDK version(e.g. pymilvus v2.0.0rc2):2.4.0.dev73\r\n- OS(Ubuntu or CentOS): \r\n- CPU/Memory: \r\n- GPU: \r\n- Others:\n```\n\n\n### Current Behavior\n\nserver argo task: fouramf-dnkv9\r\nclients argo task: fouramf-concurrent-xfr27\r\n\r\nserver:\r\n```\r\nNAME                                                              READY   STATUS             RESTARTS        AGE     IP              NODE         NOMINATED NODE   READINESS GATES\r\nlb-helm-ivfsq8-scene-low-etcd-0                                   1/1     Running            0               13m     10.104.16.151   4am-node21   <none>           <none>\r\nlb-helm-ivfsq8-scene-low-etcd-1                                   1/1     Running            0               13m     10.104.12.78    4am-node17   <none>           <none>\r\nlb-helm-ivfsq8-scene-low-etcd-2                                   1/1     Running            0               13m     10.104.4.181    4am-node11   <none>           <none>\r\nlb-helm-ivfsq8-scene-low-milvus-datacoord-57b456f5bb-fn76f        1/1     Running            0               13m     10.104.16.143   4am-node21   <none>           <none>\r\nlb-helm-ivfsq8-scene-low-milvus-datanode-54d4c6b9b8-gkp7f         1/1     Running            1 (9m41s ago)   13m     10.104.23.174   4am-node27   "
+  }
+ ],
+ "chroma_dimension": [
+  {
+   "title": "[Bug]: Using v1.0.3 client/server with a database created by v0.6.3 client/server causes `chromadb.errors.InternalError`",
+   "url": "https://github.com/chroma-core/chroma/issues/4217",
+   "state": "closed",
+   "comments": 28,
+   "created": "2025-04-08",
+   "body": "### What happened?\n\nA `collection.get()` call using v1.0.3 client and v1.0.3 server on a collection created by v0.6.3 chromadb produced a `chromadb.errors.InternalError: Error executing plan: Error sending backfill request to compactor`.\n\nThis is the relevant code snippet:\n```python\nawait collection.get(\n    where={\"path\": full_path_str},\n    include=[\"metadatas\"],\n)\n```\n\nAside from this error, I'm wondering whether a database created by 0.x.x chromadb is supposed to \"just work\"? Also, what's the expected outcome if a user has a mismatched chromadb client and server? I'm experiencing errors, and at the same time, I couldn't find many useful guides on what to expect over the upgrade (from 0.x.x to 1.x.x). The Discord channel (migrations) hasn't been updated for a few months. I'm a bit lost at this point because I don't know what to expect when [trying to bump the chromadb version for my project](https://github.com/davidyz/vectorcode).\n\n### Versions\n\nCollection created by chromadb v0.6.3 and accessed by chromadb v1.0.3, on python 3.13, arch Linux\n\n### Relevant log output\n\n```shell\nTraceback (most recent call last):\n  File \"/home/davidyz/git/VectorCode/src/vectorcode/main.py\", line 85, in async_main\n    return_val = await vectorise(final_configs)\n                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/davidyz/git/VectorCode/src/vectorcode/subcommands/vectorise.py\", line 192, in vectorise\n    await task\n  File \"/usr/lib/python3.13/asyncio/tasks.py\", line 634, in _wait_for_o"
+  },
+  {
+   "title": "[Bug]: Inconsistent upsert/update API responses",
+   "url": "https://github.com/chroma-core/chroma/issues/1466",
+   "state": "closed",
+   "comments": 8,
+   "created": "2023-12-05",
+   "body": "### What happened?\r\n\r\nIn client/server mode, the API does not return a proper response for `update` and `upsert` collection ops when there is a mismatch in embedding and collection dimensions.\r\n\r\n### Versions\r\n\r\nChroma 0.4.18, Python 3.11\r\n\r\n### Relevant log output\r\n\r\nResponse for add:\r\n\r\n```py\r\nException: {\"detail\":\"Embedding dimension 384 does not match collection dimensionality 1536\"}\r\n```\r\n\r\nResponse for `update` and `upsert`:\r\n\r\n```py\r\nHTTPError: 400 Client Error: Bad Request for url: http://localhost:8000/api/v1/collections/1cc231ef-b34b-463a-9fc7-69b3184ba2a6/update\r\n```\r\n"
+  },
+  {
+   "title": "Custom embed function causes dimension mismatch",
+   "url": "https://github.com/chroma-core/chroma/issues/1862",
+   "state": "closed",
+   "comments": 4,
+   "created": "2024-03-12",
+   "body": "### What happened?\n\nI have created a custom embedding function to run a Hugging Face embedding model locally.\r\n\r\n```python\r\nfrom transformers import AutoTokenizer\r\nfrom chromadb import Documents, EmbeddingFunction, Embeddings\r\n\r\nclass LocalHuggingFaceEmbeddingFunction(EmbeddingFunction[Documents]):\r\n    def __init__(self, model_name: str, access_token: str=None):\r\n        self.tokenizer = AutoTokenizer.from_pretrained(model_name, token=access_token)\r\n\r\n    def __call__(self, input: Documents) -> Embeddings:\r\n        return self.tokenizer.batch_encode_plus(input)[\"input_ids\"]\r\n```\r\n\r\n\r\nI use the custom function when creating the collection.\r\n\r\n```python\r\nimport chromadb\r\n\r\ncli = chromadb.PersistentClient(path=\"./data\")\r\n\r\ncollection = cli.get_or_create_collection(name=\"collection-1\", \r\n    embedding_function=LocalHuggingFaceEmbeddingFunction(model_name=\"mistralai/Mistral-7B-Instruct-v0.1\"))\r\n```\r\n\r\nI try to add a few documents.\r\n\r\n```python\r\ncollection.add(\r\n    documents=[\r\n        \"McCarthy's 1960 Lisp did nothing more than interpret Lisp expressions\", \r\n        \"Fairly quickly I realized that we had stumbled upon the way to scale startup funding.\"\r\n    ],\r\n    metadatas=[\r\n        {\"source\": \"source-1\"}, \r\n        {\"source\": \"source-2\"}\r\n    ],\r\n    ids=[\"id1\", \"id2\"]\r\n)\r\n```\r\n\r\nI get the error:\r\n\r\n```\r\nInvalidDimensionException: Embedding dimension 18 does not match collection dimensionality 21\r\n```\n\n### Versions\n\nChromadb: 0.4.24\r\nGoogle Colab\n\n### Relevant log output\n\n``"
+  },
+  {
+   "title": "Improve `InvalidDimensionException` message to teach the underlying concept (dimension mismatch is not just a number)",
+   "url": "https://github.com/chroma-core/chroma/issues/7824",
+   "state": "open",
+   "comments": 0,
+   "created": "2026-09-30",
+   "body": "### Problem\n\n```\nInvalidDimensionException: Embedding dimension 384 does not match collection dimensionality 768\n```\n\nThis message surfaces repeatedly (user bug reports: #4368, #1905, #771, plus many Stack Overflow questions), but it only reports the numbers. Users \"fix\" it by changing the number without learning the constraint that actually matters:\n\n> Each embedding model produces its own vector space. Vectors from different models are not comparable \u2014 even when dimensions happen to match. Switching embedding models requires re-embedding the entire collection (or creating a new collection with a consistent model).\n\nWithout this, the same users go on to mix vectors from different models (silent quality loss), or query a collection right after swapping models (empty/unstable results).\n\n### Proposal\n\nAppend two sentences to the exception message (raised in `chromadb/segment/impl/vector/local_hnsw.py`):\n\n```\nThis collection was created with a different embedding model.\nEach embedding model defines its own vector space: vectors from\ndifferent models are not comparable even if dimensions match.\nFix: re-embed all documents with one consistent model (or create\na new collection).\n```\n\n### Why it matters\n\nError messages are where user attention peaks. The current message resolves the symptom; the proposed addition resolves the misconception, and points at the correct fix (re-embed everything / new collection) rather than inviting a numeric patch.\n\nHappy to submit a PR if maintainers "
+  }
+ ],
+ "chroma_duplicates": [
+  {
+   "title": "[Bug]: querying a persisted index returns an empty array",
+   "url": "https://github.com/chroma-core/chroma/issues/640",
+   "state": "closed",
+   "comments": 30,
+   "created": "2023-05-30",
+   "body": "### What happened?\n\nThe following example uses langchain to successfully load documents into chroma and to successfully persist the data. Querying works as expected. \r\n\r\nHowever, when we restart the notebook and attempt to query again without ingesting data and instead reading the persisted directory, we get [] when querying both using the langchain wrapper's method and chromadb's client (accessed from langchain wrapper). I've concluded that there is either a deep bug in chromadb or I am doing something wrong. Please help! \r\n\r\n### Code to reproduce\r\nIn the notebook paste: \r\n\r\n```\r\nfrom langchain.embeddings.openai import OpenAIEmbeddings\r\nfrom langchain.vectorstores import Chroma\r\nimport json\r\n\r\nassembly_ai_output_file = \"data_auto_chapters.json\"\r\n\r\n# Read the JSON file\r\nwith open(assembly_ai_output_file, \"r\") as json_file:\r\n    json_data = json.load(json_file)\r\n\r\nutterances = json_data['utterances']\r\ndata = list(map(lambda x: {key: value for key, value in x.items() if key != \"words\"}, utterances))\r\ntranscription_id = json_data['id']\r\ndocs = list(map(lambda x: Document(page_content=x['text'], \r\n                                   metadata={\"transcription_id\": transcription_id,\"confidence\": x['confidence'], \"start\": x['start'], \"end\": x['end'], \"speaker\": x['speaker']}),\r\n                            utterances))\r\n\r\nembedding = OpenAIEmbeddings()\r\n\r\npersist_directory = 'db'\r\nvectordb = Chroma.from_documents(documents=docs, embedding=embedding, persist_directory=persist_directory,"
+  },
+  {
+   "title": "[New Feature][Ease of Use] Auto-Ingestion Batching",
+   "url": "https://github.com/chroma-core/chroma/issues/2282",
+   "state": "closed",
+   "comments": 21,
+   "created": "2024-06-04",
+   "body": "# Auto-Ingestion Batching\r\n\r\nChroma users tend to throw a bunch of data at Chroma at once to get their collections set up. On many developer-class machines, and remote notebook environments like Colab, this immediately leads to high memory consumption and hard swapping, making Chroma appear much slower on ingestion than it actually is in the (platonic) world of ideal forms. \r\n\r\nAdditionally, the user does not know if Chroma has crashed, their system has hung, or how ingestion is going in general.\r\n\r\n## API Design\r\n\r\n```python\r\n# New argument on add\r\ncollection.add(..., batch_size=128) \r\n\r\n# Display a progress bar\r\n[---------60%           ]\r\n\r\n# Impl 1.\r\n# Wrap add classic in a loop with tqdm strapped on it \r\ndef add(self, batch_size=128, **kwargs):\r\n    for ... \r\n        self._add(**kwargs)\r\n```  \r\n\r\n## [Complexity] Subtask\r\n\r\n- [Low] Ship it with a reasonable default\r\n- [Low] Investigate the tradeoffs to make sure we ship a reasonable default\r\n- [High] Paralellize and pipeline this with EF (and Chunker). Whole thing is parallelizable. Knowing the batch size in advance helps considerably.\r\n\r\n\r\n## Misc\r\n- Is there something here we could do with returning query results also ?"
+  },
+  {
+   "title": "[Bug]: Re-inserting records leads to log messages on every subsequent operation",
+   "url": "https://github.com/chroma-core/chroma/issues/870",
+   "state": "closed",
+   "comments": 18,
+   "created": "2023-07-24",
+   "body": "### What happened?\n\nReinserting records without embeddings (i.e. requiring Chromadb to generate the embeddings) causes them to be held in the `embeddings_queue` table of chromadb.sqlite3. On every subsequent operation, log messages are presented as chroma (presumably) attempts to insert the already existing records:\r\n\r\n```\r\nAdd of existing embedding ID: 21\r\nInsert of existing embedding ID: 21\r\n```\r\n\r\nTo replicate, attempt to re-insert a record keeping the id, documents and metadata identical. If done n times (e.g. via a broken loop that increments record numbers incorrectly, which is how I did it), the row is added n times to the embeddings_queue table.\r\n\r\nThe issue is easily worked-around by deleting the records from embeddings_queue:\r\n\r\n```# Drop everything in the embeddings_queue table\r\ncur.execute(\"DELETE FROM embeddings_queue;\")\r\nconn.commit()\r\n```\r\n\r\nThe records appear to be added to the table in this file, https://github.com/chroma-core/chroma/blob/3ed229ccb9280ca2569525bf65f4bc218c36a745/chromadb/db/mixins/embeddings_queue.py#L88 \r\n\r\nThe warnings are raised in:\r\n\r\nhttps://github.com/chroma-core/chroma/blob/3ed229ccb9280ca2569525bf65f4bc218c36a745/chromadb/segment/impl/vector/local_hnsw.py#L303\r\n\r\nand \r\n\r\nhttps://github.com/chroma-core/chroma/blob/3ed229ccb9280ca2569525bf65f4bc218c36a745/chromadb/segment/impl/metadata/sqlite.py#L216\r\n\r\nand \r\n\r\nhttps://github.com/chroma-core/chroma/blob/3ed229ccb9280ca2569525bf65f4bc218c36a745/chromadb/segment/impl/vector/local_persiste"
+  },
+  {
+   "title": "[Feature Request]: Clarification on `Collection.create_index`",
+   "url": "https://github.com/chroma-core/chroma/issues/551",
+   "state": "closed",
+   "comments": 13,
+   "created": "2023-05-15",
+   "body": "### Describe the problem\n\nI was trying to query an existing collection via `query_texts` and got the the following exception:\r\n```bash\r\nNoIndexException: Index not found, please create an instance before querying\r\n```\r\n\r\nUsing Pandas to read the parquet files I have confirmed that the collection exists and the embeddings exist. I thought this was a strange issue, so I used the `Collection.count` and `Collection.peek` methods to ensure that the data was detected by Chroma; it was.\r\n\r\nI did not find any issues addressing this exception in this repo's issues.\r\n\r\nSo, I double checked the documentation and it makes no mention of this exception or needing to create an index for a collection.\r\n\r\nAfter looking through the API documentation, I found the method: `Collection.create_index` with the comment: \r\n```python\r\n# advanced: manually create the embedding search index\r\n```\r\n\r\nAs far as I can tell, this is the only place in the entirety of the documentation that makes mention of this method. In addition, the comment does not do a good job of explaining why the method would need to be used. I'm wary of calling this method to test because I do not want to corrupt my embeddings in some way and have to rebuild as it takes about 30 minutes to do so.\r\n\r\nIt also seems strange to me that a process(indexing?) that is fundamental to the core use-case of Chroma would be so hidden in the docs and have essentially zero documentation around its use. \r\n\r\nIs indexing something that should happen at"
+  },
+  {
+   "title": "How can I avoid writing duplicate data",
+   "url": "https://github.com/chroma-core/chroma/issues/2588",
+   "state": "closed",
+   "comments": 12,
+   "created": "2024-07-29",
+   "body": "In my scenario, I would try to extract the tags of a file and store the tag vector, for different files, the tags may be duplicated, and we don't want to save the duplicate tags.\r\nAt present, we use the same ID for the same label to make the label vector not stored repeatedly, but when calling add, is often printed: Add of existing embedding ID: *. This log causes my log file to be very large and makes me wonder if my usage is wrong.\r\nIs there a better way to avoid storing duplicate vectors? Or is there a way to eliminate this log? "
+  },
+  {
+   "title": "[Feature Request]: Multiple embeddings per document",
+   "url": "https://github.com/chroma-core/chroma/issues/1325",
+   "state": "closed",
+   "comments": 11,
+   "created": "2023-11-02",
+   "body": "### Describe the problem\n\nIs there a way to use multiple embeddings functions?\r\n\r\nMy understanding is that each collection has a single embedding function. I would like to be able to have several and then specify which one to use when querying. \r\n\r\nIs there some way to do this with already with multiple collections? If so ideally I would be able to have one collection with NO embeddings and JUST documents and ids. And multiple other collections with NO documents and JUST embeddings and ids.\n\n### Describe the proposed solution\n\nI should be able to create a collection with multiple embedding functions. Ideally I should be able to add more functions later as well.\r\n\r\nOR\r\n\r\nThere should be a clear way to create a collection with NO embeddings, and then a way to create a collection that sources its docs from another collection.\n\n### Alternatives considered\n\n_No response_\n\n### Importance\n\nwould make my life easier\n\n### Additional Information\n\n_No response_"
+  },
+  {
+   "title": "Update with duplicate IDs fails",
+   "url": "https://github.com/chroma-core/chroma/issues/295",
+   "state": "closed",
+   "comments": 8,
+   "created": "2023-04-05",
+   "body": "Because `add` allows duplicate / redundant IDs. When `update` gets called and finds redundant IDs, it fails with an obtuse error. \r\n\r\nThis is an artifact of allowing redundant IDs, we shouldn't do this. "
+  },
+  {
+   "title": "[Feature Request]:  remove the duplicate data",
+   "url": "https://github.com/chroma-core/chroma/issues/1947",
+   "state": "open",
+   "comments": 5,
+   "created": "2024-03-29",
+   "body": "### Describe the problem\n\nI want to use chroma to remove the duplicate data, I have a lot of duplicate data in the data, I looked at the interface has no way to redo, there is no way for me to remove the duplicate data\n\n### Describe the proposed solution\n\n remove the duplicate data\n\n### Alternatives considered\n\n remove the duplicate data\n\n### Importance\n\nwould make my life easier\n\n### Additional Information\n\n_No response_"
+  }
+ ],
+ "chroma_embedding_function": [
+  {
+   "title": "[Bug]: querying a persisted index returns an empty array",
+   "url": "https://github.com/chroma-core/chroma/issues/640",
+   "state": "closed",
+   "comments": 30,
+   "created": "2023-05-30",
+   "body": "### What happened?\n\nThe following example uses langchain to successfully load documents into chroma and to successfully persist the data. Querying works as expected. \r\n\r\nHowever, when we restart the notebook and attempt to query again without ingesting data and instead reading the persisted directory, we get [] when querying both using the langchain wrapper's method and chromadb's client (accessed from langchain wrapper). I've concluded that there is either a deep bug in chromadb or I am doing something wrong. Please help! \r\n\r\n### Code to reproduce\r\nIn the notebook paste: \r\n\r\n```\r\nfrom langchain.embeddings.openai import OpenAIEmbeddings\r\nfrom langchain.vectorstores import Chroma\r\nimport json\r\n\r\nassembly_ai_output_file = \"data_auto_chapters.json\"\r\n\r\n# Read the JSON file\r\nwith open(assembly_ai_output_file, \"r\") as json_file:\r\n    json_data = json.load(json_file)\r\n\r\nutterances = json_data['utterances']\r\ndata = list(map(lambda x: {key: value for key, value in x.items() if key != \"words\"}, utterances))\r\ntranscription_id = json_data['id']\r\ndocs = list(map(lambda x: Document(page_content=x['text'], \r\n                                   metadata={\"transcription_id\": transcription_id,\"confidence\": x['confidence'], \"start\": x['start'], \"end\": x['end'], \"speaker\": x['speaker']}),\r\n                            utterances))\r\n\r\nembedding = OpenAIEmbeddings()\r\n\r\npersist_directory = 'db'\r\nvectordb = Chroma.from_documents(documents=docs, embedding=embedding, persist_directory=persist_directory,"
+  },
+  {
+   "title": "Cannot submit more than 41,666 embeddings at once.",
+   "url": "https://github.com/chroma-core/chroma/issues/1049",
+   "state": "closed",
+   "comments": 30,
+   "created": "2023-08-27",
+   "body": "Hi,\r\n\r\nI am using chromadb 0.4.7 and langchain 0.0.274 while trying to save some embeddings into a chromadb.\r\n\r\nAfter upgrading to the versions mentioned above, I started to get the following error when trying to ingest some offline documents:\r\n\r\n`/chromadb/db/mixins/embeddings_queue.py\", line 127, in submit_embeddings\r\n    raise ValueError(\r\nValueError: \r\n                Cannot submit more than 41,666 embeddings at once.\r\n                Please submit your embeddings in batches of size\r\n                41,666 or less.`\r\n\r\nCould you please let me know what was changed and why do I have this error?\r\n\r\nThank you!"
+  },
+  {
+   "title": "[Install issue]: Trying to deploy chromadb as a Google Cloud Run Service",
+   "url": "https://github.com/chroma-core/chroma/issues/1429",
+   "state": "closed",
+   "comments": 22,
+   "created": "2023-11-27",
+   "body": "### What happened?\r\n\r\nCreated a service.\r\nDeployed directly docker from Docker Hub.\r\n\r\nNow trying connect via HttpClient:\r\n\r\n```\r\nchroma_client = chromadb.HttpClient(host=\"<MY_HOST>\",\r\n    port='443',\r\n    ssl=True,\r\n    settings=Settings(allow_reset=True, anonymized_telemetry=False),\r\n    headers={'authorization': 'PASS'})\r\n```\r\n\r\n### Versions\r\n\r\nPYTHON_VERSION=3.10.13\r\nchromadb 0.4.18\r\n\r\n### Relevant log output\r\n\r\n#### Client size\r\n\r\n```shell\r\nHTTPError                                 Traceback (most recent call last)\r\n/usr/local/lib/python3.10/dist-packages/chromadb/api/fastapi.py in raise_chroma_error(resp)\r\n    627     try:\r\n--> 628         resp.raise_for_status()\r\n    629     except requests.HTTPError:\r\n\r\n9 frames\r\nHTTPError: 502 Server Error: Bad Gateway for url: https://<MY_HOST>:443/api/v1/tenants/default_tenant\r\n\r\nDuring handling of the above exception, another exception occurred:\r\n\r\nException                                 Traceback (most recent call last)\r\nException: upstream connect error or disconnect/reset before headers. reset reason: protocol error\r\n\r\nDuring handling of the above exception, another exception occurred:\r\n\r\nValueError                                Traceback (most recent call last)\r\n/usr/local/lib/python3.10/dist-packages/chromadb/api/client.py in _validate_tenant_database(self, tenant, database)\r\n    431             )\r\n    432         except Exception:\r\n--> 433             raise ValueError(\r\n    434                 f\"Could not connect to tenan"
+  },
+  {
+   "title": "[Bug]: AttributeError: 'NoneType' object has no attribute 'get'",
+   "url": "https://github.com/chroma-core/chroma/issues/2510",
+   "state": "closed",
+   "comments": 19,
+   "created": "2024-07-12",
+   "body": "### What happened?\n\nI have installed latest version of chroma 0.5.4 using pip in python language\r\nI am connecting to my chroma  set up in an AWS EC2 instance through docker installation method.\r\nAfter creating a connection through chroma HttpClient using the host address and port name \r\nI tried to get list of all my connections using the below code:\r\n\r\ncollections= chroma_client.list_collections()\r\n\r\nand it is throwing the following error\r\n AttributeError: 'NoneType' object has no attribute 'get'\r\n \r\nI downgraded my chroma to version 0.5.3 and it was working fine\r\nSeems like an issue with newer version of 0.5.4 or Am I doing a mistake anywhere ??\r\n\r\nGotta need Your Feedback\r\n\n\n### Versions\n\nchroma 0.5.4\r\nWindows\r\neditor - Vs Code\r\nPython 3.11.5\r\nI was using ipykernel in  vs code for running my notebook .\n\n### Relevant log output\n\n```shell\nAttributeError: 'NoneType' object has no attribute 'get'\n```\n"
+  },
+  {
+   "title": " SyntaxError: Named export 'ChromaClient' not found. The requested module 'chromadb' is a CommonJS module (have installed 1.5.8) [Install issue]: ",
+   "url": "https://github.com/chroma-core/chroma/issues/1123",
+   "state": "closed",
+   "comments": 17,
+   "created": "2023-09-09",
+   "body": "### What happened?\r\n\r\nI run a sample test project with chromadb in node with version 18.16.\r\n\r\n```\r\n{\r\n  \"name\": \"embeddings-test\",\r\n  \"version\": \"1.0.0\",\r\n  \"description\": \"\",\r\n  \"main\": \"index.js\",\r\n  \"scripts\": {\r\n    \"test\": \"echo \\\"Error: no test specified\\\" && exit 1\"\r\n  },\r\n  \"author\": \"\",\r\n  \"license\": \"ISC\",\r\n  \"dependencies\": {\r\n    \"@types/node\": \"^20.5.1\",\r\n    \"@xenova/transformers\": \"^2.5.4\",\r\n    \"cheerio\": \"^1.0.0-rc.12\",\r\n    \"chromadb\": \"^1.5.8\",\r\n    \"d3-dsv\": \"^2.0.0\",\r\n    \"dotenv\": \"^16.3.1\",\r\n    \"langchain\": \"^0.0.145\",\r\n    \"typescript\": \"^5.2.2\"\r\n  },\r\n  \"type\": \"module\"\r\n}\r\n```\r\n\r\ntest is simple \r\n\r\n\r\n```\r\nimport { ChromaClient, Collection,TransformersEmbeddingFunction } from \"chromadb\";\r\nconst client = new ChromaClient({path: \"http://localhost:9007\"});\r\nconst embedder = new TransformersEmbeddingFunction();\r\n\r\n(async () => {\r\n\r\n    // list all collections\r\n    let list = await client.listCollections()\r\n    console.log('list',list);\r\n\r\n});\r\n```\r\n\r\n\r\n\r\n\r\n### Versions\r\n\r\nchromadb is running in docker.\r\nnode.js is 18.16\r\nchromadb is 1.5.8\r\nlangchain  \"^0.0.145\",\r\n\r\n\r\n### Relevant log output\r\n\r\n```shell\r\nrunning the codes - **ts-node --esm embedding_chroma.ts**\r\n\r\n outpus an error \r\n\r\n\r\nimport { ChromaClient, TransformersEmbeddingFunction } from \"chromadb\";\r\n         ^^^^^^^^^^^^\r\nSyntaxError: Named export 'ChromaClient' not found. The requested module 'chromadb' is a CommonJS module, which may not support all module.exports as named exports.\r\nCommonJS m"
+  },
+  {
+   "title": "[Bug]: Non deterministic query results in a local db query",
+   "url": "https://github.com/chroma-core/chroma/issues/2675",
+   "state": "closed",
+   "comments": 16,
+   "created": "2024-08-17",
+   "body": "### What happened?\r\n\r\n\r\nMinimal repro here: https://github.com/naddeoa/chromadb_determinism_issue. Check that out and run `make install run` (with poetry installed)\r\n\r\nThe same query will yield different results between database loads. As long as the database is loaded the query results are consistent, but if you unload the database (just let the script end and restart it) then you'll randomly get different results. For example, the following are two sample runs using the repro code that differ. Nothing changed in the database (besides the apparent mutations that chromadb always does even though I'm only reading, which makes things very hard to reason about).\r\n\r\n```python\r\n[[[0.7512401342391968, 0.7793669104576111, 0.8091723322868347]],\r\n [[0.7512401342391968, 0.7793669104576111, 0.8091723322868347]],\r\n [[0.7512401342391968, 0.7793669104576111, 0.8091723322868347]],\r\n [[0.7512401342391968, 0.7793669104576111, 0.8091723322868347]],\r\n [[0.7512401342391968, 0.7793669104576111, 0.8091723322868347]],\r\n [[0.7512401342391968, 0.7793669104576111, 0.8091723322868347]],\r\n [[0.7512401342391968, 0.7793669104576111, 0.8091723322868347]],\r\n [[0.7512401342391968, 0.7793669104576111, 0.8091723322868347]],\r\n [[0.7512401342391968, 0.7793669104576111, 0.8091723322868347]],\r\n [[0.7512401342391968, 0.7793669104576111, 0.8091723322868347]]]\r\n\r\n# Values only change in between runs, not within runs\r\n[[[0.7512401342391968, 0.8091723322868347, 0.8145251274108887]],\r\n [[0.7512401342391968, 0.8091723322"
+  },
+  {
+   "title": "[Bug]: PersistentClient.delete_collection does not delete persitent folders when uvicorn server is restarted",
+   "url": "https://github.com/chroma-core/chroma/issues/1309",
+   "state": "open",
+   "comments": 11,
+   "created": "2023-10-29",
+   "body": "### What happened?\n\nI have a fastapi app that checks for changes of knowledge bases in a config file when the server is restarted. For those removed configurations, I want to delete the related collections as well. But folders `./chroma/{uuid}` can not be deleted after the uvicorn server is restarted. I wrote a simple demo to reproduce the problem as discussed in #1245. \r\n\r\nTest demo:\r\n```python\r\n\r\nimport os\r\n\r\nimport chromadb\r\nfrom chromadb.config import Settings\r\nfrom fastapi import FastAPI\r\n\r\nprint(\"chromadb.__version__\", chromadb.__version__)\r\n\r\n\r\ndef get_folder_size(start_path: str) -> float:\r\n    total_size = 0\r\n    for dirpath, dirnames, filenames in os.walk(start_path):\r\n        for f in filenames:\r\n            fp = os.path.join(dirpath, f)\r\n            # skip if it is symbolic link\r\n            if not os.path.islink(fp):\r\n                total_size += os.path.getsize(fp)\r\n\r\n    return total_size / (1024 * 1024)  # convert bytes to megabytes\r\n\r\n\r\napp = FastAPI()\r\n\r\n\r\n@app.get(\"/upsert\")\r\nasync def upsert():\r\n    \"\"\"create a collection and upsert docs\"\"\"\r\n    script_entry = get_folder_size(\"./chroma\")\r\n    print(\"on script run\", script_entry)\r\n\r\n    client = chromadb.PersistentClient(settings=Settings(allow_reset=True))\r\n\r\n    client.reset()\r\n\r\n    after_reset = get_folder_size(\"./chroma\")\r\n    print(\"after_reset\", after_reset)\r\n\r\n    collection = client.get_or_create_collection(\"fruit\")\r\n    collection.upsert(\r\n        documents=[\"apples\", \"oranges\", \"bananas\", \"pinea"
+  },
+  {
+   "title": "[Bug]: getting 'hnswlib.Index' has no attribute 'file_handle_count' error when using PersistentClient",
+   "url": "https://github.com/chroma-core/chroma/issues/931",
+   "state": "closed",
+   "comments": 9,
+   "created": "2023-08-04",
+   "body": "### What happened?\n\ni am using the latest chromadb (v0.4.4) and has an error running the following standard example code:\r\n\r\n```\r\nimport chromadb\r\nclient = chromadb.PersistentClient(path=\"./db\")\r\n```\r\n\r\nthrows an error:\r\n`AttributeError: type object 'hnswlib.Index' has no attribute 'file_handle_count'`\r\n\r\nlooking at the stack trace, it seems like there is a bug in:\r\nchromadb/segment/impl/manager/local.py:73\r\n\r\n      71 segment_limit = (\r\n      72     self._max_file_handles\r\n      ---> 73     // PersistentLocalHnswSegment.get_file_handle_count()\r\n\r\n\r\ni suspect the intention is to comment out line 73? (wrong syntax // for java, # for python)\r\n\r\ni manually changed this to # in my local version of local.py, and it works.\r\nhope this helps.\r\n\r\nthanks\r\n\n\n### Versions\n\nChromadb 0.4.4\r\nChroma-hnswlib 0.7.2\r\nPython 3.10.0\r\nMacOS 13.4.1, Ubuntu 22.04.2\n\n### Relevant log output\n\n```shell\nFile ~/anaconda3/envs/textgen/lib/python3.10/site-packages/langchain/vectorstores/chroma.py:603, in Chroma.from_documents(cls, documents, embedding, ids, collection_name, persist_directory, client_settings, client, collection_metadata, **kwargs)\r\n    601 texts = [doc.page_content for doc in documents]\r\n    602 metadatas = [doc.metadata for doc in documents]\r\n--> 603 return cls.from_texts(\r\n    604     texts=texts,\r\n    605     embedding=embedding,\r\n    606     metadatas=metadatas,\r\n    607     ids=ids,\r\n    608     collection_name=collection_name,\r\n    609     persist_directory=persist_directory,\r\n    61"
+  }
+ ],
+ "chroma_wrong_results": [
+  {
+   "title": "[Bug]: querying a persisted index returns an empty array",
+   "url": "https://github.com/chroma-core/chroma/issues/640",
+   "state": "closed",
+   "comments": 30,
+   "created": "2023-05-30",
+   "body": "### What happened?\n\nThe following example uses langchain to successfully load documents into chroma and to successfully persist the data. Querying works as expected. \r\n\r\nHowever, when we restart the notebook and attempt to query again without ingesting data and instead reading the persisted directory, we get [] when querying both using the langchain wrapper's method and chromadb's client (accessed from langchain wrapper). I've concluded that there is either a deep bug in chromadb or I am doing something wrong. Please help! \r\n\r\n### Code to reproduce\r\nIn the notebook paste: \r\n\r\n```\r\nfrom langchain.embeddings.openai import OpenAIEmbeddings\r\nfrom langchain.vectorstores import Chroma\r\nimport json\r\n\r\nassembly_ai_output_file = \"data_auto_chapters.json\"\r\n\r\n# Read the JSON file\r\nwith open(assembly_ai_output_file, \"r\") as json_file:\r\n    json_data = json.load(json_file)\r\n\r\nutterances = json_data['utterances']\r\ndata = list(map(lambda x: {key: value for key, value in x.items() if key != \"words\"}, utterances))\r\ntranscription_id = json_data['id']\r\ndocs = list(map(lambda x: Document(page_content=x['text'], \r\n                                   metadata={\"transcription_id\": transcription_id,\"confidence\": x['confidence'], \"start\": x['start'], \"end\": x['end'], \"speaker\": x['speaker']}),\r\n                            utterances))\r\n\r\nembedding = OpenAIEmbeddings()\r\n\r\npersist_directory = 'db'\r\nvectordb = Chroma.from_documents(documents=docs, embedding=embedding, persist_directory=persist_directory,"
+  },
+  {
+   "title": "Improve message on `collection.get` empty embeddings",
+   "url": "https://github.com/chroma-core/chroma/issues/300",
+   "state": "closed",
+   "comments": 20,
+   "created": "2023-04-07",
+   "body": "## Problem\r\n\r\nI have successfully defined my embedding function, and added documents.\r\n\r\nAnd yet when calling `Collection.get()`, the default behaviour is to show `None` for `embeddings` in the output:\r\n\r\n```python\r\n>>> collection.get(\"doc1\")\r\n{'ids': [['doc1']],\r\n 'embeddings': None,  # <---- Why?\r\n 'documents': [['Louis XIV lived for tens of years']],\r\n 'metadatas': [[{'source': 'my_source'}]],\r\n}\r\n```\r\n\r\nSeeing `None` is rather counter intuitive*, as it gives the impression that embeddings were not computed. They are! But you need to explicitly pass `include=[\"embeddings\"]` to discover that:\r\n\r\n```python\r\n>>> collection.get(\"doc1\", include=[\"embeddings\", \"metadatas\"])\r\n{'ids': [['doc1']],\r\n 'embeddings': [[0.2352, 2324.... ]], \r\n 'documents': [['Louis XIV lived for tens of years']],\r\n 'metadatas': [[{'source': 'my_source'}]],\r\n}\r\n```\r\n\r\n*Saw a couple of persons having the same issue on Discord\r\n\r\n## Proposals (additive)\r\n\r\n1. Have `Collection.get` only show `\"id\"` + keys passed through `include`. Avoid the counter intuitive `None`!\r\n2. Have `\"embeddings\"` part of the default values for `include` with a pretty printer, to avoid cluttering the output.\r\n\r\nNew behaviours:\r\n```\r\n>>> collection.get(\"doc1\")\r\n{'ids': [['doc1']],\r\n 'embeddings': [[0.2352, 2324.... ]], \r\n 'documents': [['Louis XIV lived for tens of years']],\r\n 'metadatas': [[{'source': 'my_source'}]],\r\n}\r\n\r\n>>> collection.get(\"doc1\", include=[\"documents\", \"metadatas\"])\r\n{'ids': [['doc1']],\r\n 'documents': [['Louis XI"
+  },
+  {
+   "title": "Inconsistent behaviour when filtering by metadata using $or",
+   "url": "https://github.com/chroma-core/chroma/issues/326",
+   "state": "closed",
+   "comments": 4,
+   "created": "2023-04-11",
+   "body": "Hi,\r\n\r\ni'm running into a problematic behaviour with querying chroma using **$or** on metadata from python:\r\n\r\n\r\nGiven a collection with a set of embeddings where the metadata contains information like this:\r\n```\r\n{\r\n    \"category\": \"all\"\r\n}\r\n```\r\nand a second set of embeddings with the metadata like\r\n```\r\n{\r\n    \"category\": \"test\"\r\n}\r\n```\r\nwhere the embeddings in the second set have both higher and lower distances to the search pattern used\r\n```\r\n    embeds = collection.query(\r\n        query_texts=[search],\r\n        where={\"$or\": [{\"category\": {\"$eq\": \"test\"}}, {\"category\": {\"$eq\": \"all\"}}]},\r\n        n_results=3\r\n    )\r\n\r\n```\r\nand that the embeddings for category \"all\" were added to the collection before adding category \"test\"\r\n\r\n**Current behaviour**: the query returns *only* data from category \"all\"\r\n\r\n**Expected behaviour**: the query should return values from category \"all\" and from category \"test\"\r\n\r\nQuerying individually for category \"test\", the resulting embeddings show both higher als lower distances to the ones returned for category \"all\"\r\nUsing a different, not existing, second category for the **$or** , the embeddings for category \"test\" are returned correctly\r\n\r\nAny ideas what could be wrong?\r\n"
+  },
+  {
+   "title": "[Bug]: collection.query() fails to retrieve documents even when metadata filter matches",
+   "url": "https://github.com/chroma-core/chroma/issues/5367",
+   "state": "open",
+   "comments": 2,
+   "created": "2025-08-27",
+   "body": "### What happened?\n\nI've been working with ChromaDB, and I've noticed a strange problem. I have a document in my collection, and I know it's there because I can get it by its ID or by using a where filter with the get() function. However, when I try to find it using the query() function, it doesn't show up. This seems wrong since I'm using filters that should definitely match the document.\n\nExpected Behavior\nI'd expect the query() function to find my document when I give it the correct metadata filters. It should look through all the documents that match those filters and then, if I've provided one, rank them based on semantic similarity.\n\nActual Behavior\nThe query() method returns an empty result set, even when I set the number of results to be very large. It's like the document isn't even being considered in the first place, even though I've confirmed it exists.\n\nWorkaround\nI can successfully retrieve the document using the collection.get() function with the same metadata filter. This proves that the document is there and that my filter is correct. It's just the query() function that seems to be having a problem.\n\n### Versions\n\nChroma v1.0.13, Python 3.9, Win11\n\n### Relevant log output\n\n```shell\n\n```"
+  },
+  {
+   "title": "[Bug]: Cosine distance greater than 1 in query distances",
+   "url": "https://github.com/chroma-core/chroma/issues/1350",
+   "state": "closed",
+   "comments": 2,
+   "created": "2023-11-07",
+   "body": "### What happened?\r\n\r\nHi, I changed the default model to `sup-simcse-roberta-large` from Huggingface transformers and\r\nI got a strange bug in the form of too large a distance than 1. (vector length of this model is 1024)\r\n\r\nCustom model:\r\n```python\r\nclass HFEmbedder(BaseEmbedder):\r\n    def __init__(self, model = 'princeton-nlp/sup-simcse-roberta-large'):\r\n        self.device = 'cuda' if torch.cuda.is_available() else 'cpu'\r\n        self.model = AutoModel.from_pretrained(model).to(self.device)\r\n        self.tokenizer = AutoTokenizer.from_pretrained(model)\r\n        \r\n\r\n    def get_embeddings(self, texts):\r\n        if type(texts) == str:\r\n            texts = [texts]\r\n\r\n        inputs = self.tokenizer(texts, padding=True, truncation=True, return_tensors=\"pt\").to(self.device)\r\n\r\n        with torch.no_grad():\r\n            embeddings = self.model(**inputs, output_hidden_states=True, return_dict=True).pooler_output.detach().cpu().numpy().tolist()\r\n\r\n        return embeddings\r\n\r\n    def __call__(self, text):\r\n        return self.get_embeddings(text)\r\n\r\n```\r\n\r\nDB:\r\n```python\r\nclass CollectionOperator():\r\n    def __init__(self, collection_name, db_path = DB_PATH, embedder: BaseEmbedder = None):\r\n        self.embedder = embedder\r\n        self.client = chromadb.PersistentClient(path = db_path)\r\n        self.collection = self.client.get_or_create_collection(name = collection_name, embedding_function = self.embedder.get_embeddings)\r\n\r\n    def add(self, text, metadata = {}):\r\n        metadat"
+  },
+  {
+   "title": "[BUG](sqlite/local): int/float union filter truncates float bounds \u2014 stored int 2 matches $eq: 2.5",
+   "url": "https://github.com/chroma-core/chroma/issues/7491",
+   "state": "open",
+   "comments": 1,
+   "created": "2026-07-23",
+   "body": "### What happened?\n\nThe int/float union filter in local/sqlite metadata filtering truncates non-integral float bounds before applying them to integer-stored values, so **every comparison operator returns wrong results when the query bound is a non-integral float and the stored value is an int**.\n\nMinimal demonstration (chromadb 1.5.9, `EphemeralClient`):\n\n```python\nimport chromadb\n\nc = chromadb.EphemeralClient()\ncol = c.get_or_create_collection(\"repro\")\ncol.add(\n    ids=[\"int2\", \"float2_5\", \"int3\"],\n    embeddings=[[1, 0], [0, 1], [1, 1]],\n    metadatas=[{\"n\": 2}, {\"n\": 2.5}, {\"n\": 3}],\n)\n\ncol.get(where={\"n\": {\"$eq\": 2.5}})[\"ids\"]   # ['float2_5', 'int2']  <- 2 == 2.5 ?!\ncol.get(where={\"n\": {\"$gte\": 2.5}})[\"ids\"]  # ['float2_5', 'int2', 'int3']  <- includes 2\ncol.get(where={\"n\": {\"$lt\": 2.5}})[\"ids\"]   # []  <- int2 (2 < 2.5) wrongly excluded\ncol.get(where={\"n\": {\"$ne\": 2.5}})[\"ids\"]   # ['int3']  <- int2 (2 != 2.5) wrongly excluded\n```\n\nExpected: `['float2_5']` / `['float2_5', 'int3']` / `['int2']` / `['int2', 'int3']`.\n\nAll four observed results are wrong in the same direction: the float bound `2.5` behaves as `2` against int-stored values.\n\n### Root cause\n\n`rust/segment/src/sqlite_metadata.rs`, `create_union_subquery_for_int_float_ops` (~lines 613\u2013648). To support int/float mixing, the filter unions an int-column subquery with a float-column subquery \u2014 but the query bound is collapsed for the int side with a plain cast:\n\n```rust\nlet (i, f) = match val {\n    MetadataValue::"
+  },
+  {
+   "title": "[Bug]: A $or with about 1,000 operands fails with \"Expression tree is too large (maximum depth 1000)\"",
+   "url": "https://github.com/chroma-core/chroma/issues/7969",
+   "state": "open",
+   "comments": 0,
+   "created": "2026-10-30",
+   "body": "### What happened?\n\nThanks for Chroma. I ran into a limit on the number of operands in a filter that I could not find in the docs, and I wanted to pass it on. Please correct me if I have misread anything.\n\nA `where` whose top level is `$or` over 1,001 simple conditions, or over 1,000 clauses that are each a `$or` of two simple conditions, raises `InternalError` (see the log output). The flat document is one level deep and the nested one two, so the depth SQLite refuses grows with the number of operands, not with the nesting of the `where` document.\n\nIn `rust/segment/src/sqlite_metadata.rs` (tag 1.5.9), `CompositeExpression::eval` starts from a bound `false` (or `true` for `$and`) and folds in each child with `Expr::expr(expr).or(child.eval())`, so a flat `$or` of n clauses becomes a left-deep chain of binary ORs n levels deep. The filter docs state no limit on the number of operands.\n\nReproducer:\n\n```python\nimport chromadb\n\nc = chromadb.EphemeralClient().create_collection(\"repro\", embedding_function=None)\nc.add(ids=[\"a\"], embeddings=[[0.1, 0.2]], metadatas=[{\"g\": 1, \"g::i:1\": True}])\n\nflat = {\"$or\": [{\"g\": {\"$eq\": i}} for i in range(1001)]}\nnested = {\"$or\": [{\"$or\": [{\"g\": {\"$in\": [i]}}, {f\"g::i:{i}\": {\"$eq\": True}}]} for i in range(1000)]}\nfor where in (flat, nested):\n    try:\n        print(c.query(query_embeddings=[[0.1, 0.2]], n_results=1, where=where)[\"ids\"])\n    except Exception as error:\n        print(type(error).__name__, error)\n```\n\nExpected: `[['a']]` for both, or a "
+  }
+ ]
+}

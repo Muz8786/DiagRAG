@@ -23,14 +23,18 @@ shows it, without digging through the working workspace.
   Markdown document you can open and edit in any Markdown
   editor (Typora, Obsidian, VS Code preview, or GitHub preview)
   with every figure embedded and captioned.
-- `kaggle/` — `diagrag_core28.ipynb`, the single Kaggle notebook
-  for the 28 core faults (data verification, purity checks, hard
+- `kaggle/` — `diagrag_core28.ipynb` (v1), `diagrag_v2.ipynb` and
+  `diagrag_port.ipynb`, the Kaggle notebooks for the 28 core faults (data verification, purity checks, hard
   episodes, detectors, repairs, closed loop), its `.py` source,
   and the CPU validation outputs. See `kaggle/README.md`.
 - `release/DiagRAG_core28_kaggle.zip` — everything needed to test
   the whole thing: the Kaggle notebook, its source, the local
   resumable runner, the docs, and the CPU judged-run outputs
   for seeds 42 and 43 (verdict, protocol, all tables, every episode).
+- `docs/EVIDENCE_AND_NOVELTY_REPORT.md` — field evidence for every
+  fault, verdicts, missing faults, the natural-validation, portability
+  and loop findings, and the execution record of the v2 and portability
+  judged runs. Raw evidence is in `docs/evidence/`.
 - `docs/CORE28_FAULTS.md` — for each core fault: the problem, the
   episodes, the detector and the repair.
 - `paper/` — the publication paper outline, with sections,

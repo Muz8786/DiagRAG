@@ -1,5 +1,18 @@
 # DiagRAG core-28 on Kaggle
 
+Three notebooks. Each is a single file with Internet ON, and a GPU is recommended:
+
+| Notebook | What it judges | Latest judged run |
+|---|---|---|
+| `diagrag_core28.ipynb` (v1) | the 28 core faults | CPU seeds 42 and 43: `judged_cpu_run_seed42/`, `judged_cpu_run_seed43/` |
+| `diagrag_v2.ipynb` | v1's 28 + the field-evidenced R25/R26/K11, family-level loop, natural arms NA1–NA6 on never-examined queries | CPU seed 44: `judged_cpu_run_v2_seed44/` |
+| `diagrag_port.ipynb` | 20 faults on a second stack (e5-small-v2 + FAISS HNSW + min-max fusion) and a second domain (BEIR SciFact) | CPU seed 7: `judged_port_scifact/` |
+
+Why v2 and the port arm exist, the evidence behind them, and every number below: `../docs/EVIDENCE_AND_NOVELTY_REPORT.md`.
+
+v2 additionally downloads `natural_exclusions_v1.json` from this repository (SHA-256 checked). It needs this branch, or the
+file placed next to the notebook.
+
 One notebook, `diagrag_core28.ipynb`, does the whole job: fetch and verify the data,
 run the purity checks, generate hard episodes for the 28 core faults, train and gate the
 detectors, gate the repairs, and run the closed loop. `diagrag_core28.py` is the same
@@ -81,3 +94,16 @@ shipped `diagrag_core28.py`.
 
 Details and the cause of the guarantee failure: `../docs/CORE28_FAULTS.md`. These runs used the
 CPU stack. The default GPU stack (bge-reranker-large) needs its own judged run.
+
+## v2 and portability judged runs, 14 Nov 2026 (CPU, MiniLM-L6 reranker)
+
+| | v2 seed 44 | Port SciFact seed 7 |
+|---|---|---|
+| Detectors passing | 28/28 (v1 faults) | 11/20 (all 11 faults with ≥ 20 held-out positives passed; 7 THIN, 2 not trainable) |
+| Repairs passing | 27/28 (Q03 fails the harm bar) | 18/20 |
+| New evidenced faults | R25 PASS/PASS, K11 PASS/PASS, R26 THIN (3 hard in 2,500) | R25 PASS/PASS |
+| Loop | mean closure 0.83 at 4.5% clean dispatch; do-no-harm L1 **FAIL** (0.0128 > 0.005) | not run |
+| Natural arms (1,500 never-examined queries) | duplicate collapse **+5.6 points [+1.6, +10.4]**; chunk-crowding collapse **+4.5 [+2.7, +6.3]**; placeholder demotion **HARM**; full loop +0.07 [−0.33, +0.47] | — |
+| Verdict | ADOPTED on the 28 | "suite ports" claim not made (11 < 15) |
+
+Every folder holds its protocol file, with gates and code SHA-256 written before the run. The hashes equal the shipped `.py` files.
