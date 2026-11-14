@@ -23,6 +23,12 @@ shows it, without digging through the working workspace.
   Markdown document you can open and edit in any Markdown
   editor (Typora, Obsidian, VS Code preview, or GitHub preview)
   with every figure embedded and captioned.
+- `kaggle/` — `diagrag_core28.ipynb`, the single Kaggle notebook
+  for the 28 core faults (data verification, purity checks, hard
+  episodes, detectors, repairs, closed loop), its `.py` source,
+  and the CPU validation outputs. See `kaggle/README.md`.
+- `docs/CORE28_FAULTS.md` — for each core fault: the problem, the
+  episodes, the detector and the repair.
 - `paper/` — the publication paper outline, with sections,
   headline numbers, and honest boundaries. The canonical
   manuscript is separate; do not edit it from here.
