@@ -35,16 +35,44 @@ CFG = dict(
     RERANKER=os.environ.get('RERANKER', 'BAAI/bge-reranker-large' if GPU else 'BAAI/bge-reranker-base'),
     CE_MAXLEN=int(os.environ.get('CE_MAXLEN', 512 if GPU else 320)),
     N_BASE_ESCI=int(os.environ.get('N_BASE_ESCI', 4000 if GPU else 320)),
-    N_HARD=int(os.environ.get('N_HARD', 80 if GPU else 10)),       # hard episodes per fault
-    MAX_ATT=int(os.environ.get('MAX_ATT', 1500 if GPU else 70)),   # injection attempts per fault
-    TEST_FRAC=0.4, AUROC_BAR=0.70, MIN_TEST_POS=20 if GPU else 3,
+    N_HARD=int(os.environ.get('N_HARD', 80 if GPU else 10)),       # hard episodes per fault, split 50/50 train/test by quota
+    MAX_ATT=int(os.environ.get('MAX_ATT', 2500 if GPU else 70)),   # injection attempts per fault
+    TEST_FRAC=0.5, CLEAN_FPR=0.05, IVF_NLIST=1024,
     N_PRDC=int(os.environ.get('N_PRDC', 528 if GPU else 120)), PROBE_K=20 if GPU else 8,
-    RESCUE_BAR_LB=0.50, N_HARM=int(os.environ.get('N_HARM', 60 if GPU else 8)), CLEAN_FPR=0.05, IVF_NLIST=1024,
+    N_HARM=int(os.environ.get('N_HARM', 60 if GPU else 8)),
+    TIME_BUDGET=int(os.environ.get('TIME_BUDGET', 0)),               # seconds per invocation; 0 = no limit (Kaggle Run All)
 )
+# Judged-run gates, fixed BEFORE any result exists (written to JUDGED_PROTOCOL.json on first start).
+GATES = dict(
+    detector='held-out one-vs-rest AUROC >= 0.70 (point estimate) AND >= 20 held-out positives',
+    repair='>= 20 hard episodes AND Wilson 95% lower bound of rescue rate >= 0.50 AND <= 10% of clean successes lost when the repair is forced on them',
+    solved='detector PASS and repair PASS',
+    targets='ADOPTED if repairs PASS >= 24/28 AND detectors PASS >= 27/28, else NOT_ADOPTED',
+    AUROC_BAR=0.70, MIN_TEST_POS=20, RESCUE_BAR_LB=0.50, MIN_REPAIR_N=20, MAX_HARM=0.10, REPAIR_TARGET=24, DETECT_TARGET=27)
 random.seed(CFG['SEED']); np.random.seed(CFG['SEED']); torch.manual_seed(CFG['SEED'])
 if not GPU: torch.set_num_threads(os.cpu_count() or 4)
 T0 = time.time()
 def log(*a): print(f'[{time.time()-T0:7.0f}s]', *a, flush=True)
+
+# Resumable run: state is checkpointed so an interrupted session (or a TIME_BUDGET stop) continues where it left off.
+import pickle
+CKPT = os.path.join(OUT, 'checkpoint.pkl')
+RES = pickle.load(open(CKPT, 'rb')) if os.path.exists(CKPT) else {}
+if RES: print('resuming from checkpoint, stage:', RES.get('stage'))
+def over_budget(): return CFG['TIME_BUDGET'] > 0 and time.time() - T0 > CFG['TIME_BUDGET']
+def save_ckpt(stage):
+    keep = {k: globals()[k] for k in ('CLEAN', 'EPIS', 'GEN', 'GSTATE', 'SEEN', 'HARM') if k in globals()}
+    keep.update(stage=stage, caches=dict(QC=globals().get('_QC', {}), CEC=globals().get('_CEC', {}), DC=globals().get('_DC', {})))
+    with open(CKPT + '.tmp', 'wb') as fh: pickle.dump(keep, fh, protocol=4)
+    os.replace(CKPT + '.tmp', CKPT); log('checkpoint saved:', stage)
+def maybe_stop(stage):
+    if over_budget():
+        save_ckpt(stage); log('TIME_BUDGET reached - run the notebook/script again to resume'); raise SystemExit(0)
+PROTO = os.path.join(OUT, 'JUDGED_PROTOCOL.json')
+if not os.path.exists(PROTO):
+    _code_sha = hashlib.sha256(open(__file__, 'rb').read()).hexdigest() if '__file__' in globals() else 'notebook'
+    json.dump(dict(created_utc=time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime()), gates=GATES, cfg=CFG, device=DEV,
+                   code_sha256=_code_sha), open(PROTO, 'w'), indent=1)
 
 # %% [markdown]
 # ## 1. Fetch and verify data (exact bytes + SHA-256, observed 14 Nov 2026)
@@ -456,6 +484,8 @@ import functools
 spell = functools.lru_cache(maxsize=None)(spell); segment = functools.lru_cache(maxsize=None)(segment)
 complete = functools.lru_cache(maxsize=None)(complete); synonyms = functools.lru_cache(maxsize=None)(synonyms)
 _enc_docs_raw = enc_docs; _DC = {}
+if RES:                                              # restore caches from the checkpoint (speed only)
+    _QC.update(RES['caches']['QC']); _CEC.update(RES['caches']['CEC']); _DC.update(RES['caches']['DC'])
 def enc_docs(texts, bs=32):
     miss = [t for t in dict.fromkeys(texts) if t not in _DC]
     if miss:
@@ -473,6 +503,7 @@ def spearman(a, b):
     if len(a) < 3: return 0.0
     ra = np.argsort(np.argsort(a)); rb = np.argsort(np.argsort(b))
     v = np.corrcoef(ra, rb)[0, 1]; return 0.0 if np.isnan(v) else float(v)
+NULL_TOP = None
 def features(tr):
     q, st, ov = tr['q'], tr['st'], tr['ov']; qt = tok(q); f = {}
     inv = [t for t in qt if t in VOC]; oov = [t for t in qt if t not in VOC]
@@ -529,6 +560,10 @@ def features(tr):
     if len(tr['dtop']):
         i0 = int(tr['dtop'][0]); f['align_probe'] = float(enc_docs([dtext(i0, ov)])[0] @ served_vec(i0, st['cfg'], ov))
     else: f['align_probe'] = 1.0
+    f['q_probe_cos'] = float(tr['qv'] @ enc_q(q, 'v15'))   # query-path probe: served vector vs pinned re-encode
+    global NULL_TOP
+    if NULL_TOP is None: NULL_TOP = set(topn(dense_all(enc_q('', 'v15')), 10).tolist())
+    f['d_null10'] = len(set(tr['dtop'][:10].tolist()) & NULL_TOP) / 10    # dense results that ignore the query text
     sp20 = [int(i) for i in tr['stop'][:CFG['PROBE_K']]]  # index-health probe: are the sparse top-k docs' dense vectors current?
     if sp20:
         fv = enc_docs([dtext(i, ov) for i in sp20]); cs_ = [float(v @ served_vec(i, st['cfg'], ov)) for i, v in zip(sp20, fv)]
@@ -605,9 +640,13 @@ def grank(tr, gold):
         if i in gold: return r + 1
     return 999
 log('clean runs')
-for b in BASE:
-    st = dict(q=b['q'], tenant=b['tenant'], cfg=mkcfg(), ov=None); tr = run(st)
-    b['clean_tr'] = tr; b['h5'] = succ(tr, b['gold'], 5); b['h1'] = succ(tr, b['gold'], 1); b['rank'] = grank(tr, b['gold'])
+CLEAN = RES.get('CLEAN', {})
+for n_, b in enumerate(BASE):
+    if b['bid'] not in CLEAN:
+        st = dict(q=b['q'], tenant=b['tenant'], cfg=mkcfg(), ov=None); tr = run(st)
+        CLEAN[b['bid']] = dict(clean_tr=tr, h5=succ(tr, b['gold'], 5), h1=succ(tr, b['gold'], 1), rank=grank(tr, b['gold']))
+        if n_ % 50 == 0: maybe_stop('clean_runs')
+    b.update(CLEAN[b['bid']])
 for s_ in ['esci', 'faq', 'inp', 'prd', 'prdc']:
     xs = [b for b in BASE if b['src'] == s_]
     if xs: log(f'clean {s_}: n={len(xs)} Hit@1={np.mean([b["h1"] for b in xs]):.3f} Hit@5={np.mean([b["h5"] for b in xs]):.3f}')
@@ -631,18 +670,18 @@ with zipfile.ZipFile(FILES['qspell']['path']) as zf:
                 if x != y and x.isalpha() and y.isalpha() and len(y) >= 4 and dl_dist(x, y) <= 2: WEBIS[y].append(x)
 log('Webis real misspelling pairs', sum(map(len, WEBIS.values())), 'edit ops', dict(WOPS))
 KEYB = 'qwertyuiop asdfghjkl zxcvbnm'.split()
-def near_key(ch):
+def near_key(ch, rng):
     for row in KEYB:
         if ch in row:
-            j = row.index(ch); return random.choice([row[k] for k in (j - 1, j + 1) if 0 <= k < len(row)])
+            j = row.index(ch); return rng.choice([row[k] for k in (j - 1, j + 1) if 0 <= k < len(row)])
     return ch
 def webis_edit(w, rng):
     """Real misspelling from Webis if the word has one, else one edit drawn from Webis' edit-type distribution."""
     if w in WEBIS: return rng.choice(WEBIS[w]), True
     ops, wt = zip(*WOPS.items()); op = rng.choices(ops, weights=wt)[0]; i = rng.randrange(1, len(w) - 1)
     if op == 'Deletion': return w[:i] + w[i + 1:], False
-    if op == 'Insertion': return w[:i] + near_key(w[i]) + w[i:], False
-    if op == 'Substitution': return w[:i] + near_key(w[i]) + w[i + 1:], False
+    if op == 'Insertion': return w[:i] + near_key(w[i], rng) + w[i:], False
+    if op == 'Substitution': return w[:i] + near_key(w[i], rng) + w[i + 1:], False
     return w[:i] + w[i + 1] + w[i] + w[i + 2:], False
 def content_toks(q): return [t for t in q.split() if t.isalpha() and len(t) >= 4 and t not in FILLER]
 def by_idf(ts): return sorted(ts, key=lambda t: -(IDF[VOC[t]] if t in VOC else 0))
@@ -706,11 +745,15 @@ def corrupt_code(t, rng):
         if t[j].isdigit() and t[i] != t[j]: return t[:i] + t[j] + t[i] + t[j + 1:]
     i = rng.choice(ds); return t[:i] + str((int(t[i]) + rng.randint(1, 9)) % 10) + t[i + 1:]
 def is_code(t): return len(t) >= 3 and t.isalnum() and any(ch.isdigit() for ch in t) and (any(ch.isalpha() for ch in t) or len(t) >= 3)
-def inj_Q07(b, rng):   # identifier / model-number corruption
+def inj_Q07(b, rng):   # identifier / model-number corruption: 1-2 digit edits that give a code the catalogue does not have
     cs = [t for t in b['q'].split() if is_code(t)]
     if not cs: return None
-    t = rng.choice(cs); w = corrupt_code(t, rng)
-    return S(b, q=b['q'].replace(t, w, 1), k=1) if w != t else None
+    t = rng.choice(cs)
+    for _ in range(6):
+        w = corrupt_code(t, rng)
+        if rng.random() < 0.5: w = corrupt_code(w, rng)
+        if w != t and df_of(w) == 0: return S(b, q=b['q'].replace(t, w, 1), k=1)
+    return None
 ESCI_BASE = [x for x in BASE if x['src'] == 'esci']
 def inj_Q09(b, rng):   # multi-intent: two shopping needs in one query
     o = rng.choice(ESCI_BASE)
@@ -872,21 +915,22 @@ def rep_Q04(st, tr):   # corpus spelling candidates, ranked by co-occurrence wit
         cur = with_q(cur, re.sub(rf'\b{re.escape(w)}\b', best, cur['q'], count=1))
     return cur
 def rep_Q05(st, tr): return with_q(st, ' '.join(' '.join(segment(w)) if (w not in VOC and segment(w)) else w for w in st['q'].split()))
-def code_variants(t):
+def code_variants1(t):
     out = set()
     for i, ch in enumerate(t):
-        if ch.isdigit():
-            out |= {t[:i] + str(d) + t[i + 1:] for d in range(10)}
+        if ch.isdigit(): out |= {t[:i] + str(d) + t[i + 1:] for d in range(10)}
         if i + 1 < len(t): out.add(t[:i] + t[i + 1] + t[i] + t[i + 2:])
-    return [v for v in out if v != t and df_of(v) >= 1]
-def rep_Q07(st, tr):   # ladder: try in-corpus identifier variants, keep the one the reranker trusts most
-    cs = [t for t in st['q'].split() if is_code(t) and df_of(t) < 3]
-    best, best_s = st, (float(tr['ce'].max()) if len(tr['ce']) else -1e9)
-    for t in cs:
-        for v in sorted(code_variants(t), key=lambda v: -df_of(v))[:6]:
-            s2 = with_q(st, st['q'].replace(t, v, 1)); t2 = run(s2); sc = float(t2['ce'].max()) if len(t2['ce']) else -1e9
-            if sc > best_s: best, best_s = s2, sc
-    return best
+    out.discard(t); return out
+def code_variants(t):
+    v1 = code_variants1(t); v2 = {y for x in v1 for y in code_variants1(x)}
+    return [v for v in (v1 | v2) if v != t and df_of(v) >= 1]
+def rep_Q07(st, tr):   # in-corpus codes within 2 digit edits, ranked by co-occurrence with the rest of the query, CE-verified
+    cur = st
+    for t in [t for t in st['q'].split() if is_code(t) and df_of(t) < 3]:
+        ctx = [w for w in cur['q'].split() if w != t]
+        cs = cooc_rank(code_variants(t), ctx, 3)
+        if cs: cur = best_by_ce(with_q(cur, cur['q'].replace(t, cs[0], 1)), [with_q(cur, cur['q'].replace(t, v, 1)) for v in cs[1:]])
+    return cur
 def rep_Q09(st, tr):
     parts = [p.strip() for p in re.split(r'\band also\b|\band\b|,|&|\bplus\b', st['q']) if len(tok(p)) >= 1]
     return with_cfg(st, parts=parts) if len(parts) >= 2 else st
@@ -939,15 +983,24 @@ assert set(REP) == set(SINGLE) and all(callable(REP[f]) for f in SINGLE)   # eve
 
 # %%
 K_OF = dict(Q07=1, K03=1, K06=1, K07=1, K09=1)
-EPIS, GEN, SEEN = [], {}, set()
+EPIS, GEN, SEEN, GSTATE = RES.get('EPIS', []), RES.get('GEN', {}), RES.get('SEEN', set()), RES.get('GSTATE', {})
+QUOTA = CFG['N_HARD'] // 2                              # hard episodes wanted in EACH split (guarantees held-out positives)
 for f in FAULTS:
+    if GSTATE.get(f, {}).get('done'): continue
     rng = random.Random(f'{CFG["SEED"]}-{f}'); k = K_OF.get(f, 5)
     pool = [b for b in BASE if b['src'] in POOL[f] and (b['h1'] if k == 1 else b['h5'])]
-    rng.shuffle(pool); per_bid = collections.Counter(); g_ = dict(pool=len(pool), attempts=0, not_applicable=0, easy=0, hard=0, real_typos=0)
-    t0 = time.time()
-    while pool and g_['attempts'] < CFG['MAX_ATT'] and g_['hard'] < CFG['N_HARD']:
-        b = pool[g_['attempts'] % len(pool)]; g_['attempts'] += 1
-        if per_bid[b['bid']] >= 2: g_['not_applicable'] += 1; continue      # at most 2 episodes per base query per fault
+    rng.shuffle(pool)
+    gs = GSTATE.get(f) or dict(ptr=0, per_bid=collections.Counter(), g=dict(pool=len(pool), attempts=0, not_applicable=0, easy=0,
+                                                                         hard=0, hard_train=0, hard_test=0, real_typos=0))
+    if 'rng' in gs: rng.setstate(gs['rng'])
+    g_, per_bid = gs['g'], gs['per_bid']; t0 = time.time()
+    while pool and g_['attempts'] < CFG['MAX_ATT'] and gs['ptr'] < 4 * len(pool) and \
+            (g_['hard_train'] < QUOTA or g_['hard_test'] < QUOTA):
+        b = pool[gs['ptr'] % len(pool)]; gs['ptr'] += 1
+        if g_['hard_' + b['split']] >= QUOTA or per_bid[b['bid']] >= 2: continue   # split quota full / max 2 per base query
+        g_['attempts'] += 1
+        if g_['attempts'] % 25 == 0 and over_budget():
+            gs['rng'] = rng.getstate(); GSTATE[f] = gs; maybe_stop(f'generation:{f}')
         st = INJ[f](b, rng)
         if st is None: g_['not_applicable'] += 1; continue
         sig = hashlib.md5(repr((b['bid'], st['q'], sorted((k_, str(v_)) for k_, v_ in st['cfg'].items() if k_ != 'emb_override'),
@@ -956,15 +1009,19 @@ for f in FAULTS:
         SEEN.add(sig)
         tr = run(st)
         if succ(tr, st['gold'], st['k']): g_['easy'] += 1; continue
-        g_['hard'] += 1; g_['real_typos'] += st['meta'].get('real_typos', 0); per_bid[b['bid']] += 1
+        g_['hard'] += 1; g_['hard_' + b['split']] += 1; g_['real_typos'] += st['meta'].get('real_typos', 0); per_bid[b['bid']] += 1
         EPIS.append(dict(fault=f, bid=b['bid'], split=b['split'], st=st, feats=features(tr), meta=st['meta']))
     tried = g_['attempts'] - g_['not_applicable']
     g_['hard_yield'] = round(g_['hard'] / tried, 3) if tried else 0.0; GEN[f] = g_
+    gs['done'] = True; GSTATE[f] = gs
     log(f, g_, f'{time.time()-t0:.0f}s')
-for b in BASE:
-    EPIS.append(dict(fault='NONE', bid=b['bid'], split=b['split'], st=dict(q=b['q'], tenant=b['tenant'], cfg=mkcfg(), ov=None,
-                     gold=b['gold'], k=5, bid=b['bid'], split=b['split'], meta={}), feats=features(b['clean_tr']), meta={},
-                     clean_h5=b['h5'], clean_h1=b['h1'], src=b['src']))
+if not GSTATE.get('_none_done'):
+    for b in BASE:
+        EPIS.append(dict(fault='NONE', bid=b['bid'], split=b['split'], st=dict(q=b['q'], tenant=b['tenant'], cfg=mkcfg(), ov=None,
+                         gold=b['gold'], k=5, bid=b['bid'], split=b['split'], meta={}), feats=features(b['clean_tr']), meta={},
+                         clean_h5=b['h5'], clean_h1=b['h1'], src=b['src']))
+    GSTATE['_none_done'] = True
+save_ckpt('generation_done')
 log('episodes', collections.Counter(e['fault'] for e in EPIS))
 
 # %% [markdown]
@@ -1002,9 +1059,9 @@ for f in SINGLE:
     if s is not None:
         a, lo, hi = boot_auc((yte == f).astype(int), s); row.update(auroc=a, ci_lo=lo, ci_hi=hi)
         cm = (yte == f) | (yte == 'NONE'); a2 = boot_auc((yte[cm] == f).astype(int), s[cm], n=1)[0]; row['auroc_vs_clean'] = a2
-        row['status'] = ('THIN' if npos_te < CFG['MIN_TEST_POS'] else 'PASS' if a >= CFG['AUROC_BAR'] else 'FAIL')
+        row['status'] = ('THIN' if npos_te < GATES['MIN_TEST_POS'] else 'PASS' if a >= GATES['AUROC_BAR'] else 'FAIL')
     DET.append(row); log('detector', {k: (round(v, 4) if isinstance(v, float) else v) for k, v in row.items()})
-if GPU: assert all(r['n_pos_train'] >= 5 for r in DET), 'a fault head has <5 training positives (R06-style routing bug)'
+if CFG['N_HARD'] >= 20: assert all(r['n_pos_train'] >= 5 for r in DET), 'a fault head has <5 training positives (R06-style routing bug)'
 
 ATT = hgb().fit(Xtr, ytr); CLS = list(ATT.classes_)
 oof = np.zeros((len(TR), len(CLS)))
@@ -1023,7 +1080,7 @@ if C2te:
     sc = np.array([sec(p) for p in ATT.predict_proba(mat(C2te + TE))]); yy = np.array([1] * len(C2te) + [0] * len(TE))
     a, lo, hi = boot_auc(yy, sc); DET.append(dict(fault='C2', detector='tier0_rule(second factor-group mass)', n_pos_train=len(C2tr),
         n_pos_test=len(C2te), n_neg_test=len(TE), auroc=a, ci_lo=lo, ci_hi=hi,
-        status='THIN' if len(C2te) < CFG['MIN_TEST_POS'] else 'PASS' if a >= CFG['AUROC_BAR'] else 'FAIL'))
+        status='THIN' if len(C2te) < GATES['MIN_TEST_POS'] else 'PASS' if a >= GATES['AUROC_BAR'] else 'FAIL'))
 ok_ = [b['clean_tr']['ce'].max() for b in BASE if b['split'] == 'train' and b['h1'] and len(b['clean_tr']['ce'])]
 CE_FLOOR[0] = float(np.percentile(ok_, 10)); log('TAU_NONE', TAU_NONE, 'TAU_C2', TAU_C2, 'CE floor (fitted, was default 0.5)', CE_FLOOR[0])
 
@@ -1039,24 +1096,30 @@ def apply_repairs(st, faults):
     if not faults: return st
     if len(faults) == 1: return REP[faults[0]](st, run(st))
     return rep_C2(st, None, faults)
-REPG = []
+REPG, HARM = [], RES.get('HARM', {})
 for f in FAULTS:
-    es = [e for e in EPIS if e['fault'] == f]; ok_n = 0
-    for e in es:
+    es = [e for e in EPIS if e['fault'] == f]
+    for n_, e in enumerate(es):
+        if 'oracle_rescued' in e: continue
         fs = e['meta']['combo'] if f == 'C2' else [f]
-        e['oracle_rescued'] = bool(succ(run(apply_repairs(e['st'], fs)), e['st']['gold'], e['st']['k'])); ok_n += e['oracle_rescued']
-    k = K_OF.get(f, 5)
-    cl = [b for b in BASE if b['src'] in POOL[f] and b['split'] == 'test' and (b['h1'] if k == 1 else b['h5'])][:CFG['N_HARM']]
-    harm = 0
-    if f != 'C2':
-        for b in cl:
-            st = dict(q=b['q'], tenant=b['tenant'], cfg=mkcfg(), ov=None)
-            harm += not succ(run(REP[f](st, b['clean_tr'])), b['gold'], k)
-    lo, hi = wilson(ok_n, len(es))
+        e['oracle_rescued'] = bool(succ(run(apply_repairs(e['st'], fs)), e['st']['gold'], e['st']['k']))
+        if n_ % 10 == 0: maybe_stop(f'repair:{f}')
+    ok_n = sum(e['oracle_rescued'] for e in es); k = K_OF.get(f, 5)
+    if f not in HARM:
+        cl = [b for b in BASE if b['src'] in POOL[f] and b['split'] == 'test' and (b['h1'] if k == 1 else b['h5'])][:CFG['N_HARM']]
+        lost = 0
+        if f != 'C2':
+            for b in cl:
+                st = dict(q=b['q'], tenant=b['tenant'], cfg=mkcfg(), ov=None)
+                lost += not succ(run(REP[f](st, b['clean_tr'])), b['gold'], k)
+        HARM[f] = (len(cl) if f != 'C2' else 0, lost); maybe_stop(f'harm:{f}')
+    cn, lost = HARM[f]; lo, hi = wilson(ok_n, len(es)); harm_rate = lost / cn if cn else 0.0
+    status = ('THIN' if len(es) < GATES['MIN_REPAIR_N'] else
+              'PASS' if lo >= GATES['RESCUE_BAR_LB'] and harm_rate <= GATES['MAX_HARM'] else 'FAIL')
     row = dict(fault=f, n_hard=len(es), rescued=ok_n, rescue_rate=ok_n / len(es) if es else float('nan'), ci_lo=lo, ci_hi=hi,
-               clean_n=len(cl) if f != 'C2' else 0, clean_lost=harm,
-               status='THIN' if len(es) < CFG['MIN_TEST_POS'] else 'PASS' if lo >= CFG['RESCUE_BAR_LB'] else 'FAIL')
+               clean_n=cn, clean_lost=lost, harm_rate=harm_rate, status=status)
     REPG.append(row); log('repair', {k_: (round(v, 3) if isinstance(v, float) else v) for k_, v in row.items()})
+save_ckpt('repair_done')
 
 # %% [markdown]
 # ## 14. Closed loop on the held-out split: telemetry -> rules + attributor -> dispatch -> repair -> re-score.
@@ -1081,13 +1144,16 @@ def dispatch(fe):
     return out
 SAME = {'R03': 'ENC', 'R10': 'ENC', 'R11': 'ENC'}
 LOOP = collections.defaultdict(lambda: dict(n=0, rescued=0, attributed=0, dispatched=0))
-for e in [x for x in EPIS if x['split'] == 'test']:
-    fs = dispatch(e['feats']); L = LOOP[e['fault']]; L['n'] += 1; L['dispatched'] += bool(fs)
+for n_, e in enumerate([x for x in EPIS if x['split'] == 'test']):
+    if 'loop' not in e:
+        fs = dispatch(e['feats']); tr2 = run(apply_repairs(e['st'], fs)) if fs else run(e['st'])
+        e['loop'] = dict(fs=fs, ok=bool(succ(tr2, e['st']['gold'], 5 if e['fault'] == 'NONE' else e['st']['k'])))
+        if n_ % 25 == 0: maybe_stop('closed_loop')
+    fs = e['loop']['fs']; L = LOOP[e['fault']]; L['n'] += 1; L['dispatched'] += bool(fs)
     truth = e['meta']['combo'] if e['fault'] == 'C2' else [e['fault']]
     L['attributed'] += (not fs) if e['fault'] == 'NONE' else (bool(fs) and {SAME.get(x, x) for x in fs} == {SAME.get(x, x) for x in truth})
-    tr2 = run(apply_repairs(e['st'], fs)) if fs else run(e['st'])
-    if e['fault'] == 'NONE': L['rescued'] += succ(tr2, e['st']['gold'], 5) - e['clean_h5']   # net change on clean traffic
-    else: L['rescued'] += succ(tr2, e['st']['gold'], e['st']['k'])
+    L['rescued'] += (e['loop']['ok'] - e['clean_h5']) if e['fault'] == 'NONE' else e['loop']['ok']   # NONE: net change on clean traffic
+save_ckpt('loop_done')
 CLOSED = []
 for f in FAULTS + ['NONE']:
     L = LOOP[f]
@@ -1108,6 +1174,17 @@ def J(x):
     return str(x)
 gen_df = pd.DataFrame([dict(fault=f, **g) for f, g in GEN.items()])
 det_df, rep_df, loop_df = pd.DataFrame(DET), pd.DataFrame(REPG), pd.DataFrame(CLOSED)
+dstat = {r['fault']: r['status'] for r in DET}; rstat = {r['fault']: r['status'] for r in REPG}
+sol_df = pd.DataFrame([dict(fault=f, detector=dstat.get(f, 'MISSING'), repair=rstat.get(f, 'MISSING'),
+                            solved=dstat.get(f) == 'PASS' and rstat.get(f) == 'PASS') for f in FAULTS])
+n_det, n_rep, n_sol = int((sol_df.detector == 'PASS').sum()), int((sol_df.repair == 'PASS').sum()), int(sol_df.solved.sum())
+clean_row = [r for r in CLOSED if r['fault'] == 'NONE']
+VERDICT = dict(detectors_pass=n_det, repairs_pass=n_rep, solved_both=n_sol, of=len(FAULTS),
+               verdict='ADOPTED' if n_rep >= GATES['REPAIR_TARGET'] and n_det >= GATES['DETECT_TARGET'] else 'NOT_ADOPTED',
+               clean_net_hit_change=clean_row[0]['clean_net_hit_change'] if clean_row else None,
+               not_solved=sol_df[~sol_df.solved].fault.tolist(), device=DEV, reranker=CFG['RERANKER'], protocol=json.load(open(PROTO)))
+json.dump(VERDICT, open(os.path.join(OUT, 'VERDICT.json'), 'w'), indent=1, default=str); sol_df.to_csv(os.path.join(OUT, 'solved.csv'), index=False)
+log('VERDICT', {k_: v_ for k_, v_ in VERDICT.items() if k_ != 'protocol'})
 for name, df_ in [('episodes_summary', gen_df), ('detector_gates', det_df), ('repair_gates', rep_df), ('closed_loop', loop_df)]:
     df_.to_csv(os.path.join(OUT, f'{name}.csv'), index=False)
 with open(os.path.join(OUT, 'data_verification.json'), 'w') as fh:
@@ -1122,11 +1199,13 @@ with open(os.path.join(OUT, 'episodes.jsonl'), 'w') as fh:
                                                      license_status=d.get('license_status')) for d in (st['ov']['docs'] if st['ov'] else [])],
                                  gold=[DOCS[i]['doc_id'] for i in sorted(st['gold']) if i < N][:20], meta=e['meta'],
                                  oracle_rescued=e.get('oracle_rescued'), feats=e['feats']), default=J) + '\n')
-md = ['# DiagRAG core-28 run report', '', f'Device: {DEV}. Reranker: {CFG["RERANKER"]}. Runtime: {time.time()-T0:.0f}s.', '',
+md = ['# DiagRAG core-28 judged run report', '', f'Device: {DEV}. Reranker: {CFG["RERANKER"]}. Last session runtime: {time.time()-T0:.0f}s.', '',
+      '## Verdict (gates fixed in JUDGED_PROTOCOL.json before results)', '', '```', json.dumps({k_: v_ for k_, v_ in VERDICT.items() if k_ != "protocol"}, indent=1, default=str), '```', '',
+      json.dumps(GATES, indent=1), '', sol_df.to_markdown(index=False), '',
       '## Data verification', '', pd.DataFrame(VERIFY).T.to_markdown(), '', '## Purity', '', '```', json.dumps(PUR, indent=1, default=J), '```', '',
       '## Episode generation (hard = clean succeeds, faulted fails)', '', gen_df.to_markdown(index=False), '',
-      f'## Detector gates (AUROC bar {CFG["AUROC_BAR"]}, min test positives {CFG["MIN_TEST_POS"]})', '', det_df.to_markdown(index=False, floatfmt='.4f'), '',
-      f'## Repair gates (Wilson lower bound >= {CFG["RESCUE_BAR_LB"]})', '', rep_df.to_markdown(index=False, floatfmt='.3f'), '',
+      f'## Detector gates (AUROC bar {GATES["AUROC_BAR"]}, min test positives {GATES["MIN_TEST_POS"]})', '', det_df.to_markdown(index=False, floatfmt='.4f'), '',
+      f'## Repair gates (Wilson lower bound >= {GATES["RESCUE_BAR_LB"]})', '', rep_df.to_markdown(index=False, floatfmt='.3f'), '',
       '## Closed loop (held-out split)', '', loop_df.to_markdown(index=False, floatfmt='.3f'), '']
 open(os.path.join(OUT, 'REPORT.md'), 'w').write('\n'.join(md))
 log('done. outputs in', OUT); print('\n'.join(md[-12:]))

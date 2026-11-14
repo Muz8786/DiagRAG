@@ -21,7 +21,8 @@ If a V4 fault ID meant something different, change three functions for that ID:
   are on by default.
 - Hard-episode rule (fixes "too easy" and "baseline already right"): an episode is kept
   only if the clean pipeline succeeds and the faulted pipeline fails. Each fault keeps
-  injecting until it has `N_HARD` = 80 hard episodes or reaches `MAX_ATT` = 1,500 attempts.
+  injecting until it has `N_HARD` = 80 hard episodes (a quota of half per split, so 40 are
+  held out) or reaches `MAX_ATT` = 2,500 attempts.
   It records how many injections were easy and how many were not applicable, so the hard-episode yield is reported.
 - Success metric: gold in the top 5. Identity-sensitive faults (Q07, K03, K06, K07, K09)
   need gold at rank 1.
@@ -32,8 +33,10 @@ If a V4 fault ID meant something different, change three functions for that ID:
   zero leakage.
 - Detector gate: held-out one-vs-rest AUROC ≥ 0.70 with ≥ 20 test positives.
   Fewer than 20 test positives is reported as THIN, not PASS.
-- Repair gate: oracle-dispatched rescue rate with a Wilson 95% lower bound ≥ 0.50.
-  Harm is measured by applying the repair to clean successes.
+- Repair gate: ≥ 20 hard episodes, oracle-dispatched rescue rate with a Wilson 95% lower
+  bound ≥ 0.50, and at most 10% of clean successes lost when the repair is forced on them.
+- Gates are fixed before results (`JUDGED_PROTOCOL.json`). The verdict is ADOPTED only if at
+  least 24/28 repairs and 27/28 detectors pass.
 - Fixes that apply to every head: each head must have ≥ 5 training positives or the run
   stops (this guards against the R06-style "never trained, AUROC 0.50" bug). Every fault's
   repair is asserted to come from this file's `REP` table (this is the R05 plugin check).
@@ -100,11 +103,35 @@ get a repair. Dispatch order: a fired tier-0 rule first, then the attributor's t
 then the C2 check. The loop reports closure per fault, attribution accuracy, and the net
 Hit change on clean held-out traffic.
 
+## Judged CPU run, 14 Nov 2026
+
+The full table is in `kaggle/judged_cpu_run/`. The run used the MiniLM-L6 reranker, 50 hard
+episodes per fault and 25 held-out positives per fault.
+
+- **Detectors: 28/28 pass.** The lowest AUROCs are C2 0.81, K04 0.84, Q03 0.87 and R22 0.94.
+  K03 was 0.51 in V4 and is now 1.00. K05 was 0.69 and is now 1.00.
+- **Repairs: 27/28 pass.** No repair lost any of its 20 clean successes. Q03 fails:
+  28/50 rescued, Wilson lower bound 0.42. WordNet synonyms are ambiguous, so mapping a rare
+  word back to a common synonym often picks the wrong sense.
+- **Verdict: ADOPTED.** 27/28 faults are solved, meaning both their detector and their repair pass.
+
+The closed loop is not gated, and it is weaker than the gates. The gates score each detector
+one-vs-rest and dispatch each repair by oracle. The loop must also choose the exact fault.
+- The Q04 typo rule has priority, so it takes over Q01 (attribution 0.04, closure 0.16) and
+  Q03 (0.08, 0.16). Truncated words and rare synonyms also look like correctable typos.
+- In 24 of 25 held-out Q01 cases the Q04 rule fired. K04 (attribution 0.28) and R07 (0.32), both
+  stale-vector faults, are often dispatched together as a two-fault repair, which counts as a
+  wrong attribution. C2 (0.24) often gets only its Q04 half (10 of 25).
+- On clean held-out traffic, 10.3% of queries get a repair, for a net Hit@5 change of −1.1 points.
+
+The next fix is to let the Q04 rule fire only when the attributor's top Q fault is Q04.
+That fix needs a new judged run with a new seed before it counts.
+
 ## What the numbers mean
 
 - Faults are injected, so detector AUROCs measure whether telemetry can see the injected
   signature. They are not a measure of natural-fault detection. Natural validation is
   still outstanding for K (temporal) and R (model shift), as `paper/OUTLINE.md` already says.
-- The CPU validation in `kaggle/cpu_validation/` used a small reranker (MiniLM-L6) and
-  10 hard episodes per fault. It proves the code runs end to end. Do not quote its numbers.
-  The Kaggle GPU run with bge-reranker-large and 80 episodes per fault is the measurement.
+- The judged run above used the CPU stack (MiniLM-L6 reranker). The notebook's default GPU
+  stack (bge-reranker-large, 80 episodes per fault) is a different stack and needs its own
+  judged run before its numbers can be quoted.

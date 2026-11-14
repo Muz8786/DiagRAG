@@ -63,12 +63,12 @@
   },
   "esci_queries_us_E_in_corpus": 7175,
   "esci_split_counts": {
-   "train": 5134,
-   "test": 2041
+   "train": 4529,
+   "test": 2646
   },
   "esci_gold_components": 1829,
   "esci_test_gold_leak": 0,
-  "query_log_queries": 96995
+  "query_log_queries": 94945
  },
  "cfg": {
   "SEED": 42,
@@ -82,22 +82,20 @@
   "QPROMPT": "Represent this sentence for searching relevant passages: ",
   "RERANKER": "cross-encoder/ms-marco-MiniLM-L-6-v2",
   "CE_MAXLEN": 256,
-  "N_BASE_ESCI": 350,
-  "N_HARD": 10,
-  "MAX_ATT": 120,
-  "TEST_FRAC": 0.4,
-  "AUROC_BAR": 0.7,
-  "MIN_TEST_POS": 3,
-  "N_PRDC": 120,
-  "PROBE_K": 8,
-  "RESCUE_BAR_LB": 0.5,
-  "N_HARM": 10,
+  "N_BASE_ESCI": 2400,
+  "N_HARD": 50,
+  "MAX_ATT": 2500,
+  "TEST_FRAC": 0.5,
   "CLEAN_FPR": 0.05,
-  "IVF_NLIST": 1024
+  "IVF_NLIST": 1024,
+  "N_PRDC": 528,
+  "PROBE_K": 8,
+  "N_HARM": 20,
+  "TIME_BUDGET": 1480
  },
- "tau_none": 0.5237757088128233,
- "tau_c2": 0.10967713477900355,
- "ce_floor": 6.6366190910339355,
+ "tau_none": 0.27587100677918786,
+ "tau_c2": 0.011087067376532376,
+ "ce_floor": 3.9865658283233643,
  "features": [
   "align_probe",
   "ann_probe",
@@ -117,6 +115,7 @@
   "d_lex5",
   "d_m5",
   "d_n",
+  "d_null10",
   "d_std20",
   "dep_dense",
   "dep_sparse",
@@ -142,6 +141,7 @@
   "q_oov",
   "q_oov_long",
   "q_prefix",
+  "q_probe_cos",
   "q_segmentable",
   "q_synlow",
   "red_cos5",

@@ -27,6 +27,10 @@ shows it, without digging through the working workspace.
   for the 28 core faults (data verification, purity checks, hard
   episodes, detectors, repairs, closed loop), its `.py` source,
   and the CPU validation outputs. See `kaggle/README.md`.
+- `release/DiagRAG_core28_kaggle.zip` — everything needed to test
+  the whole thing: the Kaggle notebook, its source, the local
+  resumable runner, the docs, and the CPU judged-run outputs
+  (verdict, protocol, all gate tables, every episode).
 - `docs/CORE28_FAULTS.md` — for each core fault: the problem, the
   episodes, the detector and the repair.
 - `paper/` — the publication paper outline, with sections,
