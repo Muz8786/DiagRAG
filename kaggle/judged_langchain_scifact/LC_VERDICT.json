@@ -1,0 +1,63 @@
+{
+ "domain": "BEIR SciFact (chunked 1000/200)",
+ "stack": "LangChain: RecursiveCharacterTextSplitter + HuggingFaceBgeEmbeddings(bge-small) + FAISS + BM25Retriever + EnsembleRetriever + CrossEncoderReranker",
+ "clean_hit5": {
+  "train": 0.819672131147541,
+  "test": 0.8017857142857143
+ },
+ "chunks": 11169,
+ "detectors_pass": 8,
+ "repairs_pass": 10,
+ "solved_both": 7,
+ "of": 15,
+ "framework_claim": false,
+ "not_solved": [
+  "K04",
+  "K05",
+  "K08",
+  "K11",
+  "R03",
+  "R13",
+  "R22",
+  "R23"
+ ],
+ "protocol": {
+  "created_utc": "2026-11-15 09:17:59",
+  "gates": {
+   "detector": "held-out one-vs-rest AUROC >= 0.70 AND >= 20 held-out positives",
+   "repair": ">= 20 hard episodes AND Wilson 95% lower bound >= 0.50 AND <= 10% of clean successes lost",
+   "AUROC_BAR": 0.7,
+   "MIN_TEST_POS": 20,
+   "RESCUE_BAR_LB": 0.5,
+   "MIN_REPAIR_N": 20,
+   "MAX_HARM": 0.1,
+   "summary": "claim \"the suite runs on a framework stack\" only if >= 11 of the 15 framework-expressible faults pass both gates",
+   "TARGET": 11
+  },
+  "cfg": {
+   "SEED": 10,
+   "K": 25,
+   "TOP_N": 5,
+   "W": [
+    0.5,
+    0.5
+   ],
+   "THRESH": null,
+   "N_HARD": 50,
+   "MAX_ATT": 2500,
+   "N_HARM": 20,
+   "TIME_BUDGET": 1400,
+   "EMB": "BAAI/bge-small-en-v1.5",
+   "EMB_SWAP": "sentence-transformers/all-MiniLM-L6-v2",
+   "CE": "cross-encoder/ms-marco-MiniLM-L-6-v2",
+   "INSTR": "Represent this sentence for searching relevant passages: "
+  },
+  "device": "cpu",
+  "versions": {
+   "langchain_core": "1.8.0",
+   "langchain_community": "0.4.2",
+   "faiss": "1.16.0"
+  },
+  "code_sha256": "87284fe4d17bb2dbb6a4430057aed469f730864fafd0b04ab39848a7ac8d115e"
+ }
+}

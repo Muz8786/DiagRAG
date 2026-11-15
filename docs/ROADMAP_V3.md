@@ -114,10 +114,33 @@ What the numbers mean (`policies.csv`, `natural_traffic.csv`, `docs/evidence/ana
   - Port v1 (11/20 on SciFact) is unchanged and still reported.
   - **K04 (stale vector) is the one fault that fails on both stack-2 domains.** That is the honest generality limit.
 - **Framework stack (LangChain).** Real LangChain components with documented defaults, 15 faults injected through
-  framework knobs, the same gates. The bar is ≥ 11/15. Results are in §3a.
+  framework knobs, the same gates. The bar was ≥ 11/15; the result was **7/15 (FAIL)**, see §3a.
   - A first launch was aborted for performance before any gate result existed: it rebuilt an 11k-vector store on
     every attempt.
   - It was relaunched with the same seed, the same semantics, and a new protocol and hash.
+
+### 3a. Framework stack (LangChain) — result: **7/15 solved, the framework claim is NOT made** (bar ≥ 11)
+
+`kaggle/judged_langchain_scifact/`, langchain-core 1.8.0, langchain-community 0.4.2, faiss 1.16.0. The documents are
+split into 11,169 chunks. Clean Hit@5 is 0.80 on test.
+
+| Outcome | Faults |
+|---|---|
+| **Solved (7)** | Q04 (SymSpell on corpus vocabulary), Q05 (wordsegment), R01, R11, R19, R24, R25 (NaN vectors in a real FAISS index) |
+| Detector FAIL, repair PASS | K04 stale vector (AUROC 0.65; fails on every non-shopping stack), R22 ensemble weights (0.69), **R23 score threshold (0.50)** |
+| Repair FAIL | **K08 0/50**: implementation error. `CrossEncoderReranker` re-sorts the documents after the thin-document filter only *reordered* them; the filter has to remove them. K05 13/21: LangChain's `EmbeddingsRedundantFilter` at 0.98 does not collapse query-stuffed copies |
+| THIN (low hard-episode yield) | K05, K11, R03 (bge-small barely degrades without its query instruction: 3 hard in 2,500), R13 |
+
+What the framework stack taught, as measured:
+- **R23 is a field-report pattern we reproduced.** A mis-scaled `similarity_score_threshold` silently removes the dense
+  leg inside `EnsembleRetriever`, while the result count stays normal (5). Our count rule cannot see it, and the
+  detector is at chance. This matches Elasticsearch #164821: "no error and the hit count looks normal".
+- **Two causes are my mistakes, not findings:** the K08 repair, and R23 using a count rule instead of a dense-leg count.
+- **Fixes for a re-judged run (not run here):**
+  - K08 filter-then-rerank;
+  - an R23 rule on the dense-leg count;
+  - a K05 threshold below 0.98.
+  A re-judged run needs a new seed, and only the hash of the fixed file, and its outcome is unknown.
 
 ## 4. Phase D — ship it as a benchmark
 
@@ -162,14 +185,15 @@ New claims, each backed by a file:
 - A telemetry-only loop with a held-out do-no-harm bound (L1) and 0.865 closure (L2).
 - A significant gain on never-examined natural traffic (N1), with replicated natural repairs.
 - A grounded fault set (22 faults with evidence tiers; 20/22 solved) plus a 7,175-query prevalence census.
-- Portability on two further domains and a second stack (15/20 and 19/20).
+- Portability on two further domains and a second stack (15/20 and 19/20). The framework stack (7/15) did **not** pass.
 - An external-baseline comparison, and a benchmark with a private held-out split.
 
 Still not claimable:
 - Generalisation to unseen faults (U1 0.365 < 0.50).
+- Portability to a framework stack (LangChain 7/15 < 11).
 - That diagnosis beats a diagnosis-free stack on accuracy. It matches it at lower cost.
 - Natural misspelling or paraphrase repair.
 - Anything on the GPU stack, or against LLM-based baselines.
 
-Estimate [HYP]: about **7–7.5/10**, up from about 6.5. Getting to 8 or above still needs the GPU flagship, one
+Estimate [HYP]: about **7/10**, up from about 6.5. Getting to 8 or above still needs the GPU flagship, one
 LLM-based baseline on the natural arm, U1 ≥ 0.5, and external adoption (Phase E).
