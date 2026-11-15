@@ -6,9 +6,14 @@ Three notebooks. Each is a single file with Internet ON, and a GPU is recommende
 |---|---|---|
 | `diagrag_core28.ipynb` (v1) | the 28 core faults | CPU seeds 42 and 43: `judged_cpu_run_seed42/`, `judged_cpu_run_seed43/` |
 | `diagrag_v2.ipynb` | v1's 28 + the field-evidenced R25/R26/K11, family-level loop, natural arms NA1–NA6 on never-examined queries | CPU seed 44: `judged_cpu_run_v2_seed44/` |
+| `diagrag_v3.ipynb` | v2 + licence-clean corpus, evidence tiers, Q03 from real query pairs, K12/R26 testbeds, family-first loop with group fallback, Mondrian conformal do-no-harm, natural traffic on never-examined queries, prevalence census, external baselines (RAGLog tier-0, QPP, SymSpell, wordsegment) | CPU seed 45: `judged_cpu_run_v3_seed45/` |
+| `diagrag_port2.ipynb` | stack 2 on SciFact and FiQA (`DATASET=scifact` or `fiqa`) | `judged_port2_scifact/`, `judged_port2_fiqa/` |
+| `diagrag_langchain.ipynb` | 15 faults injected through real LangChain components and knobs (SciFact) | `judged_langchain_scifact/` |
 | `diagrag_port.ipynb` | 20 faults on a second stack (e5-small-v2 + FAISS HNSW + min-max fusion) and a second domain (BEIR SciFact) | CPU seed 7: `judged_port_scifact/` |
 
 Why v2 and the port arm exist, the evidence behind them, and every number below: `../docs/EVIDENCE_AND_NOVELTY_REPORT.md`.
+The v3 roadmap execution, with every v3/port2/LangChain number: `../docs/ROADMAP_V3.md`. The benchmark release: `../bench/`.
+v3 downloads `natural_exclusions_v2.json` from this repository, SHA-256 checked.
 
 v2 additionally downloads `natural_exclusions_v1.json` from this repository (SHA-256 checked). It needs this branch, or the
 file placed next to the notebook.

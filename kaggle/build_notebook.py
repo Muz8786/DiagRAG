@@ -2,7 +2,7 @@
 Usage: python kaggle/build_notebook.py [diagrag_core28 diagrag_v2 diagrag_port]"""
 import json, os, re, sys
 here = os.path.dirname(os.path.abspath(__file__))
-for name in (sys.argv[1:] or ['diagrag_core28', 'diagrag_v2', 'diagrag_port']):
+for name in (sys.argv[1:] or ['diagrag_core28', 'diagrag_v2', 'diagrag_port', 'diagrag_v3', 'diagrag_port2', 'diagrag_langchain']):
   src = open(os.path.join(here, name + '.py'), encoding='utf-8').read()
   cells = []
   for block in re.split(r'^# %%', src, flags=re.M)[1:]:

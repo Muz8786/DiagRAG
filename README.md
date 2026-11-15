@@ -31,6 +31,11 @@ shows it, without digging through the working workspace.
   the whole thing: the Kaggle notebook, its source, the local
   resumable runner, the docs, and the CPU judged-run outputs
   for seeds 42 and 43 (verdict, protocol, all tables, every episode).
+- `docs/ROADMAP_V3.md` — execution record of roadmap Phases A–E (v3,
+  port2, LangChain): every gate, result, failure and remaining decision.
+- `bench/` — DiagRAG-Bench v1.0: public dev episodes, unlabelled
+  held-out episodes, scorer, datasheet, reference baseline.
+- `docs/IDENTIFIABILITY.md`, `docs/CROSSWALK_CATALOGUE.md`, `NOTICE.md`.
 - `docs/EVIDENCE_AND_NOVELTY_REPORT.md` — field evidence for every
   fault, verdicts, missing faults, the natural-validation, portability
   and loop findings, and the execution record of the v2 and portability
