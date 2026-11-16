@@ -102,3 +102,10 @@ Run: `docs/evidence/probe_admission_nbr.py` (SHA-256 `9ea82bd1…c6077`), v4 CPU
 3. **C3 acts on the repair function, not on labels.** In the code the labels Q01, Q03, Q04, Q05 and the Q-group fallback `GQ` all apply the same function, `rep_QLEX` (the family repair). Dropping only the Q04 and Q05 labels would change nothing.
    The deployed natural loop therefore does not apply `rep_QLEX` at all (`DEPLOY['natural_typo_repair'] = False`). This also removes the family repair from the classifier path on natural traffic. Evidence on that path (v4 GPU seed 48, 668 natural queries where the classifier dispatched a Q-group repair): Hit@5 0.501 to 0.503, 5 fixed and 4 broken, so removing it costs nothing measurable and saves its cost.
    Both loops are reported on the natural queries: `h_loop` (v5 deployed config) and `h_loop_v4cfg` (v4 behaviour as a counterfactual), so the delta from the correction is on record. NA1c compares them on queries with `q_correctable >= 1`.
+
+**B4 — v5 code frozen (16 Nov 2026, 08:35 UTC; no v5 judged run exists).**
+`kaggle/diagrag_v5.py` is generated from `kaggle/diagrag_v4.py` by `kaggle/mk_v5.py` (25 exact, asserted replacements; `diff v4 v5` shows them). SHA-256 **`bf43658f1c9bab175bdf992647a08d238820dc413b06ebd7d4359c646765591b`**.
+Code checks done before this freeze, all on a tiny CPU smoke run (the numbers from it are meaningless and are not reported): the script runs to the end with exit 0; the protocol file records this hash, floor 50 and the deploy switch;
+`VERDICT.accounting` carries (a), (b) and (c); the policy table carries the two new policies with T1 to T4; natural arms NA1c, NA1d and N1v4 are present; the unchanged pre-registered `analysis_gpu_plan.py` reads the output.
+Not checked: behaviour at full scale on a GPU (that is the judged run itself).
+Nothing in the protocol's gates or bars changed in B1 to B4 except as stated there. The judged run is one run, GPU, seed 49, settings in section 3, and waits for the owner's go-ahead and the choice of Kaggle account.
