@@ -62,7 +62,7 @@ Code was written by Claude (Anthropic) with the repository owner directing the w
     code('''
 # 1. Configuration. These are the pre-registered v5 settings (seed 49, docs/evidence/v5_protocol.md section 3). The protocol allows ONE judged run; do not change SEED to shop for a verdict.
 import os
-CONFIG = dict(SEED='49', N_BASE_ESCI='2400', N_PRDC='528', N_HARD='100', MAX_ATT='4000', N_HARM='20', TIME_BUDGET='38500')
+CONFIG = dict(SEED='49', N_BASE_ESCI='2400', N_PRDC='528', N_HARD='100', MAX_ATT='4000', N_HARM='20', TIME_BUDGET='30000')
 os.environ.update(CONFIG)
 print(CONFIG)
 '''),
