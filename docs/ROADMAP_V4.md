@@ -255,3 +255,14 @@ Note the single-threshold `global_crc_0.005` already met all four targets (in v4
 **About 7.5 out of 10. The v5 run did not raise it, and the programme's target of 8.0 to 8.2 is not reached.** What moved: a measured guarantee frontier (the strongest new result), a resolved C2 question, a rigorous Q03 identifiability exhibit with five runs in the real-pair era, a fifth natural-traffic measurement (+2.43), D3 passing for the first time, and a reproducibility record.
 What did not: the adoption gate was missed again (24/28, three of the misses caused by my own floor), U1 stayed below its bar with no ceiling proved, and the frontier LLM arm, the full FiQA port and the bench release did not happen. A reviewer will see two NOT_ADOPTED runs in the matrix; the explanation is written, but it does not make them pass.
 **What would move it to about 8.0:** a v6 with the generator fix (owner approval), a GPU replication with a valid token, the frontier LLM arm with the owner's keys, and a full-suite FiQA port. **8.2 and above is not reachable by this repository alone.**
+
+---
+
+## 11.4 Correction (17 Nov 2026): the mechanism behind v5's three THIN detectors was misdiagnosed
+
+Sections 11.1 and `PROJECT_EXPLAINED.md` 5.2 say the three THIN detectors (R03, R15, R22) came from a generator loop whose pointer budget was consumed by skipped entries, and that "count quota skips separately" is the fix. **That fix would not work, and the explanation is incomplete.** I found this by simulating the proposed fix, which did not reproduce the failure, and then reading the stored generation state:
+- The pointer did reach its bound (5,228 = 4 x 1,307) at only 2,617 to 2,717 attempts, as stated. That fact stands.
+- But for R03, R15 and R22 the injector is **deterministic** (for example `enc='v15_trunc'`), so a second attempt on the same base query reproduces the same episode, is caught by the duplicate signature and counted "not applicable" (56%, 58% and 57% of attempts). These three faults have **zero** base queries with two hard episodes, while R10 (random noise) has 11.
+- So each base query yields at most one episode for these faults, and only 7.4%, 8.6% and 8.5% of queries are hard. One pass over the whole pool would give about 96, 112 and 111 hard episodes in total, and about **39, 46 and 45 in the test half** (the test half has 872 ESCI queries against 1,528 for train). v5 obtained 38, 44 and 47.
+- **Conclusion: the 50-positive floor is not reachable for deterministic low-yield faults with this base-query pool.** The limit is supply of distinct test queries, not the loop. A fix has to change supply (more base queries, or a larger test fraction), which is a different design change from the one drafted.
+`diagrag_v6.py` as first drafted (loop-budget fix plus C2 pair balancing) was **discarded before any run** and is not in the repository.
