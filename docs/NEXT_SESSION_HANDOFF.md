@@ -28,7 +28,7 @@ across the Q/K/R/C fault groups, cause-dispatched repair, and recovery measured 
 | Judged results | `kaggle/judged_*` folders. Every one holds a protocol file whose `code_sha256` equals its `.py` |
 | Evidence, plan, record | `docs/EVIDENCE_AND_NOVELTY_REPORT.md` (42 field reports, fault verdicts), `docs/ROADMAP_V3.md` (Phases A–E results), `docs/IDENTIFIABILITY.md` (theory), `docs/CROSSWALK_CATALOGUE.md` |
 | Benchmark | `bench/` (DiagRAG-Bench v1.0, scorer, datasheet). The private test labels are **not** in the repo; their hash is in `bench/release_v1/MANIFEST.json` |
-| Release zip | `release/DiagRAG_core28_kaggle.zip`; the single-file Kaggle notebook is `kaggle/DiagRAG_v4_kaggle.ipynb` (built by `kaggle/build_final_notebook.py`) |
+| Release zips | `release/DiagRAG_FULL_PROJECT_A_to_Z.zip`, `release/DiagRAG_RUN_PACKAGE.zip` (the older `DiagRAG_core28_kaggle.zip` was superseded and removed); the single-file Kaggle notebook is `kaggle/DiagRAG_v4_kaggle.ipynb` (built by `kaggle/build_final_notebook.py`) |
 | Data | corpus and cache on Google Drive (IDs in `data/DATA_MANIFEST.md`); ESCI from GitHub LFS; Webis-QSpell-17 from Zenodo; BEIR from UKP. All are SHA-256 checked inside the notebooks |
 | The other project | `Muz8786/diagrag-data` (private): the 47-fault catalogue DiagRAG. **Keep it separate unless the owner approves a merge** (the fault IDs collide) |
 

@@ -13,7 +13,7 @@ Every notebook is a single file. Internet must be ON. Use a GPU (T4 x1) for the 
 | `diagrag_langchain.ipynb` (v1) | 15 faults injected through real LangChain components | `judged_langchain_scifact/` (7/15, claim FAILED) |
 | `diagrag_langchain2.ipynb` | same 15 faults after fixes designed from the v1 results | `judged_langchain_v2_scifact/` (11/15, exactly at the bar of 11) |
 | `diagrag_port.ipynb` | 20 faults on a second stack and a second domain (SciFact) | CPU seed 7: `judged_port_scifact/` (11/20) |
-| `diagrag_v5.ipynb` / `DiagRAG_v5_kaggle.ipynb` | v4 + 50-positive floor, capped and two-stage dispatch policies, deployed-config correction, library versions in the protocol. Pre-registered in `../docs/evidence/v5_protocol.md` | **not yet run** (one GPU run, seed 49, awaiting the owner) |
+| `diagrag_v5.ipynb` / `DiagRAG_v5_kaggle.ipynb` | v4 + 50-positive floor, capped and two-stage dispatch policies, deployed-config correction, library versions in the protocol. Pre-registered in `../docs/evidence/v5_protocol.md` | CPU seed 49: `judged_cpu_run_v5_seed49/` (**NOT_ADOPTED**, 24/28 detectors; three THIN under the new floor). GPU replication not run |
 | (script) `../bench/llm_baselines.py` | RAGLog-style LLM diagnosis and CRAG-style LLM repair against DiagRAG | `judged_llm_baselines/`, `../docs/LLM_BASELINES_RESULTS.md` |
 
 Why v2 and the port arm exist, the evidence behind them, and every number below: `../docs/EVIDENCE_AND_NOVELTY_REPORT.md`.

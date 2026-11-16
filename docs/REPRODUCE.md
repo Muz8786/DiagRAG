@@ -5,7 +5,7 @@ Two levels. The first takes about 30 minutes and needs no GPU. The second regene
 ## Level 1 — check that the published tables follow from the published episodes (about 30 minutes, CPU)
 
 ```bash
-git clone -b core28-kaggle-notebook https://github.com/Muz8786/DiagRAG && cd DiagRAG      # or unzip release/DiagRAG_core28_kaggle.zip
+git clone -b core28-kaggle-notebook https://github.com/Muz8786/DiagRAG && cd DiagRAG      # or unzip release/DiagRAG_RUN_PACKAGE.zip (then see RUN_GUIDE.md)
 pip install numpy scikit-learn                                                              # nothing else is needed for this level
 python verify.py                                                                            # zip only: file checksums and code hashes (about 10 seconds)
 python kaggle/reproduce_tables.py kaggle/judged_cpu_run_v4_seed47                          # re-fit every detector from the shipped episodes (about 30 seconds)
