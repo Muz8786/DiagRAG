@@ -132,10 +132,20 @@ def maybe_stop(stage):
     if over_budget():
         save_ckpt(stage); log('TIME_BUDGET reached - run the notebook/script again to resume'); raise SystemExit(0)
 PROTO = os.path.join(OUT, 'JUDGED_PROTOCOL.json')
+def _env_versions():   # v5 B5: a re-fit of the detectors from shipped episodes differed on Kaggle's stack, and the library versions were not recorded
+    import importlib.metadata as _im, platform
+    v = dict(python=platform.python_version(), platform=platform.platform(), cpu_count=os.cpu_count())
+    for n_ in ('numpy', 'pandas', 'scipy', 'scikit-learn', 'torch', 'transformers', 'sentence-transformers', 'faiss-cpu', 'faiss-gpu', 'rank-bm25', 'nltk', 'threadpoolctl'):
+        try: v[n_] = _im.version(n_)
+        except Exception: pass
+    try: v['cuda'] = torch.version.cuda; v['gpu'] = torch.cuda.get_device_name(0) if torch.cuda.is_available() else None
+    except Exception: pass
+    return v
+ENV_VERSIONS = _env_versions()
 if not os.path.exists(PROTO):
     _code_sha = hashlib.sha256(open(__file__, 'rb').read()).hexdigest() if '__file__' in globals() else 'notebook'
     json.dump(dict(created_utc=time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime()), gates=GATES, cfg=CFG, device=DEV,
-                   code_sha256=_code_sha), open(PROTO, 'w'), indent=1)
+                   code_sha256=_code_sha, env=ENV_VERSIONS), open(PROTO, 'w'), indent=1)
 
 # %% [markdown]
 # ## 1. Fetch and verify data (exact bytes + SHA-256, observed 14 Nov 2026)

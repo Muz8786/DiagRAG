@@ -139,6 +139,22 @@ sub("N1 = [r for r in NAT if r['arm'] == 'N1'][0]\n",
     "nat_row('N1v4', 'counterfactual: DEPLOYED LOOP with the v4 config on all natural queries', rows_, lambda r: r['h_loop_v4cfg'])\n"
     "N1 = [r for r in NAT if r['arm'] == 'N1'][0]\n")
 
+# ---- B5: record the software environment in the protocol (no gate or computation changes)
+sub("                   code_sha256=_code_sha), open(PROTO, 'w'), indent=1)",
+    "                   code_sha256=_code_sha, env=ENV_VERSIONS), open(PROTO, 'w'), indent=1)")
+sub("PROTO = os.path.join(OUT, 'JUDGED_PROTOCOL.json')\n",
+    "PROTO = os.path.join(OUT, 'JUDGED_PROTOCOL.json')\n"
+    "def _env_versions():   # v5 B5: a re-fit of the detectors from shipped episodes differed on Kaggle's stack, and the library versions were not recorded\n"
+    "    import importlib.metadata as _im, platform\n"
+    "    v = dict(python=platform.python_version(), platform=platform.platform(), cpu_count=os.cpu_count())\n"
+    "    for n_ in ('numpy', 'pandas', 'scipy', 'scikit-learn', 'torch', 'transformers', 'sentence-transformers', 'faiss-cpu', 'faiss-gpu', 'rank-bm25', 'nltk', 'threadpoolctl'):\n"
+    "        try: v[n_] = _im.version(n_)\n"
+    "        except Exception: pass\n"
+    "    try: v['cuda'] = torch.version.cuda; v['gpu'] = torch.cuda.get_device_name(0) if torch.cuda.is_available() else None\n"
+    "    except Exception: pass\n"
+    "    return v\n"
+    "ENV_VERSIONS = _env_versions()\n")
+
 # ---- C5 accounting and cheap-guarantee summary
 sub("gsol = sol_df[sol_df.grounded]\n",
     "gsol = sol_df[sol_df.grounded]\n"

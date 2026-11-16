@@ -109,3 +109,11 @@ Code checks done before this freeze, all on a tiny CPU smoke run (the numbers fr
 `VERDICT.accounting` carries (a), (b) and (c); the policy table carries the two new policies with T1 to T4; natural arms NA1c, NA1d and N1v4 are present; the unchanged pre-registered `analysis_gpu_plan.py` reads the output.
 Not checked: behaviour at full scale on a GPU (that is the judged run itself).
 Nothing in the protocol's gates or bars changed in B1 to B4 except as stated there. The judged run is one run, GPU, seed 49, settings in section 3, and waits for the owner's go-ahead and the choice of Kaggle account.
+
+**B5 — the protocol file now records the software environment; v5 hash replaced (16 Nov 2026, 10:05 UTC; still no v5 judged run).**
+Reason, found while building the reproduction script (`kaggle/reproduce_tables.py`): re-fitting the detectors from a run's shipped `episodes.jsonl` reproduces the **CPU** run (v4 seed 47) exactly, 31 of 31 AUROCs, largest difference 0.0000.
+For the **Kaggle GPU** run (v4 seed 48) it differs for 4 of 31 faults: K12 +0.015, Q03 +0.017 (recorded 0.6914 FAIL; re-fit 0.7085, above the bar), R03 -0.041, R06 +0.017. The head does not depend on its model seed (AUROC identical over five seeds), so this is a library or numerical-path difference on Kaggle's stack, not seed noise.
+The seed-48 protocol file recorded the code hash but **no library versions**, so the cause cannot be identified from the files. The v4 verdict is unchanged and stays NOT_ADOPTED as recorded.
+Change: `JUDGED_PROTOCOL.json` gains an `env` block (Python, platform, numpy, pandas, scipy, scikit-learn, torch, transformers, sentence-transformers, faiss, nltk, CUDA, GPU name). No gate, bar, sample or computation changes.
+Checked: a short CPU run starts, writes the `env` block and its `code_sha256` equals the file hash.
+**This supersedes the SHA-256 in B4.** The frozen v5 hash is now `deecafad69b49c5ae87ee7031f23d24553ea092cf390b964859dbae81091702a`.
