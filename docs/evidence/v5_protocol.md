@@ -77,3 +77,19 @@ These come from the seven-run record and the diagnosis. They are not gates. The 
 The first launch of `docs/evidence/probe_admission_nbr.py` (SHA-256 `8e9b11ac…d647`, committed as `5d751d4`) was killed by the sandbox when its tool call returned, after printing only "probe features 0/2681". No probe feature, AUROC or condition was computed or read.
 The script now caches its probe features and pair AUROCs to disk and stops at a time budget so it can be resumed across tool calls. **The probe features, the five pairs, the folds, the models, the thresholds and the four admission conditions are unchanged.**
 Script SHA-256 after B1: `9ea82bd189dca9303a4e6009b73da87d4bfbc4fd6f67223891293bbb44d6c077`.
+
+**B2 — outcome of the pre-registered probe admission test (16 Nov 2026, 07:21 UTC). The neighbour-retrieval probe is REJECTED. v5 ships without it.**
+Run: `docs/evidence/probe_admission_nbr.py` (SHA-256 `9ea82bd1…c6077`), v4 CPU seed-47 TRAIN split only (2,681 single-fault and clean episodes, out-of-fold, grouped by base query, 5 folds). Result file: `docs/evidence/probe_admission_result.json`.
+
+| Condition | Required | Measured | Verdict |
+|---|---|---|---|
+| (a) mean pairwise AUROC over the five least-separable pairs | rises by >= 0.03 | 0.9411 -> 0.9386 (-0.003) | **fail** |
+| (b) Q03-vs-rest AUROC | rises by >= 0.03 | 0.6086 -> 0.5980 (-0.011) | **fail** |
+| (c) mean over all pairs | falls by no more than 0.002 | 0.9805 -> 0.9797 (-0.0008) | pass |
+| (d) fault-vs-clean AUROC | falls by no more than 0.002 | 0.9730 -> 0.9721 (-0.0009) | pass |
+
+- **Two deviations from the frozen text, both disclosed here.** (1) The protocol said "all 465 pairs"; the script scored 496, because it included the clean class (32 classes). Conditions (a) and (b) fail by a wide margin on any reading. (2) The five pairs named in C4 were the least separable in the **v3 seed-45** train split. In this **v4 seed-47** train split their baseline AUROCs are 0.89 to 0.98 (K04|Q03 0.968, Q03|R22 0.891, K05|R11 0.966, Q04|R13 0.984, Q03|R24 0.896), so they are no longer the five lowest. I kept the pre-registered five.
+- **What this shows.** One probe family, built from the same neighbour the Q03 repair uses, adds no separation for Q03 on the training split. Q03-vs-rest stays near 0.60 (the v3/v4 held-out era mean is 0.645, ROADMAP_V4 section 2b).
+  **It is not a proof of a ceiling.** Lemma 1 gives lower bounds on distances; no upper bound was derived. Other probes are untested.
+- **Consequence for v5.** No probe features. The v5 prediction for U1 (section 4, about 0.15 chance of reaching 0.50) stands unchanged, and the Q03 detector is expected to FAIL.
+- Two earlier checks, on TRAIN data only, are also recorded: the Q03 repair is **not** a no-op from query-log leakage (0 of 25 injected queries are in the log; the neighbour differs from the query in 25 of 25 cases and the repair acts on 18 of 25), so its weak rescue rate is a real limit and not an artefact.

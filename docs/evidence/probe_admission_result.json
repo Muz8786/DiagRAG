@@ -1,0 +1,52 @@
+{
+ "n_train_episodes": 2681,
+ "probe_features": [
+  "nbr_cos",
+  "nbr_overlap",
+  "nbr_ce_gain"
+ ],
+ "five": {
+  "K04|Q03": {
+   "base": 0.968,
+   "probe": 0.9551999999999999
+  },
+  "Q03|R22": {
+   "base": 0.8912,
+   "probe": 0.8944
+  },
+  "K05|R11": {
+   "base": 0.9664,
+   "probe": 0.9664
+  },
+  "Q04|R13": {
+   "base": 0.984,
+   "probe": 0.984
+  },
+  "Q03|R24": {
+   "base": 0.8959999999999999,
+   "probe": 0.8928
+  }
+ },
+ "started_utc": "2026-11-16 07:20:48",
+ "five_mean_base": 0.9411200000000001,
+ "five_mean_probe": 0.9385600000000001,
+ "five_gain": -0.0025600000000000067,
+ "q03_ovr_base": 0.6086219879518073,
+ "q03_ovr_probe": 0.5979743975903615,
+ "q03_gain": -0.010647590361445802,
+ "all_pairs_n": 496,
+ "all_pairs_mean_base": 0.9805253341372727,
+ "all_pairs_mean_probe": 0.9797289460020768,
+ "all_pairs_change": -0.0007963881351958912,
+ "fault_vs_clean_base": 0.9729821267699587,
+ "fault_vs_clean_probe": 0.9720764305804845,
+ "fault_vs_clean_change": -0.0009056961894741145,
+ "conditions": {
+  "a": false,
+  "b": false,
+  "c": true,
+  "d": true
+ },
+ "ADMITTED": false,
+ "finished_utc": "2026-11-16 07:21:05"
+}
