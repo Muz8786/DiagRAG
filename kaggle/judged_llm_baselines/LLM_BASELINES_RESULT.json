@@ -1,0 +1,137 @@
+{
+ "gemini": {
+  "model": "gemini-3.1-flash-lite",
+  "B1": {
+   "n": 320,
+   "n_faulted": 160,
+   "n_clean": 160,
+   "unparsed": 0,
+   "auroc_llm": 0.75392578125,
+   "auroc_llm_ci": [
+    0.7024103370044938,
+    0.8036033958026558
+   ],
+   "auroc_ours": 0.9754296875,
+   "auroc_ours_ci": [
+    0.9600764485093741,
+    0.9891290676209171
+   ],
+   "auroc_ours_minus_llm": {
+    "mean": 0.22226835477953164,
+    "ci_lo": 0.17252170154453064,
+    "ci_hi": 0.2699961308712326
+   },
+   "verdict": "OURS_BETTER",
+   "llm_detect_at_5pct_fa": 0.0,
+   "llm_group_accuracy_on_faulted": 0.41875,
+   "our_group_accuracy_on_faulted": 0.8085106382978723,
+   "mean_tokens_per_item": 586.653125,
+   "llm_calls_per_item": 1,
+   "our_llm_calls_per_item": 0
+  },
+  "B2": {
+   "n": 300,
+   "excluded_incomplete_procedure": 0,
+   "triggered": 0.14666666666666667,
+   "unparsed": 0,
+   "crag_delta": {
+    "mean": 0.009891666666666665,
+    "ci_lo": 0.0,
+    "ci_hi": 0.023333333333333334
+   },
+   "loop_delta": {
+    "mean": 0.01649166666666667,
+    "ci_lo": 0.0,
+    "ci_hi": 0.03666666666666667
+   },
+   "loop_minus_crag": {
+    "mean": 0.0066,
+    "ci_lo": -0.013333333333333334,
+    "ci_hi": 0.02666666666666667
+   },
+   "verdict": "INCONCLUSIVE",
+   "crag_fixed": 3,
+   "crag_broken": 0,
+   "loop_fixed": 6,
+   "loop_broken": 1,
+   "mean_llm_calls_per_query": 1.1466666666666667,
+   "mean_tokens_per_query": 517.3866666666667,
+   "our_llm_calls_per_query": 0,
+   "universal_delta": 0.02
+  }
+ },
+ "groq": {
+  "model": "openai/gpt-oss-120b",
+  "B1": {
+   "n": 163,
+   "n_faulted": 79,
+   "n_clean": 84,
+   "unparsed": 1,
+   "auroc_llm": 0.7307112718505123,
+   "auroc_llm_ci": [
+    0.6460398830555515,
+    0.8047168136833047
+   ],
+   "auroc_ours": 0.9751356238698011,
+   "auroc_ours_ci": [
+    0.9510640817680027,
+    0.9932235594654915
+   ],
+   "auroc_ours_minus_llm": {
+    "mean": 0.2441326615448571,
+    "ci_lo": 0.16643295976560665,
+    "ci_hi": 0.3312956908597731
+   },
+   "verdict": "OURS_BETTER",
+   "llm_detect_at_5pct_fa": 0.11392405063291139,
+   "llm_group_accuracy_on_faulted": 0.17721518987341772,
+   "our_group_accuracy_on_faulted": 0.8169014084507042,
+   "mean_tokens_per_item": 672.8773006134969,
+   "llm_calls_per_item": 1,
+   "our_llm_calls_per_item": 0
+  },
+  "B2": {
+   "verdict": "NOT_ANALYSABLE",
+   "reason": "31 of 149 graded queries had an incomplete CRAG-style procedure (provider quota); amendment A3",
+   "graded": 149,
+   "excluded_incomplete_procedure": 31
+  }
+ },
+ "groq20": {
+  "model": "openai/gpt-oss-20b",
+  "B1": {
+   "n": 169,
+   "n_faulted": 81,
+   "n_clean": 88,
+   "unparsed": 0,
+   "auroc_llm": 0.6415544332210998,
+   "auroc_llm_ci": [
+    0.5663527089007858,
+    0.7207507032348804
+   ],
+   "auroc_ours": 0.9762906846240179,
+   "auroc_ours_ci": [
+    0.9536967252356108,
+    0.9932588990652441
+   ],
+   "auroc_ours_minus_llm": {
+    "mean": 0.3346437245016082,
+    "ci_lo": 0.2547751469123193,
+    "ci_hi": 0.4161107875422064
+   },
+   "verdict": "OURS_BETTER",
+   "llm_detect_at_5pct_fa": 0.0,
+   "llm_group_accuracy_on_faulted": 0.32098765432098764,
+   "our_group_accuracy_on_faulted": 0.8082191780821918,
+   "mean_tokens_per_item": 658.1420118343195,
+   "llm_calls_per_item": 1,
+   "our_llm_calls_per_item": 0
+  },
+  "B2": {
+   "verdict": "NOT_ANALYSABLE",
+   "reason": "34 of 154 graded queries had an incomplete CRAG-style procedure (provider quota); amendment A3",
+   "graded": 154,
+   "excluded_incomplete_procedure": 34
+  }
+ }
+}
