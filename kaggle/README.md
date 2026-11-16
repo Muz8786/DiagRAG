@@ -1,24 +1,26 @@
 # DiagRAG core-28 on Kaggle
 
-Three notebooks. Each is a single file with Internet ON, and a GPU is recommended:
+Every notebook is a single file. Internet must be ON. Use a GPU (T4 x1) for the v3/v4 flagship runs.
+**The flagship is `diagrag_v4.ipynb`.** The older notebooks stay because each judged run is pinned to the exact file that produced it.
 
-| Notebook | What it judges | Latest judged run |
+| Notebook | What it judges | Judged run (folder) |
 |---|---|---|
 | `diagrag_core28.ipynb` (v1) | the 28 core faults | CPU seeds 42 and 43: `judged_cpu_run_seed42/`, `judged_cpu_run_seed43/` |
-| `diagrag_v2.ipynb` | v1's 28 + the field-evidenced R25/R26/K11, family-level loop, natural arms NA1–NA6 on never-examined queries | CPU seed 44: `judged_cpu_run_v2_seed44/` |
-| `diagrag_v3.ipynb` | v2 + licence-clean corpus, evidence tiers, Q03 from real query pairs, K12/R26 testbeds, family-first loop with group fallback, Mondrian conformal do-no-harm, natural traffic on never-examined queries, prevalence census, external baselines (RAGLog tier-0, QPP, SymSpell, wordsegment) | CPU seed 45: `judged_cpu_run_v3_seed45/` |
+| `diagrag_v2.ipynb` | v1's 28 + field-evidenced R25/R26/K11, family-level loop, natural arms NA1-NA6 | CPU seed 44: `judged_cpu_run_v2_seed44/` |
+| `diagrag_v3.ipynb` | v2 + licence-clean corpus, evidence tiers, Q03 from real query pairs, K12/R26 testbeds, Mondrian conformal do-no-harm, natural traffic, prevalence census, external baselines (RAGLog tier-0, QPP, SymSpell, wordsegment) | CPU seed 45: `judged_cpu_run_v3_seed45/`; **GPU T4, bge-reranker-large, seed 46: `judged_gpu_v3_seed46/`** |
+| `diagrag_v4.ipynb` | v3 + group-level attributor and a larger K fallback (written after the v3 results, then frozen) | CPU seed 47: `judged_cpu_run_v4_seed47/`; GPU seed 48: see "v4 GPU" below |
 | `diagrag_port2.ipynb` | stack 2 on SciFact and FiQA (`DATASET=scifact` or `fiqa`) | `judged_port2_scifact/`, `judged_port2_fiqa/` |
-| `diagrag_langchain.ipynb` | 15 faults injected through real LangChain components and knobs (SciFact) | `judged_langchain_scifact/` |
-| `diagrag_port.ipynb` | 20 faults on a second stack (e5-small-v2 + FAISS HNSW + min-max fusion) and a second domain (BEIR SciFact) | CPU seed 7: `judged_port_scifact/` |
+| `diagrag_langchain.ipynb` (v1) | 15 faults injected through real LangChain components | `judged_langchain_scifact/` (7/15, claim FAILED) |
+| `diagrag_langchain2.ipynb` | same 15 faults after fixes designed from the v1 results | `judged_langchain_v2_scifact/` (11/15, exactly at the bar of 11) |
+| `diagrag_port.ipynb` | 20 faults on a second stack and a second domain (SciFact) | CPU seed 7: `judged_port_scifact/` (11/20) |
+| (script) `../bench/llm_baselines.py` | RAGLog-style LLM diagnosis and CRAG-style LLM repair against DiagRAG | `judged_llm_baselines/`, `../docs/LLM_BASELINES_RESULTS.md` |
 
 Why v2 and the port arm exist, the evidence behind them, and every number below: `../docs/EVIDENCE_AND_NOVELTY_REPORT.md`.
 The v3 roadmap execution, with every v3/port2/LangChain number: `../docs/ROADMAP_V3.md`. The benchmark release: `../bench/`.
-v3 downloads `natural_exclusions_v2.json` from this repository, SHA-256 checked.
+v3 and v4 download `natural_exclusions_v2.json` from this repository (SHA-256 checked). v2 downloads `natural_exclusions_v1.json`.
+Either file can also be placed next to the notebook.
 
-v2 additionally downloads `natural_exclusions_v1.json` from this repository (SHA-256 checked). It needs this branch, or the
-file placed next to the notebook.
-
-One notebook, `diagrag_core28.ipynb`, does the whole job: fetch and verify the data,
+The v1 notebook, `diagrag_core28.ipynb`, shows the whole job in one file: fetch and verify the data,
 run the purity checks, generate hard episodes for the 28 core faults, train and gate the
 detectors, gate the repairs, and run the closed loop. `diagrag_core28.py` is the same
 code as a plain script (`# %%` cells). Rebuild the notebook after editing the script:
@@ -28,7 +30,7 @@ Fault definitions, detectors and repairs: `../docs/CORE28_FAULTS.md`.
 
 ## Run it
 
-1. Kaggle → New Notebook → File → Import Notebook → upload `diagrag_core28.ipynb`.
+1. Kaggle → New Notebook → File → Import Notebook → upload `diagrag_v4.ipynb` (or any notebook in the table).
 2. Settings: Accelerator **GPU T4 x1** (or P100), Internet **On**.
 3. Run All. No Kaggle dataset is needed. The notebook downloads everything itself:
    - corpus `kb_tier3_186k.jsonl.gz` and cache `embeddings_cache_186k.npz` by gdown from
@@ -40,10 +42,10 @@ Fault definitions, detectors and repairs: `../docs/CORE28_FAULTS.md`.
      bge-reranker-large.
 4. Every file is checked for exact bytes and SHA-256 before use. A mismatch stops the run.
 
-Expected runtime on a T4: about 3–5 hours. This is an estimate, because no GPU was
-available in the build sandbox. The CPU judged run below took about 1 h 50 min of compute
-with the small reranker. If the Kaggle session dies, run the notebook again: it resumes
-from `diagrag_out/checkpoint.pkl`.
+Runtime on a T4: the v3 GPU run (seed 46) took about 2 hours with the settings in the launcher
+(N_BASE_ESCI 2400, N_PRDC 528, N_HARD 50, MAX_ATT 2500, N_HARM 20). The defaults listed under
+"Overrides" are larger and will take longer; set the overrides to reproduce the judged runs.
+If the Kaggle session dies, run the notebook again: it resumes from `diagrag_out/checkpoint.pkl`.
 
 ## Judged run
 
@@ -98,7 +100,7 @@ shipped `diagrag_core28.py`.
 | Unseen faults, mean closure | — | 0.21 |
 
 Details and the cause of the guarantee failure: `../docs/CORE28_FAULTS.md`. These runs used the
-CPU stack. The default GPU stack (bge-reranker-large) needs its own judged run.
+CPU stack. The GPU stack (bge-reranker-large) was judged separately: `judged_gpu_v3_seed46/`.
 
 ## v2 and portability judged runs, 14 Nov 2026 (CPU, MiniLM-L6 reranker)
 

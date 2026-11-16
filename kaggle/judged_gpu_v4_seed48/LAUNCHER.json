@@ -1,0 +1,13 @@
+{
+ "commit": "9c92ae638baec80d45c933c9610c36b1b8529714",
+ "sha256": "0a56155af8d38271be4f45d9018a81f05db77f775fd3f1f022f1bcbb276f2c64",
+ "env": {
+  "SEED": "48",
+  "N_BASE_ESCI": "2400",
+  "N_HARD": "50",
+  "MAX_ATT": "2500",
+  "N_HARM": "20",
+  "TIME_BUDGET": "38500"
+ },
+ "started_utc": "2026-11-16 03:40:21"
+}

@@ -51,8 +51,11 @@ The same run also scored external detection baselines on the held-out episodes (
 
 How to read the RAGLog comparison:
 - It favours us. Our telemetry includes probes designed for the faults in this suite.
-- RAGLog's LLM-based checks were not run (no API key in the build environment). Its authors report that those checks
-  contribute the most.
+- RAGLog's own LLM-based checks were not run. A narrower LLM-judge baseline (an LLM sees the query and the 5 returned
+  snippets and rates how likely retrieval failed) was run later on three free-tier models: AUROC 0.754 (Gemini 3.1 flash-lite),
+  0.731 (gpt-oss-120b, partial) and 0.642 (gpt-oss-20b, partial), against 0.975 for the supervised telemetry attributor on the
+  same episodes. This is a supervised-versus-zero-shot comparison and is not full RAGLog. Details, limits and the
+  pre-registration: `../docs/LLM_BASELINES_RESULTS.md`, script `llm_baselines.py`.
 
 ## Evidence tiers
 

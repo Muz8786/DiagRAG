@@ -15,6 +15,8 @@
 | e5-small-v2, e5-small | huggingface.co/intfloat | MIT | stack 2 encoder; model-drift fault |
 | all-mpnet-base-v2, all-MiniLM-L6-v2, ms-marco-MiniLM-L-6-v2 | huggingface.co/sentence-transformers, cross-encoder | Apache-2.0 | drift fault, RAGLog embeddings, CPU reranker |
 | LangChain (langchain-core, langchain-community) | github.com/langchain-ai | MIT | framework-stack arm |
+| Google Gemini API (`gemini-3.1-flash-lite`, free tier) | ai.google.dev | service terms apply | LLM baselines in `bench/llm_baselines.py`: receives a query and 5 document snippets from the licence-clean corpus. API keys are read from environment variables and are never stored in the repo |
+| Groq API (`openai/gpt-oss-120b`, `openai/gpt-oss-20b`, free tier) | console.groq.com | service terms apply; the gpt-oss model weights are published by OpenAI under Apache-2.0 | same use as above |
 
 Before any public data release:
 - Verify each licence at its source; this table repeats what the publishers state.
