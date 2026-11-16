@@ -12,7 +12,7 @@ import argparse, collections, hashlib, json, os, re, threading, time, urllib.err
 import numpy as np
 
 SAMPLE = dict(SEED=2026, N_DIAG_PER_FAULT=5, N_DIAG_CLEAN=160, N_NAT=300, SNIP=240, TOPK=5)
-MODELS = {'groq': dict(model='openai/gpt-oss-120b', min_interval=6.5), 'gemini': dict(model='gemini-3.1-flash-lite', min_interval=4.0)}
+MODELS = {'groq': dict(model='openai/gpt-oss-120b', min_interval=6.5), 'groq20': dict(model='openai/gpt-oss-20b', min_interval=6.5), 'gemini': dict(model='gemini-3.1-flash-lite', min_interval=4.0)}
 FAMILY = dict(Q01='QLEX', Q03='QLEX', Q04='QLEX', Q05='QLEX', K04='STALE', R07='STALE', R03='ENC', R10='ENC', R11='ENC')
 UA = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) diagrag-eval/1.0'}
 
@@ -65,7 +65,7 @@ class Provider:
         for attempt in range(6):
             self.last[ki] = time.time()
             try:
-                if self.name == 'groq':
+                if self.name.startswith('groq'):
                     body = {'model': self.cfg['model'], 'messages': [{'role': 'user', 'content': prompt}], 'temperature': 0, 'max_tokens': 800, 'reasoning_effort': 'low'}
                     req = urllib.request.Request('https://api.groq.com/openai/v1/chat/completions', json.dumps(body).encode(),
                                                  {**UA, 'Authorization': 'Bearer ' + key, 'Content-Type': 'application/json'})
@@ -89,7 +89,7 @@ class Provider:
 
 
 def keys_of(name):
-    v = os.environ.get({'groq': 'GROQ_API_KEY', 'gemini': 'GEMINI_API_KEYS'}[name], '')
+    v = os.environ.get({'groq': 'GROQ_API_KEY', 'groq20': 'GROQ_API_KEY', 'gemini': 'GEMINI_API_KEYS'}[name], '')
     return [k for k in re.split(r'[,\s]+', v) if k]
 
 
@@ -278,7 +278,7 @@ def stage_analyze(a):
 
 if __name__ == '__main__':
     ap = argparse.ArgumentParser(); ap.add_argument('stage', choices=['prep', 'llm', 'rewrite', 'analyze']); ap.add_argument('--work', default='/projects/sandbox/_llmwork')
-    ap.add_argument('--out', default='/projects/sandbox/_llm'); ap.add_argument('--private', default='/projects/sandbox/_private'); ap.add_argument('--providers', nargs='+', default=['groq', 'gemini'])
+    ap.add_argument('--out', default='/projects/sandbox/_llm'); ap.add_argument('--private', default='/projects/sandbox/_private'); ap.add_argument('--providers', nargs='+', default=['groq', 'groq20', 'gemini'])
     ap.add_argument('--budget', type=int, default=1300); ap.add_argument('--ours-csv', default='/projects/sandbox/_private/baseline_track1_test.csv'); a = ap.parse_args()
     os.makedirs(a.out, exist_ok=True); os.makedirs(a.private, exist_ok=True)
     {'prep': stage_prep, 'llm': stage_llm, 'rewrite': stage_rewrite, 'analyze': stage_analyze}[a.stage](a)

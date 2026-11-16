@@ -32,4 +32,9 @@ inside that script. If the script has to change after the first LLM call (for ex
 - Small samples (about 315 and 300 items) give wide intervals. INCONCLUSIVE is a possible and acceptable outcome.
 
 ## Amendments
-(none yet)
+**A1 — Groq daily token quota (made after seeing only call counts and that every reply contained a JSON object; no metric was computed).**
+- Groq `gpt-oss-120b` exhausted its free daily token budget at 312 of 620 hash-ordered calls. Its arm is analysed on the **completed subset**, which is a
+  random sample because the call order is the frozen md5 order, and it is labelled PARTIAL with its n.
+- A further Groq arm, `groq20` = `openai/gpt-oss-20b` (same prompts, same key, separate quota), is added and run until its quota ends. It is labelled PARTIAL if it does not finish.
+- **Claim rule, stricter than before:** a combined claim needs OURS_BETTER or OURS_NON_INFERIOR in **every** analysed arm (Gemini, Groq-120b, Groq-20b), including partial ones.
+- Script SHA-256 after the amendment: `5f9077f6744d8f6e45540777e19ed03eb627a2998f0528792353ad3e3dc7b173`. Gemini finished all 620 calls before the amendment, and its prompts and parsing are unchanged by it.
