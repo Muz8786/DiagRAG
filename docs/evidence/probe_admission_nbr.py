@@ -1,4 +1,6 @@
 # PRE-REGISTERED probe admission test (docs/evidence/v5_protocol.md, item C4). Run ONCE. TRAIN split only, out-of-fold, grouped by base query.
+# EXECUTION-ONLY AMENDMENT B1 (16 Nov 2026, before any probe number existed): results are cached to disk and a time budget (env PROBE_BUDGET, seconds) stops the run so it can be resumed
+# in several tool calls. Features, folds, models, thresholds and conditions are unchanged from the committed version 8e9b11ac.
 # Executed through a harness that loads the v4 pipeline state (seed-47 checkpoint). No held-out (test-split) episode is read.
 #
 # Probe = one extra retrieval with the query-log nearest neighbour of the query (other users' queries; the same neighbour the Q03 repair uses):
@@ -16,22 +18,39 @@ from sklearn.model_selection import GroupKFold
 EP = RES['EPIS']
 TRN = [e for e in EP if e['split'] == 'train' and e['fault'] != 'C2']
 assert all(e['split'] == 'train' for e in TRN)
+import os, pickle, sys
+T0 = time.time(); BUDGET = int(os.environ.get('PROBE_BUDGET', '1500')); CACHE = '/projects/sandbox/_w3/probe_cache.pkl'
+CA = pickle.load(open(CACHE, 'rb')) if os.path.exists(CACHE) else dict(extra={}, pairs={})
+def save(): pickle.dump(CA, open(CACHE + '.tmp', 'wb')); os.replace(CACHE + '.tmp', CACHE)
+def over(): return time.time() - T0 > BUDGET
 t0 = time.time(); extra = {}
 for n_, e in enumerate(TRN):
+    if n_ in CA['extra']: extra[id(e)] = CA['extra'][n_]; continue
     st = e['st']; tr0 = run(st); qn, cs = qlog_neighbour(st['q'])
     tr1 = run(dict(st, q=qn)) if qn != st['q'] else tr0
     a, b = set(tr0['final'][:5]), set(tr1['final'][:5])
-    extra[id(e)] = dict(nbr_cos=float(cs), nbr_overlap=len(a & b) / max(1, len(a | b)),
+    extra[id(e)] = CA['extra'][n_] = dict(nbr_cos=float(cs), nbr_overlap=len(a & b) / max(1, len(a | b)),
                         nbr_ce_gain=(float(np.max(tr1['ce'])) if len(tr1['ce']) else 0.0) - (float(np.max(tr0['ce'])) if len(tr0['ce']) else 0.0))
-    if n_ % 400 == 0: print('probe features %d/%d %.0fs' % (n_, len(TRN), time.time() - t0), flush=True)
+    if n_ % 200 == 0:
+        print('probe features %d/%d %.0fs' % (n_, len(TRN), time.time() - t0), flush=True); save()
+        if over(): print('BUDGET reached - run again to resume'); sys.exit(0)
+save(); print('probe features complete', len(CA['extra']), flush=True)
 FE0 = sorted(TRN[0]['feats']); PK = ['nbr_cos', 'nbr_overlap', 'nbr_ce_gain']
 X0 = np.array([[e['feats'][k] for k in FE0] for e in TRN], np.float32); XP = np.array([[extra[id(e)][k] for k in PK] for e in TRN], np.float32)
 X1 = np.concatenate([X0, XP], 1); y = np.array([e['fault'] for e in TRN]); grp = [e['bid'] for e in TRN]
 def hg(): return HistGradientBoostingClassifier(max_iter=150, min_samples_leaf=5, random_state=0)       # same settings as analysis_v3.py (pairwise)
-def pair_auc(X, f1, f2):
+def pair_auc_raw(X, f1, f2):
     m = (y == f1) | (y == f2); Xa, ya, ga = X[m], (y[m] == f1).astype(int), [grp[k] for k in np.where(m)[0]]; s = np.zeros(len(ya))
     for a_, b_ in GroupKFold(5).split(Xa, ya, ga): s[b_] = hg().fit(Xa[a_], ya[a_]).predict_proba(Xa[b_])[:, 1]
     return max(roc_auc_score(ya, s), 1 - roc_auc_score(ya, s))
+def pair_auc(X, f1, f2):
+    key = (len(X[0]), f1, f2)
+    if key not in CA['pairs']:
+        CA['pairs'][key] = pair_auc_raw(X, f1, f2)
+        if len(CA['pairs']) % 40 == 0:
+            save()
+            if over(): print('BUDGET reached - run again to resume'); sys.exit(0)
+    return CA['pairs'][key]
 faults = sorted(set(y) - {'NONE'}); allf = sorted(set(y))
 FIVE = [('K04', 'Q03'), ('Q03', 'R22'), ('K05', 'R11'), ('Q04', 'R13'), ('Q03', 'R24')]
 res = dict(n_train_episodes=len(TRN), probe_features=PK, five={}, started_utc=time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime()))

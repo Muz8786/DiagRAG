@@ -70,3 +70,10 @@ These come from the seven-run record and the diagnosis. They are not gates. The 
 - NOT_ADOPTED: the result is reported with the same prominence as v4's. It does not by itself say which fault flipped; the per-fault table does.
 - U1 < 0.50: a fourth run under the bar. The write-up then reads U1 as bounded below 0.50 by faults that have no repair, with the closure table as the evidence.
 - Nothing in v5 tests generalisation to other stacks or other domains; those are the port2, LangChain and bench arms.
+
+## 6. Amendments
+
+**B1 — probe admission test made resumable (16 Nov 2026, 06:58 UTC; made before any probe number existed).**
+The first launch of `docs/evidence/probe_admission_nbr.py` (SHA-256 `8e9b11ac…d647`, committed as `5d751d4`) was killed by the sandbox when its tool call returned, after printing only "probe features 0/2681". No probe feature, AUROC or condition was computed or read.
+The script now caches its probe features and pair AUROCs to disk and stops at a time budget so it can be resumed across tool calls. **The probe features, the five pairs, the folds, the models, the thresholds and the four admission conditions are unchanged.**
+Script SHA-256 after B1: `9ea82bd189dca9303a4e6009b73da87d4bfbc4fd6f67223891293bbb44d6c077`.
