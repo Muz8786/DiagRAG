@@ -263,7 +263,9 @@ def stage_analyze(a):
                 calls += 1; toks += rc['tokens']
                 if r_.get('hit') is not None: hit = bool(r_['hit'])
             rows.append(dict(h0=it['h0'], crag=hit, loop=it['h_loop'], univ=it['h_univ'], trig=trig, calls=calls, tokens=toks, unparsed=unp, h_before_trig=it['h0']))
-        if rows:
+        graded = len(rows) + excluded
+        if excluded > 0.10 * max(1, graded): res['B2'] = dict(verdict='NOT_ANALYSABLE', reason=f'{excluded} of {graded} graded queries had an incomplete CRAG-style procedure (provider quota); amendment A3', graded=graded, excluded_incomplete_procedure=excluded)
+        elif rows:
             h0 = np.array([r['h0'] for r in rows], float); hc = np.array([r['crag'] for r in rows], float); hl = np.array([r['loop'] for r in rows], float); hu = np.array([r['univ'] for r in rows], float)
             dc = boot(lambda i: float((hc[i] - h0[i]).mean()), len(rows)); dl = boot(lambda i: float((hl[i] - h0[i]).mean()), len(rows)); dd = boot(lambda i: float((hl[i] - hc[i]).mean()), len(rows))
             res['B2'] = dict(n=len(rows), excluded_incomplete_procedure=excluded, triggered=float(np.mean([r['trig'] for r in rows])), unparsed=int(sum(r['unparsed'] for r in rows)),

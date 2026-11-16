@@ -44,3 +44,12 @@ inside that script. If the script has to change after the first LLM call (for ex
   and counted in `excluded_incomplete_procedure`. Before this amendment such a query would have been scored as "unchanged", which would handicap the baseline.
   The paired comparison with the DiagRAG loop uses the same retained queries.
 - Script SHA-256 after A2: `aa8980093a7ae8df539b4f64cedac58aa5f38771c9ffd6ca9855914ad3a23582`.
+
+**A3 — partial arms (made before any metric was computed; the only things seen were call counts and quota messages).**
+- Both Groq models hit their free daily token limits: `gpt-oss-120b` at 312/620 and `gpt-oss-20b` at 323/620 hash-ordered calls. Gemini finished 620/620 and all rewrite calls.
+- **B1** is analysed for every arm on its completed items (a random subset, because the call order is the frozen md5 order). Each arm's n is printed next to its AUROC.
+- **B2**: an arm is analysed only if at most 10% of its graded natural queries are excluded under A2. Otherwise it is reported as NOT_ANALYSABLE with the counts.
+  Reason: the excluded queries are exactly those where CRAG-style repair would act, so dropping them would test the baseline on the queries where it does nothing.
+  The Groq arms did not reach their rewrite calls, so B2 is expected to be NOT_ANALYSABLE for them and is judged on Gemini only.
+- **Claim wording.** Any combined claim names the providers it covers. No claim is made about a provider whose arm is not analysable.
+- Script SHA-256 after A3: `3aa855222550fc9bd89224553a8553812e55ab431ba3b5476fb01ab4791e78d2`.
