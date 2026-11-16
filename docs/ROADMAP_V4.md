@@ -165,3 +165,93 @@ What could move it, with my judgement of the effect (these are estimates, not me
 
 So 8.0 is reachable if both runs land well; **8.5 is not something this repository can produce by itself, and 9 is not a target.** U1 at or above 0.50 would add little on its own while Q03 and the unrepaired faults remain.
 Outside anyone's control here: whether others pick up the benchmark, and whether a venue accepts a paper whose headline result missed its own adoption gate.
+
+---
+
+# 11. Update, 17 Nov 2026 — the v5 judged run, and the A-venue programme item by item
+
+This section supersedes the "not run" statuses in sections 3, 5, 7 and 9 above (those texts are left as written).
+
+## 11.1 The v5 judged run: **NOT_ADOPTED** (CPU stack, seed 49)
+
+Why CPU: the only Kaggle credential in the environment is rejected with HTTP 401 (same answer as a made-up token), consistent with the owner regenerating keys. Amendment B7 in `docs/evidence/v5_protocol.md`, committed before the run, moved the single judged run to the CPU stack.
+Seed 49 and every setting were unchanged. Code `kaggle/diagrag_v5.py`, SHA-256 `deecafad69b49c5ae87ee7031f23d24553ea092cf390b964859dbae81091702a`, equal to the hash recorded in the run's `JUDGED_PROTOCOL.json`. The protocol file also records the library versions (scikit-learn 1.9.1, numpy 2.4.6, torch 2.15.0+cpu, Python 3.11.15).
+Output committed whole: `kaggle/judged_cpu_run_v5_seed49/`. The run took six 25-minute chunks.
+
+| Accounting (pre-registered; headline is a) | Detectors | Repairs | Solved both | Not solved |
+|---|---|---|---|---|
+| **(a) core 28, original rule** | **24** (27 needed) | 27 (24 needed) | 24 | Q03; R03, R15, R22 (THIN) |
+| (b) grounded set (22 faults) | 18 | 20 | 18 of 22 | Q03, R15, R22, R26 |
+| (c) quarantine set (10 faults) | 9 | 10 | 9 of 10 | R03 |
+
+Loop gates: **L1 PASS** (held-out clean loss 0.15%, bar 0.5%); **L2 PASS** (closure 0.833, bar 0.70); **U1 FAIL** (0.440, bar 0.50; grounded 0.408; without group fallback 0.254); **N1 PASS** (+2.43 points [+1.70, +3.22], 42 fixed, 2 broken, n = 1,648).
+Pre-registered GPU-plan analysis on this run: D1 PASS (closure 0.833 against 0.755 for diagnosis-free, clean loss 0.15% against 1.49%); D2 **FAIL** (loop minus universal +0.24 points, CI lower bound -0.61, which is below the -0.50 margin; cost 5.16); D3 **PASS** (+0.61 points [+0.06, +1.15], the first run where detection gating beat always-on K12 with the interval above zero).
+
+**Why the detector count is 24, stated in full.** Q03 fails for the reason section 2b gives (AUROC 0.640 [0.571, 0.714], n = 50). The other three are not detector failures: R03, R15 and R22 have held-out AUROC **1.000, 0.988 and 0.968** and are marked THIN because they produced only **38, 44 and 47** held-out positives, below the 50-positive floor that v5 itself introduced.
+The cause is in the generator, not the detectors: the loop stops at `ptr < 4 * len(pool)`, and once the train quota (50) fills, every remaining train-split pool entry is skipped but still consumes `ptr`, so the smaller test half starves. These three faults have the lowest yields (7 to 9%) and about 1,520 of roughly 2,700 attempts were "not applicable".
+**Disclosed counterfactual, not a verdict:** under v4's floor of 20 positives these three detectors would pass, giving 27/28 detectors and an ADOPTED verdict by the original numbers. I am not entitled to re-adjudicate with a bar chosen after seeing the result, and the verdict stands as NOT_ADOPTED. A fix (count quota skips separately, or bound the loop by attempts only) belongs in a v6 that needs the owner's approval.
+
+**Prediction scorecard** (section 4 of the protocol, written before the run; the GPU-stack predictions were kept as written):
+
+| Prediction | Outcome |
+|---|---|
+| Q03 detector FAIL | **correct**: 0.640 FAIL |
+| C2 detector PASS (about 0.9) | **correct**: 0.785 PASS, n = 50 |
+| 27-detector rule met (about 0.85) | **wrong**: 24. I did not foresee the floor-versus-generator interaction; three of the four misses are THIN, not FAIL |
+| U1 >= 0.50 (about 0.15) | **correct** that it would not: 0.440 FAIL |
+| L1, L2, N1 PASS | **correct** |
+| `two_stage_0.005` misses the dispatch target | **correct**: total clean dispatch 41.1% (classifier-only 15.6%) |
+| NA1c small | **correct**: +0.54 [0.00, +1.62] |
+
+## 11.2 The programme's seven attacks, in the brief's order
+
+**#1 "Your flagship run is NOT_ADOPTED." Not closed. Two judged runs in a row (GPU seed 48, CPU seed 49) missed the adoption rule.** The honest reading is split: seed 48 missed on Q03 and C2 (C2 explained below); seed 49 missed on Q03 plus three THIN detectors caused by my floor.
+The A plan's fallback applies: the identifiability result becomes the headline and the suite verdict a reported limitation (all-runs matrix: `docs/ALL_RUNS_MATRIX.md`). A GPU replication of v5 was not possible.
+
+**§3 C2: resolved.** `docs/evidence/c2_decomposition.py` and its result file. All 50 C2 positives are ESCI, tenant ALL, k = 5, so source, tenant and k cannot explain anything. **The construction feature is the fault-pair mix:** the generator draws one of 12 pairs at random, about four per type per run; six pair types have almost no second-group mass because the first fault masks the second (Q03+R05, Q04+K05, Q04+R10, K04+R24, Q05+R24, K04+R03; mean score below 0.05).
+In seed 48 the test split's composition sat at the 5th percentile of random splits, and the 25 test positives scored far below the 25 train positives under the same head (medians 0.002 and 0.136, Mann-Whitney p = 0.003). With composition held fixed the test AUROC is still low (0.631, below 98.7% of 4,000 within-pair-type re-splits, p = 0.013), but the probability that the worst of seven runs reaches that is 8.6%, so the residual is consistent with chance. In v5 (n = 50, CPU) C2 passes at 0.785.
+**Verdict: a construction artefact (unbalanced pair mix per split) plus ordinary small-n variance.** Not fixed in v5, because v5 was frozen; a stratified pair assignment belongs in v6.
+
+**§3 Q03: the identifiability exhibit.** Q03 detector AUROC by construction era (inverse-variance means, 95% CI):
+
+| Era | Runs | AUROCs | Mean [95% CI] | Heterogeneity within era |
+|---|---|---|---|---|
+| injected synonym swap | seeds 42, 43, 44 | 0.866, 0.934, 0.877 | **0.912 [0.874, 0.950]** | Q = 2.42, df 2, p = 0.30 |
+| real query pairs from other users | seeds 45 to 49 | 0.559, 0.654, 0.704, 0.691, 0.640 | **0.643 [0.600, 0.687]** | Q = 4.40, df 4, p = 0.35 |
+| all eight | | | | Q = 89.7, df 7, p = 1.5e-16 |
+
+The era difference is 0.268 (z = 9.1). Within the real-pair era one run in five passed. **The upper end of the real-pair interval (0.687) is below the 0.70 bar**, so under that construction the telemetry detector is not expected to meet its bar. The injected and the natural paraphrase task are different problems.
+
+**#2 "Your unseen-fault claim fails its own bar." Not closed, and no proved ceiling.** Route A (inside v5): U1 = 0.440, FAIL. Route B (`docs/evidence/route_b.py`, amendment B8, train split only):
+- **Pairwise table, rigorous:** over the 465 pairs of the 31 single faults in the v5 training split, 98.1% have out-of-fold AUROC at least 0.95 and none is below 0.80; the median certified total-variation lower bound is 1.00. The least separable pair is **K04|Q03 at 0.875 [0.811, 0.945]**, then K04|R07 (0.926), R05|R13 (0.927), K06|R05 (0.932) and Q07|R13 (0.937). Q03 is in the least-separable pair, consistent with its detector result.
+- **The brief's aggregate, as a diagnostic:** 35% of faults have their nearest confusable partner in the same repair group, 65% in another. Read as a bound that would cap U1 near 0.35. **The measured U1 values (0.44 to 0.49) exceed it, so the assumption that an unseen fault is routed like its nearest confusable partner is falsified by the data, and this is not a ceiling.**
+- **Oracle-group closure** (closure if the group were always right), from the four runs with group fallbacks: 0.583, 0.666, 0.685 and 0.572, all above 0.50. The mean right-group rate is 0.40, 0.52, 0.52 and 0.58. So the shortfall is mostly group attribution, and a ceiling below 0.50 cannot be derived from repair quality either.
+- **Conclusion: neither route closes the attack.** The paper cannot claim "the bound, not the bar". It can claim: unseen-fault closure is limited by group attribution (about 0.5 to 0.6) and by four faults with no effective repair (K06, Q03, Q07, Q09 in the earlier runs); no ceiling is proved; the identifiability table is the rigorous result. The failed neighbour-retrieval probe is the one-paragraph companion.
+
+**#3 "Your guarantee costs 90% dispatch." Closed, with a measured frontier** (`docs/ALL_RUNS_MATRIX.md`, v5 CPU seed 49; held-out clean queries):
+
+| Policy | Clean loss | Total clean dispatch | Mean cost | Mean closure | Meets T1 to T4 |
+|---|---|---|---|---|---|
+| tau at 5% false alarm (no guarantee) | 0.07% | 2.1% | 0.11 | 0.837 | yes |
+| global CRC 0.005 | 0.15% | 14.1% | 0.98 | 0.872 | yes |
+| Mondrian CRC 0.005 (the L1 gate) | 0.15% | **89.2%** | 3.66 | 0.833 | no (dispatch, cost) |
+| **capped CRC 0.005** | **0.07%** | **15.6%** | **0.96** | **0.821** | **yes** |
+| two-stage 0.005 | 0.37% | 41.1% (classifier 15.6%) | 1.91 | 0.782 | no (dispatch, cost, closure) |
+| diagnosis-free universal | 1.49% | 100% | 12.00 | 0.755 | no |
+
+Finding: the 89% dispatch is not the price of the guarantee. The stratified threshold is simply the *smallest* one the loss bound allows, so it dispatches almost everything in the common stratum. **Capping dispatch at 20% on the calibration set keeps the loss bound (the loss is monotone in the threshold) and costs 1.2 points of closure (0.833 to 0.821) while cutting dispatch from 89% to 16% and cost from 3.66 to 0.96.** The claim rule picks `capped_crc_0.005`.
+Note the single-threshold `global_crc_0.005` already met all four targets (in v4 GPU too: 12.1% dispatch, closure 0.871), so the improvement is in the *per-stratum* guarantee, not in having any guarantee. The two-stage policy misses, as predicted, because the natural rules K12 and K05 fire on about 35% of clean queries (they help on natural traffic: 41 to 45 fixed, 2 to 5 broken). That is a finding about natural traffic.
+
+**#4 "You beat free-tier LLMs; so what." Not closed.** No LLM key is set (`GROQ_API_KEY`, `GEMINI_API_KEYS`, `FRONTIER_API_KEY` all absent), so no call was made. Amendments A4 and A5 are filed, the script is tested against a mock server, and the 700 extra natural inputs are built. Needs keys from the owner.
+
+**#5 "One corpus." Not closed.** The existing ports (FiQA 19/20, SciFact 15/20) remain. A full-suite FiQA port was not built: 9 of the core 28 are absent from the port (Q02, Q07, Q09, K03, K06, K07, K09, R06, C2), and several cannot exist on FiQA by construction (Q07 needs product codes, K07 needs tenants, K09 and K03 need versioned or sibling documents). The honest design is to port what can exist, list what cannot as structurally absent, and not count absent faults as failures.
+
+**#6 "Artefact?" Staged, not released.** `release/DiagRAG-Bench_v1.0_public_STAGED.zip`: verified from a clean extraction (hashes, quickstart, scorer). The name, the ShopNova licence and the release date are the owner's.
+
+**#7 "Can I trust any of this?" Done in the repository.** The all-runs matrix is generated (`docs/ALL_RUNS_MATRIX.md`, 8 judged runs plus a GPU row marked "not run"); every amendment is dated; six statements in my own earlier text were corrected after checking them against files; the limitations are written in `PROJECT_EXPLAINED.md` section 12.
+
+## 11.3 Honest estimate after the v5 run
+
+**About 7.5 out of 10. The v5 run did not raise it, and the programme's target of 8.0 to 8.2 is not reached.** What moved: a measured guarantee frontier (the strongest new result), a resolved C2 question, a rigorous Q03 identifiability exhibit with five runs in the real-pair era, a fifth natural-traffic measurement (+2.43), D3 passing for the first time, and a reproducibility record.
+What did not: the adoption gate was missed again (24/28, three of the misses caused by my own floor), U1 stayed below its bar with no ceiling proved, and the frontier LLM arm, the full FiQA port and the bench release did not happen. A reviewer will see two NOT_ADOPTED runs in the matrix; the explanation is written, but it does not make them pass.
+**What would move it to about 8.0:** a v6 with the generator fix (owner approval), a GPU replication with a valid token, the frontier LLM arm with the owner's keys, and a full-suite FiQA port. **8.2 and above is not reachable by this repository alone.**
