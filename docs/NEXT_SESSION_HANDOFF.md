@@ -24,11 +24,11 @@ across the Q/K/R/C fault groups, cause-dispatched repair, and recovery measured 
 | What | Where |
 |---|---|
 | Code | `Muz8786/DiagRAG`, branch `core28-kaggle-notebook`, PR #1 (open) |
-| Notebooks | `kaggle/diagrag_core28.py` (v1), `diagrag_v2.py`, `diagrag_v3.py` (current flagship), `diagrag_port.py` / `diagrag_port2.py` (second stack: SciFact, FiQA), `diagrag_langchain.py` (framework stack). The `.ipynb` files are built with `kaggle/build_notebook.py` |
+| Notebooks | `kaggle/diagrag_core28.py` (v1), `diagrag_v2.py`, `diagrag_v3.py`, `diagrag_v4.py` (current flagship), `diagrag_langchain2.py`, `diagrag_port.py` / `diagrag_port2.py` (second stack: SciFact, FiQA), `diagrag_langchain.py` (framework stack). The `.ipynb` files are built with `kaggle/build_notebook.py` |
 | Judged results | `kaggle/judged_*` folders. Every one holds a protocol file whose `code_sha256` equals its `.py` |
 | Evidence, plan, record | `docs/EVIDENCE_AND_NOVELTY_REPORT.md` (42 field reports, fault verdicts), `docs/ROADMAP_V3.md` (Phases A–E results), `docs/IDENTIFIABILITY.md` (theory), `docs/CROSSWALK_CATALOGUE.md` |
 | Benchmark | `bench/` (DiagRAG-Bench v1.0, scorer, datasheet). The private test labels are **not** in the repo; their hash is in `bench/release_v1/MANIFEST.json` |
-| Release zip | `release/DiagRAG_core28_kaggle.zip` |
+| Release zip | `release/DiagRAG_core28_kaggle.zip`; the single-file Kaggle notebook is `kaggle/DiagRAG_v4_kaggle.ipynb` (built by `kaggle/build_final_notebook.py`) |
 | Data | corpus and cache on Google Drive (IDs in `data/DATA_MANIFEST.md`); ESCI from GitHub LFS; Webis-QSpell-17 from Zenodo; BEIR from UKP. All are SHA-256 checked inside the notebooks |
 | The other project | `Muz8786/diagrag-data` (private): the 47-fault catalogue DiagRAG. **Keep it separate unless the owner approves a merge** (the fault IDs collide) |
 
@@ -55,6 +55,18 @@ key if you need the LLM-based baselines in §3.
 
 Pushing a notebook or using GPU quota on someone's Kaggle account is an external action. **Confirm with the owner
 first.** The last proposal was `muzammilveil99`, private notebook. That proposal was not yet confirmed.
+
+## 3.0 Status on 16 Nov 2026 (written after the list below was first drafted)
+
+Done, with judged evidence (all in `docs/ROADMAP_V3.md` sections 8 and 9):
+- GPU flagship, twice: v3 seed 46 (ADOPTED, 27/28) and v4 seed 48 (**NOT_ADOPTED**, 26/28 detectors). Loop gates L1, L2, N1 and the diagnosis-vs-diagnosis-free closure test D1 pass on both. **U1 fails on both** (0.395, 0.456).
+- LangChain v2: 11/15, exactly at the bar, with fixes designed after v1 (7/15).
+- LLM-based baselines on free-tier APIs: diagnosis (B1) beaten by telemetry on three models; repair (B2) comparable to CRAG-style but non-inferiority **not shown**.
+- Item 2 below is partly done (LangChain, U1 improved but still under 0.50). Item 3 is done in a narrow form (not full RAGLog, not the CRAG paper).
+
+Still open: U1 >= 0.50 on a fresh seed, Q03 detection (fails the detector gate in 3 of 7 judged runs), natural misspelling repair (harms), diagnosis beating a
+diagnosis-free stack on accuracy (D3 fails twice), the full LLM-based baselines with a paid model, and Phase E. Do not rerun the same flagship hoping for a pass:
+a gate change after seeing results is not allowed, and a different seed is a new run to report, pass or fail.
 
 ## 3. The road from ~7 to 9, in order
 

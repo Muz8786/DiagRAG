@@ -23,14 +23,14 @@ shows it, without digging through the working workspace.
   Markdown document you can open and edit in any Markdown
   editor (Typora, Obsidian, VS Code preview, or GitHub preview)
   with every figure embedded and captioned.
-- `kaggle/` — `diagrag_core28.ipynb` (v1), `diagrag_v2.ipynb` and
-  `diagrag_port.ipynb`, the Kaggle notebooks for the 28 core faults (data verification, purity checks, hard
-  episodes, detectors, repairs, closed loop), its `.py` source,
-  and the CPU validation outputs. See `kaggle/README.md`.
-- `release/DiagRAG_core28_kaggle.zip` — everything needed to test
-  the whole thing: the Kaggle notebook, its source, the local
-  resumable runner, the docs, and the CPU judged-run outputs
-  for seeds 42 and 43 (verdict, protocol, all tables, every episode).
+- `kaggle/DiagRAG_v4_kaggle.ipynb` — **the one-file Kaggle notebook**. It embeds the frozen `diagrag_v4.py`, checks its SHA-256
+  and runs the judged GPU configuration (about 2 h 10 min on a T4). Judged result of that configuration: NOT_ADOPTED, 26/28
+  detectors (27 needed), 27/28 repairs. See `docs/ROADMAP_V3.md` section 8.
+- `kaggle/` — the other notebooks (v1 to v4, port, port2, LangChain v1 and v2), their `.py` sources, `build_notebook.py`,
+  `build_final_notebook.py`, and one `judged_*` folder per judged run. See `kaggle/README.md`.
+- `release/DiagRAG_core28_kaggle.zip` — the single package: the Kaggle notebook, all code, every judged run with its
+  episode file, the benchmark (without private labels), the docs, `verify.py` and `CHECKSUMS.sha256`. Start with
+  `README_RUN_ON_KAGGLE.md` inside it.
 - `docs/ROADMAP_V3.md` — execution record of roadmap Phases A–E (v3,
   port2, LangChain): every gate, result, failure and remaining decision.
 - `bench/` — DiagRAG-Bench v1.0: public dev episodes, unlabelled

@@ -193,7 +193,60 @@ Still not claimable:
 - Portability to a framework stack (LangChain 7/15 < 11).
 - That diagnosis beats a diagnosis-free stack on accuracy. It matches it at lower cost.
 - Natural misspelling or paraphrase repair.
-- Anything on the GPU stack, or against LLM-based baselines.
+- Anything that needs full RAGLog (its LLM checks and generated answers) or the CRAG paper's evaluator. Sections 8 and 9 cover the narrower baselines that were run.
 
-Estimate [HYP]: about **7/10**, up from about 6.5. Getting to 8 or above still needs the GPU flagship, one
-LLM-based baseline on the natural arm, U1 ≥ 0.5, and external adoption (Phase E).
+Estimate at the end of Phase E, before section 8: about **7/10**. The updated estimate is at the end of section 9.
+
+## 8. After the roadmap: GPU runs, v4, LangChain v2 (14-16 Nov 2026)
+
+Every row is a judged run. The code hash in each `JUDGED_PROTOCOL.json` equals the file that was frozen before the run.
+
+| Run | Detectors / repairs / both | Verdict | L1 | L2 closure | U1 (bar 0.50) | N1 (paired, 95% CI) |
+|---|---|---|---|---|---|---|
+| v3 CPU seed 45 | 27 / 27 / 27 | ADOPTED | PASS 0.149% | 0.865 | FAIL 0.365 | PASS +2.25 pts |
+| v3 **GPU** seed 46 (T4, bge-reranker-large) | 27 / 27 / 27 | ADOPTED | PASS 0.147% | 0.86 | FAIL 0.395 | PASS +2.06 [1.21, 2.85] |
+| v4 CPU seed 47 | 28 / 27 / 27 | ADOPTED | PASS 0.368% | 0.83 | FAIL 0.485 | PASS +2.31 |
+| v4 **GPU** seed 48 (T4, bge-reranker-large) | **26** / 27 / **26** | **NOT_ADOPTED** (needs 27 detectors) | PASS 0.0% | 0.866 | FAIL 0.456 | PASS +2.18 [1.27, 3.16] |
+
+### 8a. v4 GPU seed 48, in full (`kaggle/judged_gpu_v4_seed48/`)
+
+- **Failed the adoption gate.** Q03 fails both gates (detector AUROC 0.691, repair rescued 1 of 50). C2 fails the detector gate (AUROC 0.612; its repair passes, 45 of 50).
+  R26 is THIN (5 held-out positives). Grounded faults: 20 of 22 solved (Q03 and R26 not solved).
+- **Seed noise at the gate.** With 25 held-out positives per fault the AUROC interval is wide. Across the seven judged runs Q03's detector failed three times (v3 CPU 0.559,
+  v3 GPU 0.654, v4 GPU 0.691) and C2's once (this run, 0.612). The gates were not changed after seeing this.
+- **Closed loop.** L1 PASS (held-out clean loss 0.0). L2 PASS (closure 0.866). **U1 FAIL** (0.456; without the fallback 0.198; grounded 0.475). U1 was 0.395 for v3 GPU (seed 46)
+  and 0.456 for v4 GPU (seed 48). The seeds differ, so the gap is not a clean measure of the v4 changes, and both are under the 0.50 bar.
+- **Natural traffic (n = 1,648, never-examined queries).** Deployed loop +2.18 points [1.27, 3.16], 47 fixed and 11 broken. Natural rules alone +2.18 [1.40, 2.97].
+  Classifier-dispatch alone +0.42 [-0.12, +0.97], inconclusive. Natural misspelling repair **HARMS**: -5.4 points [-10.8, -0.5], and external SymSpell harms more (-12.4).
+  Duplicate collapse +6.4 [+1.4, +11.3]. Chunk-crowding collapse +4.3 [+2.5, +6.1].
+- **Pre-registered GPU analysis** (`PREREGISTERED_ANALYSIS.json`, `docs/evidence/analysis_gpu_plan.py`):
+
+| | v3 GPU seed 46 | v4 GPU seed 48 |
+|---|---|---|
+| D1 closure, loop vs diagnosis-free (bar: >= +0.05 and lower clean loss) | PASS: 0.86 vs 0.744; loss 0.15% vs 1.25% | PASS: 0.866 vs 0.760; loss 0.0% vs 0.75% |
+| D2 natural, loop minus universal (CI lower bound > -0.5 pts, cost <= 7.2) | FAIL: lower bound -0.61 pts, cost 6.4 | PASS: +0.30 pts [-0.49, +1.03], cost 5.93 (lower bound -0.485 pts, 0.015 pts inside the -0.5 margin) |
+| D3 natural, detection-gated minus K12-always-on (lower bound > 0) | FAIL: lower bound exactly 0 | FAIL: +0.61 pts [0.00, +1.21] |
+
+- Replicated on two GPU seeds: L1, L2, N1 and D1 pass both times, U1 and D3 fail both times. D2 differs, and its v4 pass is marginal.
+- External detection baselines on the held-out episodes, v4 GPU: our attributor 0.977, RAGLog tier-0 features with the same classifier 0.761 [0.738, 0.780], best single tier-0 feature 0.646, QPP 0.59 and 0.58.
+
+### 8b. LangChain v2 (`kaggle/judged_langchain_v2_scifact/`)
+
+11 of 15 faults solved, exactly the bar of 11, so `framework_claim` is True at the bar. Not solved: K04, R03, R13, R22. The fixes were designed after the v1 result (7/15), so this is a
+second attempt, not an independent replication. Run on Kaggle with seed 11.
+
+## 9. LLM-based baselines (free-tier APIs)
+
+Full results, limits and the pre-registration with its three amendments: `docs/LLM_BASELINES_RESULTS.md`.
+- **B1 diagnosis.** Supervised telemetry beat zero-shot LLM judges on all three models: AUROC 0.975 against 0.754 (Gemini 3.1 flash-lite, n = 320), 0.731 (gpt-oss-120b, partial n = 163) and
+  0.642 (gpt-oss-20b, partial n = 169). Differences +0.22 to +0.34, all intervals above zero.
+- **B2 repair.** Gemini CRAG-style +0.99 points [0.00, 2.33], our loop +1.65 [0.00, 3.67]. Loop minus CRAG-style +0.66 [-1.33, +2.67]: **INCONCLUSIVE**, non-inferiority not shown.
+  The Groq arms were NOT_ANALYSABLE because their free quotas ran out.
+- Not full RAGLog, not the CRAG paper. The comparison favours us in B1, because our model was trained on labelled episodes and the LLMs were not.
+
+### Honest estimate after sections 8 and 9 [HYP]
+
+About **7.5 / 10**. The estimate is unchanged by the v4 GPU result: that run replicated the loop and the natural-traffic gain on a second GPU seed and still missed two gates (adoption, U1).
+What is supported: a telemetry-only diagnosis and repair loop with a held-out do-no-harm bound, a replicated gain on real traffic, a licence-clean grounded fault set, a benchmark and a pre-registered comparison against LLM judges.
+What would be needed for 8.5 or higher, and is not in this repository: adoption or independent replication by other groups, the full LLM-based RAGLog and CRAG pipelines with a paid model,
+U1 at or above 0.50 on a fresh seed, and a framework-stack result (LangChain) that is not at the bar. This project does not support 9.
