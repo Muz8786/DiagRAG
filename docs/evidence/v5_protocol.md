@@ -48,7 +48,7 @@ Reason (diagnosis section 2c): n = 25 gives a standard error of about 0.06 on th
 ## 3. The run
 
 - **One judged v5 run, GPU (T4, bge-reranker-large), seed 49.** Seed 49 is the next integer after the last judged seed (48). It was not chosen from any result and no run has used it.
-- Settings: `SEED=49, N_BASE_ESCI=2400, N_PRDC=528, N_HARD=100, MAX_ATT=4000, N_HARM=20, TIME_BUDGET=38500 (notebook: 30000, B7)`.
+- Settings: `SEED=49, N_BASE_ESCI=2400, N_PRDC=528, N_HARD=100, MAX_ATT=4000, N_HARM=20, TIME_BUDGET=38500`.
 - If v5 is NOT_ADOPTED, that is the result. It is reported and the work stops. A v6, a second v5 run, or a re-run on another seed needs the owner's explicit approval. **Seed-shopping is tuning and is forbidden.**
 - Which Kaggle account runs it, and the go-ahead, are the owner's decisions.
 - Pre-registered analysis after the run: `docs/evidence/analysis_gpu_plan.py` unchanged (G, D1, D2, D3; its bootstrap seed 46 is kept for comparability).
