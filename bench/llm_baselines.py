@@ -12,9 +12,24 @@ import argparse, collections, hashlib, json, os, re, threading, time, urllib.err
 import numpy as np
 
 SAMPLE = dict(SEED=2026, N_DIAG_PER_FAULT=5, N_DIAG_CLEAN=160, N_NAT=300, SNIP=240, TOPK=5)
-MODELS = {'groq': dict(model='openai/gpt-oss-120b', min_interval=6.5), 'groq20': dict(model='openai/gpt-oss-20b', min_interval=6.5), 'gemini': dict(model='gemini-3.1-flash-lite', min_interval=4.0)}
+# Amendment A4: the natural (B2) sample is widened to N_NAT_EXT queries for the Gemini and frontier arms. It is a PREFIX of the same md5 order, so the first 300 are unchanged.
+# The free-tier Groq arms stay on the original 300 (their daily quotas make 1,000 infeasible).
+N_NAT_EXT = 1000
+NAT_LIMIT = dict(groq=300, groq20=300, gemini=N_NAT_EXT, frontier=N_NAT_EXT)
 FAMILY = dict(Q01='QLEX', Q03='QLEX', Q04='QLEX', Q05='QLEX', K04='STALE', R07='STALE', R03='ENC', R10='ENC', R11='ENC')
 UA = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) diagrag-eval/1.0'}
+
+
+MODELS = {'groq': dict(model='openai/gpt-oss-120b', min_interval=6.5), 'groq20': dict(model='openai/gpt-oss-20b', min_interval=6.5), 'gemini': dict(model='gemini-3.1-flash-lite', min_interval=4.0)}
+
+
+def frontier_cfg():
+    """Frontier arm (amendment A4/A5). Everything comes from environment variables; the provider, model and prices are the owner's choice. The key is read only from FRONTIER_API_KEY.
+    FRONTIER_PROVIDER = openai (any OpenAI-compatible chat-completions endpoint) | anthropic ; FRONTIER_MODEL ; FRONTIER_BASE_URL (optional) ;
+    FRONTIER_PRICE_IN / FRONTIER_PRICE_OUT = USD per 1M tokens ; FRONTIER_MAX_USD = hard cap enforced here (default 15), in addition to the cap set in the provider console."""
+    return dict(model=os.environ.get('FRONTIER_MODEL', ''), min_interval=float(os.environ.get('FRONTIER_MIN_INTERVAL', '0.5')), provider=os.environ.get('FRONTIER_PROVIDER', 'openai'),
+                base=os.environ.get('FRONTIER_BASE_URL', ''), price_in=float(os.environ.get('FRONTIER_PRICE_IN', '0') or 0), price_out=float(os.environ.get('FRONTIER_PRICE_OUT', '0') or 0),
+                max_usd=float(os.environ.get('FRONTIER_MAX_USD', '15') or 15))
 
 DIAG_PROMPT = """You monitor a product-search retrieval system. Below are a user query and the top-5 documents the system returned.
 Decide whether retrieval FAILED: none of the 5 documents is a good answer for the query's intent, or the results are defective
@@ -57,14 +72,33 @@ class Quota(Exception): pass
 
 class Provider:
     def __init__(self, name, keys):
-        self.name, self.keys, self.cfg = name, keys, MODELS[name]; self.last = collections.defaultdict(float); self.dead = set()
+        self.name, self.keys = name, keys; self.cfg = frontier_cfg() if name == 'frontier' else MODELS[name]
+        self.last = collections.defaultdict(float); self.dead = set(); self.usd = {}; self.spent = 0.0
 
     def call(self, prompt, ki):
         key = self.keys[ki]; wait = self.last[ki] + self.cfg['min_interval'] - time.time()
         if wait > 0: time.sleep(wait)
+        if self.name == 'frontier' and self.spent >= self.cfg['max_usd'] * 0.97:   # amendment A4: hard spend cap, checked before every call
+            raise Quota(f"frontier: spend cap reached (${self.spent:.2f} of ${self.cfg['max_usd']:.2f})")
         for attempt in range(6):
             self.last[ki] = time.time()
             try:
+                if self.name == 'frontier':
+                    pr = self.cfg['provider']
+                    if pr == 'anthropic':
+                        body = {'model': self.cfg['model'], 'max_tokens': 800, 'temperature': 0, 'messages': [{'role': 'user', 'content': prompt}]}
+                        req = urllib.request.Request((self.cfg['base'] or 'https://api.anthropic.com') + '/v1/messages', json.dumps(body).encode(),
+                                                     {**UA, 'x-api-key': key, 'anthropic-version': '2023-06-01', 'Content-Type': 'application/json'})
+                        r = json.loads(urllib.request.urlopen(req, timeout=120).read()); tin, tout = r['usage']['input_tokens'], r['usage']['output_tokens']
+                        text = ''.join(b.get('text', '') for b in r['content'] if b.get('type') == 'text')
+                    else:
+                        body = {'model': self.cfg['model'], 'messages': [{'role': 'user', 'content': prompt}], 'temperature': 0, 'max_tokens': 800}
+                        req = urllib.request.Request((self.cfg['base'] or 'https://api.openai.com/v1') + '/chat/completions', json.dumps(body).encode(),
+                                                     {**UA, 'Authorization': 'Bearer ' + key, 'Content-Type': 'application/json'})
+                        r = json.loads(urllib.request.urlopen(req, timeout=120).read()); tin, tout = r['usage']['prompt_tokens'], r['usage']['completion_tokens']
+                        text = r['choices'][0]['message'].get('content') or ''
+                    usd = (tin * self.cfg['price_in'] + tout * self.cfg['price_out']) / 1e6; self.spent += usd; self.usd[ki] = dict(usd=usd, tin=tin, tout=tout)
+                    return text, tin + tout
                 if self.name.startswith('groq'):
                     body = {'model': self.cfg['model'], 'messages': [{'role': 'user', 'content': prompt}], 'temperature': 0, 'max_tokens': 800, 'reasoning_effort': 'low'}
                     req = urllib.request.Request('https://api.groq.com/openai/v1/chat/completions', json.dumps(body).encode(),
@@ -89,7 +123,7 @@ class Provider:
 
 
 def keys_of(name):
-    v = os.environ.get({'groq': 'GROQ_API_KEY', 'groq20': 'GROQ_API_KEY', 'gemini': 'GEMINI_API_KEYS'}[name], '')
+    v = os.environ.get({'groq': 'GROQ_API_KEY', 'groq20': 'GROQ_API_KEY', 'gemini': 'GEMINI_API_KEYS', 'frontier': 'FRONTIER_API_KEY'}[name], '')
     return [k for k in re.split(r'[,\s]+', v) if k]
 
 
@@ -144,6 +178,18 @@ def stage_prep(a):
     out.close(); lab.close(); print('prep done', len(items), 'diag items,', len(nat), 'natural queries')
 
 
+def load_items(out):
+    """Original llm_inputs.jsonl (byte-identical, never rewritten) plus the A4 extension file; natural items get `rank` = position in the frozen md5 order."""
+    items = [json.loads(l) for l in open(os.path.join(out, 'llm_inputs.jsonl'))]
+    ep = os.path.join(out, 'llm_inputs_ext.jsonl')
+    if os.path.exists(ep): items += [json.loads(l) for l in open(ep)]
+    n = 0
+    for it in items:
+        if it['kind'] == 'nat':
+            it.setdefault('rank', n); n += 1
+    return items
+
+
 def load_cache(p):
     c = {}
     if os.path.exists(p):
@@ -153,8 +199,24 @@ def load_cache(p):
     return c
 
 
+def stage_extend(a):
+    """Amendment A4: append natural queries with md5-order rank 300 .. N_NAT_EXT-1 to llm_inputs_ext.jsonl (the original input file is not touched). Needs no API key."""
+    import pickle
+    g = load_harness(a.work); R = pickle.load(open(os.path.join(a.work, 'diagrag_out', 'checkpoint.pkl'), 'rb')); S = SAMPLE
+    nat = sorted(R['NAT3'], key=lambda q: md5(f"{S['SEED']}|{q}"))[:N_NAT_EXT]; first = [json.loads(l) for l in open(os.path.join(a.out, 'llm_inputs.jsonl'))]
+    first_nat = [it['query'] for it in first if it['kind'] == 'nat']; assert first_nat == nat[:len(first_nat)], 'the first 300 natural queries are not a prefix of the widened order'
+    out = open(os.path.join(a.out, 'llm_inputs_ext.jsonl'), 'w'); t0 = time.time()
+    for n, q in enumerate(nat[len(first_nat):], start=len(first_nat)):
+        r = R['CENS'][q]; gold = g['gold_set']([j for p in r['pids'] for j in g['BY_PKEY'][p]]); st = dict(q=q, tenant='ALL', cfg=g['mkcfg'](), ov=None, gold=gold, k=5, meta={})
+        tr = g['run'](st); docs = [snippet(g, i, None, S['SNIP']) for i in tr['final'][:S['TOPK']]]; v = R['NAT3'][q]
+        out.write(json.dumps(dict(kind='nat', id='nat:' + md5(q)[:12], rank=n, query=q, docs=docs, h0=bool(g['succ'](tr, gold, 5)), h_loop=bool(v['h_loop']), h_univ=bool(v['h_univ']),
+                                  h_rules=bool(v['h_rules']), cost_loop=v['cost_loop'])) + '\n')
+        if n % 100 == 0: print(f'extend nat {n}/{len(nat)} {time.time() - t0:.0f}s', flush=True)
+    out.close(); print('extend done:', len(nat) - len(first_nat), 'new natural queries, total', len(nat))
+
+
 def stage_llm(a):
-    items = [json.loads(l) for l in open(os.path.join(a.out, 'llm_inputs.jsonl'))]; t_end = time.time() + a.budget
+    items = load_items(a.out); t_end = time.time() + a.budget
     tasks = []
     for it in items:
         if it['kind'] == 'diag': tasks.append((it['id'], 'diag', DIAG_PROMPT.format(query=it['query'], docs=fmt_docs(it['docs']))))
@@ -163,13 +225,18 @@ def stage_llm(a):
     for prov in a.providers:
         P = Provider(prov, keys_of(prov)); cp = os.path.join(a.out, f'llm_cache_{prov}.jsonl'); cache = load_cache(cp); lock = threading.Lock()
         if not P.keys: print(prov, 'no key in environment - skipped'); continue
-        todo = [t for t in tasks if f'{t[0]}|{t[1]}' not in cache]
+        if prov == 'frontier' and not P.cfg['model']: print('frontier: FRONTIER_MODEL is not set - skipped'); continue
+        P.spent = sum(float(c.get('usd') or 0) for c in cache.values())   # cumulative spend across resumed chunks (frontier cap, A4)
+        rank_of = {it['id']: it['rank'] for it in items if it['kind'] == 'nat'}
+        todo = [t for t in tasks if f'{t[0]}|{t[1]}' not in cache and rank_of.get(t[0], -1) < NAT_LIMIT[prov]]   # A4: Groq arms stay on the first 300 natural queries
         # second pass: rewrite prompts for natural queries whose grades are all false
         for it in items:
             gr = cache.get(f"{it['id']}|grade")
-            if gr:
+            if gr and rank_of.get(it['id'], -1) < NAT_LIMIT[prov]:
                 j = jparse(gr['text']); rel = j.get('relevant') if isinstance(j, dict) else None
                 if isinstance(rel, list) and not any(bool(x) for x in rel) and f"{it['id']}|rewrite" not in cache: todo.append((it['id'], 'rewrite', REWRITE_PROMPT.format(query=it['query'])))
+        if prov == 'frontier':   # A4: frontier call order = all diagnosis items (frozen md5 order), then natural grading in rank order, then rewrites; a capped arm still yields a complete B1
+            todo.sort(key=lambda t: (0 if t[1] == 'diag' else 1 if t[1] == 'grade' else 2, rank_of.get(t[0], 0)))
         q = list(todo); done = [0]; err = []
 
         def worker(ki):
@@ -181,16 +248,17 @@ def stage_llm(a):
                 except Quota as e: err.append(str(e)); return
                 except Exception as e: err.append(repr(e)[:200]); time.sleep(5); continue
                 with lock:
-                    cache[f'{iid}|{kind}'] = dict(key=f'{iid}|{kind}', text=text, tokens=tok); done[0] += 1
+                    cache[f'{iid}|{kind}'] = dict(key=f'{iid}|{kind}', text=text, tokens=tok, **(P.usd[ki] if prov == 'frontier' and ki in P.usd else {})); done[0] += 1
                     open(cp, 'a').write(json.dumps(cache[f'{iid}|{kind}']) + '\n')
         th = [threading.Thread(target=worker, args=(ki,)) for ki in range(len(P.keys))]
         [t.start() for t in th]; [t.join() for t in th]
+        if prov == 'frontier': print(f"frontier spend so far: ${P.spent:.2f} of the ${P.cfg['max_usd']:.2f} cap")
         print(f'{prov}: {done[0]} calls this chunk, {len([t for t in tasks if f"{t[0]}|{t[1]}" in cache])}/{len(tasks)} diag+grade done, remaining {len(q)}', ('| ' + '; '.join(sorted(set(err)))[:200]) if err else '')
 
 
 def stage_rewrite(a):
     import pickle
-    items = {j['id']: j for j in map(json.loads, open(os.path.join(a.out, 'llm_inputs.jsonl'))) if j['kind'] == 'nat'}
+    items = {j['id']: j for j in load_items(a.out) if j['kind'] == 'nat'}
     g = load_harness(a.work); R = pickle.load(open(os.path.join(a.work, 'diagrag_out', 'checkpoint.pkl'), 'rb'))
     for prov in a.providers:
         cache = load_cache(os.path.join(a.out, f'llm_cache_{prov}.jsonl')); rp = os.path.join(a.out, f'rewrite_hits_{prov}.json'); res = json.load(open(rp)) if os.path.exists(rp) else {}
@@ -219,7 +287,7 @@ def boot(fn, n_items, n=2000, seed=7):
 
 
 def stage_analyze(a):
-    items = [json.loads(l) for l in open(os.path.join(a.out, 'llm_inputs.jsonl'))]; diag = [i for i in items if i['kind'] == 'diag']; nat = [i for i in items if i['kind'] == 'nat']
+    items = load_items(a.out); diag = [i for i in items if i['kind'] == 'diag']; nat = [i for i in items if i['kind'] == 'nat']
     lab = {j['id']: j for j in map(json.loads, open(os.path.join(a.private, 'llm_diag_labels.jsonl')))}
     ours = {r['episode_id']: r for r in __import__('csv').DictReader(open(a.ours_csv))}
     GROUPMAP = {'query': 'Q', 'knowledge_base': 'K', 'retrieval_stack': 'R', 'none': 'NONE'}; out = {}
@@ -234,7 +302,7 @@ def stage_analyze(a):
             ok = isinstance(pf, (int, float)) and 0 <= pf <= 1
             d_ok.append(dict(id=it['id'], y=int(lab[it['id']]['fault'] != 'NONE'), llm=float(pf) if ok else 0.5, parsed=ok,
                              cause=GROUPMAP.get(str((j or {}).get('cause', '')).lower(), 'NONE') if isinstance(j, dict) else 'NONE',
-                             group=lab[it['id']]['group'], ours=float(ours[it['id']]['p_fault']), our_group=ours[it['id']]['family'], tokens=c['tokens']))
+                             group=lab[it['id']]['group'], ours=float(ours[it['id']]['p_fault']), our_group=ours[it['id']]['family'], tokens=c['tokens'], usd=float(c.get('usd') or 0)))
         if d_ok:
             y = np.array([r['y'] for r in d_ok]); sl = np.array([r['llm'] for r in d_ok]); so = np.array([r['ours'] for r in d_ok])
             clean = sl[y == 0]; thr = float(np.quantile(clean, 0.95)) if len(clean) else 1.0
@@ -247,40 +315,44 @@ def stage_analyze(a):
                              llm_detect_at_5pct_fa=float(np.mean(sl[fa] > thr)) if fa.any() else None,
                              llm_group_accuracy_on_faulted=float(np.mean([r['cause'] == r['group'] for r in d_ok if r['y']])),
                              our_group_accuracy_on_faulted=float(np.mean([r['our_group'][0] == r['group'] for r in d_ok if r['y'] and r['our_group'] != 'NONE'] or [float('nan')])),
-                             mean_tokens_per_item=float(np.mean([r['tokens'] for r in d_ok])), llm_calls_per_item=1, our_llm_calls_per_item=0)
-        # ---- B2
-        rp = os.path.join(a.out, f'rewrite_hits_{prov}.json'); rw = json.load(open(rp)) if os.path.exists(rp) else {}; rows = []; excluded = 0
-        for it in nat:
-            c = cache.get(f"{it['id']}|grade")
-            if not c: continue
-            j = jparse(c['text']); rel = j.get('relevant') if isinstance(j, dict) else None
-            if not (isinstance(rel, list) and len(rel) >= 1): rel = [True]; unp = 1
-            else: unp = 0
-            trig = not any(bool(x) for x in rel); hit = it['h0']; calls = 1; toks = c['tokens']
-            if trig:
-                rc = cache.get(f"{it['id']}|rewrite"); r_ = rw.get(it['id'])
-                if not rc or not r_: excluded += 1; continue   # amendment A2: the CRAG-style procedure did not complete for this query
-                calls += 1; toks += rc['tokens']
-                if r_.get('hit') is not None: hit = bool(r_['hit'])
-            rows.append(dict(h0=it['h0'], crag=hit, loop=it['h_loop'], univ=it['h_univ'], trig=trig, calls=calls, tokens=toks, unparsed=unp, h_before_trig=it['h0']))
-        graded = len(rows) + excluded
-        if excluded > 0.10 * max(1, graded): res['B2'] = dict(verdict='NOT_ANALYSABLE', reason=f'{excluded} of {graded} graded queries had an incomplete CRAG-style procedure (provider quota); amendment A3', graded=graded, excluded_incomplete_procedure=excluded)
-        elif rows:
-            h0 = np.array([r['h0'] for r in rows], float); hc = np.array([r['crag'] for r in rows], float); hl = np.array([r['loop'] for r in rows], float); hu = np.array([r['univ'] for r in rows], float)
-            dc = boot(lambda i: float((hc[i] - h0[i]).mean()), len(rows)); dl = boot(lambda i: float((hl[i] - h0[i]).mean()), len(rows)); dd = boot(lambda i: float((hl[i] - hc[i]).mean()), len(rows))
-            res['B2'] = dict(n=len(rows), excluded_incomplete_procedure=excluded, triggered=float(np.mean([r['trig'] for r in rows])), unparsed=int(sum(r['unparsed'] for r in rows)),
-                             crag_delta=dict(mean=dc[0], ci_lo=dc[1], ci_hi=dc[2]), loop_delta=dict(mean=dl[0], ci_lo=dl[1], ci_hi=dl[2]), loop_minus_crag=dict(mean=dd[0], ci_lo=dd[1], ci_hi=dd[2]),
-                             verdict=('OURS_BETTER' if dd[1] > 0 else 'OURS_NON_INFERIOR' if dd[1] > -0.005 else 'LLM_BETTER' if dd[2] < 0 else 'INCONCLUSIVE'),
-                             crag_fixed=int(((hc - h0) > 0).sum()), crag_broken=int(((hc - h0) < 0).sum()), loop_fixed=int(((hl - h0) > 0).sum()), loop_broken=int(((hl - h0) < 0).sum()),
-                             mean_llm_calls_per_query=float(np.mean([r['calls'] for r in rows])), mean_tokens_per_query=float(np.mean([r['tokens'] for r in rows])),
-                             our_llm_calls_per_query=0, universal_delta=float((hu - h0).mean()))
-        out[prov] = dict(model=MODELS[prov]['model'], **res)
+                             mean_tokens_per_item=float(np.mean([r['tokens'] for r in d_ok])), llm_calls_per_item=1, our_llm_calls_per_item=0,
+                             usd_per_item=(float(np.mean([r['usd'] for r in d_ok])) if prov == 'frontier' else None))
+        # ---- B2 (A4: the extended sample for providers with a wider natural limit, plus the original first-300 variant for continuity)
+        b2v = [('B2', NAT_LIMIT[prov])] + ([('B2_first300', 300)] if NAT_LIMIT[prov] > 300 else [])
+        for B2KEY, B2LIM in b2v:
+            rp = os.path.join(a.out, f'rewrite_hits_{prov}.json'); rw = json.load(open(rp)) if os.path.exists(rp) else {}; rows = []; excluded = 0
+            for it in [x for x in nat if x['rank'] < B2LIM]:
+                c = cache.get(f"{it['id']}|grade")
+                if not c: continue
+                j = jparse(c['text']); rel = j.get('relevant') if isinstance(j, dict) else None
+                if not (isinstance(rel, list) and len(rel) >= 1): rel = [True]; unp = 1
+                else: unp = 0
+                trig = not any(bool(x) for x in rel); hit = it['h0']; calls = 1; toks = c['tokens']; usd_q = float(c.get('usd') or 0)
+                if trig:
+                    rc = cache.get(f"{it['id']}|rewrite"); r_ = rw.get(it['id'])
+                    if not rc or not r_: excluded += 1; continue   # amendment A2: the CRAG-style procedure did not complete for this query
+                    calls += 1; toks += rc['tokens']; usd_q += float(rc.get('usd') or 0)
+                    if r_.get('hit') is not None: hit = bool(r_['hit'])
+                rows.append(dict(h0=it['h0'], crag=hit, loop=it['h_loop'], univ=it['h_univ'], trig=trig, calls=calls, tokens=toks, unparsed=unp, h_before_trig=it['h0'], usd=usd_q))
+            graded = len(rows) + excluded
+            if excluded > 0.10 * max(1, graded): res[B2KEY] = dict(verdict='NOT_ANALYSABLE', reason=f'{excluded} of {graded} graded queries had an incomplete CRAG-style procedure (provider quota); amendment A3', graded=graded, excluded_incomplete_procedure=excluded)
+            elif rows:
+                h0 = np.array([r['h0'] for r in rows], float); hc = np.array([r['crag'] for r in rows], float); hl = np.array([r['loop'] for r in rows], float); hu = np.array([r['univ'] for r in rows], float)
+                dc = boot(lambda i: float((hc[i] - h0[i]).mean()), len(rows)); dl = boot(lambda i: float((hl[i] - h0[i]).mean()), len(rows)); dd = boot(lambda i: float((hl[i] - hc[i]).mean()), len(rows))
+                res[B2KEY] = dict(n=len(rows), excluded_incomplete_procedure=excluded, triggered=float(np.mean([r['trig'] for r in rows])), unparsed=int(sum(r['unparsed'] for r in rows)),
+                                 crag_delta=dict(mean=dc[0], ci_lo=dc[1], ci_hi=dc[2]), loop_delta=dict(mean=dl[0], ci_lo=dl[1], ci_hi=dl[2]), loop_minus_crag=dict(mean=dd[0], ci_lo=dd[1], ci_hi=dd[2]),
+                                 verdict=('OURS_BETTER' if dd[1] > 0 else 'OURS_NON_INFERIOR' if dd[1] > -0.005 else 'LLM_BETTER' if dd[2] < 0 else 'INCONCLUSIVE'),
+                                 crag_fixed=int(((hc - h0) > 0).sum()), crag_broken=int(((hc - h0) < 0).sum()), loop_fixed=int(((hl - h0) > 0).sum()), loop_broken=int(((hl - h0) < 0).sum()),
+                                 mean_llm_calls_per_query=float(np.mean([r['calls'] for r in rows])), mean_tokens_per_query=float(np.mean([r['tokens'] for r in rows])),
+                                 usd_per_query=(float(np.mean([r['usd'] for r in rows])) if prov == 'frontier' else None),
+                                 our_llm_calls_per_query=0, universal_delta=float((hu - h0).mean()))
+        out[prov] = dict(model=(frontier_cfg()['model'] if prov == 'frontier' else MODELS[prov]['model']), **res)
     json.dump(out, open(os.path.join(a.out, 'LLM_BASELINES_RESULT.json'), 'w'), indent=1); print(json.dumps(out, indent=1)[:6000])
 
 
 if __name__ == '__main__':
-    ap = argparse.ArgumentParser(); ap.add_argument('stage', choices=['prep', 'llm', 'rewrite', 'analyze']); ap.add_argument('--work', default='/projects/sandbox/_llmwork')
+    ap = argparse.ArgumentParser(); ap.add_argument('stage', choices=['prep', 'extend', 'llm', 'rewrite', 'analyze']); ap.add_argument('--work', default='/projects/sandbox/_llmwork')
     ap.add_argument('--out', default='/projects/sandbox/_llm'); ap.add_argument('--private', default='/projects/sandbox/_private'); ap.add_argument('--providers', nargs='+', default=['groq', 'groq20', 'gemini'])
     ap.add_argument('--budget', type=int, default=1300); ap.add_argument('--ours-csv', default='/projects/sandbox/_private/baseline_track1_test.csv'); a = ap.parse_args()
     os.makedirs(a.out, exist_ok=True); os.makedirs(a.private, exist_ok=True)
-    {'prep': stage_prep, 'llm': stage_llm, 'rewrite': stage_rewrite, 'analyze': stage_analyze}[a.stage](a)
+    {'prep': stage_prep, 'extend': stage_extend, 'llm': stage_llm, 'rewrite': stage_rewrite, 'analyze': stage_analyze}[a.stage](a)
