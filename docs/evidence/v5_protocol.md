@@ -104,7 +104,7 @@ Run: `docs/evidence/probe_admission_nbr.py` (SHA-256 `9ea82bd1…c6077`), v4 CPU
    Both loops are reported on the natural queries: `h_loop` (v5 deployed config) and `h_loop_v4cfg` (v4 behaviour as a counterfactual), so the delta from the correction is on record. NA1c compares them on queries with `q_correctable >= 1`.
 
 **B4 — v5 code frozen (16 Nov 2026, 08:35 UTC; no v5 judged run exists).**
-`kaggle/diagrag_v5.py` is generated from `kaggle/diagrag_v4.py` by `kaggle/mk_v5.py` (25 exact, asserted replacements; `diff v4 v5` shows them). SHA-256 **`bf43658f1c9bab175bdf992647a08d238820dc413b06ebd7d4359c646765591b`**.
+`kaggle/diagrag_v5.py` is generated from `kaggle/diagrag_v4.py` by `kaggle/mk_v5.py` (26 exact, asserted replacements after B5; `diff v4 v5` shows them). SHA-256 **`bf43658f1c9bab175bdf992647a08d238820dc413b06ebd7d4359c646765591b`**.
 Code checks done before this freeze, all on a tiny CPU smoke run (the numbers from it are meaningless and are not reported): the script runs to the end with exit 0; the protocol file records this hash, floor 50 and the deploy switch;
 `VERDICT.accounting` carries (a), (b) and (c); the policy table carries the two new policies with T1 to T4; natural arms NA1c, NA1d and N1v4 are present; the unchanged pre-registered `analysis_gpu_plan.py` reads the output.
 Not checked: behaviour at full scale on a GPU (that is the judged run itself).

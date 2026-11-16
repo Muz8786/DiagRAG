@@ -26,6 +26,9 @@ shows it, without digging through the working workspace.
 - `kaggle/DiagRAG_v4_kaggle.ipynb` — **the one-file Kaggle notebook**. It embeds the frozen `diagrag_v4.py`, checks its SHA-256
   and runs the judged GPU configuration (about 2 h 10 min on a T4). Judged result of that configuration: NOT_ADOPTED, 26/28
   detectors (27 needed), 27/28 repairs. See `docs/ROADMAP_V3.md` section 8.
+- `kaggle/DiagRAG_v5_kaggle.ipynb` — the **pre-registered next run** (seed 49): code frozen, hash tied to `docs/evidence/v5_protocol.md`, **not yet executed**. The protocol allows one judged run.
+- `docs/ROADMAP_V4.md` — execution record of the programme towards 8.5: the diagnosis of the Q03 and C2 gate flips, the v5 design, a rejected probe, what is blocked on the owner, and the honest estimate (about 7.5/10).
+- `docs/REPRODUCE.md`, `docs/REPLICATION_INVITATION.md` — a 30-minute reproduction path and an invitation to replicate (the email in it is a draft and has not been sent). `bench/QUICKSTART.md` — a 5-minute benchmark quickstart.
 - `kaggle/` — the other notebooks (v1 to v4, port, port2, LangChain v1 and v2), their `.py` sources, `build_notebook.py`,
   `build_final_notebook.py`, and one `judged_*` folder per judged run. See `kaggle/README.md`.
 - `release/DiagRAG_core28_kaggle.zip` — the single package: the Kaggle notebook, all code, every judged run with its
