@@ -38,3 +38,9 @@ inside that script. If the script has to change after the first LLM call (for ex
 - A further Groq arm, `groq20` = `openai/gpt-oss-20b` (same prompts, same key, separate quota), is added and run until its quota ends. It is labelled PARTIAL if it does not finish.
 - **Claim rule, stricter than before:** a combined claim needs OURS_BETTER or OURS_NON_INFERIOR in **every** analysed arm (Gemini, Groq-120b, Groq-20b), including partial ones.
 - Script SHA-256 after the amendment: `5f9077f6744d8f6e45540777e19ed03eb627a2998f0528792353ad3e3dc7b173`. Gemini finished all 620 calls before the amendment, and its prompts and parsing are unchanged by it.
+
+**A2 — B2 incomplete procedures (made before any metric was computed; only call counts had been seen).**
+- A natural query whose grade says "no relevant document" but whose rewrite call or rewrite retrieval never ran (provider quota) is **excluded** from that arm's B2
+  and counted in `excluded_incomplete_procedure`. Before this amendment such a query would have been scored as "unchanged", which would handicap the baseline.
+  The paired comparison with the DiagRAG loop uses the same retained queries.
+- Script SHA-256 after A2: `aa8980093a7ae8df539b4f64cedac58aa5f38771c9ffd6ca9855914ad3a23582`.

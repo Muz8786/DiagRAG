@@ -249,7 +249,7 @@ def stage_analyze(a):
                              our_group_accuracy_on_faulted=float(np.mean([r['our_group'][0] == r['group'] for r in d_ok if r['y'] and r['our_group'] != 'NONE'] or [float('nan')])),
                              mean_tokens_per_item=float(np.mean([r['tokens'] for r in d_ok])), llm_calls_per_item=1, our_llm_calls_per_item=0)
         # ---- B2
-        rp = os.path.join(a.out, f'rewrite_hits_{prov}.json'); rw = json.load(open(rp)) if os.path.exists(rp) else {}; rows = []
+        rp = os.path.join(a.out, f'rewrite_hits_{prov}.json'); rw = json.load(open(rp)) if os.path.exists(rp) else {}; rows = []; excluded = 0
         for it in nat:
             c = cache.get(f"{it['id']}|grade")
             if not c: continue
@@ -258,15 +258,15 @@ def stage_analyze(a):
             else: unp = 0
             trig = not any(bool(x) for x in rel); hit = it['h0']; calls = 1; toks = c['tokens']
             if trig:
-                rc = cache.get(f"{it['id']}|rewrite")
-                if rc: calls += 1; toks += rc['tokens']
-                r_ = rw.get(it['id'])
-                if r_ and r_.get('hit') is not None: hit = bool(r_['hit'])
+                rc = cache.get(f"{it['id']}|rewrite"); r_ = rw.get(it['id'])
+                if not rc or not r_: excluded += 1; continue   # amendment A2: the CRAG-style procedure did not complete for this query
+                calls += 1; toks += rc['tokens']
+                if r_.get('hit') is not None: hit = bool(r_['hit'])
             rows.append(dict(h0=it['h0'], crag=hit, loop=it['h_loop'], univ=it['h_univ'], trig=trig, calls=calls, tokens=toks, unparsed=unp, h_before_trig=it['h0']))
         if rows:
             h0 = np.array([r['h0'] for r in rows], float); hc = np.array([r['crag'] for r in rows], float); hl = np.array([r['loop'] for r in rows], float); hu = np.array([r['univ'] for r in rows], float)
             dc = boot(lambda i: float((hc[i] - h0[i]).mean()), len(rows)); dl = boot(lambda i: float((hl[i] - h0[i]).mean()), len(rows)); dd = boot(lambda i: float((hl[i] - hc[i]).mean()), len(rows))
-            res['B2'] = dict(n=len(rows), triggered=float(np.mean([r['trig'] for r in rows])), unparsed=int(sum(r['unparsed'] for r in rows)),
+            res['B2'] = dict(n=len(rows), excluded_incomplete_procedure=excluded, triggered=float(np.mean([r['trig'] for r in rows])), unparsed=int(sum(r['unparsed'] for r in rows)),
                              crag_delta=dict(mean=dc[0], ci_lo=dc[1], ci_hi=dc[2]), loop_delta=dict(mean=dl[0], ci_lo=dl[1], ci_hi=dl[2]), loop_minus_crag=dict(mean=dd[0], ci_lo=dd[1], ci_hi=dd[2]),
                              verdict=('OURS_BETTER' if dd[1] > 0 else 'OURS_NON_INFERIOR' if dd[1] > -0.005 else 'LLM_BETTER' if dd[2] < 0 else 'INCONCLUSIVE'),
                              crag_fixed=int(((hc - h0) > 0).sum()), crag_broken=int(((hc - h0) < 0).sum()), loop_fixed=int(((hl - h0) > 0).sum()), loop_broken=int(((hl - h0) < 0).sum()),
