@@ -117,3 +117,6 @@ The seed-48 protocol file recorded the code hash but **no library versions**, so
 Change: `JUDGED_PROTOCOL.json` gains an `env` block (Python, platform, numpy, pandas, scipy, scikit-learn, torch, transformers, sentence-transformers, faiss, nltk, CUDA, GPU name). No gate, bar, sample or computation changes.
 Checked: a short CPU run starts, writes the `env` block and its `code_sha256` equals the file hash.
 **This supersedes the SHA-256 in B4.** The frozen v5 hash is now `deecafad69b49c5ae87ee7031f23d24553ea092cf390b964859dbae81091702a`.
+
+**B6 — correction of a factual error in section 4 (16 Nov 2026, 11:10 UTC; no v5 run exists).** Section 4 says the faults with closure <= 0.08 "in all three" group-fallback runs are Q02, Q03, Q07, Q09 and K06. Recomputed from `unseen_faults.csv` of v3 GPU seed 46, v4 CPU seed 47 and v4 GPU seed 48, the set is **K06, Q03, Q07 and Q09**.
+Q02 has closure 0.16 in v3 GPU and 0.00 and 0.04 in the two v4 runs, so it is not in the set. The v4 runs alone (seeds 47 and 48) give Q02, Q03, Q07, Q09 and K06 (plus R06 in seed 48). The prediction that U1 will be below 0.50 is unchanged. No gate or bar is affected.
