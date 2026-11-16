@@ -1,14 +1,14 @@
 # DiagRAG core-28 on Kaggle
 
 Every notebook is a single file. Internet must be ON. Use a GPU (T4 x1) for the v3/v4 flagship runs.
-**The flagship is `diagrag_v4.ipynb`.** The older notebooks stay because each judged run is pinned to the exact file that produced it.
+**The flagship is v4. The easiest way to run it is the one-file `DiagRAG_v4_kaggle.ipynb`** (built by `build_final_notebook.py`): it embeds the frozen `diagrag_v4.py`, checks its SHA-256 and sets the judged settings. The older notebooks stay because each judged run is pinned to the exact file that produced it.
 
 | Notebook | What it judges | Judged run (folder) |
 |---|---|---|
 | `diagrag_core28.ipynb` (v1) | the 28 core faults | CPU seeds 42 and 43: `judged_cpu_run_seed42/`, `judged_cpu_run_seed43/` |
 | `diagrag_v2.ipynb` | v1's 28 + field-evidenced R25/R26/K11, family-level loop, natural arms NA1-NA6 | CPU seed 44: `judged_cpu_run_v2_seed44/` |
 | `diagrag_v3.ipynb` | v2 + licence-clean corpus, evidence tiers, Q03 from real query pairs, K12/R26 testbeds, Mondrian conformal do-no-harm, natural traffic, prevalence census, external baselines (RAGLog tier-0, QPP, SymSpell, wordsegment) | CPU seed 45: `judged_cpu_run_v3_seed45/`; **GPU T4, bge-reranker-large, seed 46: `judged_gpu_v3_seed46/`** |
-| `diagrag_v4.ipynb` | v3 + group-level attributor and a larger K fallback (written after the v3 results, then frozen) | CPU seed 47: `judged_cpu_run_v4_seed47/`; GPU seed 48: see "v4 GPU" below |
+| `diagrag_v4.ipynb` | v3 + group-level attributor and a larger K fallback (written after the v3 results, then frozen) | CPU seed 47: `judged_cpu_run_v4_seed47/`; GPU seed 48: `judged_gpu_v4_seed48/` (NOT_ADOPTED: 26/28 detectors, 27/28 repairs; L1, L2, N1 pass, U1 fails) |
 | `diagrag_port2.ipynb` | stack 2 on SciFact and FiQA (`DATASET=scifact` or `fiqa`) | `judged_port2_scifact/`, `judged_port2_fiqa/` |
 | `diagrag_langchain.ipynb` (v1) | 15 faults injected through real LangChain components | `judged_langchain_scifact/` (7/15, claim FAILED) |
 | `diagrag_langchain2.ipynb` | same 15 faults after fixes designed from the v1 results | `judged_langchain_v2_scifact/` (11/15, exactly at the bar of 11) |
