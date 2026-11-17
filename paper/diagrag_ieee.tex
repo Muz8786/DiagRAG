@@ -1,0 +1,372 @@
+% DiagRAG: IEEE conference paper (IEEEtran, conference mode). Compile with: pdflatex diagrag_ieee.tex (twice), or: tectonic diagrag_ieee.tex
+% Every number comes from a file in the repository (kaggle/judged_*/, docs/evidence/). Author names, affiliations, venue and the
+% AI-assistance wording are the owner's decisions and are marked [OWNER]. Verify the bibliography entries against the sources before submission.
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{graphicx}
+\usepackage{url}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,fit,calc}
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em T\kern-.1667em\lower.7ex\hbox{E}\kern-.125em X}}
+\newcommand{\ci}[2]{[#1,\,#2]}
+\newcommand{\tc}[1]{\texttt{#1}}
+\setlength{\tabcolsep}{3pt}
+
+\begin{document}
+
+\title{DiagRAG: Telemetry-Only Diagnosis and Repair of Retrieval Faults in RAG Systems, with a Conformal Do-No-Harm Bound and a Composed-Fault Study}
+
+\author{\IEEEauthorblockN{[OWNER: author name(s)]}
+\IEEEauthorblockA{{[OWNER: affiliation]}\\
+{[OWNER: e-mail]}}}
+
+\maketitle
+
+\begin{abstract}
+When a retrieval-augmented generation (RAG) system answers badly, the cause often lies in the retrieval stage, and that stage rarely reports it.
+We ask whether the telemetry that retrieval already produces (score gaps, rank agreement between dense and lexical legs, duplicate counts, cheap probes; 63 numbers per query) is enough to detect a fault, name its cause among 32 injectable fault types, apply a targeted repair, and bound the harm done to queries that were healthy, with no generated answer and no LLM call at run time.
+We build a gradient-boosted attributor, a family-first dispatcher, per-fault repairs, and a per-stratum conformal risk-control gate.
+Under pre-registered gates, the flagship run is adopted on a GPU stack (27 of 28 core detectors, 27 of 28 repairs) and on a CPU replication.
+The diagnoser separates faulty from clean episodes at AUROC 0.977, against 0.734 for the retrieval-stage features of an existing system with the same classifier and 0.63 to 0.75 for zero-shot LLM judges.
+On 1,648 never-examined natural queries the deployed loop gains $+2.43$ points of Hit@5 $\ci{+1.64}{+3.22}$, almost all of it from two simple rules.
+A pre-registered study of 155 held-out composed faults (pairs and triples) shows where the method stops: every cause is named in 40.0\% of episodes $\ci{32.6}{47.9}$, and in 0 of 75 pairs inside one fault group and triples.
+We also report what failed: two earlier runs missed the adoption rule, closure on unseen faults stays below its 0.50 bar (0.41), and all faults are injected by the authors on one e-commerce corpus.
+\end{abstract}
+
+\begin{IEEEkeywords}
+retrieval-augmented generation, fault diagnosis, observability, conformal risk control, fault injection, pre-registration
+\end{IEEEkeywords}
+
+%--------------------------------------------------------------------------------------------------
+\section{Introduction}
+RAG systems answer from documents they retrieve. When an answer is wrong, the failure is often upstream: a misspelled query, near-duplicate passages that crowd out evidence, a stale vector index, a reranker that returns noise. Barnett et al.\ catalogue such failure points from practice~\cite{barnett2024seven}. The retrieval stage typically logs scores but does not say that something is wrong, and checking every answer with an LLM is slow and costly.
+
+\emph{Diagnosis} differs from \emph{detection}. A detector says that retrieval failed; a diagnoser says where, so that a targeted repair can run. We study a narrow, testable version of the problem: given only the retrieval telemetry of one query, (i) is retrieval faulty, (ii) which of a known set of faults is it, (iii) which repair should run, and (iv) can the system promise that healthy queries are rarely made worse?
+
+\textbf{Contributions.}
+\begin{enumerate}
+\item A fault model of 32 injectable retrieval faults in four groups, each tied to public field evidence by a tier, and a telemetry vector of 63 features computed from the retrieval trace alone (Section~\ref{sec:setting}).
+\item A diagnosis-and-repair loop: a gradient-boosted attributor, a family-first dispatcher with group fallbacks, per-fault repairs, and a per-stratum conformal risk-control gate that bounds expected loss on clean queries (Section~\ref{sec:method}).
+\item An evaluation under \emph{pre-registered} gates, with the SHA-256 of the exact code written before any result existed, dated amendments, and every failed run kept in the main table (Section~\ref{sec:protocol}).
+\item Results against retrieval-stage, query-performance and LLM-judge baselines; natural-traffic evidence on queries no run had examined; and a decomposition showing that the natural gain comes from two simple rules (Section~\ref{sec:results}).
+\item A pre-registered composed-fault study of fault pairs and triples, with a no-regression check on the single-fault gates, which exposes a structural limit of the dispatcher (Section~\ref{sec:composed}).
+\end{enumerate}
+Section~\ref{sec:failed} lists what failed. We state the limits of the evidence at the outset: the faults are injected by the authors, on one English e-commerce corpus.
+
+%--------------------------------------------------------------------------------------------------
+\section{Related Work}
+\textbf{RAG and its failure modes.} RAG combines a retriever with a generator~\cite{lewis2020rag}. Barnett et al.\ describe seven failure points when engineering such systems~\cite{barnett2024seven}. Automatic evaluation frameworks score generated answers or retrieved context with LLM judges~\cite{es2023ragas,saadfalcon2024ares}; they need model calls per query, whereas we use only retrieval telemetry.
+
+\textbf{Retrieval observability and correction.} RAGLog is an open-source system that reads retrieval-stage logs; we use its tier-0 feature extractor (Apache-2.0, commit 7f7d068) as a detection baseline and do not reproduce its LLM checks~\cite{raglog}. Corrective RAG grades retrieved documents with a model and rewrites the query~\cite{yan2024crag}; our CRAG-style baseline is a reduced version of this idea, not the full system.
+
+\textbf{Query performance prediction (QPP).} QPP estimates retrieval quality without relevance labels. Normalised query commitment (NQC)~\cite{shtok2012qpp} and weighted information gain (WIG)~\cite{zhou2007wig} are standard predictors; we report both as detection baselines.
+
+\textbf{Risk control.} Conformal risk control bounds the expected value of a monotone loss~\cite{angelopoulos2024crc}; Mondrian (conditional) calibration gives the bound within strata~\cite{vovk2013mondrian}. We use both to gate when a repair may run.
+
+\textbf{Retrieval components and data.} We use dense retrieval with BGE encoders~\cite{xiao2023bge}, BM25~\cite{robertson2009bm25}, reciprocal-rank fusion~\cite{cormack2009rrf}, sentence-transformer models~\cite{reimers2019sbert}, the Amazon ESCI shopping queries~\cite{reddy2022esci}, the Webis-QSpell-17 misspelling corpus~\cite{hagen2017qspell}, and BEIR for portability checks~\cite{thakur2021beir}. Classifiers are histogram gradient-boosted trees from scikit-learn~\cite{pedregosa2011sklearn}.
+
+\textbf{Pre-registration.} We follow the logic of pre-registration~\cite{nosek2018prereg}: gates and code are fixed before runs, and amendments are dated and committed before the results they touch.
+
+%--------------------------------------------------------------------------------------------------
+\section{Problem Setting}\label{sec:setting}
+\subsection{Retrieval stack}
+The stack fuses dense retrieval (bge-base-en-v1.5) and BM25 by reciprocal-rank fusion ($k{=}60$); the top 25 candidates go to a cross-encoder reranker (bge-reranker-large on GPU, MiniLM-L6 on CPU), and the top five are returned. A tenant filter and a validity-date filter are on by default. A query \emph{succeeds} if a gold document is in the top five (Hit@5); identity-sensitive faults require rank one. The corpus has 101{,}297 documents after removing 84{,}993 of the original 186{,}290 whose licence status is unverified.
+
+\subsection{Fault model}
+We define 32 injectable faults in four groups: query (Q), knowledge base (K), retrieval stack (R), and composition (C). The adoption rule counts the \emph{core 28}; four more (R25, R26, K11, K12) come from field reports and are reported alongside. Each fault has an evidence tier linking it to public reports; tiers S and M (22 faults) form the \emph{grounded} set, while N and P are quarantined. Table~\ref{tab:faults} lists the core faults.
+
+\begin{table}[t]
+\caption{Core faults by group.}
+\label{tab:faults}
+\centering\footnotesize
+\begin{tabular}{@{}p{0.07\columnwidth}p{0.85\columnwidth}@{}}
+\toprule
+Group & Faults\\
+\midrule
+Q & Q01 unfinished last word; Q02 chatty filler; Q03 paraphrase by another real user; Q04 misspelling; Q05 missing space; Q07 corrupted model number; Q09 two needs in one query\\
+K & K03 sibling products with one identity; K04 stale vector; K05 near-duplicates; K06 unverified copies; K07 other-tenant leak; K08 placeholder documents; K09 expired versions\\
+R & R01 index coverage hole; R03 encoder truncation; R05 reranker returns garbage; R06 misrouting; R07 shifted embedding rows; R10 query-vector noise; R11 encoder drift; R13 BM25 dictionary out of sync; R15 ANN recall; R19 rerank depth cut; R22 raw-score fusion; R23 partial results; R24 reranker truncation\\
+C & C2 two faults from different groups\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Episodes}
+An episode is a query run through the clean and the faulted pipeline. It is kept only if the clean pipeline succeeds and the faulted one fails, so every episode has something to repair; the yield is reported per fault. Train and held-out splits are made by gold-product component, so no gold product appears on both sides. The v6 CPU run has 9{,}535 single-fault and clean episodes.
+
+\subsection{Telemetry}
+Each query yields 63 features computed from the retrieval trace only (no gold label and no generated answer): query features (out-of-vocabulary rate, correctable and segmentable tokens), score statistics (dense, sparse and cross-encoder gaps), agreement between legs, duplicate and chunk-crowding counts, tenant and validity checks, and cheap probes (ANN-versus-exact recall, vector alignment, stale-vector probe).
+
+%--------------------------------------------------------------------------------------------------
+\section{Method}\label{sec:method}
+Figure~\ref{fig:pipeline} shows the loop.
+
+\begin{figure}[t]
+\centering
+\resizebox{\columnwidth}{!}{%
+\begin{tikzpicture}[node distance=5mm, box/.style={draw, rounded corners=2pt, align=center, minimum height=8mm, font=\footnotesize, inner sep=3pt}, arr/.style={-{Stealth[length=2mm]}, thick}]
+\node[box] (q) {query};
+\node[box, right=of q] (r) {retrieval\\stack};
+\node[box, right=of r] (t) {telemetry\\(63 features)};
+\node[box, right=of t] (a) {attributor\\+ dispatcher};
+\node[box, below=7mm of a] (g) {conformal\\do-no-harm gate};
+\node[box, left=of g] (rep) {repair\\(family / group)};
+\node[box, left=of rep] (out) {top-5\\returned};
+\draw[arr] (q)--(r); \draw[arr] (r)--(t); \draw[arr] (t)--(a); \draw[arr] (a)--(g); \draw[arr] (g)--(rep); \draw[arr] (rep)--(out);
+\draw[arr, dashed] (r) |- ($(out.north)+(0,3mm)$) -- (out.north);
+\end{tikzpicture}}
+\caption{Closed loop. Telemetry from the first retrieval feeds the attributor; a dispatcher proposes a repair; a conformal gate decides whether it may run. Dashed: the unrepaired result is returned when the gate declines.}
+\label{fig:pipeline}
+\end{figure}
+
+\subsection{Detectors}
+Seven faults (Q04, K07, R15, R23, R25, R26, K11) use a precise rule on one probe; the others use a gradient-boosted head on the telemetry. A detector \emph{passes} if held-out AUROC is at least 0.70 with at least 50 held-out positives.
+
+\subsection{Attributor and dispatcher}
+A histogram gradient-boosted classifier (250 iterations, learning rate 0.08, 15 leaves, $\ell_2$ regularisation 1.0) scores each query's telemetry against the clean class and every fault. The dispatcher applies a fired precise rule first. Otherwise it picks the letter group (Q, K or R) by probability mass, then the repair family within the group (e.g.\ QLEX for Q01/Q03/Q04/Q05, STALE for K04/R07, ENC for R03/R10/R11), falling back to the group repair when no family is clearly ahead ($\tau{=}0.6$). A second label is returned from another group when that group's mass is high enough.
+
+\subsection{Repairs}
+Each fault has one repair (autocomplete, spelling correction, word segmentation, near-duplicate collapse, re-applying the tenant filter, rebuilding the dense view, restoring fusion, and so on), plus the family repairs and group fallbacks above. A repair \emph{passes} if the Wilson lower bound of its rescue rate is at least 0.50 and at most 10\% of clean successes are lost.
+
+\subsection{Do-no-harm gate}
+Let $\ell(\lambda)$ be the Hit@5 lost on a clean query when repairs are dispatched whenever the attributor's fault probability exceeds $\lambda$. The loss is monotone in $\lambda$, so conformal risk control~\cite{angelopoulos2024crc} chooses the smallest $\lambda$ with calibrated expected loss at most $\alpha{=}0.005$. Calibration is done separately in three strata (common ESCI queries, rare ESCI queries, a synthetic enterprise partition), which gives a Mondrian guarantee~\cite{vovk2013mondrian}. Gate \textbf{L1} requires held-out clean loss at most 0.5\%; \textbf{L2} requires mean closure on injected faults of at least 0.70; \textbf{U1} requires mean closure of at least 0.50 on faults the attributor never saw (leave-one-fault-out); \textbf{N1} requires a natural-traffic gain whose 95\% interval excludes zero.
+
+A \emph{capped} variant raises $\lambda$ until clean classifier dispatch is at most 20\% on the calibration set; the loss bound survives because loss is monotone in $\lambda$.
+
+%--------------------------------------------------------------------------------------------------
+\section{Experimental Protocol}\label{sec:protocol}
+\textbf{Pre-registration.} Before each judged run, a protocol file records the gates, the configuration, the SHA-256 of the exact code, and (from the fifth run) the library versions. A run is \emph{adopted} if at least 27 of 28 core detectors and 24 of 28 core repairs pass. Amendments are dated, committed before the results they touch, and carry a real hash. Failed runs stay in the results table.
+
+\textbf{Natural traffic.} A census of 7{,}175 ESCI queries with an Exact product in the corpus identifies 1{,}648 queries that no earlier run had examined; with no injection, we apply the deployed loop and measure the paired change in Hit@5 with a 95\% bootstrap interval.
+
+\textbf{Baselines.} (i) RAGLog tier-0 features with the same classifier~\cite{raglog}; (ii) NQC and WIG~\cite{shtok2012qpp,zhou2007wig}, and the negated top reranker score; (iii) zero-shot LLM judges that see the query and the five returned documents (Gemini 3.1 Flash-Lite, gpt-oss-120b, gpt-oss-20b, $n{=}320$ episodes each); (iv) a diagnosis-free universal repair applied to every query; (v) SymSpell and word-segmentation baselines for the spelling faults; (vi) a CRAG-style repair~\cite{yan2024crag}.
+
+\textbf{Intervals.} Proportions use Wilson 95\% intervals~\cite{wilson1927}; differences use paired bootstrap intervals.
+
+\textbf{Stacks.} CPU runs use scikit-learn 1.9.1; the Kaggle GPU runs recorded scikit-learn 1.6.1. Re-fitting the 31 detectors from the shipped episodes under each stack's recorded versions reproduces all recorded AUROCs (31 of 31, largest difference 0.0000) for every run re-fitted; under other versions near-bar detectors move by up to 0.03.
+
+%--------------------------------------------------------------------------------------------------
+\section{Results}\label{sec:results}
+\subsection{Adoption across all judged runs}
+Table~\ref{tab:runs} lists every judged run. Runs 42 to 47 are adopted; the v4 GPU run (26 of 28 detectors) and the v5 CPU run (24 of 28) are not. Three of the four missing detectors in v5 (R03, R15, R22) lacked 50 held-out positives; the cause was the supply of distinct test queries, not the loop. Version v6 raised the base-query supply to all 5{,}527 examined ESCI queries and balanced the C2 pair mix; the prediction that the three detectors would then pass could have failed and did not. The v6 flagship is adopted on GPU and on a CPU replication. The v7 row re-fits the attributor on the same single-fault episodes with composed rows added (Section~\ref{sec:composed}); it is a regression check, not an independent adoption.
+
+\begin{table*}[t]
+\caption{All judged runs, pass or fail. Detectors/repairs/both are counts of 28 core faults. L1 is held-out clean loss (bar 0.5\%); L2 is mean closure (bar 0.70); U1 is unseen-fault closure (bar 0.50); N1 is the natural-traffic gain in Hit@5 points with 95\% interval.}
+\label{tab:runs}
+\centering\footnotesize
+\begin{tabular}{@{}llllllllll@{}}
+\toprule
+Seed & Stack & Code & Det./Rep./Both & L1 & L2 & U1 & N1 & Verdict\\
+\midrule
+42 & CPU & v1 & 28/27/27 & -- & -- & -- & -- & adopted\\
+43 & CPU & v1 & 28/28/28 & 0.75\% & -- & 0.207 & -- & adopted\\
+44 & CPU & v2 & 28/27/27 & 1.28\% (fail) & 0.871 & 0.253 & -- & adopted\\
+45 & CPU & v3 & 27/27/27 & 0.15\% & 0.865 & 0.365 & $+2.25$ $\ci{+1.40}{+3.09}$ & adopted\\
+46 & GPU T4 & v3 & 27/27/27 & 0.15\% & 0.860 & 0.395 & $+2.06$ $\ci{+1.21}{+2.85}$ & adopted\\
+47 & CPU & v4 & 28/27/27 & 0.37\% & 0.830 & 0.485 & $+2.31$ $\ci{+1.52}{+3.16}$ & adopted\\
+48 & GPU T4 & v4 & 26/27/26 & 0.00\% & 0.866 & 0.456 & $+2.18$ $\ci{+1.27}{+3.16}$ & \textbf{not adopted}\\
+49 & CPU & v5 & 24/27/24 & 0.15\% & 0.833 & 0.440 & $+2.43$ $\ci{+1.70}{+3.22}$ & \textbf{not adopted}\\
+50 & GPU T4 & v6 (flagship) & 27/27/27 & 0.28\% & 0.844 & 0.406 & $+2.18$ $\ci{+1.33}{+3.03}$ & adopted\\
+50 & CPU & v6 (replication) & 28/27/27 & 0.20\% & 0.854 & 0.413 & $+2.43$ $\ci{+1.70}{+3.22}$ & adopted\\
+50 & CPU & v7 (regression check) & 28/27/27 & 0.16\% & 0.846 & 0.413 & $+2.43$ $\ci{+1.64}{+3.22}$ & adopted\\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+The do-no-harm bound failed in two early runs (0.75\% and 1.28\%); per-stratum calibration, introduced in the third version, has held it in every run since. U1 is below its bar in every run that measured it.
+
+\subsection{Diagnosis against baselines}
+Table~\ref{tab:diag} compares fault-versus-clean AUROC on held-out episodes (v6 CPU run; 4{,}019 episodes of which 1{,}511 faulted). The telemetry diagnoser reaches 0.977. The retrieval-stage features of RAGLog with the same classifier reach 0.734, and query-performance predictors 0.55 to 0.63.
+
+\begin{table}[t]
+\caption{Detection AUROC on held-out episodes (v6 CPU, seed 50), 95\% bootstrap intervals.}
+\label{tab:diag}
+\centering\footnotesize
+\begin{tabular}{@{}lc@{}}
+\toprule
+Method & AUROC\\
+\midrule
+DiagRAG attributor, $1-p(\text{clean})$ & \textbf{0.977} $\ci{0.972}{0.981}$\\
+RAGLog tier-0 features, same classifier & 0.734 $\ci{0.719}{0.750}$\\
+Best single RAGLog tier-0 feature & 0.551 $\ci{0.531}{0.569}$\\
+$-$ top reranker score & 0.632 $\ci{0.613}{0.651}$\\
+NQC (negated) & 0.567 $\ci{0.549}{0.587}$\\
+WIG (negated) & 0.550 $\ci{0.530}{0.573}$\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{LLM judges.} On the same 320 episodes, zero-shot LLM judges that see the query and the five returned documents reach AUROC 0.754 (Gemini 3.1 Flash-Lite), 0.701 (gpt-oss-120b) and 0.629 (gpt-oss-20b), against 0.975 for the diagnoser; the paired differences are $+0.222$ $\ci{+0.173}{+0.270}$ and $+0.274$ $\ci{+0.222}{+0.332}$ for the first two. The comparison favours us: the diagnoser trained on thousands of labelled episodes and the LLMs saw none, so it is supervised against zero-shot, and the models are free-tier. No frontier model was run. On repair, over 1{,}000 natural queries the loop minus the CRAG-style repair (Gemini) is $+1.23$ points $\ci{-0.10}{+2.60}$, i.e.\ non-inferior and not better.
+
+\subsection{Natural traffic}
+Table~\ref{tab:nat} shows the arms on the 1{,}648 natural queries (v7 CPU run; the same sample as all earlier runs). The deployed loop gains $+2.43$ points, with 43 queries fixed and 3 broken. The gain comes from two rules that collapse near-duplicates (K05) and chunk crowding (K12); the classifier's dispatch alone adds $+0.42$ points $\ci{+0.12}{+0.79}$. The diagnosis-free universal repair gains $+2.18$ points but breaks 25 queries while fixing 61. Repairing natural misspellings does not help: the point estimate is negative ($-4.9$ points) and SymSpell is worse ($-11.4$), so the deployed configuration leaves natural-typo repair off.
+
+\begin{table}[t]
+\caption{Natural-traffic arms (v7 CPU run). Change in Hit@5, points, with 95\% paired bootstrap intervals.}
+\label{tab:nat}
+\centering\footnotesize
+\begin{tabular}{@{}lcc@{}}
+\toprule
+Arm & $n$ & Change $\ci{\text{lo}}{\text{hi}}$\\
+\midrule
+Deployed loop & 1648 & $+2.43$ $\ci{+1.64}{+3.22}$\\
+\quad rules only (K12, K05) & 1648 & $+2.43$ $\ci{+1.70}{+3.22}$\\
+\quad classifier dispatch only & 1648 & $+0.42$ $\ci{+0.12}{+0.79}$\\
+K12 collapse always on & 1648 & $+1.82$ $\ci{+1.09}{+2.61}$\\
+Universal repair, all queries & 1648 & $+2.18$ $\ci{+1.03}{+3.28}$\\
+Natural duplicates (K05) & 140 & $+5.00$ $\ci{+1.43}{+9.29}$\\
+Natural crowding (K12) & 637 & $+4.87$ $\ci{+3.14}{+6.75}$\\
+Natural typos, ours & 185 & $-4.86$ $\ci{-10.27}{+0.54}$\\
+Natural typos, SymSpell & 185 & $-11.35$ $\ci{-17.30}{-5.41}$\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+A census over the 7{,}175 queries shows why natural gains are bounded: the clean pipeline fails on 43.5\% of them, and the gold document is itself an empty placeholder (``nan'') for 58.6\% of queries and 69.1\% of failures (v6 GPU), so no repair can win those.
+
+\subsection{The cost of the guarantee}
+Table~\ref{tab:policy} compares dispatch policies on held-out clean queries (v7 CPU run). The stratified Mondrian policy that carries the proof at $\alpha{=}0.005$ dispatches on 85\% of clean queries. The capped variant keeps the loss bound by construction at 16.1\% dispatch and closure 0.838, and it meets all four pre-registered targets (loss $\le$ 0.5\%, clean dispatch $\le$ 25\%, mean cost $\le$ 1.5, closure $\ge$ 0.80) on every run evaluated. The un-stratified global threshold breaks the loss bound (0.64\% in this run). We note that the capped variant was designed after the stratified one.
+
+\begin{table}[t]
+\caption{Dispatch policies on held-out clean queries (v7 CPU run). Closure is over injected faults.}
+\label{tab:policy}
+\centering\footnotesize
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+Policy & Clean loss & Dispatch & Cost & Closure\\
+\midrule
+\tc{tau\_none\_5pct\_fpr} & 0.16\% & 3.3\% & 0.17 & 0.847\\
+\tc{global\_crc\_0.005} & 0.64\% & 44.4\% & 2.36 & 0.892\\
+\tc{mondrian\_crc\_0.0025} & 0.16\% & 66.6\% & 3.08 & 0.587\\
+\tc{mondrian\_crc\_0.005} & 0.16\% & 85.4\% & 4.03 & 0.846\\
+\tc{mondrian\_crc\_0.01} & 0.20\% & 86.1\% & 4.06 & 0.866\\
+\tc{mondrian\_crc\_0.02} & 0.40\% & 89.0\% & 4.22 & 0.887\\
+\textbf{\tc{capped\_crc\_0.005}} & \textbf{0.08\%} & \textbf{16.1\%} & \textbf{1.03} & \textbf{0.838}\\
+\tc{two\_stage\_0.005} & 0.32\% & 48.8\% & 2.19 & 0.815\\
+universal repair, all & 1.63\% & 100\% & 12.00 & 0.761\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Unseen faults}
+Leave-one-fault-out closure (U1) is 0.406 (GPU) and 0.413 (CPU) in the flagship runs, below the 0.50 bar and below earlier versions (best 0.485). A group fallback repairs some unseen faults, but faults whose repair differs from the group repair stay unrepaired. We could not prove a ceiling.
+
+%--------------------------------------------------------------------------------------------------
+\section{Composed Faults}\label{sec:composed}
+\subsection{Question and design}
+Real failures often have several causes, but every result above injects one fault at a time. Does the same diagnoser, with no new detector or repair, name both causes and close the loop? We pre-registered a study (code hash committed before any episode was generated). Fault pairs and triples from the 20 grounded and solved faults are injected into one base query; an episode is kept only if the clean query succeeds and the composed one fails, and we record whether each component fails alone. The eight strata are WITHIN\_FAMILY (Q04+Q05, the only pair in one repair family), QQ, KK and RR (two faults of one letter), QK, QR and KR (cross-letter), and TRIPLE. Quotas are 20 per stratum and split (15 for TRIPLE), giving 155 train and 155 held-out episodes, every stratum at quota; seed 51; splits by base-query hash with no base query shared with any single-fault episode. The attributor is retrained with composed rows in the training split only, and every single-fault gate is re-run. Descriptive targets only; there is no adoption gate.
+
+\subsection{Results}
+Table~\ref{tab:comp} gives the held-out results. The retrained attributor names every cause at the family level in 40.0\% of episodes $\ci{32.6}{47.9}$ (62/155), against 30.3\% $\ci{23.6}{38.0}$ for the single-fault-trained attributor; mean set-F1 is 0.770 (0.713). At least one cause is named in 96.1\%. Sequential repair (repair, re-diagnose, repair; at most three rounds, gated by the same stratum thresholds, never seeing the label) closes 72.9\% $\ci{65.4}{79.3}$ against 83.9\% $\ci{77.3}{88.8}$ when the true causes are repaired in order. Held-out clean loss is 0.16\% for the single-round policy and 0.3\% $\ci{0.1}{1.9}$ (1 of 300) for the sequential loop on a clean subsample.
+
+\begin{table}[t]
+\caption{Composed faults, 155 held-out episodes. ``Named'' = every cause named at the family level (new / old attributor). Closure: sequential repair vs.\ oracle-forward repair.}
+\label{tab:comp}
+\centering\footnotesize
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+Stratum & $n$ & Named (new/old) & Seq.\ closure & Oracle\\
+\midrule
+WITHIN\_FAM. & 20 & 20/20 / 20/20$^{*}$ & 3/20 & 7/20\\
+QQ & 20 & 0/20 / 0/20 & 11/20 & 18/20\\
+KK & 20 & 0/20 / 0/20 & 20/20 & 20/20\\
+RR & 20 & 0/20 / 0/20 & 19/20 & 19/20\\
+QK & 20 & 9/20 / 2/20 & 12/20 & 15/20\\
+QR & 20 & 17/20 / 12/20 & 14/20 & 16/20\\
+KR & 20 & 16/20 / 13/20 & 20/20 & 20/20\\
+TRIPLE & 15 & 0/15 / 0/15 & 14/15 & 15/15\\
+\midrule
+All & 155 & 62/155 / 47/155 & 113/155 & 130/155\\
+\bottomrule
+\multicolumn{5}{@{}l}{\footnotesize $^{*}$By construction: Q04 and Q05 share one family label.}
+\end{tabular}
+\end{table}
+
+\textbf{Reading.} The dispatcher returns at most one label per letter group, so it cannot name two faults of one group, or three faults: 0 of 75 in both attributors. The gain from retraining (+9.7 points) lies entirely in the cross-letter strata (QK $+35$, QR $+25$, KR $+15$ points). Closure stays high in KK, RR, KR and TRIPLE even where the pair is not named, because one group repair fixes both causes. In 25.8\% of episodes (40) neither component fails alone, so the failure is emergent; in 18.7\% (29) each component fails alone. Forcing the reverse repair order made no difference to closure (25/32 under both orders), and oracle-forward and oracle-reverse closure agree in all 155 episodes: these repairs mostly commute.
+
+\textbf{No regression.} Under a regression definition fixed in advance (a core-28 status moving from pass to fail or thin, the verdict leaving adopted, L1, L2 or N1 failing, or the capped policy missing a target), there is none: detectors 28/28, repairs 27/27, L1, L2 and N1 pass, U1 unchanged at 0.413. Reported differences: capped-policy closure 0.848 to 0.838 (margin to the 0.80 bar 0.038), C2 detector AUROC 0.823 to 0.848.
+
+\textbf{Predictions.} Of six predictions written before the run, three held (both-cause rate 0.2 to 0.5 and low within a letter; retraining adds up to 0.1; no single-fault regression) and three did not (a sequential-closure gap of at least 0.2: observed 0.11; reverse order lowering some strata: it did not; several strata short of quota: none were).
+
+\subsection{Execution record}
+After the freeze the run needed two execution fixes, both disclosed in the protocol: detection-baseline rows kept in memory under an object identity could not resume, and about 9{,}000 single-row attributor calls at 0.061~s each pushed one stage past the chunk wall clock; the second was replaced by one batch call with a $10^{-9}$ equality check. The first diagnosis was incomplete and the second corrected it. The composed result is byte-identical before and after both fixes.
+
+%--------------------------------------------------------------------------------------------------
+\section{An Optional Side Comparison: Simulated Quantum ML}\label{sec:qml}
+As an optional comparison of scores only, we simulate six-qubit quantum models with a noiseless statevector simulator written for the study: a quantum-kernel SVM (ZZ feature map, two repetitions, fidelity kernel) and a variational classifier (three data re-uploading layers, five seeds). Classical models receive the same six PCA components (40.8\% of the variance), and the project's gradient boosting receives all 63 features. Models are fitted on the train split only and scored once on the held-out split (protocol committed before the run). Table~\ref{tab:qml} shows the result. Both classical six-input models beat both quantum models on both sets. There is no hardware, no noise model, and no claim of quantum advantage.
+
+\begin{table}[t]
+\caption{Fault-versus-clean AUROC (single-fault held-out set) and composed-versus-clean AUROC. All quantum models are simulated.}
+\label{tab:qml}
+\centering\footnotesize
+\begin{tabular}{@{}lcc@{}}
+\toprule
+Model & Single-fault & Composed\\
+\midrule
+GB, 63 features & 0.978 $\ci{0.974}{0.983}$ & 0.995\\
+Log.\ regression, 6-d & 0.727 & 0.864\\
+RBF-SVM, 6-d & 0.917 $\ci{0.907}{0.926}$ & 0.979\\
+GB, 6-d & 0.921 $\ci{0.912}{0.931}$ & 0.988\\
+Quantum-kernel SVM & 0.892 $\ci{0.881}{0.903}$ & 0.942\\
+Variational (5 seeds) & 0.883 (sd 0.005) & 0.965\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+%--------------------------------------------------------------------------------------------------
+\section{What Failed, and Threats to Validity}\label{sec:failed}
+\textbf{Failures.}
+(1) Adoption was missed twice (v4 GPU: 26 of 28 detectors; v5 CPU: 24 of 28) before v6 met it; v6 is a pass on a changed construction (6{,}000 base queries, balanced C2 mix), not on the v5 test set.
+(2) U1 stayed below 0.50 in every run, and was lower in v6 (0.41) than in v4 (0.485, 0.456).
+(3) The Q03 detector (paraphrase by another real user) passes in 2 of 7 runs of its natural construction, by 0.004 and 0.001; its repair rescues 1 to 6 of 100.
+(4) Repairing natural misspellings does not help.
+(5) No frontier-LLM comparison, and a full-suite second corpus was not built (ports cover 15 to 20 faults).
+(6) The dispatcher cannot name two faults of one group (Section~\ref{sec:composed}); the pre-registered natural-traffic non-inferiority comparison against the universal repair fails in v6 and v7 by 0.05 points.
+
+\textbf{Threats to validity.}
+\emph{Construct:} faults are injected by the authors who wrote the detectors and repairs, so a pass shows the method works on this construction, not on any production system. \emph{External:} one English e-commerce corpus carries the evidence. \emph{Internal:} each configuration was judged once per stack and seed; the natural-traffic gain rests on one sample of 1{,}648 queries, repeated across runs; the capped policy was designed after the stratified one; the LLM comparison is supervised against zero-shot. \emph{Statistical:} verdicts decided by 0.001 to 0.005 are fragile across library versions. \emph{Composed study:} 155 synthetic episodes from 20 faults, one seed, and a filter that keeps only combinations that break retrieval.
+
+%--------------------------------------------------------------------------------------------------
+\section{Reproducibility and Artefacts}
+The repository ships every script, every judged run (protocol with code hash, verdict, tables, report and episodes), the pre-registrations with all amendments, a verifier that checks every file and every recorded code hash, and a single Kaggle notebook that re-runs the checks, the detector re-fit, the stored results and the benchmark, and optionally regenerates the flagship run and the composed-fault arm. DiagRAG-Bench v1.0 has 2{,}718 development episodes with public labels and 2{,}125 test episodes whose labels are held privately, with a published SHA-256 commitment; its release is staged, not published. [OWNER: add repository and archive links, benchmark name and licence once decided.]
+
+%--------------------------------------------------------------------------------------------------
+\section{Conclusion}
+Retrieval telemetry alone detects injected retrieval faults at AUROC 0.977, names and repairs most of them under pre-registered gates, and supports a conformal bound on harm to healthy queries, at a clean-dispatch cost that a capped variant reduces to 16\%. On real traffic, the measurable gain is small (+2.4 points) and comes from two simple rules; diagnosis adds little there. Composed faults expose a structural limit: one label per fault group. The open problems are unseen-fault generalisation (0.41 against a 0.50 bar), evidence beyond author-injected faults and a single corpus, and comparison with frontier models. We report these as limits, not as future-work boilerplate, because each is a place where the present evidence stops.
+
+\section*{Disclosure and Ethics}
+The code, experiments and text were produced with an AI assistant (Claude, Anthropic) under the direction of the corresponding author. [OWNER: replace this sentence with the authorship and disclosure wording your venue requires.] No personal data are used; the corpora are public or synthetic, and no API key is stored in the repository.
+
+\section*{Acknowledgment}
+[OWNER: acknowledgments, funding.]
+
+%--------------------------------------------------------------------------------------------------
+\begin{thebibliography}{00}
+\bibitem{lewis2020rag} P.~Lewis \emph{et al.}, ``Retrieval-augmented generation for knowledge-intensive NLP tasks,'' in \emph{Advances in Neural Information Processing Systems (NeurIPS)}, 2020.
+\bibitem{barnett2024seven} S.~Barnett, S.~Kurniawan, S.~Thudumu, Z.~Brannelly, and M.~Abdelrazek, ``Seven failure points when engineering a retrieval augmented generation system,'' in \emph{Proc.\ CAIN}, 2024, arXiv:2401.05856.
+\bibitem{es2023ragas} S.~Es, J.~James, L.~Espinosa-Anke, and S.~Schockaert, ``RAGAS: Automated evaluation of retrieval augmented generation,'' arXiv:2309.15217, 2023.
+\bibitem{saadfalcon2024ares} J.~Saad-Falcon, O.~Khattab, C.~Potts, and M.~Zaharia, ``ARES: An automated evaluation framework for retrieval-augmented generation systems,'' in \emph{Proc.\ NAACL}, 2024, arXiv:2311.09476.
+\bibitem{yan2024crag} S.-Q.~Yan, J.-C.~Gu, Y.~Zhu, and Z.-H.~Ling, ``Corrective retrieval augmented generation,'' arXiv:2401.15884, 2024.
+\bibitem{raglog} RAGLog, open-source retrieval observability code, \url{https://github.com/hiraa221/raglog}, commit 7f7d068, Apache-2.0. [OWNER: add authors and paper if one exists.]
+\bibitem{shtok2012qpp} A.~Shtok, O.~Kurland, D.~Carmel, F.~Raiber, and G.~Markovits, ``Predicting query performance by query-drift estimation,'' \emph{ACM Trans.\ Inf.\ Syst.}, vol.~30, no.~2, 2012.
+\bibitem{zhou2007wig} Y.~Zhou and W.~B.~Croft, ``Query performance prediction in web search environments,'' in \emph{Proc.\ SIGIR}, 2007.
+\bibitem{angelopoulos2024crc} A.~N.~Angelopoulos, S.~Bates, A.~Fisch, L.~Lei, and T.~Schuster, ``Conformal risk control,'' in \emph{Proc.\ ICLR}, 2024, arXiv:2208.02814.
+\bibitem{vovk2013mondrian} V.~Vovk, ``Conditional validity of inductive conformal predictors,'' \emph{Machine Learning}, vol.~92, 2013.
+\bibitem{xiao2023bge} S.~Xiao, Z.~Liu, P.~Zhang, and N.~Muennighoff, ``C-Pack: Packaged resources to advance general Chinese embedding,'' arXiv:2309.07597, 2023.
+\bibitem{robertson2009bm25} S.~Robertson and H.~Zaragoza, ``The probabilistic relevance framework: BM25 and beyond,'' \emph{Found.\ Trends Inf.\ Retr.}, vol.~3, no.~4, 2009.
+\bibitem{cormack2009rrf} G.~V.~Cormack, C.~L.~A.~Clarke, and S.~Buettcher, ``Reciprocal rank fusion outperforms Condorcet and individual rank learning methods,'' in \emph{Proc.\ SIGIR}, 2009.
+\bibitem{reimers2019sbert} N.~Reimers and I.~Gurevych, ``Sentence-BERT: Sentence embeddings using Siamese BERT-networks,'' in \emph{Proc.\ EMNLP-IJCNLP}, 2019.
+\bibitem{reddy2022esci} C.~K.~Reddy \emph{et al.}, ``Shopping queries dataset: A large-scale ESCI benchmark for improving product search,'' arXiv:2206.06588, 2022.
+\bibitem{hagen2017qspell} M.~Hagen, M.~Potthast, M.~Gohsen, A.~Rathgeber, and B.~Stein, ``A large-scale query spelling correction corpus,'' in \emph{Proc.\ SIGIR}, 2017.
+\bibitem{thakur2021beir} N.~Thakur, N.~Reimers, A.~R\"uckl\'e, A.~Srivastava, and I.~Gurevych, ``BEIR: A heterogeneous benchmark for zero-shot evaluation of information retrieval models,'' in \emph{NeurIPS Datasets and Benchmarks}, 2021.
+\bibitem{pedregosa2011sklearn} F.~Pedregosa \emph{et al.}, ``Scikit-learn: Machine learning in Python,'' \emph{J.\ Mach.\ Learn.\ Res.}, vol.~12, 2011.
+\bibitem{nosek2018prereg} B.~A.~Nosek, C.~R.~Ebersole, A.~C.~DeHaven, and D.~T.~Mellor, ``The preregistration revolution,'' \emph{Proc.\ Natl.\ Acad.\ Sci.}, vol.~115, no.~11, 2018.
+\bibitem{wilson1927} E.~B.~Wilson, ``Probable inference, the law of succession, and statistical inference,'' \emph{J.\ Am.\ Stat.\ Assoc.}, vol.~22, no.~158, 1927.
+\end{thebibliography}
+
+\end{document}
