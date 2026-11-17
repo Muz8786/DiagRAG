@@ -1,0 +1,13 @@
+train (5416, 63) test (4019, 63) | PCA explained variance of 6 components: 0.408
+ML main: HistGB, 63 features       AUROC 0.9784 [0.974, 0.983]  composed-vs-clean 0.9954
+ML 6-d: logistic regression        AUROC 0.7269 [0.707, 0.744]  composed-vs-clean 0.8638
+ML 6-d: SVM, RBF kernel            AUROC 0.9165 [0.907, 0.926]  composed-vs-clean 0.9794
+ML 6-d: HistGB                     AUROC 0.9211 [0.912, 0.931]  composed-vs-clean 0.9883
+QML: quantum-kernel SVM (6 qubits) AUROC 0.8918 [0.881, 0.903]  composed-vs-clean 0.9418
+  VQC seed 0 final train loss 0.5093 | test AUROC 0.8834 | 36s
+  VQC seed 1 final train loss 0.4385 | test AUROC 0.8812 | 53s
+  VQC seed 2 final train loss 0.4595 | test AUROC 0.8733 | 70s
+  VQC seed 3 final train loss 0.3790 | test AUROC 0.8896 | 87s
+  VQC seed 4 final train loss 0.3766 | test AUROC 0.8856 | 104s
+QML: variational classifier        AUROC 0.8826 +- 0.0054 over 5 seeds
+wrote _w1/qml_result.json

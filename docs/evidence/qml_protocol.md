@@ -28,4 +28,22 @@ AUROC with a 95% bootstrap interval (1,000 resamples over test episodes) for eve
 Nothing about quantum hardware, noise, or scaling; nothing about faults other than detection; a 6-qubit simulation on 6 PCA components is a small-scale illustration. A tie or a loss for the quantum models is a valid result and will be reported as such.
 
 ## 6. Code and amendments
-`docs/evidence/qml_compare.py`, SHA-256 `9b99c703a7b976d176e8366eff892e738cfb99370afc3270ee969ff13f0922f3`. Amendments: (none yet)
+`docs/evidence/qml_compare.py`, SHA-256 `9b99c703a7b976d176e8366eff892e738cfb99370afc3270ee969ff13f0922f3`. Amendments: Q1 (results, below). The code was not changed after this protocol (hash verified before the run).
+
+## Q1. Results (17 Nov 2026, 08:10 UTC). Written after the run; the protocol above is unchanged.
+Run: `qml_compare.py` (hash above, unchanged) on `kaggle/judged_cpu_run_v6_seed50/episodes.jsonl` (5,416 train, 4,019 test: 1,511 faulted, 2,508 clean), with the 155 held-out composed episodes of the v7 run as a second set (`export_composed_features.py` from the v7 checkpoint). CPU, 8 threads, 107 s. PCA to 6 components keeps 40.8% of the variance. Simulated, noiseless, no hardware. Raw output: `qml_result.json`, `qml_run.log`.
+
+| model | single-fault AUROC [95% CI] | composed-vs-clean AUROC |
+|---|---|---|
+| ML main: HistGB, 63 features | 0.9784 [0.974, 0.983] | 0.9954 |
+| ML 6-d: logistic regression | 0.7269 [0.707, 0.744] | 0.8638 |
+| ML 6-d: RBF-SVM | 0.9165 [0.907, 0.926] | 0.9794 |
+| ML 6-d: HistGB | 0.9211 [0.912, 0.931] | 0.9883 |
+| QML: quantum-kernel SVM (6 qubits) | 0.8918 [0.881, 0.903] | 0.9418 |
+| QML: variational classifier, mean of 5 seeds | 0.8826 (sd 0.0054; seeds 0.873 to 0.890) | 0.9647 |
+
+Kernel diagnostics: unit diagonal, off-diagonal mean 0.0546 (the kernel is not degenerate). Composed-versus-clean AUROC by stratum is in `qml_result.json`; for the quantum-kernel SVM it ranges from 0.900 (RR) to 0.969 (QR), and for the 63-feature HistGB from 0.97 (WITHIN_FAMILY) to 1.0.
+
+Scorecard. (1) HistGB on 63 features beats every 6-dimensional model by a clear margin: 0.978 against at most 0.921, **held**. (2) The quantum-kernel SVM within about 0.03 of the classical RBF-SVM on the same input and not beating it: 0.892 against 0.917, a gap of 0.025, **held**. (3) The variational classifier below the quantum-kernel SVM, seed spread about 0.01 to 0.03: mean 0.883 against 0.892, seed range 0.016, **held** (the seed standard deviation, 0.005, is smaller than I guessed, and the difference between the two quantum models, 0.009, is smaller than the 95% interval of either). (4) Composed episodes score lower than or similar to single faults: every model scores **higher** on composed-versus-clean (0.86 to 0.995), **did not hold**. A composed episode carries two or more disturbances, so telling it from a clean one is easier than telling a single fault from clean; this is a different task from the single-fault one and the two numbers are not the same measurement.
+
+Reading. Under identical 6-dimensional input the classical RBF-SVM and HistGB score above both quantum models on both sets (single-fault 0.917 and 0.921 against 0.892 and 0.883). On the composed set the variational classifier (0.965) scored above the quantum-kernel SVM (0.942), but both are below the classical 6-d RBF-SVM (0.979) and HistGB (0.988). There is **no quantum advantage in this result**, and none is claimed. The result says only that a 6-qubit simulated model on 6 PCA components gets within about 0.03 of a classical kernel machine on the same input and 0.09 below the full-feature model the project uses. Single run, one seed for the data split, one PCA, one feature map; nothing was tuned on the test split.
