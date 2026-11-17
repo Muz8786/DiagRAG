@@ -1,0 +1,13 @@
+{
+ "config": {
+  "SEED": "50",
+  "N_BASE_ESCI": "6000",
+  "N_PRDC": "528",
+  "N_HARD": "100",
+  "MAX_ATT": "4000",
+  "N_HARM": "20",
+  "TIME_BUDGET": "30000"
+ },
+ "code_sha256": "44176b9a5ad633e39ec29581237d9919619b9944471178effb172be1d276e28a",
+ "started_utc": "2026-11-16 15:37:34"
+}
