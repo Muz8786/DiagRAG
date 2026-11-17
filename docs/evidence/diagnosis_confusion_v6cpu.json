@@ -1,0 +1,725 @@
+{
+ "folder": "kaggle/judged_cpu_run_v6_seed50",
+ "n_train": 3442,
+ "n_test": 4019,
+ "classes": [
+  "K03",
+  "K04",
+  "K05",
+  "K06",
+  "K07",
+  "K08",
+  "K09",
+  "K11",
+  "K12",
+  "NONE",
+  "Q01",
+  "Q02",
+  "Q03",
+  "Q04",
+  "Q05",
+  "Q07",
+  "Q09",
+  "R01",
+  "R03",
+  "R05",
+  "R06",
+  "R07",
+  "R10",
+  "R11",
+  "R13",
+  "R15",
+  "R19",
+  "R22",
+  "R23",
+  "R24",
+  "R25",
+  "R26"
+ ],
+ "post_hoc": true,
+ "A_attributor": {
+  "top1_accuracy_all_32_classes": 0.936053744712615,
+  "macro_f1_all": 0.8958779335262337,
+  "macro_f1_faults_only": 0.8939979452223504,
+  "exact_fault_accuracy_on_faulted": 0.898742554599603,
+  "n_faulted": 1511,
+  "faulted_called_clean": 0.08405029781601589,
+  "clean_called_fault": 0.04146730462519936,
+  "n_clean": 2508,
+  "family_accuracy_on_faulted": 0.913302448709464,
+  "group_accuracy_on_faulted": 0.9093315684976837,
+  "exact_fault_accuracy_among_detected": 0.9812138728323699,
+  "n_thin_faults": [
+   "R26"
+  ],
+  "per_fault": {
+   "K03": {
+    "support": 50,
+    "precision": 1.0,
+    "recall": 0.98,
+    "f1": 0.98989898989899
+   },
+   "K04": {
+    "support": 50,
+    "precision": 0.8222222222222222,
+    "recall": 0.74,
+    "f1": 0.7789473684210526
+   },
+   "K05": {
+    "support": 50,
+    "precision": 0.9411764705882353,
+    "recall": 0.96,
+    "f1": 0.9504950495049505
+   },
+   "K06": {
+    "support": 50,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0
+   },
+   "K07": {
+    "support": 50,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0
+   },
+   "K08": {
+    "support": 50,
+    "precision": 0.9607843137254902,
+    "recall": 0.98,
+    "f1": 0.9702970297029702
+   },
+   "K09": {
+    "support": 50,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0
+   },
+   "K11": {
+    "support": 50,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0
+   },
+   "K12": {
+    "support": 50,
+    "precision": 0.8928571428571429,
+    "recall": 1.0,
+    "f1": 0.9433962264150945
+   },
+   "NONE": {
+    "support": 2508,
+    "precision": 0.9498222046621888,
+    "recall": 0.9585326953748007,
+    "f1": 0.9541575709466164
+   },
+   "Q01": {
+    "support": 50,
+    "precision": 0.7230769230769231,
+    "recall": 0.94,
+    "f1": 0.8173913043478259
+   },
+   "Q02": {
+    "support": 50,
+    "precision": 1.0,
+    "recall": 0.94,
+    "f1": 0.9690721649484536
+   },
+   "Q03": {
+    "support": 50,
+    "precision": 0.0,
+    "recall": 0.0,
+    "f1": 0.0
+   },
+   "Q04": {
+    "support": 50,
+    "precision": 0.6785714285714286,
+    "recall": 0.76,
+    "f1": 0.7169811320754718
+   },
+   "Q05": {
+    "support": 50,
+    "precision": 0.5833333333333334,
+    "recall": 0.84,
+    "f1": 0.6885245901639344
+   },
+   "Q07": {
+    "support": 50,
+    "precision": 0.8392857142857143,
+    "recall": 0.94,
+    "f1": 0.8867924528301886
+   },
+   "Q09": {
+    "support": 50,
+    "precision": 0.9259259259259259,
+    "recall": 1.0,
+    "f1": 0.9615384615384615
+   },
+   "R01": {
+    "support": 50,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0
+   },
+   "R03": {
+    "support": 50,
+    "precision": 0.9090909090909091,
+    "recall": 1.0,
+    "f1": 0.9523809523809523
+   },
+   "R05": {
+    "support": 50,
+    "precision": 0.96,
+    "recall": 0.96,
+    "f1": 0.96
+   },
+   "R06": {
+    "support": 50,
+    "precision": 0.9285714285714286,
+    "recall": 0.78,
+    "f1": 0.8478260869565217
+   },
+   "R07": {
+    "support": 50,
+    "precision": 0.9767441860465116,
+    "recall": 0.84,
+    "f1": 0.9032258064516129
+   },
+   "R10": {
+    "support": 50,
+    "precision": 1.0,
+    "recall": 0.98,
+    "f1": 0.98989898989899
+   },
+   "R11": {
+    "support": 50,
+    "precision": 1.0,
+    "recall": 0.92,
+    "f1": 0.9583333333333334
+   },
+   "R13": {
+    "support": 50,
+    "precision": 1.0,
+    "recall": 0.96,
+    "f1": 0.9795918367346939
+   },
+   "R15": {
+    "support": 50,
+    "precision": 1.0,
+    "recall": 0.96,
+    "f1": 0.9795918367346939
+   },
+   "R19": {
+    "support": 50,
+    "precision": 0.9803921568627451,
+    "recall": 1.0,
+    "f1": 0.99009900990099
+   },
+   "R22": {
+    "support": 50,
+    "precision": 0.7636363636363637,
+    "recall": 0.84,
+    "f1": 0.8000000000000002
+   },
+   "R23": {
+    "support": 50,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0
+   },
+   "R24": {
+    "support": 50,
+    "precision": 0.8421052631578947,
+    "recall": 0.64,
+    "f1": 0.7272727272727272
+   },
+   "R25": {
+    "support": 50,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0
+   },
+   "R26": {
+    "support": 11,
+    "precision": 1.0,
+    "recall": 0.9090909090909091,
+    "f1": 0.9523809523809523
+   }
+  },
+  "top_confusions": [
+   {
+    "n": 46,
+    "true": "Q03",
+    "predicted": "NONE",
+    "true_family": "QLEX",
+    "pred_family": "NONE",
+    "same_family": false
+   },
+   {
+    "n": 24,
+    "true": "NONE",
+    "predicted": "Q05",
+    "true_family": "NONE",
+    "pred_family": "QLEX",
+    "same_family": false
+   },
+   {
+    "n": 17,
+    "true": "R24",
+    "predicted": "NONE",
+    "true_family": "R24",
+    "pred_family": "NONE",
+    "same_family": false
+   },
+   {
+    "n": 16,
+    "true": "NONE",
+    "predicted": "Q01",
+    "true_family": "NONE",
+    "pred_family": "QLEX",
+    "same_family": false
+   },
+   {
+    "n": 15,
+    "true": "NONE",
+    "predicted": "Q04",
+    "true_family": "NONE",
+    "pred_family": "QLEX",
+    "same_family": false
+   },
+   {
+    "n": 13,
+    "true": "NONE",
+    "predicted": "R22",
+    "true_family": "NONE",
+    "pred_family": "R22",
+    "same_family": false
+   },
+   {
+    "n": 12,
+    "true": "K04",
+    "predicted": "NONE",
+    "true_family": "STALE",
+    "pred_family": "NONE",
+    "same_family": false
+   },
+   {
+    "n": 10,
+    "true": "R06",
+    "predicted": "NONE",
+    "true_family": "R06",
+    "pred_family": "NONE",
+    "same_family": false
+   },
+   {
+    "n": 9,
+    "true": "NONE",
+    "predicted": "Q07",
+    "true_family": "NONE",
+    "pred_family": "Q07",
+    "same_family": false
+   },
+   {
+    "n": 8,
+    "true": "R22",
+    "predicted": "NONE",
+    "true_family": "R22",
+    "pred_family": "NONE",
+    "same_family": false
+   },
+   {
+    "n": 8,
+    "true": "Q04",
+    "predicted": "NONE",
+    "true_family": "QLEX",
+    "pred_family": "NONE",
+    "same_family": false
+   },
+   {
+    "n": 7,
+    "true": "R07",
+    "predicted": "K04",
+    "true_family": "STALE",
+    "pred_family": "STALE",
+    "same_family": true
+   },
+   {
+    "n": 7,
+    "true": "Q05",
+    "predicted": "NONE",
+    "true_family": "QLEX",
+    "pred_family": "NONE",
+    "same_family": false
+   },
+   {
+    "n": 6,
+    "true": "NONE",
+    "predicted": "R24",
+    "true_family": "NONE",
+    "pred_family": "R24",
+    "same_family": false
+   },
+   {
+    "n": 6,
+    "true": "NONE",
+    "predicted": "K12",
+    "true_family": "NONE",
+    "pred_family": "K12",
+    "same_family": false
+   },
+   {
+    "n": 4,
+    "true": "R11",
+    "predicted": "R03",
+    "true_family": "ENC",
+    "pred_family": "ENC",
+    "same_family": true
+   },
+   {
+    "n": 4,
+    "true": "Q04",
+    "predicted": "Q05",
+    "true_family": "QLEX",
+    "pred_family": "QLEX",
+    "same_family": true
+   },
+   {
+    "n": 4,
+    "true": "NONE",
+    "predicted": "Q09",
+    "true_family": "NONE",
+    "pred_family": "Q09",
+    "same_family": false
+   },
+   {
+    "n": 3,
+    "true": "Q07",
+    "predicted": "NONE",
+    "true_family": "Q07",
+    "pred_family": "NONE",
+    "same_family": false
+   },
+   {
+    "n": 3,
+    "true": "Q02",
+    "predicted": "NONE",
+    "true_family": "Q02",
+    "pred_family": "NONE",
+    "same_family": false
+   }
+  ],
+  "confusions_into_NONE_total": 127,
+  "confusions_between_faults_total": 26
+ },
+ "sanity_refit_vs_stored_score": {
+  "n": 4019,
+  "max_abs_diff": 0.5290394168640293,
+  "mean_abs_diff": 0.00019662121481328458,
+  "fraction_within_1e_6": 0.9990047275441652
+ },
+ "B_dispatcher_end_to_end": {
+  "n_faulted_test": 1511,
+  "label_exact_top1": 0.9384513567174056,
+  "family_level_correct": 0.8881535407015222,
+  "group_level_correct": 0.8901389808074123,
+  "used_group_fallback": 0.05493050959629384,
+  "no_label": 0.0,
+  "note": "labels the dispatcher would output before the do-no-harm gate; family_level_correct = all labels are non-fallback and name the true repair family; group_level_correct = the labels name the true letter group",
+  "per_fault": {
+   "K03": {
+    "n": 50,
+    "exact": 1.0,
+    "family": 0.94,
+    "group": 0.94,
+    "fallback": 0.04
+   },
+   "K04": {
+    "n": 50,
+    "exact": 0.76,
+    "family": 0.62,
+    "group": 0.62,
+    "fallback": 0.28
+   },
+   "K05": {
+    "n": 50,
+    "exact": 0.96,
+    "family": 0.94,
+    "group": 0.96,
+    "fallback": 0.04
+   },
+   "K06": {
+    "n": 50,
+    "exact": 1.0,
+    "family": 1.0,
+    "group": 1.0,
+    "fallback": 0.0
+   },
+   "K07": {
+    "n": 50,
+    "exact": 1.0,
+    "family": 1.0,
+    "group": 1.0,
+    "fallback": 0.0
+   },
+   "K08": {
+    "n": 50,
+    "exact": 0.98,
+    "family": 0.98,
+    "group": 0.98,
+    "fallback": 0.02
+   },
+   "K09": {
+    "n": 50,
+    "exact": 1.0,
+    "family": 1.0,
+    "group": 1.0,
+    "fallback": 0.0
+   },
+   "K11": {
+    "n": 50,
+    "exact": 1.0,
+    "family": 0.98,
+    "group": 0.98,
+    "fallback": 0.0
+   },
+   "K12": {
+    "n": 50,
+    "exact": 1.0,
+    "family": 0.96,
+    "group": 0.96,
+    "fallback": 0.0
+   },
+   "Q01": {
+    "n": 50,
+    "exact": 0.98,
+    "family": 0.92,
+    "group": 0.92,
+    "fallback": 0.02
+   },
+   "Q02": {
+    "n": 50,
+    "exact": 1.0,
+    "family": 0.94,
+    "group": 0.94,
+    "fallback": 0.06
+   },
+   "Q03": {
+    "n": 50,
+    "exact": 0.58,
+    "family": 0.52,
+    "group": 0.52,
+    "fallback": 0.3
+   },
+   "Q04": {
+    "n": 50,
+    "exact": 0.86,
+    "family": 0.8,
+    "group": 0.8,
+    "fallback": 0.12
+   },
+   "Q05": {
+    "n": 50,
+    "exact": 0.92,
+    "family": 0.74,
+    "group": 0.74,
+    "fallback": 0.12
+   },
+   "Q07": {
+    "n": 50,
+    "exact": 1.0,
+    "family": 0.9,
+    "group": 0.9,
+    "fallback": 0.04
+   },
+   "Q09": {
+    "n": 50,
+    "exact": 1.0,
+    "family": 0.96,
+    "group": 0.96,
+    "fallback": 0.0
+   },
+   "R01": {
+    "n": 50,
+    "exact": 1.0,
+    "family": 0.98,
+    "group": 0.98,
+    "fallback": 0.0
+   },
+   "R03": {
+    "n": 50,
+    "exact": 1.0,
+    "family": 0.96,
+    "group": 0.96,
+    "fallback": 0.0
+   },
+   "R05": {
+    "n": 50,
+    "exact": 0.96,
+    "family": 0.9,
+    "group": 0.92,
+    "fallback": 0.02
+   },
+   "R06": {
+    "n": 50,
+    "exact": 0.88,
+    "family": 0.76,
+    "group": 0.78,
+    "fallback": 0.12
+   },
+   "R07": {
+    "n": 50,
+    "exact": 0.84,
+    "family": 0.76,
+    "group": 0.72,
+    "fallback": 0.16
+   },
+   "R10": {
+    "n": 50,
+    "exact": 0.98,
+    "family": 0.98,
+    "group": 0.98,
+    "fallback": 0.0
+   },
+   "R11": {
+    "n": 50,
+    "exact": 0.92,
+    "family": 0.88,
+    "group": 0.88,
+    "fallback": 0.0
+   },
+   "R13": {
+    "n": 50,
+    "exact": 0.96,
+    "family": 0.88,
+    "group": 0.88,
+    "fallback": 0.04
+   },
+   "R15": {
+    "n": 50,
+    "exact": 0.96,
+    "family": 0.96,
+    "group": 0.96,
+    "fallback": 0.02
+   },
+   "R19": {
+    "n": 50,
+    "exact": 1.0,
+    "family": 0.98,
+    "group": 0.98,
+    "fallback": 0.0
+   },
+   "R22": {
+    "n": 50,
+    "exact": 0.9,
+    "family": 0.78,
+    "group": 0.78,
+    "fallback": 0.04
+   },
+   "R23": {
+    "n": 50,
+    "exact": 1.0,
+    "family": 0.98,
+    "group": 0.98,
+    "fallback": 0.0
+   },
+   "R24": {
+    "n": 50,
+    "exact": 0.7,
+    "family": 0.62,
+    "group": 0.66,
+    "fallback": 0.22
+   },
+   "R25": {
+    "n": 50,
+    "exact": 1.0,
+    "family": 1.0,
+    "group": 1.0,
+    "fallback": 0.0
+   },
+   "R26": {
+    "n": 11,
+    "exact": 1.0,
+    "family": 1.0,
+    "group": 1.0,
+    "fallback": 0.0
+   }
+  },
+  "top_confusions": [
+   {
+    "n": 7,
+    "true": "Q03",
+    "dispatched": "GR"
+   },
+   {
+    "n": 7,
+    "true": "R07",
+    "dispatched": "K04"
+   },
+   {
+    "n": 5,
+    "true": "Q03",
+    "dispatched": "K04"
+   },
+   {
+    "n": 5,
+    "true": "Q04",
+    "dispatched": "Q05"
+   },
+   {
+    "n": 5,
+    "true": "K04",
+    "dispatched": "Q03"
+   },
+   {
+    "n": 5,
+    "true": "R24",
+    "dispatched": "Q03"
+   },
+   {
+    "n": 4,
+    "true": "R11",
+    "dispatched": "R03"
+   },
+   {
+    "n": 4,
+    "true": "R24",
+    "dispatched": "GR"
+   },
+   {
+    "n": 3,
+    "true": "K04",
+    "dispatched": "GR"
+   },
+   {
+    "n": 3,
+    "true": "R06",
+    "dispatched": "GR"
+   },
+   {
+    "n": 3,
+    "true": "R24",
+    "dispatched": "Q04"
+   },
+   {
+    "n": 2,
+    "true": "Q03",
+    "dispatched": "R22"
+   },
+   {
+    "n": 2,
+    "true": "Q03",
+    "dispatched": "GK"
+   },
+   {
+    "n": 2,
+    "true": "Q03",
+    "dispatched": "Q04"
+   },
+   {
+    "n": 2,
+    "true": "Q04",
+    "dispatched": "Q03"
+   }
+  ]
+ }
+}

@@ -357,6 +357,16 @@ Machine learning is the project's method; this is a side comparison of scores (`
 
 The six PCA components keep 40.8% of the variance, which is why same-input classical models are the fair comparison. The quantum models land within 0.025 of the classical RBF-SVM and 0.09 below the full-feature model; both classical six-input models beat both quantum models on both sets. Of four written predictions, three held; the fourth (composed episodes score lower or similar) did not: every model scores higher on composed-versus-clean, which is an easier task than single-fault detection. **No quantum advantage, and no claim of one.**
 
+### 5.11 Fault-type identification, and the natural-traffic split (post-hoc, descriptive; added after a reviewer-style objection)
+
+**AUROC 0.977 is fault-versus-clean detection, not fault-type accuracy.** `docs/evidence/diagnosis_confusion.py` scores the multi-class attributor on the held-out test split of the v6 CPU run (4,019 episodes: 1,511 faulted, 2,508 clean; 32 classes), re-fitted from the shipped episodes (its derived score matches the run's stored per-episode score within 1e-6 on 99.9% of episodes). Results (`docs/evidence/diagnosis_confusion_v6cpu.json`, `_confusion.csv`, `.png`):
+- Top-1 correct on 93.6% of all held-out episodes; macro-F1 0.896 over 32 classes (Q03 counted as 0). On faulted episodes the exact fault is named in **89.9%**; 8.4% are called clean; 4.1% of clean episodes are called faulty. Among faulted episodes called a fault, 98.1% are exact (a conditional figure; quote the 89.9%). Repair-family level 91.3%, letter-group level 90.9%. The v6 GPU run gives 93.5%, 89.7%, macro-F1 0.894.
+- Errors: 127 faulted episodes called clean, only 26 confusions between two faults. K05 versus K07 and R03 versus R15 are separated (0 of 50 each way). Confusions sit where faults share a mechanism (R07 to K04 7/50, Q04 to Q05 4/50, R11 to R03 4/50).
+- End-to-end dispatcher labels on the same faulted episodes: first label exact 93.8% (excludes the called-clean errors, since the gate comes later); the whole label set names exactly the right family 88.8%; group fallback used 5.5%.
+- F1 at least 0.90 for 22 of 31 faults, at least 0.80 for 26. **Q03 is never identified** (F1 0; 46 of 50 called clean). Weakest others: R24 (recall 0.64), K04 (0.74), Q04 (precision 0.68), Q05 (0.58). R26 has 11 held-out positives (thin).
+
+**Natural traffic split by gold content** (`docs/evidence/natural_split_by_gold.py`, v7 CPU run). The gold document is an empty placeholder for 938 of the 1,648 queries, and retrieving it counts as a hit. Gold with content (710 queries): loop +3.24 points [+1.97, +4.51], 23 fixed, 0 broken; universal repair +1.69, 14 broken. Placeholder gold (938): loop +1.81 [+0.85, +2.77]. The gain is small, comes from two deterministic rules (classifier alone +0.42), and rests on one sample.
+
 ---
 
 ## 6. Diagnoses of what looked odd

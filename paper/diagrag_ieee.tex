@@ -32,7 +32,7 @@ When a retrieval-augmented generation (RAG) system answers badly, the cause ofte
 We ask whether the telemetry that retrieval already produces (score gaps, rank agreement between dense and lexical legs, duplicate counts, cheap probes; 63 numbers per query) is enough to detect a fault, name its cause among 32 injectable fault types, apply a targeted repair, and bound the harm done to queries that were healthy, with no generated answer and no LLM call at run time.
 We build a gradient-boosted attributor, a family-first dispatcher, per-fault repairs, and a per-stratum conformal risk-control gate.
 Under pre-registered gates, the flagship run is adopted on a GPU stack (27 of 28 core detectors, 27 of 28 repairs) and on a CPU replication.
-The diagnoser separates faulty from clean episodes at AUROC 0.977, against 0.734 for the retrieval-stage features of an existing system with the same classifier and 0.63 to 0.75 for zero-shot LLM judges.
+As a detector the attributor separates faulty from clean episodes at AUROC 0.977, against 0.734 for the retrieval-stage features of an existing system with the same classifier and 0.63 to 0.75 for zero-shot LLM judges; as a 32-class identifier it names the exact fault on 89.9\% of held-out faulted episodes (macro-F1 0.896), with F1 of at least 0.90 for 22 of 31 faults and 0 for one (Q03).
 On 1,648 never-examined natural queries the deployed loop gains $+2.43$ points of Hit@5 $\ci{+1.64}{+3.22}$, almost all of it from two simple rules.
 A pre-registered study of 155 held-out composed faults (pairs and triples) shows where the method stops: every cause is named in 40.0\% of episodes $\ci{32.6}{47.9}$, and in 0 of 75 pairs inside one fault group and triples.
 We also report what failed: two earlier runs missed the adoption rule, closure on unseen faults stays below its 0.50 bar (0.41), and all faults are injected by the authors on one e-commerce corpus.
@@ -203,6 +203,52 @@ WIG (negated) & 0.550 $\ci{0.530}{0.573}$\\
 
 \textbf{LLM judges.} On the same 320 episodes, zero-shot LLM judges that see the query and the five returned documents reach AUROC 0.754 (Gemini 3.1 Flash-Lite), 0.701 (gpt-oss-120b) and 0.629 (gpt-oss-20b), against 0.975 for the diagnoser; the paired differences are $+0.222$ $\ci{+0.173}{+0.270}$ and $+0.274$ $\ci{+0.222}{+0.332}$ for the first two. The comparison favours us: the diagnoser trained on thousands of labelled episodes and the LLMs saw none, so it is supervised against zero-shot, and the models are free-tier. No frontier model was run. On repair, over 1{,}000 natural queries the loop minus the CRAG-style repair (Gemini) is $+1.23$ points $\ci{-0.10}{+2.60}$, i.e.\ non-inferior and not better.
 
+\subsection{Fault-type identification, not only detection}\label{sec:ident}
+AUROC 0.977 measures \emph{fault versus clean}. It is not the accuracy of naming the fault, and we do not present it as such. We therefore score the multi-class attributor directly on the held-out test episodes of the v6 CPU run (4{,}019 episodes: 1{,}511 faulted, 2{,}508 clean; 32 classes). This analysis was written after the main results and is descriptive, not pre-registered. The attributor is re-fitted from the shipped episodes with the run's settings; the score derived from it matches the run's stored per-episode score to within $10^{-6}$ on 99.9\% of the 4{,}019 episodes.
+
+\textbf{Headline.} The top-1 class is correct on 93.6\% of all held-out episodes (macro-F1 0.896 over 32 classes, Q03 counted as zero) and on \textbf{89.9\%} of faulted episodes. Of the faulted episodes, 8.4\% are called clean, and 4.1\% of clean episodes are called faulty. Among faulted episodes called a fault, the exact fault is named in 98.1\%. That last figure conditions on detection and so flatters the method; the 89.9\% is the number to quote. Counting errors, 127 are faulted episodes called clean and only 26 are confusions between two faults. The same analysis on the v6 GPU run (scikit-learn 1.6.1) gives 93.5\%, 89.7\% and macro-F1 0.894. At repair-family level the attributor is correct on 91.3\% of faulted episodes and at letter-group level on 90.9\%.
+
+\textbf{End to end.} Taking the labels that the dispatcher actually outputs (rules first, family-first routing, group fallbacks) for the same 1{,}511 faulted episodes, the first label is the exact fault in 93.8\%; the whole label set names exactly the right repair family in 88.8\% (a second label from another group counts against this), the label set names the right letter group in 89.0\%, and a group fallback is used in 5.5\%. These dispatcher figures exclude the ``called clean'' errors, because the do-no-harm gate is applied afterwards.
+
+\textbf{The pairs a reviewer would ask about.} K05 versus K07: 0 of 50 K05 episodes are labelled K07 and 0 of 50 the other way. R03 versus R15: 0 and 0. Confusions concentrate where faults act through the same mechanism: R07 labelled K04 (7 of 50) and K04 labelled R07 (1), Q04 labelled Q05 (4) and Q05 labelled Q04 (1), R11 labelled R03 (4 of 50).
+
+\textbf{Where it fails.} Q03 is never identified: 46 of its 50 held-out episodes are called clean (the rest go to other classes), because a paraphrase by another real user leaves almost no trace in telemetry (its detector also fails its gate). R24 (reranker truncation, recall 0.64), K04 (0.74), Q04 (precision 0.68) and Q05 (precision 0.58) are the weakest of the rest. R26 has only 11 held-out positives and is thin. Table~\ref{tab:perfault} gives precision, recall and F1 per fault, and Fig.~\ref{fig:confusion} the confusion matrix.
+
+\begin{table*}[t]
+\caption{Per-fault precision, recall and F1 of the multi-class attributor on the held-out test split (v6 CPU run, seed 50). $n$ is the number of held-out episodes of that fault; the clean class (NONE, $n{=}2508$) has precision 0.95, recall 0.96, F1 0.95. Precision of a fault is reduced by clean episodes called faulty.}
+\label{tab:perfault}
+\centering\footnotesize
+\begin{tabular}{@{}lrrrr@{\hspace{10pt}}lrrrr@{}}
+\toprule
+Fault & $n$ & Prec. & Rec. & F1 & Fault & $n$ & Prec. & Rec. & F1\\
+\midrule
+K03 & 50 & 1.00 & 0.98 & 0.99 & R01 & 50 & 1.00 & 1.00 & 1.00 \\
+K04 & 50 & 0.82 & 0.74 & 0.78 & R03 & 50 & 0.91 & 1.00 & 0.95 \\
+K05 & 50 & 0.94 & 0.96 & 0.95 & R05 & 50 & 0.96 & 0.96 & 0.96 \\
+K06 & 50 & 1.00 & 1.00 & 1.00 & R06 & 50 & 0.93 & 0.78 & 0.85 \\
+K07 & 50 & 1.00 & 1.00 & 1.00 & R07 & 50 & 0.98 & 0.84 & 0.90 \\
+K08 & 50 & 0.96 & 0.98 & 0.97 & R10 & 50 & 1.00 & 0.98 & 0.99 \\
+K09 & 50 & 1.00 & 1.00 & 1.00 & R11 & 50 & 1.00 & 0.92 & 0.96 \\
+K11 & 50 & 1.00 & 1.00 & 1.00 & R13 & 50 & 1.00 & 0.96 & 0.98 \\
+K12 & 50 & 0.89 & 1.00 & 0.94 & R15 & 50 & 1.00 & 0.96 & 0.98 \\
+Q01 & 50 & 0.72 & 0.94 & 0.82 & R19 & 50 & 0.98 & 1.00 & 0.99 \\
+Q02 & 50 & 1.00 & 0.94 & 0.97 & R22 & 50 & 0.76 & 0.84 & 0.80 \\
+Q03 & 50 & 0.00 & 0.00 & 0.00 & R23 & 50 & 1.00 & 1.00 & 1.00 \\
+Q04 & 50 & 0.68 & 0.76 & 0.72 & R24 & 50 & 0.84 & 0.64 & 0.73 \\
+Q05 & 50 & 0.58 & 0.84 & 0.69 & R25 & 50 & 1.00 & 1.00 & 1.00 \\
+Q07 & 50 & 0.84 & 0.94 & 0.89 & R26 & 11 & 1.00 & 0.91 & 0.95 \\
+Q09 & 50 & 0.93 & 1.00 & 0.96 & & & & & \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=0.62\textwidth]{diagrag_confusion_v6cpu.png}
+\caption{Held-out confusion matrix of the attributor (rows normalised). Most off-diagonal mass is in the NONE column (faults called clean) and the NONE row (clean called faulty); fault-to-fault confusions are few and mostly within a repair family.}
+\label{fig:confusion}
+\end{figure*}
+
 \subsection{Natural traffic}
 Table~\ref{tab:nat} shows the arms on the 1{,}648 natural queries (v7 CPU run; the same sample as all earlier runs). The deployed loop gains $+2.43$ points, with 43 queries fixed and 3 broken. The gain comes from two rules that collapse near-duplicates (K05) and chunk crowding (K12); the classifier's dispatch alone adds $+0.42$ points $\ci{+0.12}{+0.79}$. The diagnosis-free universal repair gains $+2.18$ points but breaks 25 queries while fixing 61. Repairing natural misspellings does not help: the point estimate is negative ($-4.9$ points) and SymSpell is worse ($-11.4$), so the deployed configuration leaves natural-typo repair off.
 
@@ -226,6 +272,10 @@ Natural typos, SymSpell & 185 & $-11.35$ $\ci{-17.30}{-5.41}$\\
 \bottomrule
 \end{tabular}
 \end{table}
+
+\textbf{What the natural-traffic result does and does not show.} Nearly all of the gain comes from two deterministic rules, and the learned classifier adds only $+0.42$ points. We therefore claim two narrower things. First, the learned part matters where faults exist and where harm must be bounded: on injected faults, diagnosis-driven dispatch closes 0.846 of episodes against 0.761 for the universal repair, with clean loss 0.16\% against 1.63\% and mean clean cost 4.0 (1.0 for the capped variant) against 12 (pre-registered comparison D1: pass). Second, detection gates the rules: the gated rules beat the same rule applied to every query by $+0.61$ points $\ci{+0.12}{+1.15}$ (D3: pass). The pre-registered non-inferiority test of the loop against the universal repair fails by 0.05 points (lower bound $-0.55$ against $-0.50$); the universal repair gains $+2.18$ points but breaks 25 queries while the loop breaks 3.
+
+A post-hoc split by whether the gold document has real content (descriptive, not pre-registered) is more informative than the pooled number. The gold document is an empty placeholder for 938 of the 1{,}648 queries, and retrieving that placeholder counts as a hit, so gains there do not imply a better answer. On the 710 queries whose gold has content, the loop gains $+3.24$ points $\ci{+1.97}{+4.51}$ (23 fixed, 0 broken), whereas the universal repair gains $+1.69$ points and breaks 14. On the 938 placeholder-gold queries the loop gains $+1.81$ points $\ci{+0.85}{+2.77}$ (20 fixed, 3 broken). The natural gain is small in absolute terms, rests on one sample of queries, and is not evidence that the classifier improves natural traffic.
 
 A census over the 7{,}175 queries shows why natural gains are bounded: the clean pipeline fails on 43.5\% of them, and the gold document is itself an empty placeholder (``nan'') for 58.6\% of queries and 69.1\% of failures (v6 GPU), so no repair can win those.
 
@@ -329,7 +379,7 @@ Variational (5 seeds) & 0.883 (sd 0.005) & 0.965\\
 (6) The dispatcher cannot name two faults of one group (Section~\ref{sec:composed}); the pre-registered natural-traffic non-inferiority comparison against the universal repair fails in v6 and v7 by 0.05 points.
 
 \textbf{Threats to validity.}
-\emph{Construct:} faults are injected by the authors who wrote the detectors and repairs, so a pass shows the method works on this construction, not on any production system. \emph{External:} one English e-commerce corpus carries the evidence. \emph{Internal:} each configuration was judged once per stack and seed; the natural-traffic gain rests on one sample of 1{,}648 queries, repeated across runs; the capped policy was designed after the stratified one; the LLM comparison is supervised against zero-shot. \emph{Statistical:} verdicts decided by 0.001 to 0.005 are fragile across library versions. \emph{Composed study:} 155 synthetic episodes from 20 faults, one seed, and a filter that keeps only combinations that break retrieval.
+\emph{Construct:} AUROC is a detection metric, so identification is reported separately in Section~\ref{sec:ident} (89.9\% top-1 on faulted episodes; Q03 never identified); faults are injected by the authors who wrote the detectors and repairs, so a pass shows the method works on this construction, not on any production system. \emph{External:} one English e-commerce corpus carries the evidence. \emph{Internal:} each configuration was judged once per stack and seed; the natural-traffic gain rests on one sample of 1{,}648 queries, repeated across runs; the capped policy was designed after the stratified one; the LLM comparison is supervised against zero-shot. \emph{Statistical:} verdicts decided by 0.001 to 0.005 are fragile across library versions. \emph{Composed study:} 155 synthetic episodes from 20 faults, one seed, and a filter that keeps only combinations that break retrieval.
 
 %--------------------------------------------------------------------------------------------------
 \section{Reproducibility and Artefacts}
