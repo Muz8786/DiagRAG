@@ -52,3 +52,32 @@ Run 2 (CPU, seed 50, the pre-registered stack replication) starts in the sandbox
 
 **C4 — the single GPU run was relocated to another Kaggle account (17 Nov 2026, 15:37 UTC; no v6 result read).** The run launched at 13:32 on `sqmuzammil` stayed QUEUED for more than two hours although a GPU smoke on the same account had started within minutes. I deleted that kernel (the CLI confirmed "deleted successfully" and a status query on it was then denied, so it could not start), and pushed the **same notebook file** (SHA-256 prefix `ddb071a014816d49`, unchanged; configuration unchanged) to `syedmuzammilquadri/diagrag-v6-gpu-flagship`, which went to RUNNING within 45 seconds.
 It is one GPU run: the first job never executed, so no result of it exists. Only the account differs; nothing about the code, seed or settings changed.
+
+**C5 — results and prediction scorecard (17 Nov 2026). Both v6 runs are committed whole: `kaggle/judged_gpu_v6_seed50/` (the flagship) and `kaggle/judged_cpu_run_v6_seed50/` (the replication). Written after both results were read; nothing above was edited.**
+
+| | GPU T4, bge-reranker-large (headline) | CPU, MiniLM-L6 (replication) |
+|---|---|---|
+| Code hash in the run's protocol | equals the frozen v6 hash | equals the frozen v6 hash |
+| (a) core 28 under the original rule | **27 detectors / 27 repairs: ADOPTED** | **28 / 27: ADOPTED** |
+| Not solved | Q03 only (detector 0.642 FAIL; repair 6 of 100) | Q03 only (repair 1 of 100; its detector passed at 0.701) |
+| (b) grounded set (22) | 20 detectors, 20 repairs, 20 solved (Q03, R26 not) | 21 / 20 / 20 (Q03, R26 not) |
+| (c) quarantine set (10) | 10 / 10 / 10 | 10 / 10 / 10 |
+| L1 clean loss (bar 0.5%) | PASS 0.28% | PASS 0.20% |
+| L2 closure (bar 0.70) | PASS 0.844 | PASS 0.854 |
+| U1 unseen-fault closure (bar 0.50) | **FAIL 0.406** | **FAIL 0.413** |
+| N1 natural traffic (n = 1,648) | PASS +2.18 [+1.33, +3.03] | PASS +2.43 [+1.70, +3.22] |
+| D1 / D2 / D3 (pre-registered analysis) | PASS / PASS (CI lower bound -0.49, margin -0.50) / FAIL (lower bound 0.00) | PASS / FAIL (-0.55) / PASS (+0.12) |
+| `capped_crc_0.005`: loss, dispatch, cost, closure | 0.12%, 16.5%, 0.93, 0.834: **meets all four** | 0.08%, 16.1%, 1.05, 0.848: **meets all four** |
+| R03, R15, R22 (v5: THIN at 38, 44, 47) | 50 held-out positives each; AUROC 1.000, 0.999, 0.950; PASS | 50 each; 1.000, 0.979, 0.955; PASS |
+| C2 detector | PASS 0.751 (n = 50) | PASS 0.823 (n = 50) |
+
+**Scorecard (section 4, written before any v6 run).**
+- R03, R15, R22 reach 50 and pass (about 0.8): **correct on both stacks**. The supply diagnosis held.
+- Q03 detector FAIL (about 0.9): **correct on GPU (0.642), wrong on CPU (0.701, 0.001 above the bar)**. The real-pair era mean of 0.643 [0.600, 0.687] predicted a fail; one run in six now passes.
+- C2 PASS (about 0.9): **correct on both**.
+- 27-detector rule met (about 0.7): **correct on both.** Both runs are ADOPTED.
+- U1 >= 0.50 (about 0.1): **correct that it would not**: 0.406 and 0.413. It is the lowest value since v3, so the two construction changes did not help it; I did not expect them to, and the larger base pool reduced it slightly.
+- L1, L2, N1 PASS: **correct on both**.
+- `capped_crc_0.005` meets all four (about 0.8): **correct on both**. `global_crc_0.005` did not on either stack in v6 (GPU loss 0.56%, dispatch 54%; CPU loss 0.60%, dispatch 45%): with the larger clean test set its single threshold broke the 0.5% bound, while the capped per-stratum policy kept it.
+
+**Disclosures.** (1) v6 exists because v5 failed; its design change was motivated by a diagnosis of v5's construction, not by a held-out score, and v5 stays in the record as NOT_ADOPTED. (2) A first v6 draft (a loop-budget fix) was discarded before any run after a simulation showed it would change nothing. (3) The GPU run was relocated to another Kaggle account (C4) after its first job sat queued for two hours; the first job never executed. (4) Two construction changes together make v6 a different test set from v5 (6,000 base queries, balanced C2 mix): v6's pass is a pass on that construction. (5) U1 got worse, not better, in v6.
