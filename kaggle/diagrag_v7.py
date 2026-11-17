@@ -1895,9 +1895,15 @@ if 'det' not in BASEL:
                 for k_, v_ in (getattr(FX, stg)(v) or {}).items(): row['rag_' + k_] = float(v_)
         DETF[id(e)] = row; DETROWS[n_] = row
         if n_ % 50 == 0: maybe_stop('detection_baselines')
+    save_ckpt('detection_rows_done')   # v7 D3: persist the rows once the loop is complete
     def auc_for(score_fn, es):
         y = np.array([e['fault'] != 'NONE' for e in es], int); s_ = np.array([score_fn(e) for e in es]); return boot_auc(y, s_)
-    ours = lambda e: 1 - proba(e['feats'])[iN]
+    # v7 D3 (execution speed only): batch-predict p(NONE) once instead of 9,000 single-row calls (0.06 s each); values checked equal to the per-row call
+    _es_ = TEST_EP + [e for e in TRAIN_EP if e['fault'] == 'NONE']
+    _pn_ = ATT.predict_proba(np.array([[e['feats'][k] for k in FEATS] for e in _es_], dtype=np.float32))[:, iN]
+    _PN = {id(e): float(1 - p_) for e, p_ in zip(_es_, _pn_)}
+    for e in _es_[::max(1, len(_es_) // 120)]: assert abs(_PN[id(e)] - float(1 - proba(e['feats'])[iN])) < 1e-9, 'D3 batch/per-row mismatch'
+    ours = lambda e: _PN[id(e)]
     res = dict(ours_1_minus_pNONE=auc_for(ours, TEST_EP), qpp_neg_nqc=auc_for(lambda e: -DETF[id(e)]['nqc'], TEST_EP),
                qpp_neg_wig=auc_for(lambda e: -DETF[id(e)]['wig'], TEST_EP), neg_ce1=auc_for(lambda e: -DETF[id(e)]['ce1'], TEST_EP))
     if rag_ok:
