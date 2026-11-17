@@ -15,7 +15,7 @@ check('e: LOFO fits unchanged (single-fault rows only)', "keep_ = ytra != f; mf 
 import difflib
 v6l = v6.splitlines(); v7l = v7.splitlines(); removed = [l for l in difflib.unified_diff(v6l, v7l, lineterm='', n=0) if l.startswith('-') and not l.startswith('---')]
 ALLOWED_REMOVED = ("# # DiagRAG v6", "ATT = hgb().fit(Xtra, ytra)", "    mm = hgb().fit(Xtra[a_], ytra[a_]); p_ = mm.predict_proba(Xtra[b_])", "    mm = hgb().fit(Xtra[a_], to_group(ytra[a_])); p_ = mm.predict_proba(Xtra[b_])", "ATTG = hgb().fit(Xtra, to_group(ytra))",
-                   "    keep = {k: globals()[k] for k in", "md = ['# DiagRAG v6", "               guarantee=GUARANTEE, policies=POLICY,")
+                   "    keep = {k: globals()[k] for k in", "    DETF = {}", "        DETF[id(e)] = row", "md = ['# DiagRAG v6", "               guarantee=GUARANTEE, policies=POLICY,")
 bad = [l for l in removed if not any(l[1:].lstrip().startswith(a.lstrip()) or a.lstrip() in l for a in ALLOWED_REMOVED) and l[1:].strip()]
 check('f: every line REMOVED from v6 is one of the declared edits (header, attributor fits, checkpoint keys, report title, verdict key)', not bad, ('unexpected: ' + str(bad[:3])[:200]) if bad else f'{len(removed)} removed lines, all declared')
 ast.parse(v7); check('g: v7 parses', True); res['ALL_PASS'] = ok_all

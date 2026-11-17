@@ -134,7 +134,7 @@ RES = pickle.load(open(CKPT, 'rb')) if os.path.exists(CKPT) else {}
 if RES: print('resuming from checkpoint, stage:', RES.get('stage'))
 def over_budget(): return CFG['TIME_BUDGET'] > 0 and time.time() - T0 > CFG['TIME_BUDGET']
 def save_ckpt(stage):
-    keep = {k: globals()[k] for k in ('CLEAN', 'EPIS', 'GEN', 'GSTATE', 'SEEN', 'HARM', 'CAL', 'NATR', 'LOFO', 'FAMR', 'NAT2', 'CENS', 'BASEL', 'NAT3', 'COMPST', 'COMPRES') if k in globals()}
+    keep = {k: globals()[k] for k in ('CLEAN', 'EPIS', 'GEN', 'GSTATE', 'SEEN', 'HARM', 'CAL', 'NATR', 'LOFO', 'FAMR', 'NAT2', 'CENS', 'BASEL', 'NAT3', 'COMPST', 'COMPRES', 'DETROWS') if k in globals()}
     keep.update(stage=stage, caches=dict(QC=globals().get('_QC', {}), CEC=globals().get('_CEC', {}), DC=globals().get('_DC', {})))
     with open(CKPT + '.tmp', 'wb') as fh: pickle.dump(keep, fh, protocol=4)
     os.replace(CKPT + '.tmp', CKPT); log('checkpoint saved:', stage)
@@ -1880,8 +1880,9 @@ if 'det' not in BASEL:
         FX, RunView = raglog_setup(); rag_ok = True
     except Exception as ex:
         rag_ok = False; BASEL['raglog_error'] = repr(ex)[:300]
-    DETF = {}
+    DETF = {}; DETROWS = RES.get('DETROWS', {})   # v7 D2: rows persisted by stable index so the stage can resume
     for n_, e in enumerate(TRAIN_EP + TEST_EP):
+        if n_ in DETROWS: DETF[id(e)] = DETROWS[n_]; continue
         tr = run(e['st']); ov = tr['ov']; row = qpp(tr)
         if rag_ok:
             T = lambda L: [dtext(int(i), ov)[:500] for i in L[:25]]
@@ -1892,7 +1893,7 @@ if 'det' not in BASEL:
                         rerankers=[dict(query=tr['q'], input_chunks=ch, order=order, scores=[float(x) for x in tr['ce']])] if len(ch) >= 2 else [])
             for stg in ('retriever', 'reranker'):
                 for k_, v_ in (getattr(FX, stg)(v) or {}).items(): row['rag_' + k_] = float(v_)
-        DETF[id(e)] = row
+        DETF[id(e)] = row; DETROWS[n_] = row
         if n_ % 50 == 0: maybe_stop('detection_baselines')
     def auc_for(score_fn, es):
         y = np.array([e['fault'] != 'NONE' for e in es], int); s_ = np.array([score_fn(e) for e in es]); return boot_auc(y, s_)

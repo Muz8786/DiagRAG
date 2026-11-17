@@ -46,4 +46,9 @@ sub("TAU_C2 = float(np.quantile(s_neg, 0.90)) if s_neg else 0.5        # <=10% o
 sub("log('LOOP GATES', GUARANTEE); save_ckpt('loop_done')\n", "log('LOOP GATES', GUARANTEE); save_ckpt('loop_done')\n\n" + ev)
 sub("md = ['# DiagRAG v6 judged run report',", "md = ['# DiagRAG v7 judged run report',")
 sub("               guarantee=GUARANTEE, policies=POLICY,", "               composed_arm=dict(result_file='COMPOSED_RESULT.json', headline=COMPRES_SUMMARY['headline']), guarantee=GUARANTEE, policies=POLICY,")
+# D2 (execution only): the detection-baseline rows (RAGLog features and QPP) were kept only in memory under id(e), so a chunked run could never finish that stage. Persist them by stable episode index.
+sub("    DETF = {}\n    for n_, e in enumerate(TRAIN_EP + TEST_EP):\n        tr = run(e['st']); ov = tr['ov']; row = qpp(tr)\n",
+    "    DETF = {}; DETROWS = RES.get('DETROWS', {})   # v7 D2: rows persisted by stable index so the stage can resume\n    for n_, e in enumerate(TRAIN_EP + TEST_EP):\n        if n_ in DETROWS: DETF[id(e)] = DETROWS[n_]; continue\n        tr = run(e['st']); ov = tr['ov']; row = qpp(tr)\n")
+sub("        DETF[id(e)] = row\n        if n_ % 50 == 0: maybe_stop('detection_baselines')\n", "        DETF[id(e)] = row; DETROWS[n_] = row\n        if n_ % 50 == 0: maybe_stop('detection_baselines')\n")
+sub("'NAT3', 'COMPST', 'COMPRES')", "'NAT3', 'COMPST', 'COMPRES', 'DETROWS')")
 out = os.path.join(here, 'diagrag_v7.py'); open(out, 'w', encoding='utf-8').write(s); print('wrote', out, hashlib.sha256(s.encode('utf-8')).hexdigest())

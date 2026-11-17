@@ -1,7 +1,7 @@
 {
  "a: protocol-frozen v7 hash equals kaggle/diagrag_v7.py": {
   "ok": true,
-  "detail": "0ebb2fe16e31f488"
+  "detail": "ab49b46cf225b51f"
  },
  "b: gate line byte-identical to v6": {
   "ok": true,
@@ -41,7 +41,7 @@
  },
  "f: every line REMOVED from v6 is one of the declared edits (header, attributor fits, checkpoint keys, report title, verdict key)": {
   "ok": true,
-  "detail": "7 removed lines, all declared"
+  "detail": "9 removed lines, all declared"
  },
  "g: v7 parses": {
   "ok": true,
