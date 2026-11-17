@@ -8,13 +8,15 @@
 # Run from anywhere:  bash kaggle/build_a_to_z_package.sh     (sandbox paths below)
 set -euo pipefail
 S=/projects/sandbox; R=$S/DiagRAG; PY=$S/_venv/bin/python; OUTD=$S/deliverables; mkdir -p "$OUTD"
-NAME=DiagRAG_KAGGLE_A_to_Z; Z=$S/_final2/$NAME
+EDITION=${EDITION:-full}   # full = with data/ and prereq/ (1.2 GB);  lite = without them (about 20 MB; stages A to E work, F downloads its inputs, G needs the full edition)
+NAME=DiagRAG_KAGGLE_A_to_Z; [ "$EDITION" = lite ] && NAME=DiagRAG_KAGGLE_A_to_Z_LITE; Z=$S/_final2/$NAME
 $PY "$R/kaggle/build_a_to_z_notebook.py"
 bash "$S/_work/build_final_zips.sh" > "$S/_work/build_final_zips.log" 2>&1 || { tail -5 "$S/_work/build_final_zips.log"; exit 1; }   # refreshes _final/DiagRAG_RUN_PACKAGE with the current notebook and guide
 rm -rf "$S/_final2" && mkdir -p "$Z"
 cp -a "$S/_final/DiagRAG_RUN_PACKAGE/." "$Z/"
 rm -f "$Z/CHECKSUMS.sha256" "$Z/START_HERE.md"
 cp "$R/kaggle/DiagRAG_A_to_Z_kaggle.ipynb" "$Z/"; cp "$R/A_TO_Z_GUIDE.md" "$Z/"
+if [ "$EDITION" = full ]; then
 mkdir -p "$Z/prereq" "$Z/data"
 cp "$S/_j50/diagrag_out/checkpoint.pkl" "$Z/prereq/v6_cpu_checkpoint.pkl"; cp "$S/_j50/diagrag_out/qlog_nn_b03a9b172742.npy" "$Z/prereq/"
 for f in kb_tier3_186k.jsonl.gz embeddings_cache_186k.npz shopping_queries_dataset_examples.parquet corpus-webis-qspell-17.zip; do cp -L "$S/_j47/diagrag_data/$f" "$Z/data/$f"; done
@@ -33,12 +35,13 @@ cat > "$Z/prereq/README.md" <<'EOF'
 - `qlog_nn_b03a9b172742.npy`: the cached embeddings of the query log (about 180,000 queries). Without it the script re-encodes them, which takes a long time on CPU.
 Stage G of the notebook uses both. Nothing else does.
 EOF
+fi
 cat > "$Z/START_HERE.md" <<'EOF'
 # DiagRAG, A to Z (one Kaggle notebook + this data zip)
 1. Upload this zip as a PRIVATE Kaggle Dataset. Create a notebook, import `DiagRAG_A_to_Z_kaggle.ipynb`, add the dataset as an input, set Internet On, Run All.
-2. Default flags run the check path (about 15 to 25 minutes, CPU, no key). Switch on `RUN_V6_GPU` (GPU T4) or `RUN_V7_CPU` in cell 2 for the long regenerations.
+2. (LITE edition: there is no data/ or prereq/ folder; stages A to E work as described, stage F downloads its inputs, stage G needs the full zip.) Default flags run the check path (about 15 to 25 minutes, CPU, no key). Switch on `RUN_V6_GPU` (GPU T4) or `RUN_V7_CPU` in cell 2 for the long regenerations.
 3. `A_TO_Z_GUIDE.md` explains every stage, every result and every limitation. `PROJECT_EXPLAINED.md` is the full project write-up.
-No API key is needed or included. The data in `data/` is for private use only (`data/DATA_NOTICE.md`).
+No API key is needed or included. If a `data/` folder exists it is for private use only (`data/DATA_NOTICE.md`).
 EOF
 $PY - "$Z" <<'EOF'
 import hashlib, json, os, subprocess, sys, time
@@ -46,12 +49,13 @@ Z = sys.argv[1]; sha = lambda p: hashlib.sha256(open(p, 'rb').read()).hexdigest(
 n = 0; size = 0
 for dp, dn, fn in os.walk(Z):
     for f in fn: n += 1; size += os.path.getsize(os.path.join(dp, f))
-ref = {'data/kb_tier3_186k.jsonl.gz': 53518791, 'data/embeddings_cache_186k.npz': 533012659, 'data/shopping_queries_dataset_examples.parquet': 51286808, 'data/corpus-webis-qspell-17.zip': 2285705}
+full = os.path.isdir(os.path.join(Z, 'data'))
+ref = {'data/kb_tier3_186k.jsonl.gz': 53518791, 'data/embeddings_cache_186k.npz': 533012659, 'data/shopping_queries_dataset_examples.parquet': 51286808, 'data/corpus-webis-qspell-17.zip': 2285705} if full else {}
 for k, v in ref.items(): assert os.path.getsize(os.path.join(Z, k)) == v, ('size mismatch', k)
 commit = subprocess.run(['git', '-C', '/projects/sandbox/DiagRAG', 'rev-parse', 'HEAD'], capture_output=True, text=True).stdout.strip()
-man = dict(name='DiagRAG_KAGGLE_A_to_Z', built_utc=time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime()), repo_commit_at_build=commit, n_files=n + 2, size_mb=round(size / 2**20, 1), private_use_only=True,
+man = dict(name=os.path.basename(Z), edition='full' if full else 'lite', built_utc=time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime()), repo_commit_at_build=commit, n_files=n + 2, size_mb=round(size / 2**20, 1), private_use_only=full,
            data={k: dict(bytes=v, sha256=sha(os.path.join(Z, k))) for k, v in ref.items()},
-           prereq={f: dict(bytes=os.path.getsize(os.path.join(Z, 'prereq', f)), sha256=sha(os.path.join(Z, 'prereq', f))) for f in ('v6_cpu_checkpoint.pkl', 'qlog_nn_b03a9b172742.npy')})
+           prereq={f: dict(bytes=os.path.getsize(os.path.join(Z, 'prereq', f)), sha256=sha(os.path.join(Z, 'prereq', f))) for f in ('v6_cpu_checkpoint.pkl', 'qlog_nn_b03a9b172742.npy')} if full else {})
 json.dump(man, open(os.path.join(Z, 'PACKAGE_MANIFEST.json'), 'w'), indent=1); print(json.dumps(man, indent=1)[:900])
 EOF
 # secrets and private labels, then checksums, then the zip

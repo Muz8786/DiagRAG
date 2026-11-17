@@ -76,7 +76,7 @@ def find_pkg():
 PKG = find_pkg()
 assert PKG, 'The data package was not found. Upload DiagRAG_KAGGLE_A_to_Z.zip as a Kaggle Dataset and add it as an input of this notebook.'
 MAN = json.load(open(os.path.join(PKG, MARK)))
-print('package:', PKG); print('built:', MAN['built_utc'], '| files:', MAN['n_files'], '| size (MB):', MAN['size_mb'])
+print('package:', PKG, '| edition:', MAN.get('edition', 'full')); print('built:', MAN['built_utc'], '| files:', MAN['n_files'], '| size (MB):', MAN['size_mb'])
 STATUS = {}   # stage -> dict(ok, seconds, note)
 def stage(name):
     class _S:
@@ -189,6 +189,8 @@ CPU_RERANK = dict(RERANKER='cross-encoder/ms-marco-MiniLM-L-6-v2', CE_MAXLEN='25
 def link_data(dst):
     """Put the shipped input files where the script looks for them (exact size and SHA-256 are re-checked by the script itself)."""
     os.makedirs(dst, exist_ok=True)
+    if not os.path.isdir(os.path.join(PKG, 'data')):
+        print('this package has no data/ folder (LITE edition): the script will download its input files from their original sources (Internet On) and check their SHA-256'); return
     for f in os.listdir(os.path.join(PKG, 'data')):
         if f.endswith('.md') or f.endswith('.sha256'): continue
         d = os.path.join(dst, f)
@@ -237,6 +239,7 @@ with stage('G composed-fault arm (v7)') if run_g else stage('G composed-fault ar
     if run_g:
         smoke = FLAGS['SMOKE']; script = os.path.join(PKG, 'kaggle', 'diagrag_v7.py')
         assert file_sha(script) == frozen_hash('v7_composed_protocol.md', 'v7'), 'diagrag_v7.py is not the file frozen in the protocol (D3)'
+        assert smoke or os.path.exists(os.path.join(PKG, 'prereq', 'v6_cpu_checkpoint.pkl')), 'Stage G needs prereq/v6_cpu_checkpoint.pkl, which is only in the FULL edition of the package (this is the LITE edition). Use SMOKE, or the full zip.'
         work = '/kaggle/working' if ON_KAGGLE else V7_WORK; outd = os.path.join(work, 'diagrag_out'); os.makedirs(outd, exist_ok=True)
         link_data('/tmp/diagrag_data' if ON_KAGGLE else os.path.join(work, 'diagrag_data'))
         src = os.path.join(V6_OUT, 'diagrag_out', 'checkpoint.pkl') if smoke else os.path.join(PKG, 'prereq', 'v6_cpu_checkpoint.pkl')   # smoke: the tiny v6 run of stage F
