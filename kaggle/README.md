@@ -15,6 +15,7 @@ Every notebook is a single file. Internet must be ON. Use a GPU (T4 x1) for the 
 | `diagrag_port.ipynb` | 20 faults on a second stack and a second domain (SciFact) | CPU seed 7: `judged_port_scifact/` (11/20) |
 | `diagrag_v5.ipynb` / `DiagRAG_v5_kaggle.ipynb` | v4 + 50-positive floor, capped and two-stage dispatch policies, deployed-config correction, library versions in the protocol. Pre-registered in `../docs/evidence/v5_protocol.md` | CPU seed 49: `judged_cpu_run_v5_seed49/` (**NOT_ADOPTED**, 24/28 detectors; three THIN under the new floor) |
 | `DiagRAG_v6_kaggle.ipynb` | v5 + base-query supply fix (all 5,527 examined ESCI queries) and balanced C2 pair mix; pre-registered in `../docs/evidence/v6_protocol.md` | **GPU T4 seed 50: `judged_gpu_v6_seed50/` (ADOPTED, 27/28)**; CPU seed 50: `judged_cpu_run_v6_seed50/` (ADOPTED, 28/28). U1 FAIL 0.406 / 0.413 |
+| `diagrag_v7.py` (+ `v7_cells/`, `mk_v7.py`) | v6 + a pre-registered composed-fault arm (fault pairs and triples), a retrained attributor and a single-fault regression check; script only, run on CPU in chunks (no notebook). Protocol and amendments D1 to D4: `../docs/evidence/v7_composed_protocol.md`. Result: `judged_cpu_run_v7_seed50/`. |
 | (script) `../bench/llm_baselines.py` | RAGLog-style LLM diagnosis and CRAG-style LLM repair against DiagRAG | `judged_llm_baselines/`, `../docs/LLM_BASELINES_RESULTS.md` |
 
 Why v2 and the port arm exist, the evidence behind them, and every number below: `../docs/EVIDENCE_AND_NOVELTY_REPORT.md`.

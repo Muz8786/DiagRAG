@@ -295,3 +295,20 @@ Re-fitting under the library versions Kaggle recorded (scikit-learn 1.6.1, numpy
 
 ## 12.4 Honest estimate after v6
 **About 7.8 out of 10.** Not 8.3 to 8.5. The flagship is now ADOPTED on the GPU stack with a CPU replication, the LLM comparison is complete, and the guarantee frontier holds on two stacks. Still open: U1 (0.41), a frontier-model arm (no key), a full-suite second-corpus port (not attempted), the benchmark release (owner decisions). I estimate about 8.2 if the last three of those close well; 8.5 needs outside adoption.
+
+# 13. Update, 17 Nov 2026 (latest): the composed-fault arm (v7) and the optional QML comparison
+
+Execution detail, the freeze and the scorecard are in `docs/evidence/v7_composed_protocol.md` (D1 to D4) and `docs/evidence/qml_protocol.md` (Q1). The full write-up is `PROJECT_EXPLAINED.md` sections 5.9 and 5.10. Both pieces are descriptive: no adoption gate, and the QML models are simulated with no advantage claim.
+
+## 13.1 v7: composed faults
+- **Design.** Fault pairs (within-family, within-letter QQ/KK/RR, cross-letter QK/QR/KR) and triples are injected; an episode is kept only if the clean query succeeds and the composed one fails, with the alone-failure record of each component. 155 train and 155 held-out episodes, every stratum at quota; seed 51; splits by base-query md5; no base query shared with any single-fault episode. Code hash frozen and committed before generation.
+- **Result (held-out, n = 155).** Every cause named at the family level: **40.0% [32.6, 47.9]** (old attributor 30.3%). By stratum: 0/75 for QQ, KK, RR and TRIPLE (the dispatcher returns at most one label per letter group), 45% QK, 85% QR, 80% KR; WITHIN_FAMILY 20/20 by construction (shared family label). Mean set-F1 0.770 (old 0.713). Sequential repair closure **72.9% [65.4, 79.3]** against 83.9% for oracle-forward repairs. Forced reverse order: no difference in closure (25/32 under both orders; oracle-forward and oracle-reverse closure agree in 155 of 155 episodes; in a direct check on 60 episodes the repaired states differed in 2). Held-out clean loss 0.16%; sequential loop on 300 clean queries 0.3% [0.1, 1.9].
+- **No regression.** The attributor was retrained with composed rows (train split only) and every single-fault gate re-run: 28/27/27, ADOPTED, L1, L2, N1 PASS, `capped_crc_0.005` meets all four targets, U1 unchanged at 0.413. Differences reported in D4 (C2 AUROC 0.823 to 0.848; capped-CRC closure 0.848 to 0.838).
+- **Scorecard.** Held: both-cause rate 0.2 to 0.5 and low within a letter; retraining adds up to 0.1 (+0.097); no regression. Did not hold: closure gap of at least 0.2 (observed 0.11); reverse order lowers some strata; strata short of quota.
+- **Execution record.** After the freeze (D1) the run needed two execution fixes, both disclosed: D2 (detection-baseline rows kept under `id(e)` could not resume) and D3 (about 9,000 single-row attributor calls at 0.061 s each pushed the stage past the chunk wall clock; replaced by one batch call with a 1e-9 equality check). D2's diagnosis was incomplete and D3 corrects it. The composed result is byte-identical before and after both.
+
+## 13.2 QML (optional, simulated)
+Six-qubit noiseless statevector simulation written in the repository; quantum-kernel SVM and a variational classifier against classical models on the same six PCA inputs and the 63-feature gradient boosting. Single-fault AUROC 0.892 and 0.883 (quantum) against 0.917 and 0.921 (classical, six inputs) and 0.978 (63 features); composed-versus-clean 0.942 and 0.965 against 0.979 and 0.988 and 0.995. Three of four predictions held. **No quantum advantage; none is claimed.**
+
+## 13.3 Honest estimate after v7
+**About 7.8 out of 10, unchanged.** The composed arm is a new, pre-registered, partly negative measurement with a no-regression proof; it gives a reviewer something new to read and a clear next step (a dispatcher that returns several labels per letter group). It does not close U1, the frontier-model comparison, the second corpus or the release, and it is 155 synthetic episodes from one seed. 8.3 to 8.5 is not supported by the evidence.

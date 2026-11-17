@@ -14,6 +14,7 @@ Status as of **17 Nov 2026 (after the v6 runs)**. Repository: `Muz8786/DiagRAG`,
 - A retrieval stack (dense + BM25 + reciprocal-rank fusion + cross-encoder reranker) over a licence-clean corpus of 101,297 documents, with 32 injectable fault types in four groups: query (Q), knowledge base (K), retrieval stack (R) and compositional (C).
 - A detector and a repair for each fault, a gradient-boosted attributor, a family-first dispatcher with group fallbacks, and a conformal do-no-harm threshold.
 - Judged runs in which every pass/fail gate and the SHA-256 of the exact code were written to a protocol file before any result existed.
+- **A composed-fault arm (v7):** 310 synthetic fault pairs and triples (155 held-out) in which the clean query succeeds and the composed one fails, plus a simulated six-qubit quantum-ML comparison that is a side comparison only (sections 5.9 and 5.10).
 - A 4,843-episode public benchmark (DiagRAG-Bench v1.0) with private held-out labels committed by hash, ports to two other corpora and to a LangChain stack, and a comparison against LLM judges.
 
 **What the results say (v6 GPU flagship, T4, seed 50, unless marked).**
@@ -22,14 +23,20 @@ Status as of **17 Nov 2026 (after the v6 runs)**. Repository: `Muz8786/DiagRAG`,
 - On **1,648 natural queries that no run had ever examined** (no injection), the deployed repair loop gained **+2.18 points** of Hit@5 [+1.33, +3.03] (GPU) and +2.43 [+1.70, +3.22] (CPU replication). Seven runs now give +2.06 to +2.43 on that one sample.
 - The do-no-harm bound held (held-out clean loss 0.28%, bar 0.5%). A capped variant gives the same bound at **16.5% clean dispatch** against 86% for the stratified policy that gates L1, with closure 0.834 against 0.844, and it meets all four pre-registered targets on both stacks.
 
+**Composed faults and QML (v7, CPU, descriptive, no adoption gate; sections 5.9 and 5.10).**
+- On 155 held-out composed episodes the retrained attributor named every cause at the family level in **40.0% [32.6, 47.9]** (the single-fault-trained one: 30.3%). The 40% is two very different numbers: **0 of 75** for pairs inside one letter group and for triples, and **80 to 85%** for cross-letter pairs QR and KR (45% for QK). Sequential repair closed **72.9% [65.4, 79.3]** against 83.9% when the true causes are repaired in order. Held-out clean loss stayed at 0.16% (sequential loop, 300 clean queries: 0.3%).
+- Retraining the attributor with composed rows **did not regress** any single-fault gate (28/27/27, ADOPTED, L1, L2, N1 pass; U1 unchanged at 0.413).
+- The simulated six-qubit QML models reach **0.892** (quantum kernel) and **0.883** (variational) fault-versus-clean AUROC, against **0.978** for the project's gradient boosting on all 63 features and 0.917 to 0.921 for classical models on the same six inputs. **No quantum advantage, and none is claimed.**
+
 **What failed, in the same breath.**
 - **v5 was NOT_ADOPTED** (CPU, 24 of 28 detectors) and so was **v4 on GPU** (26 of 28). v6 is ADOPTED only after a construction fix motivated by diagnosing v5; v5 and v4 stay in the matrix.
 - **Unseen-fault closure (U1) never reached its 0.50 bar** (best 0.485; v6 0.406 and 0.413, the lowest since v3), and no ceiling could be proved.
 - **Q03's detector** passes in 2 of 7 runs of the natural-paraphrase construction, by 0.004 and 0.001; its repair rescues 1 to 6 of 100.
 - Repairing natural misspellings does not help (negative point estimate in every run that measured it, interval above zero in three).
+- **The dispatcher cannot name two faults of the same letter group** (0 of 75 in the composed arm, old and new attributor alike); the composed arm shows it and does not fix it.
 - A frontier-model LLM arm and a full-suite second-corpus port were **not done**, and the benchmark is **staged, not released** (section 9).
 
-**Honest score: about 7.8 out of 10** as a research contribution (section 10): up from 7.5 because the flagship is now ADOPTED on the GPU stack, the LLM comparison is complete and the guarantee frontier is measured on two stacks. 8.3 to 8.5 was requested and is **not** supported by the evidence; section 10 says what is missing.
+**Honest score: about 7.8 out of 10** as a research contribution (section 10): up from 7.5 because the flagship is now ADOPTED on the GPU stack, the LLM comparison is complete and the guarantee frontier is measured on two stacks. The composed-fault arm adds a new, partly negative measurement; I do not raise the number for it (section 10). 8.3 to 8.5 was requested and is **not** supported by the evidence; section 10 says what is missing.
 
 ---
 
@@ -110,8 +117,9 @@ Core 28 (the adoption rule counts these) plus four extra faults found in field r
 | seed 49 | CPU | v5 | 24 / 27 / 24 | 0.15% (PASS) | 0.833 (PASS) | 0.440 (FAIL) | +2.43 [+1.70, +3.22] (PASS) | **NOT_ADOPTED** |
 | seed 50 | GPU T4 | v6 (flagship) | 27 / 27 / 27 | 0.28% (PASS) | 0.844 (PASS) | 0.406 (FAIL) | +2.18 [+1.33, +3.03] (PASS) | **ADOPTED** |
 | seed 50 (CPU replication) | CPU | v6 | 28 / 27 / 27 | 0.20% (PASS) | 0.854 (PASS) | 0.413 (FAIL) | +2.43 [+1.70, +3.22] (PASS) | **ADOPTED** |
+| seed 50 (CPU, retrained attributor) | CPU | v7 (composed arm) | 28 / 27 / 27 | 0.16% (PASS) | 0.846 (PASS) | 0.413 (FAIL) | +2.43 [+1.64, +3.22] (PASS) | **ADOPTED** (regression check, not a new test set) |
 
-Notes: seed 42 used older v1 code whose hash is not shipped. L1 and L2 are defined from v2 onward (v1 runs predate them; "-" means not measured). Natural-traffic samples overlap across v3, v4 and v5 (one query sample), so N1 values are repeated measurements.
+Notes: the v7 row re-fits the attributor with composed rows on the same single-fault episodes as v6 CPU; it is a regression check, not an independent run, and is not counted as one more adoption. Seed 42 used older v1 code whose hash is not shipped. L1 and L2 are defined from v2 onward (v1 runs predate them; "-" means not measured). Natural-traffic samples overlap across v3, v4 and v5 (one query sample), so N1 values are repeated measurements.
 
 Reading it: runs 42 to 47 are adopted; seed 48 (GPU, v4) and seed 49 (CPU, v5) are not; seed 50 (v6) is adopted on both stacks. The do-no-harm bound failed at seed 43 (0.75%) and seed 44 (1.28%); per-stratum (Mondrian) conformal calibration, introduced in v3, has passed in every run since. U1 (the unseen-fault arm exists from seed 43 on) has been below 0.50 in every run. The natural-traffic gain is +2.06 to +2.43 in all seven runs that measured it, **on one shared query sample**, so these are repeated measurements, not independent evidence.
 **How v6 came about.** v5's three THIN detectors (R03, R15, R22) were first blamed on the generator loop and then, after a simulation of the proposed fix failed to reproduce the problem, on supply: those injectors are deterministic, so each base query gives at most one episode, and the test half of 2,400 base queries holds too few hard ones for a floor of 50. v6 uses all 5,527 already-examined ESCI queries and balances C2's pair mix. It was pre-registered before it ran (`docs/evidence/v6_protocol.md`).
@@ -291,6 +299,66 @@ These ports cover 20 of the core 28 faults; nine are absent from the FiQA port (
 
 ---
 
+### 5.9 Composed faults (v7): what the dispatcher does with two or three causes at once
+
+**Question.** Real retrieval failures often have more than one cause. Every earlier result injects one fault at a time (C2, a two-fault case, is quarantined). Does the same diagnoser, with no new detector and no new repair, name both causes and close the loop?
+
+**Design (pre-registered, `docs/evidence/v7_composed_protocol.md`, code hash committed before any episode was generated).** Fault pairs and triples are injected into one base query's state. An episode is kept only if the clean query succeeds and the composed one fails; for each kept episode the record also says whether each component fails alone. Strata: WITHIN_FAMILY (Q04+Q05, the only pair in one repair family), QQ, KK, RR (two faults of one letter), QK, QR, KR (cross-letter), TRIPLE. Quotas 20 per stratum and per split (15 for TRIPLE): 155 train and 155 held-out episodes, every stratum at quota. Faults come from the 20 grounded and solved ones (excluded with reasons logged: Q03 and R26 not solved, the quarantine faults, and C2). Splits are by the md5 of the base query; no base query is shared with any single-fault episode. Composed seed 51. The attributor was retrained with composed rows in the training split only (a new version; the single-fault fits and U1 use single-fault rows only) and every single-fault gate was re-run.
+
+**Result (155 held-out episodes; Wilson 95% intervals).**
+
+| | new attributor | single-fault-trained attributor |
+|---|---|---|
+| every cause named, family level | **40.0% [32.6, 47.9]** (62/155) | 30.3% [23.6, 38.0] (47/155) |
+| at least one cause named | 96.1% | 96.1% |
+| every cause named, group level | 80.0% (124/155) | 69.0% (107/155) |
+| mean set-F1, family level | 0.770 | 0.713 |
+| sequential repair closure | **72.9% [65.4, 79.3]** (113/155) | oracle-forward repairs: 83.9% [77.3, 88.8] |
+
+By stratum (new / old attributor for the family-level naming):
+
+| stratum | n | every cause named | sequential closure | oracle-forward closure |
+|---|---|---|---|---|
+| WITHIN_FAMILY | 20 | 20/20 / 20/20 (by construction, see below) | 3/20 | 7/20 |
+| QQ | 20 | 0/20 / 0/20 | 11/20 | 18/20 |
+| KK | 20 | 0/20 / 0/20 | 20/20 | 20/20 |
+| RR | 20 | 0/20 / 0/20 | 19/20 | 19/20 |
+| QK | 20 | 9/20 / 2/20 | 12/20 | 15/20 |
+| QR | 20 | 17/20 / 12/20 | 14/20 | 16/20 |
+| KR | 20 | 16/20 / 13/20 | 20/20 | 20/20 |
+| TRIPLE | 15 | 0/15 / 0/15 | 14/15 | 15/15 |
+
+**How to read it.** (1) The dispatcher returns at most one label per letter group, so it cannot name two faults of one letter or three faults: 0 of 75 in both attributors. The 20/20 in WITHIN_FAMILY is by construction (Q04 and Q05 share one family label), not a separation of the two. (2) The gain from retraining (+9.7 points; +35 points in QK, +25 in QR, +15 in KR) is entirely in the cross-letter strata. (3) Closure is high in KK, RR, KR and TRIPLE even where the pair is not named, because one group repair fixes both causes; it is lowest in WITHIN_FAMILY (3/20, oracle 7/20) and QQ (11/20, oracle 18/20); I have not isolated why. (4) In 25.8% of episodes (40) neither component fails alone: the failure is emergent, and 18.7% (29) fail with either component alone.
+
+**Order.** In the forced reverse-order subsample (32 episodes, 24 in which the reverse order is a different sequence of repairs) closure was 25/32 under both orders. Oracle-forward and oracle-reverse closure agree in 155 of 155 episodes, and in a direct check on 60 episodes the repaired states differed in 2 and the top-5 lists in 1: these repairs mostly commute, so order does not matter here.
+
+**Do-no-harm.** Held-out clean loss under the single-round policy is 0.16% (bar 0.5%). The sequential loop (at most three rounds, gated by the same stratum thresholds, never seeing the label) on a fixed 300-query clean subsample lost 1 (0.3%, [0.1, 1.9]); this subsample is small and the upper bound is above the bar.
+
+**No regression (protocol section 4, `REGRESSION_CHECK.json`).** Core-28 detectors 28/28 and repairs 27/27 unchanged, no status moved, verdict ADOPTED, L1, L2, N1 PASS, `capped_crc_0.005` meets all four targets, U1 unchanged (0.4128). Reported differences: Mondrian thresholds moved, L1 held-out clean loss 0.199% to 0.159%, L2 closure 0.854 to 0.846, capped-CRC closure 0.848 to 0.838 (margin to the 0.80 bar 0.038, was 0.047), C2 detector AUROC 0.823 to 0.848. The natural-traffic pre-registered D2 comparison fails in both v6 and v7 (lower bound -0.55 points against -0.5).
+
+Re-fitting the 31 detectors from the shipped v7 episodes reproduces all 31 (largest difference 0.0000); the stored GPU runs also re-fit 31 of 31 under scikit-learn 1.6.1 and numpy 2.1.3.
+
+**Predictions that could fail (written before the run).** Both-cause rate about 0.2 to 0.5, low within a letter: held. Retraining adds up to about 0.1: held (+0.097). No regression: held. Closure at least 0.2 below oracle-forward: **did not hold** (gap 0.11). Reverse order lowers some strata: **did not hold**. Several strata short of quota: **did not hold** (none).
+
+**What it is not.** Synthetic pairs injected by the same authors into one stack, 155 held-out episodes, one seed, CPU. No adoption gate was set and none is claimed. It maps where the dispatcher works on compound faults (cross-letter) and where it cannot (within a letter); the next step it points to is a dispatcher that can return more than one label per group. Four disclosures are in the protocol (D4), including that the composed result was read before the first execution fix (D2), and the run needed two execution amendments (D2, D3) after the freeze (D1).
+
+### 5.10 Optional comparison: simulated quantum machine learning
+
+Machine learning is the project's method; this is a side comparison of scores (`docs/evidence/qml_protocol.md`, committed before it was run). Six qubits, a noiseless statevector simulator written in the repository, no hardware, no noise model. Task: fault versus clean on the v6 CPU run's held-out episodes (4,019: 1,511 faulted), models fitted on the train split only; the 155 composed held-out episodes are a second set.
+
+| model | single-fault AUROC [95% CI] | composed-vs-clean AUROC |
+|---|---|---|
+| ML main: gradient boosting, 63 features | 0.978 [0.974, 0.983] | 0.995 |
+| ML on the same 6 PCA inputs: logistic regression | 0.727 | 0.864 |
+| ML on the same 6 inputs: RBF-SVM | 0.917 [0.907, 0.926] | 0.979 |
+| ML on the same 6 inputs: gradient boosting | 0.921 [0.912, 0.931] | 0.988 |
+| QML: quantum-kernel SVM | 0.892 [0.881, 0.903] | 0.942 |
+| QML: variational classifier (5 seeds) | 0.883 (sd 0.005) | 0.965 |
+
+The six PCA components keep 40.8% of the variance, which is why same-input classical models are the fair comparison. The quantum models land within 0.025 of the classical RBF-SVM and 0.09 below the full-feature model; both classical six-input models beat both quantum models on both sets. Of four written predictions, three held; the fourth (composed episodes score lower or similar) did not: every model scores higher on composed-versus-clean, which is an easier task than single-fault detection. **No quantum advantage, and no claim of one.**
+
+---
+
 ## 6. Diagnoses of what looked odd
 
 ### 6.1 Q03 is an identifiability exhibit, not a flaky detector
@@ -328,20 +396,22 @@ See section 5.2b. The explanation I first gave (a loop-budget flaw) was wrong; t
 6. **Second corpus:** subset ports only (FiQA 19/20, SciFact 15/20); no full-suite port. Q02, Q09 and C2 need new features, a retrieval option and a state merger on the port stack, which was not attempted.
 7. **Release:** the benchmark is staged, not published (the name, the ShopNova licence and the timing are the owner's).
 8. **The v6 pass is a pass on a changed construction** (6,000 base queries, balanced C2 mix), not a pass on the v5 test set.
+9. **Composed faults:** the dispatcher names every cause in 0 of 75 within-letter pairs and triples; sequential closure is 11 points below the oracle; WITHIN_FAMILY closure is 3/20. The v7 run needed two execution amendments (D2, D3) after its freeze; D2 gave an incomplete diagnosis of the stall, which D3 corrects.
+10. **Natural-traffic non-inferiority to the universal repair (pre-registered D2)** fails in v6 and v7 by 0.05 points.
 
 ---
 
 ## 8. Time line of how the project got here (short)
 
-Core-28 notebook (CPU seeds 42, 43) → v2 with natural-validation arms and family-level loop (seed 44) → v3 with licence-clean corpus, tiers, conformal calibration and external baselines (CPU seed 45, GPU seed 46) → v4 with a group attributor (CPU seed 47, GPU seed 48) → ports (SciFact, FiQA), LangChain v1 and v2, LLM baselines (free tiers), benchmark v1.0 → diagnosis of the gate flips, v5 pre-registration and run (CPU seed 49, NOT_ADOPTED) → correction of the THIN diagnosis, v6 pre-registration, GPU flagship and CPU replication (seed 50, ADOPTED on both), completion of the LLM arms, identification of the reproducibility gap → this document.
+Core-28 notebook (CPU seeds 42, 43) → v2 with natural-validation arms and family-level loop (seed 44) → v3 with licence-clean corpus, tiers, conformal calibration and external baselines (CPU seed 45, GPU seed 46) → v4 with a group attributor (CPU seed 47, GPU seed 48) → ports (SciFact, FiQA), LangChain v1 and v2, LLM baselines (free tiers), benchmark v1.0 → diagnosis of the gate flips, v5 pre-registration and run (CPU seed 49, NOT_ADOPTED) → correction of the THIN diagnosis, v6 pre-registration, GPU flagship and CPU replication (seed 50, ADOPTED on both), completion of the LLM arms, identification of the reproducibility gap → the composed-fault arm (v7, pre-registered, with a retrained attributor and a single-fault regression check) and the optional simulated-QML comparison → this document.
 
 ---
 
 ## 9. What is in the repository and how to run it
 
 - `PROJECT_EXPLAINED.md` (this file), `README.md`, `NOTICE.md` (licences).
-- `kaggle/` : every notebook and script (v1 to v6, ports, LangChain), the natural-traffic exclusion files, and one `judged_*` folder per judged run (protocol with code hash and library versions from v5 on, verdict, tables, report; episode files are in the zip).
-- `docs/` : `ROADMAP_V3.md`, `ROADMAP_V4.md` (execution record), `ALL_RUNS_MATRIX.md` (generated), `IDENTIFIABILITY.md`, `CORE28_FAULTS.md`, `EVIDENCE_AND_NOVELTY_REPORT.md`, `LLM_BASELINES_RESULTS.md`, `REPRODUCE.md`, and `docs/evidence/` (protocols with every amendment: `v5_protocol.md` B1 to B8, `v6_protocol.md` C1 to C5, `llm_baselines_plan.md` A1 to A7; analysis scripts and results).
+- `kaggle/` : every notebook and script (v1 to v7, ports, LangChain; `v7_cells/` holds the composed-arm cells), the natural-traffic exclusion files, and one `judged_*` folder per judged run (protocol with code hash and library versions from v5 on, verdict, tables, report; episode files are in the zip).
+- `docs/` : `ROADMAP_V3.md`, `ROADMAP_V4.md` (execution record), `ALL_RUNS_MATRIX.md` (generated), `IDENTIFIABILITY.md`, `CORE28_FAULTS.md`, `EVIDENCE_AND_NOVELTY_REPORT.md`, `LLM_BASELINES_RESULTS.md`, `REPRODUCE.md`, and `docs/evidence/` (protocols with every amendment: `v5_protocol.md` B1 to B8, `v6_protocol.md` C1 to C5, `v7_composed_protocol.md` D1 to D4, `qml_protocol.md` Q1, `v7_regression_check.py`, `qml_compare.py`, `llm_baselines_plan.md` A1 to A7; analysis scripts and results).
 - `bench/` : DiagRAG-Bench v1.0 public files, scorer, quickstart, verifier. `paper/` : outline and a workshop draft.
 
 **To run.** See `RUN_GUIDE.md`: verify the files (10 seconds), re-fit the detectors from shipped episodes (30 seconds per run; **use the library versions in the protocol file**), run the benchmark quickstart, run any judged script on a laptop CPU in resumable chunks, or run a notebook on a Kaggle GPU. The LLM scripts need keys supplied as environment variables only.
@@ -353,6 +423,8 @@ Core-28 notebook (CPU seeds 42, 43) → v2 with natural-validation arms and fami
 **Where the project stands: about 7.8 out of 10.** This is my judgement from the evidence, not a measurement and not a venue prediction. It was about 7.5 before the v6 runs. The change is earned by: a pre-registered flagship that is **ADOPTED on the GPU stack** (with a CPU replication), a prediction about a diagnosed construction limit that could have failed and did not, a completed LLM comparison, the guarantee frontier measured on two stacks, and the reproducibility gap identified and fixed (versions recorded).
 
 *Strong.* A well-posed problem with field evidence for each fault; a method with a stated guarantee; protocol discipline that is unusual (hash-bound code, dated amendments, failures in the main table, a wrong diagnosis corrected in the open); a natural-traffic gain measured seven times; a rigorous identifiability table; a benchmark with a private split; and a record of its own corrections.
+
+*Added by v7.* A pre-registered composed-fault arm with a no-regression proof adds a measurement the earlier runs did not have (I did not run a literature search to say whether others report it), and its result is mixed in a useful way: it finds a structural limit (one label per letter group) and a gain from retraining that sits entirely in cross-letter pairs. I do **not** move the score for it. It is descriptive (no gate), synthetic, one seed, 155 episodes, and it closes none of the open attacks in the table below; it gives a reviewer something new to read, which is not the same as a stronger claim. The QML comparison adds nothing to the score: it is a side table, simulated, and the quantum models lose to classical models on the same input.
 
 *Weak.* The ADOPTED verdict followed two failures and a construction change; U1 stayed below its bar and got worse; the gain on natural traffic comes from two simple rules; the diagnosis advantage is over baselines that favour us (supervised against zero-shot); one e-commerce corpus carries the evidence; no frontier-LLM comparison; the repair loop is only non-inferior to a CRAG-style repair, not better; the code was written by an AI assistant under the owner's direction.
 
@@ -383,6 +455,8 @@ Core-28 notebook (CPU seeds 42, 43) → v2 with natural-validation arms and fami
 - **Supervised against zero-shot** in the LLM comparison; free-tier models; reduced RAGLog and CRAG variants; no frontier model.
 - **Library versions matter.** A near-bar detector moves by up to 0.03 between scikit-learn versions; verdicts decided by 0.001 to 0.005 are fragile (section 6.3).
 - **Single-run adoption.** Each configuration was judged once per stack and seed; the seed-to-seed spread is visible in the matrix and is not small for the faults that flip.
+- **Composed faults are synthetic and few.** 155 held-out pairs and triples from 20 faults, one seed, injected by the authors into one stack; the clean-succeeds-and-composed-fails filter keeps only pairs that break retrieval and discards harmless ones. Family-level naming cannot separate faults that share a family. No adoption gate was set.
+- **QML is simulated.** Six qubits on six PCA components (41% of the variance), noiseless, no hardware, one data split; it says nothing about quantum hardware or scale.
 - **v6 is a different test set from v5** (more base queries, balanced C2 mix); its pass does not mean v5's would have passed.
 
 ---
@@ -397,4 +471,5 @@ Core-28 notebook (CPU seeds 42, 43) → v2 with natural-validation arms and fami
 1. A frontier-model arm: provider, model, key (as an environment variable), prices and a spend cap of USD 15 set in the provider console first. Amendment A6 records that none was available on the supplied keys.
 2. A full-suite second-corpus port (needs new features for Q02, Q09 and C2 on the port stack and an owner-approved pre-registration).
 3. Benchmark name, ShopNova licence, release timing; whether to send the replication email (`docs/REPLICATION_INVITATION.md`, a draft) or submit the workshop draft (`paper/WORKSHOP_DRAFT.md`).
-4. Delete the throwaway Kaggle notebooks (`diagrag-v4-notebook-smoke`, `diagrag-v6-gpu-smoke`) and decide whether to keep the v6 GPU kernel.
+4. Whether to build a dispatcher that returns several labels per letter group (the composed arm's main finding), which would need its own pre-registration.
+5. Delete the throwaway Kaggle notebooks (`diagrag-v4-notebook-smoke`, `diagrag-v6-gpu-smoke`) and decide whether to keep the v6 GPU kernel.

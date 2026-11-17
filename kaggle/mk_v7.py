@@ -51,4 +51,13 @@ sub("    DETF = {}\n    for n_, e in enumerate(TRAIN_EP + TEST_EP):\n        tr 
     "    DETF = {}; DETROWS = RES.get('DETROWS', {})   # v7 D2: rows persisted by stable index so the stage can resume\n    for n_, e in enumerate(TRAIN_EP + TEST_EP):\n        if n_ in DETROWS: DETF[id(e)] = DETROWS[n_]; continue\n        tr = run(e['st']); ov = tr['ov']; row = qpp(tr)\n")
 sub("        DETF[id(e)] = row\n        if n_ % 50 == 0: maybe_stop('detection_baselines')\n", "        DETF[id(e)] = row; DETROWS[n_] = row\n        if n_ % 50 == 0: maybe_stop('detection_baselines')\n")
 sub("'NAT3', 'COMPST', 'COMPRES')", "'NAT3', 'COMPST', 'COMPRES', 'DETROWS')")
+# D3 (execution speed only): batch-predict p(NONE) once instead of ~9,000 single-row calls, with a 1e-9 equality check; save once the baseline loop is complete.
+sub("    def auc_for(score_fn, es):\n", "    save_ckpt('detection_rows_done')   # v7 D3: persist the rows once the loop is complete\n    def auc_for(score_fn, es):\n")
+sub("    ours = lambda e: 1 - proba(e['feats'])[iN]\n",
+    "    # v7 D3 (execution speed only): batch-predict p(NONE) once instead of 9,000 single-row calls (0.06 s each); values checked equal to the per-row call\n"
+    "    _es_ = TEST_EP + [e for e in TRAIN_EP if e['fault'] == 'NONE']\n"
+    "    _pn_ = ATT.predict_proba(np.array([[e['feats'][k] for k in FEATS] for e in _es_], dtype=np.float32))[:, iN]\n"
+    "    _PN = {id(e): float(1 - p_) for e, p_ in zip(_es_, _pn_)}\n"
+    "    for e in _es_[::max(1, len(_es_) // 120)]: assert abs(_PN[id(e)] - float(1 - proba(e['feats'])[iN])) < 1e-9, 'D3 batch/per-row mismatch'\n"
+    "    ours = lambda e: _PN[id(e)]\n")
 out = os.path.join(here, 'diagrag_v7.py'); open(out, 'w', encoding='utf-8').write(s); print('wrote', out, hashlib.sha256(s.encode('utf-8')).hexdigest())

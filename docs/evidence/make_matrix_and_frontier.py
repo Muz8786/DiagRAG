@@ -7,7 +7,7 @@ import numpy as np
 K, OUT = sys.argv[1], sys.argv[2]
 RUNS = [('seed 42', 'judged_cpu_run_seed42', 'CPU', 'v1 (older code, not shipped)'), ('seed 43', 'judged_cpu_run_seed43', 'CPU', 'v1'), ('seed 44', 'judged_cpu_run_v2_seed44', 'CPU', 'v2'),
         ('seed 45', 'judged_cpu_run_v3_seed45', 'CPU', 'v3'), ('seed 46', 'judged_gpu_v3_seed46', 'GPU T4', 'v3'), ('seed 47', 'judged_cpu_run_v4_seed47', 'CPU', 'v4'),
-        ('seed 48', 'judged_gpu_v4_seed48', 'GPU T4', 'v4'), ('seed 49', 'judged_cpu_run_v5_seed49', 'CPU', 'v5'), ('seed 50', 'judged_gpu_v6_seed50', 'GPU T4', 'v6 (flagship)'), ('seed 50 (CPU replication)', 'judged_cpu_run_v6_seed50', 'CPU', 'v6')]
+        ('seed 48', 'judged_gpu_v4_seed48', 'GPU T4', 'v4'), ('seed 49', 'judged_cpu_run_v5_seed49', 'CPU', 'v5'), ('seed 50', 'judged_gpu_v6_seed50', 'GPU T4', 'v6 (flagship)'), ('seed 50 (CPU replication)', 'judged_cpu_run_v6_seed50', 'CPU', 'v6'), ('seed 50 (CPU, retrained attributor)', 'judged_cpu_run_v7_seed50', 'CPU', 'v7 (composed arm; single-fault regression check)')]
 def f3(x): return '-' if x is None else f'{x:.3f}'
 lines = ['## All judged runs (every run, pass or fail)', '',
          '| Run | Stack | Code | Detectors / repairs / both (of 28) | L1 clean loss | L2 closure | U1 (bar 0.50) | N1 natural gain (95% CI) | Verdict |', '|---|---|---|---|---|---|---|---|---|']
