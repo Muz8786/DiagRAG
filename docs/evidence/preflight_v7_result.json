@@ -1,0 +1,51 @@
+{
+ "a: protocol-frozen v7 hash equals kaggle/diagrag_v7.py": {
+  "ok": true,
+  "detail": "0ebb2fe16e31f488"
+ },
+ "b: gate line byte-identical to v6": {
+  "ok": true,
+  "detail": ""
+ },
+ "b2: unchanged bar present: ALPHA=0.005, ALPHAS=[0.0025, 0.005, 0.01, 0.02]": {
+  "ok": true,
+  "detail": ""
+ },
+ "b2: unchanged bar present: L2_BAR=0.70": {
+  "ok": true,
+  "detail": ""
+ },
+ "b2: unchanged bar present: U1_BAR=0.50": {
+  "ok": true,
+  "detail": ""
+ },
+ "b2: unchanged bar present: TAU_FAM=0.6": {
+  "ok": true,
+  "detail": ""
+ },
+ "b2: unchanged bar present: CLEAN_FPR=0.05": {
+  "ok": true,
+  "detail": ""
+ },
+ "c: composed seed 51 and quotas 20/15 in code and protocol": {
+  "ok": true,
+  "detail": ""
+ },
+ "d: composed arm never writes into EPIS": {
+  "ok": true,
+  "detail": ""
+ },
+ "e: LOFO fits unchanged (single-fault rows only)": {
+  "ok": true,
+  "detail": ""
+ },
+ "f: every line REMOVED from v6 is one of the declared edits (header, attributor fits, checkpoint keys, report title, verdict key)": {
+  "ok": true,
+  "detail": "7 removed lines, all declared"
+ },
+ "g: v7 parses": {
+  "ok": true,
+  "detail": ""
+ },
+ "ALL_PASS": true
+}
