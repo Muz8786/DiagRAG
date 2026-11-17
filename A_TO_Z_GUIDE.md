@@ -35,6 +35,8 @@ There are two editions of the package, built by the same script (`kaggle/build_a
 | **LITE** | `DiagRAG_KAGGLE_A_to_Z_LITE.zip` | about 20 MB | everything below **except** `data/` and `prereq/` | stages A to E exactly as described. Stage F downloads its input files from their original sources (Internet On) and checks each file's size and SHA-256. Stage G (composed arm) needs the full edition |
 | **FULL** | `DiagRAG_KAGGLE_A_to_Z.zip` | about 1.2 GB | everything, including `data/` and `prereq/` | all stages. **Private use only** (section 11) |
 
+The FULL zip is too large for most browsers to download in one piece, so it is also stored in 13 parts of at most 90 MiB in the **private** repository `Muz8786/diagrag-data`, branch `a-to-z-full-parts`, folder `a_to_z_full/` (with `merge_parts.py`, which checks and merges the parts, and its own README). The LITE zip is in this repository under `release/`.
+
 The notebook reads `edition` from `PACKAGE_MANIFEST.json`, says so in its first output, and stops stage G with a clear message on the LITE edition. The table below describes the FULL edition.
 
 `DiagRAG_KAGGLE_A_to_Z.zip` is about 1.2 GB (1.34 GB unpacked, 334 files). **Private use only** (section 11).
