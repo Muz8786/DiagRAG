@@ -266,3 +266,32 @@ Sections 11.1 and `PROJECT_EXPLAINED.md` 5.2 say the three THIN detectors (R03, 
 - So each base query yields at most one episode for these faults, and only 7.4%, 8.6% and 8.5% of queries are hard. One pass over the whole pool would give about 96, 112 and 111 hard episodes in total, and about **39, 46 and 45 in the test half** (the test half has 872 ESCI queries against 1,528 for train). v5 obtained 38, 44 and 47.
 - **Conclusion: the 50-positive floor is not reachable for deterministic low-yield faults with this base-query pool.** The limit is supply of distinct test queries, not the loop. A fix has to change supply (more base queries, or a larger test fraction), which is a different design change from the one drafted.
 `diagrag_v6.py` as first drafted (loop-budget fix plus C2 pair balancing) was **discarded before any run** and is not in the repository.
+
+
+---
+
+# 12. Update, 17 Nov 2026 (later): v6 ADOPTED, the LLM arms complete, the reproducibility gap identified
+
+Execution detail and the prediction scorecard are in `docs/evidence/v6_protocol.md` (C1 to C5) and `docs/evidence/llm_baselines_plan.md` (A6, A7). This section supersedes the "not run" and "open" statements in sections 11.1 to 11.3 where it says otherwise.
+
+## 12.1 v6: the pre-registered flagship is ADOPTED (GPU), and so is the CPU replication
+- Why v6: the corrected v5 diagnosis (section 11.4) is supply of distinct test queries. v6 changes only that (all 5,527 examined ESCI bases, `N_BASE_ESCI` 6,000) and balances C2's pair mix inside each split. A first v6 draft (a loop-budget fix) was discarded before any run after a simulation showed it would change nothing; a first version of the C2 balancing rule was caught by a unit test (a never-yielding pair blocked all others) and fixed before any compute.
+- **GPU (Kaggle T4, seed 50): 27 detectors / 27 repairs, ADOPTED.** Only Q03 is not solved (detector 0.642). L1 PASS 0.28%, L2 PASS 0.844, **U1 FAIL 0.406**, N1 PASS +2.18 [+1.33, +3.03]. `kaggle/judged_gpu_v6_seed50/`.
+- **CPU replication (same seed): 28 / 27, ADOPTED**; Q03's detector passed at 0.701. L1 0.20%, L2 0.854, U1 0.413, N1 +2.43 [+1.70, +3.22]. `kaggle/judged_cpu_run_v6_seed50/`.
+- R03, R15 and R22, THIN in v5, reached 50 held-out positives on both stacks and passed (0.95 to 1.000): the supply diagnosis is confirmed by a prediction that could have failed.
+- `capped_crc_0.005` met all four targets on both stacks (GPU: loss 0.12%, dispatch 16.5%, cost 0.93, closure 0.834). `global_crc_0.005` broke the 0.5% loss bound on both (0.56%, 0.60%).
+- Predictions wrong: Q03 passed on CPU (0.701, predicted fail at 0.9). U1 got worse, not better.
+- **Process notes.** The GPU job first sat QUEUED for two hours on one account; I deleted it unexecuted and pushed the same notebook (same SHA-256 prefix) to another account where it ran (amendment C4). A tiny GPU smoke of the same notebook had passed first.
+
+## 12.2 LLM arms: all three free-tier arms are complete (amendments A6, A7)
+- B1 (diagnosis, n = 320 each): OURS_BETTER in every arm. Gemini 3.1 Flash-Lite 0.754 (ours minus LLM +0.222 [+0.173, +0.270]); gpt-oss-120b 0.701 (+0.274 [+0.222, +0.332]); gpt-oss-20b 0.629 (+0.347 [+0.292, +0.402]).
+- B2 (repair): Gemini on **1,000** natural queries, loop minus CRAG-style **+1.23 points [-0.10, +2.60]: OURS_NON_INFERIOR** (not "better"); first-300 sample unchanged at +0.66 [-1.33, +2.67] INCONCLUSIVE. Groq arms, now complete on 300 queries: INCONCLUSIVE (+1.32 [-0.67, +3.67]; +0.98 [-1.33, +3.33]).
+- The first Gemini key hit its 500-requests-per-day quota; a second key resumed the same arm (A7) with the same model and prompts.
+- **No frontier arm.** The Gemini key's Pro-class models returned quota or availability errors; `gemini-4-hydrogen` answers at 28 to 51 s per call. The A4.3 arm is not run, and the "only free-tier judges" objection is not answered.
+- A process lesson: the first B2 verdicts for Groq read NOT_ANALYSABLE because rewrite calls are queued from grades present at the start of a chunk, so a single chunk left them unfinished (not a quota failure). Finishing the pending rewrites, which is deterministic and does not depend on any outcome, changed them to complete arms.
+
+## 12.3 The reproducibility gap is identified and fixed
+Re-fitting under the library versions Kaggle recorded (scikit-learn 1.6.1, numpy 2.1.3) reproduces the v6 GPU run's detectors exactly (31 of 31, largest difference 0.0000), and also the v4 seed-48 and v3 seed-46 GPU runs (31 of 31 each) and the v4 C2 head (0.6116). Under scikit-learn 1.9.1 the same data gives 27 or 28 of 31. The cause is the library version; the v4 verdict is unchanged. `requirements_kaggle_gpu.txt` ships the versions.
+
+## 12.4 Honest estimate after v6
+**About 7.8 out of 10.** Not 8.3 to 8.5. The flagship is now ADOPTED on the GPU stack with a CPU replication, the LLM comparison is complete, and the guarantee frontier holds on two stacks. Still open: U1 (0.41), a frontier-model arm (no key), a full-suite second-corpus port (not attempted), the benchmark release (owner decisions). I estimate about 8.2 if the last three of those close well; 8.5 needs outside adoption.

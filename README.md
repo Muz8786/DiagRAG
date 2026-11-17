@@ -27,7 +27,7 @@ shows it, without digging through the working workspace.
   and runs the judged GPU configuration (about 2 h 10 min on a T4). Judged result of that configuration: NOT_ADOPTED, 26/28
   detectors (27 needed), 27/28 repairs. See `docs/ROADMAP_V3.md` section 8.
 - **`PROJECT_EXPLAINED.md` — start here.** The whole project in depth: the idea, what was built, every result (including the failures), the limitations and the honest score.
-- `kaggle/DiagRAG_v5_kaggle.ipynb` — the one-file notebook for the pre-registered v5 run (seed 49). **The judged v5 run was executed on the CPU stack (amendment B7) and is NOT_ADOPTED (24/28 detectors)**: `kaggle/judged_cpu_run_v5_seed49/`. A GPU replication has not been run (the Kaggle token is revoked).
+- `kaggle/DiagRAG_v6_kaggle.ipynb` — the one-file notebook of the **latest pre-registered run (v6, seed 50)**. The GPU flagship (`kaggle/judged_gpu_v6_seed50/`) and the CPU replication (`kaggle/judged_cpu_run_v6_seed50/`) are both **ADOPTED** (27/28 and 28/28 detectors); U1 is still below its bar. v5 (CPU, NOT_ADOPTED) and v4 (GPU, NOT_ADOPTED) stay in the record: `docs/ALL_RUNS_MATRIX.md`.
 - `kaggle/` — the other notebooks (v1 to v4, port, port2, LangChain v1 and v2), their `.py` sources, `build_notebook.py`,
   `build_final_notebook.py`, and one `judged_*` folder per judged run. See `kaggle/README.md`.
 - `release/DiagRAG_FULL_PROJECT_A_to_Z.zip` — everything: code, notebooks, every judged run with its episodes, docs, evidence, benchmark, drafts. `release/DiagRAG_RUN_PACKAGE.zip` — what is needed to run and check it (`RUN_GUIDE.md`, runners, verifier). `release/DiagRAG-Bench_v1.0_public_STAGED.zip` — the benchmark package, staged and not released.
