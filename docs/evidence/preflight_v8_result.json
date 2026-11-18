@@ -1,0 +1,22 @@
+{
+  "status": "PASS",
+  "scope": "synthetic dispatcher only; no data, training, or judged results",
+  "checks": [
+    "same-letter secondary label is added",
+    "output cap is three",
+    "at most one extra label per letter group"
+  ],
+  "v7_labels": [
+    "Q02"
+  ],
+  "v8_same_letter_labels": [
+    "Q02",
+    "Q04"
+  ],
+  "synthetic_three_labels": [
+    "GQ",
+    "K04",
+    "Q02"
+  ],
+  "v8_sha256": "5ccb86fb4f79d3c52af4985c94afd9d2e3b9942660a4fbee9058b7b38b3a565f"
+}
