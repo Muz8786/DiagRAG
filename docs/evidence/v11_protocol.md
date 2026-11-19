@@ -50,3 +50,5 @@ No LLM arm of any kind (v11.b), no frontier arm, no U1 or Q03 redesign, no new n
 
 ## 8. Amendments
 (none yet; each is dated and filed before the result it concerns is read)
+
+**A1 — R1 and R2 launched (19 Nov 2026, about 14:00 UTC; no v11.a result exists or has been read; sections 0 to 7 are unedited).** Kernels `syedmuzammilquadri/diagrag-v11a-main-seed55` (R1) and `syedmuzammilquadri/diagrag-v11a-port-scidocs` (R2) were pushed from the unmodified notebooks after `docs/evidence/v11_verify.py` printed ALL OK. At the time of writing R2 was RUNNING and R1 was QUEUED (Kaggle limits concurrent GPU sessions); queueing changes nothing about the run. One run each; no setting changed. No API key was used to build, push or run anything in v11.a; the Kaggle token was supplied only as an environment variable for the push command. The `docs/evidence/v11_report.py` generator was written before any result and prints `not run` for missing files.
