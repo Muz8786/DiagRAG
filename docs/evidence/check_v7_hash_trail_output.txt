@@ -1,0 +1,9 @@
+PASS protocol has three entries  ['0ebb2fe1', 'ab49b46c', '26924b7b']
+PASS entry 1 (0ebb2fe1) exists in git history  58e727c8
+PASS entry 2 (ab49b46c) exists in git history  c2af6808
+PASS entry 3 (26924b7b) exists in git history  a58ac5c3
+PASS last entry equals the working-tree file  26924b7b
+PASS stored JUDGED_PROTOCOL.json hash equals the first entry (written once, at chunk 1)  0ebb2fe1
+  info 0ebb2fe1 -> ab49b46c: 3 lines removed, 4 lines added
+  info ab49b46c -> 26924b7b: 1 lines removed, 7 lines added
+HASH TRAIL: CONSISTENT

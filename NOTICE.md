@@ -1,3 +1,10 @@
+# Licence of this repository
+
+- **Code** in this repository is licensed under the Apache License 2.0 (`LICENSE`).
+- **Data and third-party components** keep the licences their publishers state, listed in the table below. Apache-2.0 does not relicense them. Files derived from CC BY 4.0 sources (Amazon Berkeley Objects `verified` rows, Webis-QSpell-17) need attribution.
+- **ShopNova synthetic corpus: licence still unassigned.** The owner must assign it before any public data release. Until then nothing derived from it is released.
+- The full data package (about 1.18 GB) is **not** to be published or re-uploaded; it contains third-party material with unsettled licences.
+
 # Third-party data and software used by DiagRAG
 
 | Component | Source | Licence (as stated by the publisher) | How it is used |
