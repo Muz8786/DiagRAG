@@ -1,6 +1,7 @@
 # LLM-based baselines — results (free-tier APIs)
 
-Pre-registration, with three dated amendments: `docs/evidence/llm_baselines_plan.md` (committed at `6262973`, before any LLM call on this data).
+Pre-registration, with dated amendments A1 to A7: `docs/evidence/llm_baselines_plan.md` (committed at `6262973`, before any LLM call on this data).
+**Status (regenerated from `kaggle/judged_llm_baselines/LLM_BASELINES_RESULT.json`): all three arms are complete.** An earlier version of this file showed the two Groq arms as partial (n = 163 and 169) and their repair arm as NOT_ANALYSABLE; that was superseded when the arms were finished (commit `6ef3c0e`). No frontier-model arm has been run (amendment A6).
 Script: `bench/llm_baselines.py`. Raw LLM replies and results: `kaggle/judged_llm_baselines/`.
 
 ## What was compared
@@ -23,42 +24,35 @@ so both systems see the same documents. Held-out episodes and never-examined nat
 
 ## B1 — diagnosis (fault vs clean AUROC; paired bootstrap of the difference)
 
-| Arm | n (faulted / clean) | LLM AUROC [95% CI] | DiagRAG AUROC | DiagRAG − LLM [95% CI] | Verdict |
-|---|---|---|---|---|---|
-| Gemini 3.1 flash-lite | 320 (160 / 160) | 0.754 [0.702, 0.804] | 0.975 | **+0.222 [+0.173, +0.270]** | OURS_BETTER |
-| Groq gpt-oss-120b, **partial** | 163 (79 / 84) | 0.731 [0.646, 0.805] | 0.975 | **+0.244 [+0.166, +0.331]** | OURS_BETTER |
-| Groq gpt-oss-20b, **partial** | 169 (81 / 88) | 0.642 [0.566, 0.721] | 0.976 | **+0.335 [+0.255, +0.416]** | OURS_BETTER |
+| Arm | n (faulted / clean) | LLM AUROC [95% CI] | DiagRAG AUROC | DiagRAG − LLM [95% CI] | Unparsed | Verdict |
+|---|---|---|---|---|---|---|
+| Gemini 3.1 flash-lite | 320 (160 / 160) | 0.754 [0.702, 0.804] | 0.975 | **+0.222 [+0.173, +0.270]** | 0 | OURS_BETTER |
+| Groq gpt-oss-120b | 320 (160 / 160) | 0.701 [0.645, 0.753] | 0.975 | **+0.274 [+0.222, +0.332]** | 2 | OURS_BETTER |
+| Groq gpt-oss-20b | 320 (160 / 160) | 0.629 [0.573, 0.682] | 0.975 | **+0.347 [+0.292, +0.402]** | 0 | OURS_BETTER |
 
-- **Partial** means the free daily token quota ended. The completed items are a random subset, because calls followed the frozen md5 order (amendment A1/A3).
-- Cause-group accuracy on faulted episodes (LLM vs ours): Gemini 41.9% vs 80.9%, Groq-120b 17.7% vs 81.7%, Groq-20b 32.1% vs 80.8%. Chance for three
-  groups is 33%. Our figure is a **lower bound**: families STALE and ENC have no single-letter group in the scoring script, so they count as wrong.
-- Detection rate at 5% false alarm was also computed, but it is unreliable for verbalised scores. The LLMs output a few distinct values (for example 0.2 or 0.9),
-  so ties at the threshold give 0% for Gemini and 0% for Groq-20b, and 11% for Groq-120b. Use AUROC.
-- Tokens per item: 587 (Gemini), 673 (Groq-120b), 658 (Groq-20b). DiagRAG uses none.
-- **Claim the pre-registered rule allows:** on this task, supervised telemetry diagnosis beat all three zero-shot LLM judges, with the LLM-judge AUROC at 0.64–0.75.
+- Cause-group accuracy on faulted episodes (LLM vs ours): Gemini 41.9% vs 80.9%, gpt-oss-120b 20.0% vs 80.9%, gpt-oss-20b 33.1% vs 80.9%. Chance for three groups is 33%. Our figure is a **lower bound**: families STALE and ENC have no single-letter group in the scoring script, so they count as wrong.
+- Detection rate at 5% false alarm was also computed, but it is unreliable for verbalised scores (few distinct values, ties at the threshold): Gemini 3.1 flash-lite: 0.0%, Groq gpt-oss-120b: 8.8%, Groq gpt-oss-20b: 0.0%. Use AUROC.
+- Tokens per item: Gemini 3.1 flash-lite: 587, Groq gpt-oss-120b: 681, Groq gpt-oss-20b: 661. DiagRAG uses none.
+- **Claim the pre-registered rule allows:** on this task, supervised telemetry diagnosis beat all three zero-shot LLM judges (LLM-judge AUROC 0.63 to 0.75). This favours DiagRAG by design: it was trained on labelled episodes and the LLMs were not.
 
-## B2 — repair on 300 never-examined natural queries
+## B2 — repair on never-examined natural queries
 
-| Arm | Status |
-|---|---|
-| Gemini | analysed, n = 300, no excluded queries |
-| Groq-120b, Groq-20b | **NOT_ANALYSABLE**: 31/149 and 34/154 graded queries had an incomplete rewrite step, above the 10% rule (A3) |
+Paired change in Hit@5 versus no repair, in points [95% CI]. "Loop − CRAG-style" is the pre-registered contrast; the non-inferiority margin is −0.5 points.
 
-Gemini, paired change in Hit@5 versus no repair:
+| Arm | n | CRAG-style | DiagRAG loop | Loop − CRAG-style | CRAG fixed / broken | Loop fixed / broken | CRAG triggered | LLM calls per query (CRAG) | Verdict |
+|---|---|---|---|---|---|---|---|---|---|
+| Gemini 3.1 flash-lite, 1,000 queries | 1000 | +0.99 [+0.30, +1.80] | +2.22 [+1.10, +3.40] | **+1.23 [-0.10, +2.60]** | 13 / 3 | 27 / 5 | 13.3% | 1.13 | OURS NON INFERIOR |
+| Gemini, first 300 only | 300 | +0.99 [+0.00, +2.33] | +1.65 [+0.00, +3.67] | **+0.66 [-1.33, +2.67]** | 3 / 0 | 6 / 1 | 14.7% | 1.15 | INCONCLUSIVE |
+| Groq gpt-oss-120b | 300 | +0.33 [-0.67, +1.67] | +1.65 [+0.00, +3.67] | **+1.32 [-0.67, +3.67]** | 2 / 1 | 6 / 1 | 22.0% | 1.22 | INCONCLUSIVE |
+| Groq gpt-oss-20b | 300 | +0.67 [-0.67, +2.00] | +1.65 [+0.00, +3.67] | **+0.98 [-1.33, +3.33]** | 3 / 1 | 6 / 1 | 24.0% | 1.24 | INCONCLUSIVE |
 
-| System | Δ Hit@5 [95% CI] | Fixed / broken | LLM calls per query |
-|---|---|---|---|
-| CRAG-style | +0.99 pts [0.00, +2.33] | 3 / 0 | 1.15 (about 517 tokens) |
-| DiagRAG deployed loop | +1.65 pts [0.00, +3.67] | 6 / 1 | **0** |
-| Loop − CRAG-style | +0.66 pts **[−1.33, +2.67]** | | |
-
-- The CRAG-style repair triggered on only 14.7% of queries and fixed 3 queries and broke none. DiagRAG repaired on more queries, fixing 6 and breaking 1.
-- **Verdict: INCONCLUSIVE.** The lower bound (−1.33 points) is below the pre-registered non-inferiority margin (−0.5 points), so
-  "our loop is non-inferior to a CRAG-style repair" is **not shown**. With 300 queries the interval is too wide to say more.
-- What the data does support: both are small, positive and about equal, and DiagRAG reaches it with no LLM calls.
+- **Gemini, 1,000 queries: OURS_NON_INFERIOR.** The lower bound (−0.10 points) is above the −0.5 margin, so the loop is not shown to be worse than a CRAG-style repair. It is **not shown to be better**: the interval includes zero.
+- The first 300 queries alone gave INCONCLUSIVE (lower bound −1.33 points); widening to 1,000 queries was amendment A4, made before the new calls.
+- **Both Groq arms are INCONCLUSIVE** on 300 queries (intervals too wide for either claim). No query was excluded for an incomplete rewrite step in the final analysis.
+- The loop makes **zero** LLM calls; the CRAG-style repair makes about 1.1 to 1.2 calls per query.
 
 ## Bottom line
 
-- Shown: LLM judging of top-5 snippets is a weak diagnoser compared with telemetry (B1), by 0.22–0.34 AUROC, across three free-tier models.
-- Not shown: that DiagRAG's loop repairs better than a CRAG-style LLM repair. The honest statement is "comparable on 300 queries, at zero LLM cost".
-- Not tested: full RAGLog with its LLM checks and generated answers; the CRAG paper's evaluator; stronger LLMs; few-shot prompts.
+- Shown: LLM judging of the top-5 snippets is a weak diagnoser compared with telemetry (B1), by 0.22 to 0.35 AUROC, across three free-tier models.
+- Shown (Gemini, 1,000 queries): the loop is non-inferior to a CRAG-style LLM repair, at zero LLM calls. Not shown: that it repairs better.
+- Not tested: full RAGLog with its LLM checks and generated answers; the CRAG paper's evaluator; **a frontier model** (amendment A6: none was reachable on the supplied keys; a flash-class model is not called frontier); few-shot or telemetry-fed LLMs.
