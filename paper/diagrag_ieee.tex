@@ -31,11 +31,11 @@
 When a retrieval-augmented generation (RAG) system answers badly, the cause often lies in the retrieval stage, and that stage rarely reports it.
 We ask whether the telemetry that retrieval already produces (score gaps, rank agreement between dense and lexical legs, duplicate counts, cheap probes; 63 numbers per query) is enough to detect a fault, name its cause among 32 injectable fault types, apply a targeted repair, and bound the harm done to queries that were healthy, with no generated answer and no LLM call at run time.
 We build a gradient-boosted attributor, a family-first dispatcher, per-fault repairs, and a per-stratum conformal risk-control gate.
-Under pre-registered gates, the flagship run is adopted on a GPU stack (27 of 28 core detectors, 27 of 28 repairs) and on a CPU replication.
+Under pre-registered gates, the flagship run is adopted on a GPU stack (27 of 28 core detectors, 27 of 28 repairs) and on a CPU replication, but a repeat of the same frozen code at a fresh seed is not adopted (26 of 28 detectors; Q03 and C2 miss the 0.70 bar).
 As a detector the attributor separates faulty from clean episodes at AUROC 0.977, against 0.734 for the retrieval-stage features of an existing system with the same classifier and 0.63 to 0.75 for zero-shot LLM judges; as a 32-class identifier it names the exact fault on 89.9\% of held-out faulted episodes (macro-F1 0.896), with F1 of at least 0.90 for 22 of 31 faults and 0 for one (Q03).
 On 1,648 never-examined natural queries the deployed loop gains $+2.43$ points of Hit@5 $\ci{+1.64}{+3.22}$, almost all of it from two simple rules.
 A pre-registered study of 155 held-out composed faults (pairs and triples) shows where the method stops: every cause is named in 40.0\% of episodes $\ci{32.6}{47.9}$, and in 0 of 75 pairs inside one fault group and triples.
-We also report what failed: two earlier runs missed the adoption rule, closure on unseen faults stays below its 0.50 bar (0.41), and all faults are injected by the authors on one e-commerce corpus.
+We also report what failed: three runs missed the adoption rule (two earlier runs and the fresh-seed repeat), closure on unseen faults stays below its 0.50 bar (0.41), and all faults are injected by the authors on one e-commerce corpus.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -153,7 +153,7 @@ A \emph{capped} variant raises $\lambda$ until clean classifier dispatch is at m
 %--------------------------------------------------------------------------------------------------
 \section{Results}\label{sec:results}
 \subsection{Adoption across all judged runs}
-Table~\ref{tab:runs} lists every judged run. Runs 42 to 47 are adopted; the v4 GPU run (26 of 28 detectors) and the v5 CPU run (24 of 28) are not. Three of the four missing detectors in v5 (R03, R15, R22) lacked 50 held-out positives; the cause was the supply of distinct test queries, not the loop. Version v6 raised the base-query supply to all 5{,}527 examined ESCI queries and balanced the C2 pair mix; the prediction that the three detectors would then pass could have failed and did not. The v6 flagship is adopted on GPU and on a CPU replication. The v7 row re-fits the attributor on the same single-fault episodes with composed rows added (Section~\ref{sec:composed}); it is a regression check, not an independent adoption.
+Table~\ref{tab:runs} lists every judged run. Runs 42 to 47 are adopted; the v4 GPU run (26 of 28 detectors) and the v5 CPU run (24 of 28) are not. Three of the four missing detectors in v5 (R03, R15, R22) lacked 50 held-out positives; the cause was the supply of distinct test queries, not the loop. Version v6 raised the base-query supply to all 5{,}527 examined ESCI queries and balanced the C2 pair mix; the prediction that the three detectors would then pass could have failed and did not. The v6 flagship is adopted on GPU and on a CPU replication. A pre-registered repeat of the frozen v6 code on a fresh seed (seed 52, GPU) is \emph{not} adopted: 26 of 28 detectors, with Q03 (AUROC 0.618) and C2 (0.681 $\ci{0.579}{0.786}$) below the 0.70 bar; repairs (27), L1, L2 and N1 pass and U1 fails (0.397). The C2 change from 0.751 in the flagship is within sampling noise (z = 0.98, $p \approx 0.33$): with 50 held-out positives per detector, a detector near 0.70 passes or fails the bar at close to coin-flip odds, so the 27-of-28 rule is fragile in that regime. We report the verdict as it fell and did not run further seeds. The v7 row re-fits the attributor on the same single-fault episodes with composed rows added (Section~\ref{sec:composed}); it is a regression check, not an independent adoption.
 
 \begin{table*}[t]
 \caption{All judged runs, pass or fail. Detectors/repairs/both are counts of 28 core faults. L1 is held-out clean loss (bar 0.5\%); L2 is mean closure (bar 0.70); U1 is unseen-fault closure (bar 0.50); N1 is the natural-traffic gain in Hit@5 points with 95\% interval.}
@@ -174,6 +174,7 @@ Seed & Stack & Code & Det./Rep./Both & L1 & L2 & U1 & N1 & Verdict\\
 50 & GPU T4 & v6 (flagship) & 27/27/27 & 0.28\% & 0.844 & 0.406 & $+2.18$ $\ci{+1.33}{+3.03}$ & adopted\\
 50 & CPU & v6 (replication) & 28/27/27 & 0.20\% & 0.854 & 0.413 & $+2.43$ $\ci{+1.70}{+3.22}$ & adopted\\
 50 & CPU & v7 (regression check) & 28/27/27 & 0.16\% & 0.846 & 0.413 & $+2.43$ $\ci{+1.64}{+3.22}$ & adopted\\
+52 & GPU T4 & v6 (fresh seed) & 26/27/26 & 0.40\% & 0.886 & 0.397 & $+2.06$ $\ci{+1.21}{+2.97}$ & \textbf{not adopted}\\
 \bottomrule
 \end{tabular}
 \end{table*}
@@ -371,7 +372,7 @@ Variational (5 seeds) & 0.883 (sd 0.005) & 0.965\\
 %--------------------------------------------------------------------------------------------------
 \section{What Failed, and Threats to Validity}\label{sec:failed}
 \textbf{Failures.}
-(1) Adoption was missed twice (v4 GPU: 26 of 28 detectors; v5 CPU: 24 of 28) before v6 met it; v6 is a pass on a changed construction (6{,}000 base queries, balanced C2 mix), not on the v5 test set.
+(1) Adoption was missed twice (v4 GPU: 26 of 28 detectors; v5 CPU: 24 of 28) before v6 met it; v6 is a pass on a changed construction (6{,}000 base queries, balanced C2 mix), not on the v5 test set. A fresh-seed repeat of the frozen v6 code (seed 52, GPU) then missed it (26 of 28; Q03 and C2), so the adoption verdict is not robust to the seed.
 (2) U1 stayed below 0.50 in every run, and was lower in v6 (0.41) than in v4 (0.485, 0.456).
 (3) The Q03 detector (paraphrase by another real user) passes in 2 of 7 runs of its natural construction, by 0.004 and 0.001; its repair rescues 1 to 6 of 100.
 (4) Repairing natural misspellings does not help.
