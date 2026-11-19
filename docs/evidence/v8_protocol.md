@@ -66,3 +66,38 @@ Script: `docs/evidence/v8_audit.py`, run on `kaggle/judged_gpu_v6_seed50/episode
 - The shuffled-label drift (mean excess about 0.035 over 0.5; the test-label permutation null is 0.500 with sd 0.009) is a real shift, not noise.
 - A score that uses **no labels at all** (mean distance of a held-out episode to its 5 nearest training episodes in standardised feature space) separates faulted from clean with AUROC **0.72** (median distance 3.65 faulted, 2.57 clean). Faulted episodes lie in sparser regions of feature space than clean ones, and a tree model trained on shuffled labels can echo that density structure. **That is the most likely explanation: covariate shift in the features, not label leakage.** It is an explanation, not a proof.
 - What this does and does not settle: the real-label AUROC (0.974) is 0.44 above the shuffled-label AUROC (0.535), so the excess of about 0.035 cannot account for the headline. But the headline's **first-order claim stands on a feature space where faulted episodes are already partly separable without labels (0.72)**, and a reader should know that. A stricter control that removes this effect (for example matching clean and faulted episodes on feature density) was not pre-registered and was not run; it is left open.
+
+**E4 — v8 result and scorecard against section 6 (19 Nov 2026, written after the result was read; sections 1 to 7 and E1 to E3 are unedited). Stored in `kaggle/judged_gpu_v8_seed52/`; audit in `docs/evidence/v8_audit_v8gpu.json`.**
+
+*Identity of the run (checked before any result was read).* Kaggle kernel `syedmuzammilquadri/diagrag-v8-gpu-seed52`, status COMPLETE, started 04:39:58 UTC, GPU (`cuda`), reranker `BAAI/bge-reranker-large`. `JUDGED_PROTOCOL.json` records code SHA-256 `44176b9a5ad633e39ec29581237d9919619b9944471178effb172be1d276e28a` (the frozen v6 hash), seed 52, and the pre-registered settings (`N_BASE_ESCI=6000, N_PRDC=528, N_HARD=100, MAX_ATT=4000, N_HARM=20`). The log has no traceback. It is one run, with no rerun and no setting changed.
+
+*Verdict: **NOT_ADOPTED**.* Detectors 26 (bar 27), repairs 27 (bar 24), solved both 26 of 28. The two missing detectors are **Q03** (held-out AUROC 0.618 [0.538, 0.691], bar 0.70; FAIL in v6 as well at 0.642) and **C2** (0.681 [0.579, 0.786]; **PASS in v6 at 0.751 [0.656, 0.847]**). R26 is THIN in both runs and sits outside the core 28. The C2 interval straddles the 0.70 bar and overlaps v6's, so the C2 change from PASS to FAIL is within sampling noise; it is also the whole difference in the verdict.
+
+| | v6 GPU, seed 50 | v8 GPU, seed 52 (same code) |
+|---|---|---|
+| Verdict | ADOPTED | **NOT_ADOPTED** |
+| Detectors / repairs / both | 27 / 27 / 27 | 26 / 27 / 26 |
+| L1 clean loss | 0.28% (PASS) | 0.40% (PASS) |
+| L2 mean closure | 0.844 (PASS) | 0.886 (PASS) |
+| U1 (bar 0.50) | 0.406 (FAIL) | 0.397 (FAIL) |
+| N1 natural gain | +2.18 [+1.33, +3.03] (PASS) | +2.06 [+1.21, +2.97] (PASS) |
+| Detection AUROC, fault vs clean | 0.9746 [0.970, 0.980] | 0.9734 [0.968, 0.978] |
+| D2 (loop non-inferior to universal repair, margin -0.5 pt) | PASS (CI lower bound -0.49 pt) | **FAIL (CI lower bound -0.67 pt)** |
+| D3 | FAIL | FAIL |
+| `capped_crc_0.005` meets all four targets | yes | yes |
+
+Note on D2: both runs sit within 0.2 points of the margin on either side, on the **same 1,648 natural queries**, so this is a re-measurement of one sample and not evidence from a second one.
+
+*Hygiene audit on the v8 episodes (same script as E2).* Reference exact-fault accuracy on faulted 0.8934 (n = 1,510), AUROC 0.9727. A1 split leakage: base-query overlap 0; 26 held-out episodes share a query string with train; removing them changes accuracy by 0.08 points (below the 0.5 flag). A2: no identical feature vectors across splits; 19 repeated (query, fault) pairs. **A3 missed its band again: mean 0.531, min 0.480, max 0.585 (band 0.45 to 0.55), recorded FAIL; E3's covariate-shift explanation applies unchanged and no new explanation was tested.** A4: strongest single feature `s_gap` AUROC 0.707, none near 0.99. A5: bootstrap AUROC 0.9707 [0.9680, 0.9733], exact-fault accuracy 0.8812 [0.8702, 0.8920]. A6: query-text-only baseline AUROC 0.589 and exact accuracy 15.9%, against telemetry 0.973 and 89.3%.
+
+*Scorecard against section 6 (predictions as written).*
+1. Adoption met at seed 52 on the GPU (about 0.6): **did not hold.** NOT_ADOPTED, 26 detectors.
+2. Q03 detector FAIL and U1 below 0.50 (about 0.9 each): **held** (Q03 0.618; U1 0.397).
+3. L1, L2 and N1 PASS (about 0.85 each): **held**, all three.
+4. Detection AUROC within 0.02 of v6 (about 0.9): **held** (0.9734 against 0.9746).
+5. A3 permutation control inside [0.45, 0.55] (about 0.97): **did not hold** (mean 0.531, max 0.585), as in v6.
+6. A1 leak effect below 0.5 point (about 0.9): **held** (0.08).
+7. A6 query-text-only baseline well below telemetry (about 0.9): **held**.
+Not predicted, and the reason for item 1: **C2's detector fell below 0.70.**
+
+*What this does and does not show.* The v6 adoption was **not robust to the seed**: the same frozen code, settings and stack gave ADOPTED at seed 50 and NOT_ADOPTED at seed 52, and the margin in both was zero or one detector (v6 had 27 of the 27 required with Q03 failing; v8 has 26). The project record now contains two GPU runs of this configuration with different verdicts; **neither replaces the other**, and the honest statement is "adopted at seed 50, not adopted at seed 52 (C2 at 0.681)". Everything else measured here (detection AUROC about 0.973 to 0.975, exact-fault accuracy 88 to 90%, repairs 27 of 27, L1, L2, N1 pass, U1 about 0.40 failing) is stable between the two seeds. The injectors, corpus, split and natural sample are the same in both, so this tests re-randomisation only, not a new corpus or a new sample. No third seed was run, and none is proposed: seed-shopping to restore ADOPTED is not allowed by the protocol.

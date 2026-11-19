@@ -1,0 +1,128 @@
+{
+ "folder": "kaggle/judged_gpu_v8_seed52",
+ "sklearn": "1.6.1",
+ "seed": 52,
+ "n_train_fit": 3442,
+ "n_test": 4018,
+ "n_test_faulted": 1510,
+ "n_test_clean": 2508,
+ "n_features": 63,
+ "reference": {
+  "auroc_fault_vs_clean": 0.9726681242540427,
+  "exact_fault_accuracy_on_faulted": 0.8933774834437086
+ },
+ "A1_split_leakage": {
+  "bid_overlap_train_test": 0,
+  "query_string_overlap_test_episodes": 26,
+  "overlap_by_fault": {
+   "K07": 7,
+   "K09": 4,
+   "NONE": 15
+  },
+  "exact_faulted_all": 0.8933774834437086,
+  "exact_faulted_without_overlap": 0.8925950633755837,
+  "auroc_without_overlap": 0.9723853875574758,
+  "n_removed": 26,
+  "drop_points": 0.07824200681249005,
+  "flag_leak_effect_over_0.5pt": false
+ },
+ "A2_duplicates": {
+  "test_episodes_with_identical_feature_vector_in_train": 0,
+  "test_episodes_with_identical_query_and_fault_in_train": 19,
+  "note": "identical feature vectors can be legitimate for clean queries that return the same documents; reported, not removed"
+ },
+ "A3_label_permutation": {
+  "n": 20,
+  "auroc_mean": 0.5310986300791112,
+  "auroc_min": 0.4795158803088395,
+  "auroc_max": 0.5846488587513334,
+  "band": [
+   0.45,
+   0.55
+  ],
+  "pass_in_band": false
+ },
+ "A4_single_feature_scan": {
+  "top10_single_feature_auroc": [
+   {
+    "feature": "s_gap",
+    "auroc_direction_free": 0.706924728286701
+   },
+   {
+    "feature": "d_gap",
+    "auroc_direction_free": 0.6976405304350581
+   },
+   {
+    "feature": "ce_gap",
+    "auroc_direction_free": 0.6774901771285529
+   },
+   {
+    "feature": "ce1",
+    "auroc_direction_free": 0.6063072340695206
+   },
+   {
+    "feature": "q_idf_mean",
+    "auroc_direction_free": 0.6026569282930385
+   },
+   {
+    "feature": "ident5",
+    "auroc_direction_free": 0.5977375708989512
+   },
+   {
+    "feature": "dup5",
+    "auroc_direction_free": 0.5848751544725752
+   },
+   {
+    "feature": "sparse_absent_dense",
+    "auroc_direction_free": 0.583791601973024
+   },
+   {
+    "feature": "red_cos5",
+    "auroc_direction_free": 0.5816060130760374
+   },
+   {
+    "feature": "d1",
+    "auroc_direction_free": 0.5805813449940324
+   }
+  ],
+  "flagged_ge_0_99": []
+ },
+ "A5_bootstrap_stability": {
+  "n": 20,
+  "auroc": {
+   "mean": 0.9707115640546278,
+   "min": 0.9679663487436231,
+   "max": 0.9733042343969496
+  },
+  "exact_faulted": {
+   "mean": 0.8811920529801324,
+   "min": 0.8701986754966887,
+   "max": 0.8920529801324504
+  }
+ },
+ "A6_query_text_only": {
+  "auroc_fault_vs_clean": 0.5887371008798336,
+  "exact_fault_accuracy_on_faulted": 0.15894039735099338,
+  "telemetry_auroc": 0.9726681242540427,
+  "telemetry_exact": 0.8933774834437086,
+  "by_group": {
+   "Q": {
+    "n": 350,
+    "query_text_only_exact": 0.38857142857142857,
+    "telemetry_exact": 0.7828571428571428
+   },
+   "K": {
+    "n": 450,
+    "query_text_only_exact": 0.14666666666666667,
+    "telemetry_exact": 0.9666666666666667
+   },
+   "R": {
+    "n": 710,
+    "query_text_only_exact": 0.05352112676056338,
+    "telemetry_exact": 0.9014084507042254
+   }
+  },
+  "note": "query text only; top-5 document text is not stored in episodes.jsonl, so a document-text baseline needs a re-run and is not part of v8"
+ },
+ "runtime_s": 373
+}
