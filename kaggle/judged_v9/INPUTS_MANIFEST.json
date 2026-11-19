@@ -196,6 +196,21 @@
    "path": "docs/evidence/v9_verify.py",
    "bytes": 4718,
    "sha256": "2706dfc1d89650cc344bde7b3cd3de782d8743677bf37d4f31e84b732ab024b0"
+  },
+  "docs/evidence/v9_port_summary.py": {
+   "path": "docs/evidence/v9_port_summary.py",
+   "bytes": 3127,
+   "sha256": "60fcea4c3741f5921152ea2f04ce82554cd4c403423c208211099dee2ad19c26"
+  },
+  "docs/evidence/v10_diagnosis.py": {
+   "path": "docs/evidence/v10_diagnosis.py",
+   "bytes": 4079,
+   "sha256": "dea15ecf7587c7063795ed5bffa8aff022a5f33e005ac94b263da1e7a3f02168"
+  },
+  "docs/evidence/v10_multilabel.py": {
+   "path": "docs/evidence/v10_multilabel.py",
+   "bytes": 8932,
+   "sha256": "9f069bb1b67dc41848cb7ef503c9964522452e6cbf1a039674ce3908ffea5e9e"
   }
  },
  "committed_analysis_inputs": {
@@ -243,6 +258,66 @@
    "path": "kaggle/judged_gpu_v8_seed52/JUDGED_PROTOCOL.json",
    "bytes": 6040,
    "sha256": "b17284c1f7904e6ad9a18b536000c9dce7a548055803243e4634aab3968efa25"
+  },
+  "kaggle/judged_port3_nfcorpus/PORT_PROTOCOL.json": {
+   "path": "kaggle/judged_port3_nfcorpus/PORT_PROTOCOL.json",
+   "bytes": 1018,
+   "sha256": "a2fd0e140cca60793e669283aa0658dacaae5b04967ec418f9e0bf5627aeaaf9"
+  },
+  "kaggle/judged_port3_nfcorpus/PORT_VERDICT.json": {
+   "path": "kaggle/judged_port3_nfcorpus/PORT_VERDICT.json",
+   "bytes": 1843,
+   "sha256": "ac6f50ed90476389bdc705d1259820584a6af3818065a411a8031a80c487e8ed"
+  },
+  "kaggle/judged_port3_nfcorpus/port_detector_gates.csv": {
+   "path": "kaggle/judged_port3_nfcorpus/port_detector_gates.csv",
+   "bytes": 1317,
+   "sha256": "d9bf1beba17f35b47f18f741801ceef23ade596c7750f62d0c8527b2fed2d6f5"
+  },
+  "kaggle/judged_port3_nfcorpus/port_repair_gates.csv": {
+   "path": "kaggle/judged_port3_nfcorpus/port_repair_gates.csv",
+   "bytes": 1137,
+   "sha256": "2c741b57c177c374abc34d6894dc83a603bd6e897e7cf46ce8016a9f0aea79cd"
+  },
+  "kaggle/judged_port3_nfcorpus/port_solved.csv": {
+   "path": "kaggle/judged_port3_nfcorpus/port_solved.csv",
+   "bytes": 410,
+   "sha256": "e04b1ce649cac05cf815f4f5f64a860068408b82d3a104f99811ba0a7dce04ae"
+  },
+  "kaggle/judged_port3_nfcorpus/port_episodes_summary.csv": {
+   "path": "kaggle/judged_port3_nfcorpus/port_episodes_summary.csv",
+   "bytes": 767,
+   "sha256": "93d8c4d288a80dafe464ac4ae55e036b27cf0746d865280070bea48c20a9ec1c"
+  },
+  "kaggle/judged_port3_arguana/PORT_PROTOCOL.json": {
+   "path": "kaggle/judged_port3_arguana/PORT_PROTOCOL.json",
+   "bytes": 1017,
+   "sha256": "de59c4d2e16b7fac2fcdf75520e5a70393facfc1253971833a6d7fcacb73d064"
+  },
+  "kaggle/judged_port3_arguana/PORT_VERDICT.json": {
+   "path": "kaggle/judged_port3_arguana/PORT_VERDICT.json",
+   "bytes": 1860,
+   "sha256": "9befaf08b1764e46f5c62ac7c2ccd567d567dc6740e77aed1e05c50b348aa1cb"
+  },
+  "kaggle/judged_port3_arguana/port_detector_gates.csv": {
+   "path": "kaggle/judged_port3_arguana/port_detector_gates.csv",
+   "bytes": 1036,
+   "sha256": "b6d48bf2e5e46b816a828d89bb9f655f909981105d3be89b9713498437a823a6"
+  },
+  "kaggle/judged_port3_arguana/port_repair_gates.csv": {
+   "path": "kaggle/judged_port3_arguana/port_repair_gates.csv",
+   "bytes": 1090,
+   "sha256": "ba66eeef7101af2ec9270cdb7aac315afda028c5610fc69f942a05a3374a48b1"
+  },
+  "kaggle/judged_port3_arguana/port_solved.csv": {
+   "path": "kaggle/judged_port3_arguana/port_solved.csv",
+   "bytes": 421,
+   "sha256": "2dabad443010737df186697637e6cb590e7af007a772449ba6fcb5ae923e349c"
+  },
+  "kaggle/judged_port3_arguana/port_episodes_summary.csv": {
+   "path": "kaggle/judged_port3_arguana/port_episodes_summary.csv",
+   "bytes": 708,
+   "sha256": "69bd219d6d601f493d849294f60addb64ffb6ce6e84804412df9a8b79f7ba7ca"
   }
  },
  "committed_analysis_outputs": {
@@ -270,6 +345,21 @@
    "path": "docs/evidence/v8_audit_v8gpu.json",
    "bytes": 3165,
    "sha256": "191c0ec14e0596fc9f81e6e6adc95585ceb599c75702cf39facab92b402efd69"
+  },
+  "docs/evidence/v9_port_summary.md": {
+   "path": "docs/evidence/v9_port_summary.md",
+   "bytes": 2409,
+   "sha256": "328172ad117e1bf06897b02f70e1c3a37e9a4992606edd80d38845d103a0e47c"
+  },
+  "docs/evidence/v10_diagnosis_v6_v8.json": {
+   "path": "docs/evidence/v10_diagnosis_v6_v8.json",
+   "bytes": 2464,
+   "sha256": "6d8e944fc615299c037b56aab687860d10097a0e19c0c49ca7c38bb377629be8"
+  },
+  "docs/evidence/v10_multilabel_result.json": {
+   "path": "docs/evidence/v10_multilabel_result.json",
+   "bytes": 4198,
+   "sha256": "ab51421134b201fe7ecedcfe46b8cf843e57f6dd2d0bb5ee2ae3b182deb92258"
   }
  },
  "environment_observed": {

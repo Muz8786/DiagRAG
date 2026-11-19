@@ -308,6 +308,27 @@ universal repair, all & 1.63\% & 100\% & 12.00 & 0.761\\
 Leave-one-fault-out closure (U1) is 0.406 (GPU) and 0.413 (CPU) in the flagship runs, below the 0.50 bar and below earlier versions (best 0.485). A group fallback repairs some unseen faults, but faults whose repair differs from the group repair stay unrepaired. We could not prove a ceiling.
 
 %--------------------------------------------------------------------------------------------------
+\subsection{Portability to other corpora}\label{sec:port}
+We ported 20 of the 32 faults to a second retrieval stack (e5-small-v2 dense index in HNSW, BM25, min-max fusion, MiniLM reranker) and ran them on four BEIR corpora with gates identical to the core run (detector AUROC at least 0.70 with at least 20 held-out positives; repair Wilson lower bound at least 0.50 with at most 10\% of clean successes lost). The suite is said to port on a corpus if at least 15 of the 20 faults pass both gates; a fault with too few hard episodes counts as not solved. SciFact (seed 8) and FiQA (seed 9) were judged on CPU; NFCorpus (seed 53) and ArguAna (seed 54) were pre-registered after those results (code hash fixed before the run; the code is the SciFact and FiQA code plus two declared edits, the corpus table and the output folder) and run once each on a GPU.
+Table~\ref{tab:ports} gives the counts. Every corpus meets the bar of 15. The unsolved faults are not the same everywhere: K04 (index staleness) fails on SciFact, FiQA and NFCorpus but passes on ArguAna; Q01 and Q03 fail on SciFact and on ArguAna. On ArguAna the two query faults were not trained at all, because the injectors found few applicable queries among the long argument queries (Q01 applied to 199 of 2{,}500 attempts and gave only 6 hard episodes; Q03 applied to 17 and gave none), so that is a property of the corpus and not a detector miss.
+Two cautions apply. First, 11 to 16 of the 18 to 20 trained detectors on each corpus sit at the AUROC ceiling (0.995 or more): most retrieval-stack faults are blunt and the telemetry separates them trivially, so passing the port gate says little about subtle faults. Second, the NFCorpus and ArguAna runs have 25 held-out positives per fault (the gate floor is 20), so each detector interval is wide, and all four corpora use one stack and author-injected faults. The port shows that the telemetry and repairs are not specific to one corpus on this stack for these 20 faults; it does not cover the other 12 faults and it is not a field test.
+
+\begin{table}[t]
+\caption{Port to four BEIR corpora (same stack, same 20 faults, same gates). Solved = detector and repair both pass.}
+\label{tab:ports}
+\centering\footnotesize
+\begin{tabular}{@{}lllll@{}}
+\toprule
+Corpus & Clean Hit@5 & Det./Rep. pass & Solved & Unsolved\\
+\midrule
+SciFact & 0.80 & 16/18 & 15 & Q01, Q03, K04, R15, R22\\
+FiQA & 0.54 & 19/19 & 19 & K04\\
+NFCorpus & 0.67 & 20/19 & 19 & K04\\
+ArguAna & 0.56 & 18/18 & 18 & Q01, Q03\\
+\bottomrule
+\end{tabular}
+\end{table}
+
 \section{Composed Faults}\label{sec:composed}
 \subsection{Question and design}
 Real failures often have several causes, but every result above injects one fault at a time. Does the same diagnoser, with no new detector or repair, name both causes and close the loop? We pre-registered a study (code hash committed before any episode was generated). Fault pairs and triples from the 20 grounded and solved faults are injected into one base query; an episode is kept only if the clean query succeeds and the composed one fails, and we record whether each component fails alone. The eight strata are WITHIN\_FAMILY (Q04+Q05, the only pair in one repair family), QQ, KK and RR (two faults of one letter), QK, QR and KR (cross-letter), and TRIPLE. Quotas are 20 per stratum and split (15 for TRIPLE), giving 155 train and 155 held-out episodes, every stratum at quota; seed 51; splits by base-query hash with no base query shared with any single-fault episode. The attributor is retrained with composed rows in the training split only, and every single-fault gate is re-run. Descriptive targets only; there is no adoption gate.
@@ -376,7 +397,7 @@ Variational (5 seeds) & 0.883 (sd 0.005) & 0.965\\
 (2) U1 stayed below 0.50 in every run, and was lower in v6 (0.41) than in v4 (0.485, 0.456).
 (3) The Q03 detector (paraphrase by another real user) passes in 2 of 7 runs of its natural construction, by 0.004 and 0.001; its repair rescues 1 to 6 of 100.
 (4) Repairing natural misspellings does not help.
-(5) No frontier-LLM comparison, and a full-suite second corpus was not built (ports cover 15 to 20 faults).
+(5) No frontier-LLM comparison, and a full-suite second corpus was not built: the ports cover 20 of the 32 faults on four BEIR corpora (Section~\ref{sec:port}), most of them at the AUROC ceiling.
 (6) The dispatcher cannot name two faults of one group (Section~\ref{sec:composed}); the pre-registered natural-traffic non-inferiority comparison against the universal repair fails in v6 and v7 by 0.05 points.
 
 \textbf{Threats to validity.}
