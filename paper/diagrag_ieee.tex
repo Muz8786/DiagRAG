@@ -393,7 +393,7 @@ Variational (5 seeds) & 0.883 (sd 0.005) & 0.965\\
 %--------------------------------------------------------------------------------------------------
 \section{What Failed, and Threats to Validity}\label{sec:failed}
 \textbf{Failures.}
-(1) Adoption was missed twice (v4 GPU: 26 of 28 detectors; v5 CPU: 24 of 28) before v6 met it; v6 is a pass on a changed construction (6{,}000 base queries, balanced C2 mix), not on the v5 test set. A fresh-seed repeat of the frozen v6 code (seed 52, GPU) then missed it (26 of 28; Q03 and C2), so the adoption verdict is not robust to the seed.
+(1) Adoption was missed twice (v4 GPU: 26 of 28 detectors; v5 CPU: 24 of 28) before v6 met it; v6 is a pass on a changed construction (6{,}000 base queries, balanced C2 mix), not on the v5 test set. A fresh-seed repeat of the frozen v6 code (seed 52, GPU) then missed it (26 of 28; Q03 and C2), so the adoption verdict is not robust to the seed. Classing each core detector by its stored 95\% interval against the 0.70 bar (descriptive, after the fact; stricter than the rule, which uses the point estimate), the 27-of-28 verdict depends on a detector whose interval contains 0.70 in 5 of the 12 judged runs (v3 CPU, v4 CPU and GPU, v6 GPU, v8 GPU); the v6 CPU replication and the v7 re-fit are adopted on every reading (27 determinate passes).
 (2) U1 stayed below 0.50 in every run, and was lower in v6 (0.41) than in v4 (0.485, 0.456).
 (3) The Q03 detector (paraphrase by another real user) passes in 2 of 7 runs of its natural construction, by 0.004 and 0.001; its repair rescues 1 to 6 of 100.
 (4) Repairing natural misspellings does not help.

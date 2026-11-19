@@ -35,3 +35,27 @@ It is **descriptive and additive**. No detector, repair, gate or frozen file cha
 
 ## 6. Amendments
 (none yet; each is dated and filed before the result it concerns is read)
+
+**H1 — result and scorecard (19 Nov 2026; written after the result was read; sections 0 to 5 are unedited). Files: `v10_textview.py` (replay), `v10_textbaseline.py`, `v10_textbaseline_nfcorpus.json`, `v10_textbaseline_arguana.json`.** scikit-learn 1.6.1. The replayed top-5 text (`view_*.jsonl`, BEIR text) is not committed.
+
+*Replay check (pre-registered threshold 99.5%).* The replay of the frozen port3 retrieval from the run's own caches reproduced the stored clean Hit@5 for **2,500 of 2,500** (NFCorpus) and **1,401 of 1,401** (ArguAna) clean episodes (0 mismatches). The study therefore ran.
+
+*Held-out fault-vs-clean AUROC and exact-fault accuracy on faulted episodes.* NFCorpus: 500 faulted and 1,263 clean held-out episodes. ArguAna: 454 faulted and 704 clean.
+| Corpus | Model | AUROC | Exact fault (faulted) | Attributor minus text, 95% interval | Verdict |
+|---|---|---|---|---|---|
+| NFCorpus | Telemetry attributor | 0.9717 | 85.2% | | |
+| NFCorpus | T1 word TF-IDF + LR (primary) | 0.5746 | 10.6% | +0.397 [+0.368, +0.427] | **OURS_BETTER** |
+| NFCorpus | T2 char TF-IDF + LR | 0.5720 | 16.6% | +0.400 [+0.369, +0.432] | OURS_BETTER |
+| ArguAna | Telemetry attributor | 0.9961 | 97.8% | | |
+| ArguAna | T1 word TF-IDF + LR (primary) | 0.5956 | 7.3% | +0.401 [+0.369, +0.435] | **OURS_BETTER** |
+| ArguAna | T2 char TF-IDF + LR | 0.6134 | 12.6% | +0.383 [+0.351, +0.417] | OURS_BETTER |
+
+By letter group, exact-fault accuracy (T1, NFCorpus): Q 5%, K 27%, R 9% against the attributor's 66%, 84%, 91%; (T1, ArguAna): Q 2%, K 0%, R 10% against 89%, 95%, 100%.
+
+*Claim rule (section 3):* the verdict is OURS_BETTER for T1 on **both** corpora, so the pre-registered statement is allowed: **on these two corpora, a supervised word TF-IDF logistic model on the query and the top-5 documents, trained on the same labelled episodes, is far worse than the telemetry attributor at both detecting and naming the fault.** It does **not** say that no text model can match telemetry.
+
+*Scorecard against section 4.* (1) Attributor beats T1 with a positive lower bound on both corpora, about 0.55: **held** (lower bounds +0.368 and +0.369). (2) T1 inside or above the zero-shot LLM range of 0.63 to 0.75, about 0.8: **did not hold** (0.575 and 0.596; the comparison is context only, a different corpus). (3) T2 within 0.05 AUROC of T1, about 0.7: **held** (0.572 against 0.575; 0.613 against 0.596). (4) Text models do worst on R faults, about 0.7: **did not hold**: the worst group is Q in NFCorpus (T1 5%, T2 7%) and K or Q in ArguAna (T1 K 0%, T2 Q 2%).
+
+*Checks run after the result was read, to rule out a bug (post-hoc).* The view file is aligned with the episodes (every stored query, fault and split equals the viewed one). Fault-vs-clean AUROC of a binary text classifier by view (NFCorpus; Q, K, R faults against clean): query characters 0.57, 0.55, 0.53; documents 0.59, 0.74, 0.57; query plus documents 0.58, 0.75, 0.57. ArguAna: 0.55, 0.51, 0.58; 0.47, 0.66, 0.65; 0.49, 0.70, 0.63. The text signal is weak everywhere and best for K faults (document-level changes). Typo (Q) faults are not separable from the rare words of the corpora by this model.
+
+*Why this is a weak baseline, and what it does not show.* (a) The text models learn from about 25 training positives per fault over 20 classes; a model with prior knowledge (a fine-tuned cross-encoder, or an LLM given labelled examples) could do much better, and that is **not** tested. (b) The attributor sees quantities (score gaps, rank agreement between the dense and lexical legs, duplicate counts, probes) that are not in the top-5 text at all; this is the likely reason for the gap, and it is an explanation, not a tested one. (c) Two small corpora, one stack, author-injected faults, many of which are blunt. (d) The result does not touch the ESCI main runs. **A stronger text baseline would need its own pre-registered amendment, and because this result motivates it, that amendment would be post-hoc and would have to say so.**

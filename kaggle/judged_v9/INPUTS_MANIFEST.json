@@ -211,6 +211,21 @@
    "path": "docs/evidence/v10_multilabel.py",
    "bytes": 8932,
    "sha256": "9f069bb1b67dc41848cb7ef503c9964522452e6cbf1a039674ce3908ffea5e9e"
+  },
+  "docs/evidence/v10_textview.py": {
+   "path": "docs/evidence/v10_textview.py",
+   "bytes": 2731,
+   "sha256": "bcd1ad74d6f9a4bea2ffa9f4b5978ad9967e55664c722c3a04494c68fd360732"
+  },
+  "docs/evidence/v10_textbaseline.py": {
+   "path": "docs/evidence/v10_textbaseline.py",
+   "bytes": 4119,
+   "sha256": "77ed40dc7fb9b8d38a9dce3eb6b55d9f2900bd90143f955dea95dd43b3cbcb59"
+  },
+  "docs/evidence/v10_adoption_intervals.py": {
+   "path": "docs/evidence/v10_adoption_intervals.py",
+   "bytes": 3631,
+   "sha256": "9c10c1a1f564c5d5e957820738436f452103820b92938a32a534ff8379f2d106"
   }
  },
  "committed_analysis_inputs": {
@@ -360,6 +375,26 @@
    "path": "docs/evidence/v10_multilabel_result.json",
    "bytes": 4198,
    "sha256": "ab51421134b201fe7ecedcfe46b8cf843e57f6dd2d0bb5ee2ae3b182deb92258"
+  },
+  "docs/evidence/v10_textbaseline_nfcorpus.json": {
+   "path": "docs/evidence/v10_textbaseline_nfcorpus.json",
+   "bytes": 1575,
+   "sha256": "c0e3ee4c2ed179ca36dab75521e80c5c0ff35229d1b3cc2730e7b229231b64fc"
+  },
+  "docs/evidence/v10_textbaseline_arguana.json": {
+   "path": "docs/evidence/v10_textbaseline_arguana.json",
+   "bytes": 1648,
+   "sha256": "51fe35ce88290185ac3998514d886241ca3cfffe00308cb8ab59e844be6fc81a"
+  },
+  "docs/evidence/v10_adoption_intervals.json": {
+   "path": "docs/evidence/v10_adoption_intervals.json",
+   "bytes": 10673,
+   "sha256": "21b97b23d8f7bd5aa12816c5268dae2861ce7d86829bcdf542c4a57f591337f1"
+  },
+  "docs/evidence/v10_adoption_intervals.md": {
+   "path": "docs/evidence/v10_adoption_intervals.md",
+   "bytes": 2380,
+   "sha256": "11d62980153d181a8bb5ba31edbec0274330441ff74d3049708c944256e54a05"
   }
  },
  "environment_observed": {
