@@ -30,3 +30,22 @@ The "cost" in the policy tables (`docs/ALL_RUNS_MATRIX.md`, targets T3, gate D2)
 
 ## 5. Amendments
 (none yet; each is dated and filed before the result it concerns is read)
+
+**A1 — Part A result (19 Nov 2026; written after the result was read; sections 0 to 4 are unedited). Files: `v12_cost_sensitivity.py`, `v12_cost_sensitivity_v8gpu.json`. Run on the v8 GPU checkpoint (one run; the v6 GPU checkpoint was not kept, only its `episodes.jsonl`).**
+
+*Gate (pre-registered).* The recomputation had to reproduce every stored policy row. **The first version of the script did not**: it counted the repairs of every episode whether or not the policy dispatched, which inflated costs (dispatch rates matched, costs did not). The gate stopped it before any sensitivity number was produced; the counting rule was corrected (a policy that does not dispatch pays nothing, as in the stored table) and the script re-run. **After the fix all six reconstructable policies reproduce the stored clean dispatch rate, clean mean cost and faulted mean cost under weights 1/3/8** (differences below 1e-5). `tau_none_5pct_fpr` is excluded: its threshold comes from out-of-fold group predictions that are not stored.
+
+*Result: the cost comparison does not depend on the weights, for the capped policy.* Universal repair = one Q, one K and one R repair per query. For **any** non-negative weights, a policy's cost as a share of the universal repair's is a weighted mean of its three per-group dispatch counts. Per **clean** query (v8 GPU) the capped policy applies 0.110 Q, 0.026 K and 0.103 R repairs, so its clean-cost ratio to the universal repair lies in [0.026, 0.110] **whatever the weights**. Over the 81 grid combinations: ratio min 0.030, median 0.074, max 0.103; below 1 in 100%, below 0.25 in 100%, at most 0.125 in 100%.
+| Policy (v8 GPU) | Q / K / R repairs per clean query | Clean-cost ratio to universal, over 81 weight combinations (min, median, max) | Share of combinations with ratio <= 0.125 |
+|---|---|---|---|
+| capped_crc_0.005 | 0.110 / 0.026 / 0.103 | 0.030, 0.074, 0.103 | **100%** |
+| global_crc_0.005 | 0.469 / 0.076 / 0.351 | 0.098, 0.261, 0.384 | 9% |
+| mondrian_crc_0.0025 | 0.433 / 0.075 / 0.310 | 0.094, 0.235, 0.353 | 12% |
+| mondrian_crc_0.005 (the L1 gate) | 0.590 / 0.093 / 0.406 | 0.120, 0.307, 0.476 | 2% |
+| two_stage_0.005 | 0.110 / 0.414 / 0.103 | 0.107, 0.229, 0.396 | 11% |
+
+*What this does not say, and a correction to earlier wording.* (1) **The "about one twelfth" figure is for clean queries only**, where the capped policy rarely dispatches. On **faulted** queries, where repairs are needed, the capped policy applies 0.225 Q, 0.296 K and 0.497 R repairs per query, which is **0.28 to 0.48 of the universal repair's cost** across the grid (median 0.36; 5.09 against 12.00 at the original weights). The CONFERENCE_GUIDE wording "about 1/12 of the repair cost" has been corrected to say this. (2) The policy that **gates L1** (`mondrian_crc_0.005`) is **not** cheap: it dispatches on 91% of clean queries and its clean cost is 0.12 to 0.48 of the universal's depending on the weights; the cheapness result belongs to the capped policy. (3) This shows the *ranking* is weight-independent for the capped policy; it measures **no** time, dollars or energy. Those need Part B.
+
+*Scorecard against section 3 (Part A).* Capped cost ratio below 1 in 100% of combinations (about 0.97): **held**. Below 0.25 in at least 90% (about 0.8): **held** (100%). T3' (<= 0.125) in at least 70% (about 0.6): **held** (100%).
+
+*Part B (measured weights) is NOT built or run.* It needs a Kaggle GPU timing notebook that executes the frozen v6 setup cells and times replayed repairs; that code does not exist yet and no timing has been taken. The predictions in section 3 for Part B are untested. Until it runs, the repair costs remain illustrative and the guide says so.

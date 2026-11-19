@@ -395,6 +395,11 @@
    "path": "docs/evidence/v10_adoption_intervals.md",
    "bytes": 2380,
    "sha256": "11d62980153d181a8bb5ba31edbec0274330441ff74d3049708c944256e54a05"
+  },
+  "docs/evidence/v12_cost_sensitivity_v8gpu.json": {
+   "path": "docs/evidence/v12_cost_sensitivity_v8gpu.json",
+   "bytes": 7466,
+   "sha256": "583a84e3c4b69cc102af1813f55a8b19071a14c12da32d3be837080cf401591c"
   }
  },
  "environment_observed": {
