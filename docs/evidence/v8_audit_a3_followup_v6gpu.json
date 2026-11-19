@@ -1,0 +1,137 @@
+{
+ "folder": "kaggle/judged_gpu_v6_seed50",
+ "shuffles": [
+  {
+   "shuffle": 0,
+   "auroc": 0.5152177931282149,
+   "test_label_permutation_null_mean": 0.5014086162689988,
+   "null_sd": 0.009638084773893477
+  },
+  {
+   "shuffle": 1,
+   "auroc": 0.5325453911720903,
+   "test_label_permutation_null_mean": 0.5000629000443614,
+   "null_sd": 0.00882729670371456
+  },
+  {
+   "shuffle": 2,
+   "auroc": 0.5289600430938877,
+   "test_label_permutation_null_mean": 0.4998304993557041,
+   "null_sd": 0.008938084317869197
+  },
+  {
+   "shuffle": 3,
+   "auroc": 0.5463383398291032,
+   "test_label_permutation_null_mean": 0.5001638670162764,
+   "null_sd": 0.009000167191015908
+  },
+  {
+   "shuffle": 4,
+   "auroc": 0.5080753509300041,
+   "test_label_permutation_null_mean": 0.499560213277776,
+   "null_sd": 0.00884737080914777
+  },
+  {
+   "shuffle": 5,
+   "auroc": 0.5396276286743349,
+   "test_label_permutation_null_mean": 0.5001150919705948,
+   "null_sd": 0.008859059148902833
+  },
+  {
+   "shuffle": 6,
+   "auroc": 0.5700468434783527,
+   "test_label_permutation_null_mean": 0.49901141314680436,
+   "null_sd": 0.009004191146505035
+  },
+  {
+   "shuffle": 7,
+   "auroc": 0.5300735659135799,
+   "test_label_permutation_null_mean": 0.5005121392999355,
+   "null_sd": 0.009763843735044754
+  },
+  {
+   "shuffle": 8,
+   "auroc": 0.5222247747605014,
+   "test_label_permutation_null_mean": 0.4993393901105865,
+   "null_sd": 0.009598034497417906
+  },
+  {
+   "shuffle": 9,
+   "auroc": 0.5365664311289965,
+   "test_label_permutation_null_mean": 0.5004319403075721,
+   "null_sd": 0.009437099782030495
+  },
+  {
+   "shuffle": 10,
+   "auroc": 0.5356361629540437,
+   "test_label_permutation_null_mean": 0.5000467292742694,
+   "null_sd": 0.010639128928454289
+  },
+  {
+   "shuffle": 11,
+   "auroc": 0.527393664776028,
+   "test_label_permutation_null_mean": 0.5002890214888516,
+   "null_sd": 0.009640714626759457
+  },
+  {
+   "shuffle": 12,
+   "auroc": 0.46517501610739675,
+   "test_label_permutation_null_mean": 0.5009847065549183,
+   "null_sd": 0.00961811647591019
+  },
+  {
+   "shuffle": 13,
+   "auroc": 0.5389442525639807,
+   "test_label_permutation_null_mean": 0.5004179559185441,
+   "null_sd": 0.01018557494838497
+  },
+  {
+   "shuffle": 14,
+   "auroc": 0.5233023860071612,
+   "test_label_permutation_null_mean": 0.5002972930331548,
+   "null_sd": 0.010394906569646383
+  },
+  {
+   "shuffle": 15,
+   "auroc": 0.5637675993113428,
+   "test_label_permutation_null_mean": 0.5001319519260221,
+   "null_sd": 0.008915090049547977
+  },
+  {
+   "shuffle": 16,
+   "auroc": 0.5816246290017639,
+   "test_label_permutation_null_mean": 0.49855653762265384,
+   "null_sd": 0.009321105451567703
+  },
+  {
+   "shuffle": 17,
+   "auroc": 0.5689903566864181,
+   "test_label_permutation_null_mean": 0.5004048165077052,
+   "null_sd": 0.009692249029650997
+  },
+  {
+   "shuffle": 18,
+   "auroc": 0.5550344856723386,
+   "test_label_permutation_null_mean": 0.5010592468339723,
+   "null_sd": 0.009037059748959025
+  },
+  {
+   "shuffle": 19,
+   "auroc": 0.5074421453996218,
+   "test_label_permutation_null_mean": 0.49983630594019657,
+   "null_sd": 0.009394944737638914
+  }
+ ],
+ "summary": {
+  "mean": 0.5348493430294581,
+  "min": 0.46517501610739675,
+  "max": 0.5816246290017639,
+  "null_sd": 0.009437606133603092
+ },
+ "label_free_knn_distance": {
+  "auroc_fault_vs_clean": 0.7201910178818509,
+  "median_distance_faulted": 3.6493582963943485,
+  "median_distance_clean": 2.5729023694992064,
+  "note": "uses no labels at all; faulted held-out episodes lie farther from the training data than clean ones"
+ }
+}
