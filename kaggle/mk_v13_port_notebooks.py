@@ -26,6 +26,15 @@ assert len(data) == EMBED['size'] and hashlib.sha256(data).hexdigest() == EMBED[
 open(os.path.join(CODE_DIR, 'diagrag_port5.py'), 'wb').write(data); print('ok diagrag_port5.py', EMBED['sha256'])
 """),
         code("""
+# Data staging (outside the frozen code). The BEIR download server was unreachable on 19 Nov 2026, so the byte-identical zips are attached as a private Kaggle
+# dataset with a .bin suffix (Kaggle unpacks .zip uploads). They are copied to the path the frozen code expects; the frozen code then checks their exact size
+# and SHA-256 itself before use, so a wrong file stops the run. If no attached copy exists, the frozen code downloads from BEIR as before.
+import glob, shutil
+os.makedirs('/tmp/diagrag_port_data', exist_ok=True)
+for b in glob.glob('/kaggle/input/**/*.zip.bin', recursive=True):
+    dst = os.path.join('/tmp/diagrag_port_data', os.path.basename(b)[:-4]); shutil.copy(b, dst); print('staged', dst, os.path.getsize(dst))
+"""),
+        code("""
 import runpy, time
 WORK = '/kaggle/working' if ON_KAGGLE else os.getcwd(); os.environ['DIAGRAG_WORK'] = WORK
 os.environ.setdefault('NLTK_DATA', os.path.join(WORK, 'nltk_data')); os.makedirs(os.environ['NLTK_DATA'], exist_ok=True)
