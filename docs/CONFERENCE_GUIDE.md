@@ -13,6 +13,46 @@ Every number comes from a file in this repository (source given as `path`). Anyt
 
 If you only remember four sentences: **telemetry not LLM; diagnose then repair; conformal do-no-harm gate; failures reported as prominently as passes.**
 
+**The point of the project (section 0b):** retrieval faults can be found and fixed *cheaply*, with a small model and rule-based repairs, **without any large LLM**, at higher closure than repairing everything and about one twelfth of its repair cost (in illustrative units; latency and dollars were not benchmarked).
+
+---
+
+## 0b. The point of the project: fixing retrieval faults cheaply, without a large LLM
+
+This is the claim the whole project is built to test, so lead with it. **The claim:** a *small*, cheap model (a gradient-boosted classifier on 63 numbers the retrieval stage already produces) plus *rule-based repairs* can find and fix most retrieval faults, with **zero LLM calls at run time**, and without paying the cost of the obvious alternatives: (a) an LLM judging every query, or (b) blindly trying every repair on every query.
+
+### What "cheap" means here, and how it is measured
+There are **two different costs**. Keep them apart on stage.
+
+| Cost | What is measured | Where it comes from |
+|---|---|---|
+| **LLM cost** | number of LLM calls and tokens per query | DiagRAG uses **0**. The LLM-based baselines use LLM calls on every query (see below). |
+| **Repair cost** | "cost units" of the repairs a policy dispatches | an **illustrative** cost vector in the code: a Q-group repair = 1, K = 3, R = 8 (`kaggle/diagrag_v6.py`, comment: "illustrative cost vector of the original DiagRAG outline, not measured"). The diagnosis-free "universal" baseline applies the query-family repair (QLEX), then the K-group repair, then the R-group repair on every query = 1 + 3 + 8 = **12 units** (`universal()` in `kaggle/diagrag_v6.py`). |
+
+### The measured evidence (held-out clean queries, same denominators; `docs/ALL_RUNS_MATRIX.md`)
+| Policy | Clean loss | Clean dispatch | Mean cost (units) | Mean closure |
+|---|---|---|---|---|
+| **Diagnosis-free universal repair** (try everything on every query) | **1.48%** | 100% | **12.00** | 0.749 (v6 GPU), 0.756 (v8 GPU) |
+| **DiagRAG capped policy** (`capped_crc_0.005`) | **0.12%** | 16.5% (v6), 15.5% (v8) | **0.93 (v6), 1.01 (v8)** | 0.834 (v6), 0.866 (v8) |
+| DiagRAG stratified policy that gates L1 (`mondrian_crc_0.005`) | 0.28% (v6), 0.40% (v8) | 86% (v6), 91% (v8) | 3.65 (v6), 4.11 (v8) | 0.844 (v6), 0.886 (v8) |
+
+**How to say it:** *diagnosing first* gets **higher closure** than repairing everything, at **about one twelfth of the repair cost** (0.93 or 1.01 units against 12.00) and **about one twelfth of the harm to healthy queries** (0.12% against 1.48% clean loss). That is the cheapness result: not "fewer repairs" for its own sake, but *the right repair, rarely, with a bounded harm guarantee*. The capped policy meets all four pre-registered targets (clean loss <= 0.5%, clean dispatch <= 25%, mean cost <= 1.5, closure >= 0.80) on both GPU runs.
+
+### The LLM side of the cost claim
+- A zero-shot LLM judge of the returned documents used about **587 tokens per item** (Gemini 3.1 Flash-Lite), 673 (gpt-oss-120b) and 658 (gpt-oss-20b), **one call per query**, and reached AUROC 0.63 to 0.75 against 0.975 for the telemetry attributor (`docs/LLM_BASELINES_RESULTS.md`).
+- The CRAG-style repair used **1.15 LLM calls per query (about 517 tokens)**. On 1,000 natural queries, DiagRAG's loop minus the CRAG-style repair was **+1.23 points of Hit@5 [-0.10, +2.60]**: *non-inferior*, **not** better, at **zero** LLM calls.
+- So the defensible statement is: **"comparable repair quality on natural traffic, better diagnosis on injected faults, and no LLM calls."**
+
+### What is NOT shown (volunteer these before a reviewer asks)
+1. **The repair cost units are illustrative, not measured.** No seconds, no dollars, no GPU-time was benchmarked for the telemetry, the classifier inference or the repairs. Some repairs are heavy (rebuilding the dense index view, re-embedding BM25 hits); the 1 / 3 / 8 weights are an assumption. The ranking "diagnose-first beats try-everything" would survive other weights only if the group costs stay in that order; that robustness was **not** tested.
+2. **No dollar comparison against a frontier LLM.** Only free-tier models were tested; the planned cost-per-item comparison against a frontier model was not run (no funded key). "Without any extensive LLM" is therefore shown against *small free-tier* judges, not against the strongest models.
+3. **Not every fault is fixed cheaply.** Q03 (synonym swap) is invisible to telemetry, and several faults (K06, Q03, Q07, Q09, Q02) have no effective repair on unseen faults; U1 closure is 0.40 against a 0.50 bar. For those, an LLM rewrite might help, and that was **not** tested beyond the reduced CRAG-style baseline.
+4. **The cheap policy does not repair most natural failures.** Most natural failures are corpus-data problems (an empty placeholder gold document), and the natural-traffic gain (+2.1 to +2.4 points) comes almost entirely from two simple rules (K12, K05).
+5. **"Diagnosis-free universal" is one specific strawman** (QLEX, K-group and R-group repairs applied in sequence to every query). It is the right reference for the cost question, but it is not the strongest non-LLM baseline one could build.
+
+### One-line version for a slide
+> *Diagnose from retrieval telemetry, repair with a rule, and bound the harm: higher closure than "repair everything" at about 1/12 of the repair cost and 1/12 of the clean-query damage, with zero LLM calls. Cost is in illustrative units; latency and dollars are not benchmarked.*
+
 ---
 
 ## 1. The problem
@@ -295,14 +335,15 @@ DiagRAG-Bench v1.0: 2,718 dev episodes (public labels) and 2,125 test episodes (
 |---|---|---|---|
 | 1 | Silent retrieval failure | 2 min | cause is upstream; generator hides it |
 | 2 | Idea: telemetry, not LLM | 1.5 | 63 numbers; no answer, no LLM call |
+| 2b | **The cheapness claim** (section 0b) | 2 | diagnose-first beats try-everything: closure up, repair cost about 1/12, clean harm about 1/12; units illustrative |
 | 3 | The 32 faults (Q, K, R, C) | 2 | grounded in field reports; evidence tiers |
 | 4 | Episodes and the hard-episode rule | 1.5 | clean succeeds and faulted fails; no leakage |
 | 5 | The loop (figure) | 3 | attributor -> dispatcher -> gate -> repair |
 | 6 | Do-no-harm gate | 2 | conformal risk control, per stratum, alpha 0.5% |
 | 7 | Pre-registration | 1 | hashes, gates, amendments, failures kept |
-| 8 | Results: diagnosis and baselines | 2.5 | 0.975 vs 0.735 vs 0.63 to 0.75 (with the fairness caveat) |
+| 8 | Results: diagnosis and baselines | 2 | 0.975 vs 0.735 vs 0.63 to 0.75 (with the fairness caveat) |
 | 9 | Results: natural traffic and ports | 1.5 | +2.1 to +2.4 points; 15 to 19 of 20 on four corpora |
-| 10 | Where it stops | 2 | composed faults, Q03, U1, seed-dependent adoption |
+| 10 | Where it stops | 1.5 | composed faults, Q03, U1, seed-dependent adoption |
 | 11 | Threats and take-aways | 1.5 | what is and is not shown |
 
 **Take-aways to end on:** (1) telemetry carries enough signal to name most retrieval faults without an LLM; (2) a conformal gate bounds harm to healthy queries; (3) pre-registered, failure-inclusive evaluation is a methodology other fault-diagnosis papers can reuse; (4) the open problems (unseen faults, subtle faults, field validity) are stated, not hidden.
