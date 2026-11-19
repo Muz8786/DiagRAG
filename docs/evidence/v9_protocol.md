@@ -69,3 +69,5 @@ Every input of P1 and P2 is listed with its source, size and SHA-256 in `kaggle/
 
 ## 8. Amendments
 (none yet; each is dated and filed before the result it concerns is read)
+
+**F0 — v8 result now in the bundle (19 Nov 2026; sections 1 to 7 are unedited).** Row R3 of section 1 said the v8 result had not been read. It has been: **NOT_ADOPTED at seed 52 (26 of 28 detectors; Q03 and C2 fail)**, scorecard in `docs/evidence/v8_protocol.md` E4, files in `kaggle/judged_gpu_v8_seed52/`, audit in `docs/evidence/v8_audit_v8gpu.json`, row added to `docs/ALL_RUNS_MATRIX.md`. v9's design does not depend on the v8 verdict (the port arm uses port2's own gates and stack), and nothing in sections 2 to 6 changes. **The seed-robustness of the v6 adoption is now an open finding that v9 does not address:** the same frozen code is ADOPTED at seed 50 and NOT_ADOPTED at seed 52.

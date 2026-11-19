@@ -228,6 +228,21 @@
    "path": "kaggle/judged_port2_fiqa/PORT_VERDICT.json",
    "bytes": 1846,
    "sha256": "46ebbe703f03840d728e67663a16ce2f5aca5a934b1b0c938cf9acd053cf81d2"
+  },
+  "kaggle/judged_gpu_v8_seed52/episodes.jsonl": {
+   "path": "kaggle/judged_gpu_v8_seed52/episodes.jsonl",
+   "bytes": 16980821,
+   "sha256": "1ba813256639754889d78108fc093eeea5fb40189fa09eb4b6da465269f2643f"
+  },
+  "kaggle/judged_gpu_v8_seed52/VERDICT.json": {
+   "path": "kaggle/judged_gpu_v8_seed52/VERDICT.json",
+   "bytes": 31835,
+   "sha256": "e228fb13bdfccefc4c80fc28d24e6091f253ef9864e3b02a277725fde8391fae"
+  },
+  "kaggle/judged_gpu_v8_seed52/JUDGED_PROTOCOL.json": {
+   "path": "kaggle/judged_gpu_v8_seed52/JUDGED_PROTOCOL.json",
+   "bytes": 6040,
+   "sha256": "b17284c1f7904e6ad9a18b536000c9dce7a548055803243e4634aab3968efa25"
   }
  },
  "committed_analysis_outputs": {
@@ -250,6 +265,11 @@
    "path": "docs/evidence/check_v7_hash_trail_output.txt",
    "bytes": 534,
    "sha256": "e5fc5546b401707227947ece56bf7febb39f262121c7c4bd34671fffab8da769"
+  },
+  "docs/evidence/v8_audit_v8gpu.json": {
+   "path": "docs/evidence/v8_audit_v8gpu.json",
+   "bytes": 3165,
+   "sha256": "191c0ec14e0596fc9f81e6e6adc95585ceb599c75702cf39facab92b402efd69"
   }
  },
  "environment_observed": {
