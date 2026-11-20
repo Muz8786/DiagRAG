@@ -17,8 +17,55 @@ FCOMP = dict(bm25_scores='BM25', q_terms='BM25', dense_all='DENSE', enc_q='DENSE
 RUN_MARKERS = [('m = M(ov)', 'DENSE'), ('ok = np.ones', 'FILTERS'), ("if c['mask'] is not None", 'DENSE'), ('ss = bm25_scores', 'BM25'),
                ("if c['pfilter'] is not None and c['post_filter']", 'FILTERS'), ("if c['refresh']", 'DENSE'), ("if c['fusion'] == 'rrf'", 'FUSION'),
                ("if c['quality']", 'CONTENT'), ("depth = fused[:c['depth']]", 'RERANK'), ("final = order[:CFG['K_FINAL']]", 'SERVING'), ('return dict(', 'TELEMETRY')]
+DEV_SEEN = set(["bm25_scores|290|25|int+|0", "bm25_scores|290|25|int-|0", "bm25_scores|293|41|int+|0", "bm25_scores|293|4|ifnot|0", "bm25_scores|294|42|int+|0", "bm25_scores|294|42|int-|0", "bm25_scores|294|87|int-|0", "ce_scores|333|60|slice-|0", "ce_scores|335|64|int-|0", "ce_scores|335|86|bool|0", "enc_q|311|4|ifnot|0", "enc_q|312|12|bin|0", "enc_q|313|73|int-|0", "enc_q|313|8|ifnot|0", "enc_q|314|71|bool|0", "enc_q|314|77|int-|0", "enc_q|315|81|int+|0", "enc_q|317|58|int+|0", "q_terms|287|21|int+|0", "q_terms|289|13|bin|0", "run|423|4|ifnot|0", "run|428|19|andor|0", "run|429|23|int+|0", "run|429|23|int-|0", "run|429|46|slice-|0", "run|430|20|bin|0", "run|432|4|ifnot|0", "run|433|75|int+|0", "run|433|79|int+|0", "run|433|90|bin|0", "run|433|95|bin|0", "run|434|13|bin|0", "run|438|4|ifnot|0", "run|439|33|slice+|0", "run|439|33|slice-|0", "run|439|49|bin|0", "run|440|9|int-|0", "run|441|4|ifnot|0", "run|443|11|cmp|0", "run|443|48|fhalf|0", "run|443|8|ifnot|0", "run|449|4|ifnot|0", "run|450|11|slice+|0", "run|453|11|slice+|0", "run|453|11|slice-|0", "run|455|4|ifnot|0", "run|455|7|andor|0", "run|456|11|slice+|0", "run|456|11|slice-|0", "run|458|4|ifnot|0", "run|459|27|fdouble|0", "run|459|27|fhalf|0", "run|461|39|slice+|0", "run|461|57|int+|0", "run|462|26|cmp|0", "run|462|41|int-|0", "run|462|4|ifnot|0", "run|462|79|int-|0", "run|462|86|bool|0", "run|463|39|neg|0", "run|463|49|int-|0", "run|465|41|slice-|0", "run|465|60|slice+|0", "run|466|28|neg|0", "run|468|14|int-|0", "run|468|19|neg|0", "run|470|4|ifnot|0", "run|470|7|andor|0", "run|474|8|ifnot|0", "run|475|32|neg|0", "run|477|27|minmax|0", "run|477|31|int-|0", "run|478|4|ifnot|0", "run|480|4|ifnot|0", "run|481|60|int-|0", "run|482|8|ifnot|0", "run|485|19|andor|0", "run|485|64|fdouble|0", "run|486|55|int-|0", "run|488|7|cmp|0", "run|491|62|bin|0", "run|491|82|int+|0", "run|491|82|int-|0", "run|496|37|neg|0", "run|498|16|bin|0", "run|499|4|ifnot|0", "run|504|4|ifnot|0", "run|506|24|int-|0", "run|508|35|fhalf|0", "run|508|42|cmp|0", "run|508|78|fdouble|0", "run|510|16|bin|0", "run|510|29|int+|0", "run|511|18|slice+|0", "run|511|18|slice-|0", "run|512|4|ifnot|0", "run|512|50|slice-|0", "run|514|7|cmp|0", "run|515|75|int-|0", "run|515|79|int-|0", "run|521|52|int+|0", "run|522|51|andor|0", "run|522|51|cmp|0", "run|522|57|int+|0", "run|522|62|cmp|0", "run|523|101|int-|0", "run|523|105|neg|0", "run|523|63|neg|0", "run|529|46|cmp|0", "run|529|55|int-|0", "run|530|16|bin|0", "run|532|29|bin|0", "run|532|4|ifnot|0", "run|533|18|slice+|0", "run|533|18|slice-|0", "run|534|33|slice+|0", "topn|397|8|minmax|0", "topn|398|12|int-|0", "topn|399|26|neg|0", "topn|399|30|bin|0", "topn|399|37|slice+|0", "topn|399|64|neg|0"])   # mutation points evaluated in the first development run (old pid format), never used as held-out
+CONFUSE = [('ds', 'dsm'), ('ss', 'ssm'), ('dtop', 'stop'), ('ok', 'dok'), ('fused', 'depth'), ('depth', 'order'), ('order', 'fused'), ('dsm', 'ssm')]
 CMP = {ast.Lt: ast.LtE, ast.LtE: ast.Lt, ast.Gt: ast.GtE, ast.GtE: ast.Gt, ast.Eq: ast.NotEq, ast.NotEq: ast.Eq}
 BIN = {ast.Add: ast.Sub, ast.Sub: ast.Add, ast.Mult: ast.Div, ast.Div: ast.Mult}
+
+
+def pts_of(ft):
+    out = []
+    for node in ast.walk(ft):
+        if isinstance(node, ast.Compare):
+            out += [('cmp', node, k) for k, op in enumerate(node.ops) if type(op) in CMP]
+        elif isinstance(node, ast.BinOp) and type(node.op) in BIN: out.append(('bin', node, 0))
+        elif isinstance(node, ast.Constant) and not isinstance(node.value, str):
+            v = node.value
+            if isinstance(v, bool): out.append(('bool', node, 0))
+            elif isinstance(v, int) and abs(v) < 10**6: out += [('int+', node, 0), ('int-', node, 0)]
+            elif isinstance(v, float): out += [('fhalf', node, 0), ('fdouble', node, 0)]
+        elif isinstance(node, ast.UnaryOp) and isinstance(node.op, ast.USub): out.append(('neg', node, 0))
+        elif isinstance(node, ast.If): out.append(('ifnot', node, 0))
+        elif isinstance(node, ast.Name) and isinstance(node.ctx, ast.Load) and any(node.id in pr for pr in CONFUSE):
+            out += [('var:' + (b if a == node.id else a), node, 0) for a, b in CONFUSE if node.id in (a, b)]
+        elif isinstance(node, (ast.AugAssign,)) or (isinstance(node, ast.Assign) and isinstance(node.targets[0], ast.Subscript)): out.append(('del', node, 0))
+        elif isinstance(node, ast.BoolOp): out.append(('andor', node, 0))
+        elif isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id in ('min', 'max'): out.append(('minmax', node, 0))
+        elif isinstance(node, ast.Slice) and node.upper is not None and not isinstance(node.upper, ast.Constant): out += [('slice+', node, 0), ('slice-', node, 0)]
+    return out
+
+
+def mutant_src(x):
+    t = ast.parse(x['seg']); kind, nd, sub = pts_of(t)[x['k']]
+    if kind == 'cmp': nd.ops[sub] = CMP[type(nd.ops[sub])]()
+    elif kind == 'bin': nd.op = BIN[type(nd.op)]()
+    elif kind == 'bool': nd.value = not nd.value
+    elif kind == 'int+': nd.value = nd.value + 1
+    elif kind == 'int-': nd.value = nd.value - 1
+    elif kind == 'fhalf': nd.value = nd.value * 0.5
+    elif kind == 'fdouble': nd.value = nd.value * 2.0
+    elif kind == 'neg': nd.op = ast.UAdd()
+    elif kind == 'ifnot': nd.test = ast.UnaryOp(op=ast.Not(), operand=nd.test)
+    elif kind.startswith('var:'): nd.id = kind[4:]
+    elif kind == 'del':
+        for par in ast.walk(t):
+            for fld in ('body', 'orelse'):
+                lst = getattr(par, fld, None)
+                if isinstance(lst, list) and any(z is nd for z in lst): lst[[k_ for k_, z in enumerate(lst) if z is nd][0]] = ast.Pass()
+    elif kind == 'andor': nd.op = ast.Or() if isinstance(nd.op, ast.And) else ast.And()
+    elif kind == 'minmax': nd.func = ast.Name(id='max' if nd.func.id == 'min' else 'min', ctx=ast.Load())
+    elif kind in ('slice+', 'slice-'): nd.upper = ast.BinOp(left=nd.upper, op=ast.Add() if kind == 'slice+' else ast.Sub(), right=ast.Constant(1))
+    return ast.unparse(ast.fix_missing_locations(t))
 
 
 class _TO(Exception): pass
@@ -97,19 +144,39 @@ def main(G, OUT, TRIAL, ROLE):
             pf = 1 - pk; return float(np.sum(np.where(y, np.log(pf), np.log(1 - pf)))) - P['KAPPA'] * len(H)
         hyps = ([] if y.any() else [()]) + [(f,) for f in faults] + [pg for pg in itertools.combinations(faults, 2)]
         return max(hyps, key=ll) if hyps else ()
-    def selftest(over, faults, pos, max_tries=5):
-        """Repair and retest: decode, apply the decoded repairs to the probes, keep them only if fewer probes fail; at most max_tries decodes, then rollback."""
+    def post_rank(y, faults, pos):
+        """Single faults ranked by noisy-OR log-likelihood of the observed failures (best first)."""
+        y = np.asarray(y, bool)
+        def ll(f):
+            pf = 1 - (1 - P['EPS']) * (1 - QB[f][pos]); return float(np.sum(np.where(y, np.log(pf), np.log(1 - pf))))
+        return sorted(faults, key=ll, reverse=True)
+    def selftest(over, faults, pos, K=6, max_rounds=4):
+        """Repair and retest (decode-guided greedy search): rank faults by the noisy-OR posterior, try the repairs of the top K
+        (then pairs of them) on the failing probes, keep the one that fixes the most, confirm on the whole battery (net gain); repeat; then rollback."""
         pr = [probes[k] for k in pos]; a = time.time(); nruns = len(pr)
-        y = [not ok(b, over) for b in pr]; detected = any(y); named, excluded, tries = [], set(), 0
-        while any(y) and tries < max_tries:
-            H = decode(y, [f for f in faults if f not in named and f not in excluded], pos); tries += 1
-            if not H: break
-            y2 = [not ok(b, over, named + list(H)) for b in pr]; nruns += len(pr)
-            if sum(y2) < sum(y): named, y = named + list(H), y2
-            else: excluded |= set(H)
-        if not any(y): return dict(named=named, verified=True, fallback=False, detected=detected, rounds=tries, runs=nruns, sec=time.time() - a)
+        y = [not ok(b, over) for b in pr]; detected = any(y); named, rounds = [], 0
+        while any(y) and rounds < max_rounds:
+            rounds += 1; fail_i = [i for i, v in enumerate(y) if v]
+            top = post_rank([y[i] for i in range(len(y))], [f for f in faults if f not in named], pos)[:K]
+            def fixes(H):
+                return sum(ok(pr[i], over, named + list(H)) for i in fail_i)
+            best, gain = None, 0
+            for f in top:
+                g_ = fixes((f,)); nruns += len(fail_i)
+                if g_ > gain: best, gain = (f,), g_
+            if best is None:
+                for H in itertools.combinations(top, 2):
+                    g_ = fixes(H); nruns += len(fail_i)
+                    if g_ > gain: best, gain = H, g_
+            if best is None: break
+            y2 = [not ok(b, over, named + list(best)) for b in pr]; nruns += len(pr)
+            if sum(y2) >= sum(y): break
+            named, y = named + list(best), y2
+        if not any(y): return dict(named=named, verified=True, fallback=False, detected=detected, rounds=rounds, runs=nruns, sec=time.time() - a)
         y = [not ok(b, over, named + ['GR']) for b in pr]; nruns += len(pr)
-        return dict(named=named, verified=not any(y), fallback=True, detected=detected, rounds=tries, runs=nruns, sec=time.time() - a)
+        return dict(named=named, verified=not any(y), fallback=True, detected=detected, rounds=rounds, runs=nruns, sec=time.time() - a)
+    def broken_by(over, qs):
+        return sum(bool(b['h5']) and not ok(b, over) for b in qs)
     fam = lambda l: FAMILY.get(l, l)
     def traffic_eval(over, res, qs):
         reps_b = list(res['named']) + (['GR'] if res['fallback'] else []); rows = []
@@ -131,8 +198,8 @@ def main(G, OUT, TRIAL, ROLE):
     rowsS = []; fS = open(os.path.join(OUT, 'S_single.jsonl'), 'w')
     for f in (SYS[:3] if TRIAL else SYS):
         for j in range(nI):
-            over = sys_cfg(f, rnd(tagE, f, j)); res = selftest(over, SYS, posAll); lofo = selftest(over, [g for g in SYS if g != f], posA)
-            r = dict(fault=f, inst=j, detected=res['detected'], named=res['named'], exact=f in res['named'], family=FAMILY[f] in {FAMILY[g] for g in res['named']}, component=COMP[f] in {COMP[g] for g in res['named']},
+            over = sys_cfg(f, rnd(tagE, f, j)); res = selftest(over, SYS, posAll); lofo = selftest(over, [g for g in SYS if g != f], posA); nb = broken_by(over, traffic)
+            r = dict(fault=f, inst=j, harmful=nb > 0, traffic_broken=nb, sibling=any(FAMILY[g] == FAMILY[f] for g in SYS if g != f), detected=res['detected'], named=res['named'], exact=f in res['named'], family=FAMILY[f] in {FAMILY[g] for g in res['named']}, component=COMP[f] in {COMP[g] for g in res['named']},
                      verified=res['verified'], fallback=res['fallback'], rounds=res['rounds'], runs=res['runs'], sec=res['sec'],
                      lofo_named=lofo['named'], lofo_family=FAMILY[f] in {FAMILY[g] for g in lofo['named']}, lofo_component=COMP[f] in {COMP[g] for g in lofo['named']}, lofo_verified=lofo['verified'], lofo_fallback=lofo['fallback'])
             if j == 0:
@@ -145,16 +212,27 @@ def main(G, OUT, TRIAL, ROLE):
     if TRIAL: prs = prs[:3]
     rowsP = []; fP = open(os.path.join(OUT, 'S_pairs.jsonl'), 'w')
     for (f, g) in prs:
-        over = dict(sys_cfg(f, rnd(tagE + 'pair', f, g, 0)), **sys_cfg(g, rnd(tagE + 'pair', f, g, 1)))
+        of, og = sys_cfg(f, rnd(tagE + 'pair', f, g, 0)), sys_cfg(g, rnd(tagE + 'pair', f, g, 1)); over = dict(of, **og)
+        eff = broken_by(of, traffic) > 0 and broken_by(og, traffic) > 0
         res = selftest(over, SYS, posAll); tv = traffic_eval(over, res, traffic[:P['PAIR_TRAFFIC']])
-        r = dict(pair=[f, g], same_group=GROUP[f] == GROUP[g], detected=res['detected'], named=res['named'], both_exact=f in res['named'] and g in res['named'],
+        r = dict(pair=[f, g], effective=eff, same_group=GROUP[f] == GROUP[g], detected=res['detected'], named=res['named'], both_exact=f in res['named'] and g in res['named'],
                  both_component={COMP[f], COMP[g]} <= {COMP[h] for h in res['named']}, both_family={FAMILY[f], FAMILY[g]} <= {FAMILY[h] for h in res['named']}, verified=res['verified'], fallback=res['fallback'], runs=res['runs'],
                  traffic=tv, agg_dispatcher_both=set(tv['top_families']) >= {fam(f), fam(g)})
         rowsP.append(r); fP.write(json.dumps(r, default=str) + '\n'); fP.flush()
     log('S pairs done', len(rowsP))
     m = lambda xs, k: (float(np.mean([bool(x[k]) for x in xs])) if xs else None)
     tr0 = [r for r in rowsS if 'traffic' in r]
-    def tmean(rows, key, sub, who): v = [r[key][sub][who] for r in rows if r[key][sub][who] is not None]; return float(np.mean(v)) if v else None
+    def tmean(rows, key, sub, who): v = [r[key][sub][who] for r in rows if key in r and r[key][sub][who] is not None]; return float(np.mean(v)) if v else None
+    HS = [r for r in rowsS if r['harmful']]; EP = [r for r in rowsP if r['effective']]
+    R['S_primary'] = dict(harmful_singles=len(HS), detected=m(HS, 'detected'), family=m(HS, 'family'), exact=m(HS, 'exact'), verified=m(HS, 'verified'),
+                          unseen_family_with_sibling=m([r for r in HS if r['sibling']], 'lofo_family'), unseen_verified=m(HS, 'lofo_verified'),
+                          effective_pairs=len(EP), effective_same_group=sum(r['same_group'] for r in EP), pairs_both_family=m(EP, 'both_family'),
+                          pairs_both_family_same_group=m([r for r in EP if r['same_group']], 'both_family'), pairs_verified=m(EP, 'verified'),
+                          pairs_agg_dispatcher_both=m(EP, 'agg_dispatcher_both'),
+                          traffic_closure_singles={w: tmean([r for r in tr0 if r['harmful']], 'traffic', 'closure', w) for w in ('selftest', 'loop', 'universal')},
+                          traffic_harm_singles={w: tmean([r for r in tr0 if r['harmful']], 'traffic', 'harm', w) for w in ('selftest', 'loop', 'universal')},
+                          traffic_closure_pairs={w: tmean(EP, 'traffic', 'closure', w) for w in ('selftest', 'loop', 'universal')},
+                          traffic_harm_pairs={w: tmean(EP, 'traffic', 'harm', w) for w in ('selftest', 'loop', 'universal')})
     R['S'] = dict(single=dict(n=len(rowsS), detected=m(rowsS, 'detected'), exact=m(rowsS, 'exact'), family=m(rowsS, 'family'), component=m(rowsS, 'component'), verified=m(rowsS, 'verified'),
                               fallback=m(rowsS, 'fallback'), agg_dispatcher_named=m(tr0, 'agg_dispatcher_named'),
                               mean_runs=float(np.mean([r['runs'] for r in rowsS])), median_sec=float(np.median([r['sec'] for r in rowsS])),
@@ -173,23 +251,6 @@ def main(G, OUT, TRIAL, ROLE):
     # ---- M: blind code mutants of the retrieval path
     SRC = open(G['__file__'], encoding='utf-8').read(); tree = ast.parse(SRC)
     FN = {n.name: n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name in TARGETS}
-    def pts_of(ft):
-        out = []
-        for node in ast.walk(ft):
-            if isinstance(node, ast.Compare):
-                out += [('cmp', node, k) for k, op in enumerate(node.ops) if type(op) in CMP]
-            elif isinstance(node, ast.BinOp) and type(node.op) in BIN: out.append(('bin', node, 0))
-            elif isinstance(node, ast.Constant) and not isinstance(node.value, str):
-                v = node.value
-                if isinstance(v, bool): out.append(('bool', node, 0))
-                elif isinstance(v, int) and abs(v) < 10**6: out += [('int+', node, 0), ('int-', node, 0)]
-                elif isinstance(v, float): out += [('fhalf', node, 0), ('fdouble', node, 0)]
-            elif isinstance(node, ast.UnaryOp) and isinstance(node.op, ast.USub): out.append(('neg', node, 0))
-            elif isinstance(node, ast.If): out.append(('ifnot', node, 0))
-            elif isinstance(node, ast.BoolOp): out.append(('andor', node, 0))
-            elif isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id in ('min', 'max'): out.append(('minmax', node, 0))
-            elif isinstance(node, ast.Slice) and node.upper is not None and not isinstance(node.upper, ast.Constant): out += [('slice+', node, 0), ('slice-', node, 0)]
-        return out
     MUT = []
     for name, node in FN.items():
         seg = ast.get_source_segment(SRC, node); base_line = node.lineno
@@ -199,28 +260,13 @@ def main(G, OUT, TRIAL, ROLE):
                 for mk, cp in RUN_MARKERS:
                     if mk in ln: marks.append((base_line + k, cp))
         for k, (kind, nd, sub) in enumerate(pts_of(ast.parse(seg))):
-            line = base_line + nd.lineno - 1; pid = f'{name}|{line}|{nd.col_offset}|{kind}|{sub}|{k}'
+            line = base_line + nd.lineno - 1; pid = f'{name}|{line}|{nd.col_offset}|{getattr(nd, "end_col_offset", -1)}|{kind}|{sub}'; dkey = f'{name}|{line}|{nd.col_offset}|{kind}|{sub}'
             half = 'dev' if int(hashlib.md5(pid.encode()).hexdigest()[0], 16) < 8 else 'heldout'
             comp = FCOMP.get(name) or next((cp for ml, cp in sorted(marks, reverse=True) if ml <= line), 'OTHER')
-            MUT.append(dict(pid=pid, fn=name, k=k, kind=kind, line=line, half=half, comp=comp, seg=seg))
+            MUT.append(dict(pid=pid, dkey=dkey, fn=name, k=k, kind=kind, line=line, half=half, comp=comp, seg=seg))
     R['M_points'] = dict(total=len(MUT), by_half=dict(collections.Counter(x['half'] for x in MUT)), by_fn=dict(collections.Counter(x['fn'] for x in MUT)))
-    mine = sorted([x for x in MUT if x['half'] == ROLE], key=lambda x: hashlib.md5(x['pid'].encode()).hexdigest())[:P['MAXM']]
+    mine = sorted([x for x in MUT if x['half'] == ROLE and not (ROLE == 'heldout' and x['dkey'] in DEV_SEEN)], key=lambda x: hashlib.md5(x['pid'].encode()).hexdigest())[:P['MAXM']]
     log('mutation points', R['M_points'], 'evaluated', len(mine))
-    def mutant_src(x):
-        t = ast.parse(x['seg']); kind, nd, sub = pts_of(t)[x['k']]
-        if kind == 'cmp': nd.ops[sub] = CMP[type(nd.ops[sub])]()
-        elif kind == 'bin': nd.op = BIN[type(nd.op)]()
-        elif kind == 'bool': nd.value = not nd.value
-        elif kind == 'int+': nd.value = nd.value + 1
-        elif kind == 'int-': nd.value = nd.value - 1
-        elif kind == 'fhalf': nd.value = nd.value * 0.5
-        elif kind == 'fdouble': nd.value = nd.value * 2.0
-        elif kind == 'neg': nd.op = ast.UAdd()
-        elif kind == 'ifnot': nd.test = ast.UnaryOp(op=ast.Not(), operand=nd.test)
-        elif kind == 'andor': nd.op = ast.Or() if isinstance(nd.op, ast.And) else ast.And()
-        elif kind == 'minmax': nd.func = ast.Name(id='max' if nd.func.id == 'min' else 'min', ctx=ast.Load())
-        elif kind in ('slice+', 'slice-'): nd.upper = ast.BinOp(left=nd.upper, op=ast.Add() if kind == 'slice+' else ast.Sub(), right=ast.Constant(1))
-        return ast.unparse(ast.fix_missing_locations(t))
     ORIG = {n: G[n] for n in TARGETS}; CACHES = {'enc_q': '_QC', 'ce_scores': '_CEC'}
     def clean_view(b):
         tr = run(dict(q=b['q'], tenant=b['tenant'], cfg=mkcfg(), ov=None)); fe = features(tr); s = dispatch_v3(proba(fe), fe)[1]
