@@ -58,6 +58,10 @@ Run inside the frozen v6 harness on a checkpoint (seed 55; also seeds 71 to 73).
 
 Arm A4.3 of `docs/evidence/llm_baselines_plan.md`, unchanged (same prompts, items, temperature 0, spend cap USD 15 set in the provider console, claim rules A4.4). It runs only if the owner supplies a funded key and chooses the model; otherwise it is reported as not run.
 
+## Amendments
+
+- **A1 (20 Nov 2026, 19:10 IST, before any E4 run).** E4 calibration also uses up to 2,000 clean queries that have relevance labels but lie outside the port run's 2,500-query sample (taken in the port's own md5 order), the analogue of ESCI's extra census calibration queries. Reason: at alpha = 0.005 a stratum needs at least 199 calibration queries for a finite threshold, and the clean-train half alone (about 625 queries) may leave the rare stratum without one. The universal repair on the port stack is every repair of the catalogue at once (the four query repairs, then every configuration repair, then the R19 depth repair). The port trace has no corpus-mean sparse score, so port NQC and WIG use the mean of the top-100 sparse scores in its place.
+
 ## Rules
 
 - One judged run per item. Trials only check that the code runs. Amendments are dated and committed before the results they touch, with the code hash of every judged script recorded before its judged run.
