@@ -30,3 +30,15 @@ They are **not** inside these runs, because their code is not built. They will b
 
 ## 6. Amendments
 (none yet)
+
+**A1 — results and scorecard (20 Nov 2026, ~04:40 UTC; written after the results were read; sections 1 to 5 unedited).** Files: `kaggle/judged_v13_port_nq/`, `kaggle/judged_v13_port_fiqa/` (checkpoints and embeddings not committed).
+
+*Identity, checked before reading verdicts:* both kernels COMPLETE, 0 tracebacks, device cuda, code SHA-256 `916c3864…294f`, seeds 58 and 60, settings exactly as section 2. J-NQ log confirms the reused embeddings came from the NQ trial output and no checkpoint was present.
+
+| Run | Clean Hit@5 (test) | Detectors | Repairs | Solved (of 20) | Ports | Unsolved | Wall time | Peak RAM |
+|---|---|---|---|---|---|---|---|---|
+| J-NQ (seed 58) | 0.724 | 18 | 19 | **18** | yes | Q01 (detector THIN), K04 (detector and repair FAIL) | 1.6 h | 23.7 GB |
+| J-FiQA (seed 60) | 0.535 | 19 | 19 | **19** | yes | K04 (detector and repair FAIL) | 0.25 h | 2.4 GB |
+
+*Scorecard:* FiQA ports (0.85): held. K04 unsolved on FiQA (0.7): held. NQ completes (0.7): held. NQ ports given completion (0.6): held. NQ clean Hit@5 in [0.55, 0.80] (0.8): held (0.724).
+*Note:* J-FiQA (seed 60) reproduces the earlier judged port2 FiQA run (seed 9) exactly on every summary figure (clean Hit@5 0.5354, 19/19/19, K04 unsolved). FiQA's hashed 50/50 query split does not depend on the seed, so the agreement is expected and not independent evidence; it confirms the port5 edits changed nothing.
