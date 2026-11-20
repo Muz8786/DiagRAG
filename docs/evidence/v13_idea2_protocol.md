@@ -39,3 +39,17 @@ Two problems were found, and the method is changed **before** the held-out run (
 P0 and the pass rule (section 4) are unchanged.
 
 **D2 — development re-run with the D1 rules (code check; NFCorpus training split; numbers not used for anything else).** P0 0.186, P2 0.184, P12 0.468, oracle 0.924; P12 minus P0 +0.282 [+0.136, +0.444]; P2 minus P0 -0.002 [-0.076, +0.076]; 3 probes per episode. **Script frozen for the held-out run: `v13_idea2.py` SHA-256 prefix `8da2c1627e5a2f79`.** Held-out runs, once each: NFCorpus, ArguAna, FiQA (test split).
+
+**R1 — held-out result and scorecard (20 Nov 2026, ~08:10 UTC; written after the results were read; sections 0 to 6, D1 and D2 unedited).** Frozen script (D2), one held-out run per corpus; replay check 0 mismatches of 200 clean episodes on each. Files `v13_idea2_{nfcorpus,arguana,fiqa}.json` (per-episode outputs not committed: they contain only ids and booleans but are large).
+
+Unseen faults (leave-one-fault-out), macro closure over 20 faults:
+| Corpus | P0 passive (best guess) | P2 probe, attributor candidates | **P12 Idea 1 + Idea 2** | Oracle (true repair) | P12 minus P0 [95% CI] | Probes per episode |
+|---|---|---|---|---|---|---|
+| NFCorpus (seed 53) | 0.178 | 0.168 | **0.448** | 0.912 | +0.270 [+0.134, +0.420] | 3 |
+| ArguAna (seed 54) | 0.351 | 0.269 | **0.707** | 0.949 | +0.356 [+0.154, +0.544] | 3 |
+| FiQA (seed 60) | 0.220 | 0.204 | **0.570** | 0.926 | +0.350 [+0.194, +0.522] | 3 |
+
+**Pass rule (section 4): P12 passes on all three corpora** (lower bounds above 0, cost 3 retrievals per episode, at the cap). **P2 does not pass** (differences -0.010 to -0.082, intervals contain 0): probing alone cannot help when the right repair is not among the attributor's guesses, which under LOFO it never is.
+*Scorecard (section 5):* P2 passes (0.5): **did not hold**. P12 passes (0.5): **held**. P12 at least as good as P2 (0.6): **held**. Mean probes 1.5 to 2.5 (0.6): **did not hold** (3.0, because D1 removed early stopping). Oracle above 0.85 everywhere (0.8): **held**.
+*What it shows:* combining the two ideas (Idea 1 narrows the broken component, Idea 2 tries that component's repairs and keeps the one whose telemetry improves most, with no gold) more than doubles closure on faults the system never saw, on three corpora, at 3 extra retrievals per faulted query. It is still well below the oracle (0.45 to 0.71 against 0.91 to 0.95).
+*Limits:* the verifier and the candidate rule were redesigned on development data (D1) before the held-out run; the cost is the full budget (3) on every faulted episode; clean-query harm of probing was not measured here (the unchanged gate decides whether to repair at all); port stack only, small corpora, one seed each; ESCI and NQ not tested; query faults (Q01, Q03, Q04, Q05) and R05, R23, R24 stay near 0.
