@@ -31,4 +31,9 @@ P2 passes: about 0.5. P12 passes: about 0.5. P12 at least as good as P2: about 0
 Port stack only (20 faults, small corpora, many faults blunt); one seed per corpus; injected faults; probes cost real retrievals (latency measured but CPU, not production); clean-query harm is set by the unchanged gate and is not re-measured here.
 
 ## 7. Amendments
-(none yet)
+**D1 — changes from the development run (20 Nov 2026, ~07:10 UTC; NFCorpus training split only; no held-out episode has been probed).** Development output `_idea2/dev_nfc_train.jsonl` (not committed). Training-split macro closure: P0 0.186, P2 0.184, P12 0.246, oracle 0.924; mean probes 1.9 to 2.0.
+Two problems were found, and the method is changed **before** the held-out run (these are design changes motivated by development data, declared here; the held-out run will be run once):
+1. **The verifier.** "Top class NONE and no invariant violated" barely predicts that a probe fixed the query (probe-level AUROC of P(NONE) 0.594; P(success | healthy) 0.23 vs 0.11). The **increase** in P(NONE) from the original telemetry to the probed telemetry predicts it better (AUROC 0.713). New rule: probe every candidate up to the budget and **keep the one with the largest increase in P(NONE)** (no early stop; cost = number of candidates, at most 3).
+2. **The candidates.** Under LOFO the attributor's classes never include the left-out fault, so a repair specific to that fault can never be a P2 candidate. New candidate set for **P12**: the repairs of every fault whose Idea-1 component is in the flagged set (the repair library is indexed by component and is part of the system; the attributor still never saw the fault), ordered by attributor probability with the left-out fault's repair placed by its component's position; then the attributor's order; at most 3. P2 keeps attributor-only candidates with the new verifier.
+3. The development run is repeated with these rules as a code check; its numbers are recorded below and not used for anything else.
+P0 and the pass rule (section 4) are unchanged.
