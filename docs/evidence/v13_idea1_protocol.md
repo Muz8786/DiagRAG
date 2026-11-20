@@ -46,3 +46,18 @@ Pass: about 0.5. M2 at most 10%: about 0.6. Q03 localised by invariants: about 0
 
 ## 9. Amendments
 **D1 — development run (20 Nov 2026, ~05:20 UTC; v8 training split only; no held-out episode scored).** Script `docs/evidence/v13_idea1.py`, output `_idea1/dev_v8_train.json` (not committed). Training-split numbers: invariants 0.54 macro component accuracy against 0.19 for LOFO (difference +0.35 [+0.21, +0.51]); clean false alarm 1.5%. Directions checked against the data for the faults that scored 0 (R13, R23, R24, R05, Q04, Q05, Q07, R22): **every direction matches the feature definition**, so no coding error was found and **nothing is changed**. Two properties are recorded, not fixed: (a) ties in p-value are broken by the order of the table in section 1 (as coded before the first run); R23 ties RERANK (n_depth) with SERVING (n_final) and is assigned RERANK; (b) query faults rarely reach the Bonferroni threshold because rare words occur in clean queries too. The held-out run follows, once, with the code as committed.
+
+**R1 — held-out result and scorecard (20 Nov 2026, ~05:40 UTC; written after the results were read; sections 0 to 8 and D1 unedited).** Script `v13_idea1.py` (SHA-256 prefix `e35e0b17`, as committed in D1), one held-out run per judged run. Files `v13_idea1_v6gpu.json`, `v13_idea1_v8gpu.json`, `v13_idea1_v11agpu.json`.
+
+| Run | Invariants (no fault labels) | LOFO attributor (fault unseen) | Difference [95% CI] | Seen-fault attributor (reference) | Clean false alarm |
+|---|---|---|---|---|---|
+| v6 GPU seed 50 | 0.542 | 0.203 | +0.339 [+0.187, +0.501] | 0.904 | 0.72% |
+| v8 GPU seed 52 | 0.541 | 0.196 | +0.345 [+0.199, +0.506] | 0.899 | 0.88% |
+| v11.a GPU seed 55 | 0.546 | 0.212 | +0.334 [+0.190, +0.498] | 0.912 | 0.92% |
+
+Macro component accuracy over 31 single faults, held-out episodes. **Pass rule (section 7): met in all three runs. Idea 1 passes.**
+By group (v8): Q 0.16 vs 0.06, K 0.80 vs 0.23, R 0.56 vs 0.24.
+**Not localised by invariants (below 0.1 in v8):** Q01, Q03, Q04, Q05, Q07, Q09, R05, R06, R13, R23, R24, R26. Query faults rarely reach the Bonferroni threshold because rare words also occur in clean queries; R23 is assigned to RERANK by the pre-declared tie order (D1); R26 is picked as ANN; R05, R24, R13, R06 break invariants too weakly against clean variation.
+**M3 (composed, v7, descriptive):** every true component flagged in 76 of 155 held-out composed episodes: KK 20/20, QQ 20/20, RR 9/20, KR 9/20, QR 8/20, QK 4/20, TRIPLE 5/15, WITHIN_FAMILY 1/20. Note this is **component level**, not the family-level naming of v7 (40.0%); KK pairs often break two components (e.g. VECTORS and CONTENT), which the v7 dispatcher could never name together (0 of 20).
+*Scorecard (section 8):* pass (0.5): **held**. M2 <= 10% (0.6): **held** (0.7 to 0.9%). Q03 localised (0.2): **did not happen** (0.00), as expected. Invariants beat LOFO on R faults (0.7): **held**; on K content faults (0.5): **held**.
+*What this does and does not show:* a training-free check locates the broken component of a fault the system never saw about 2.7 times as often as the trained attributor does, at under 1% clean false alarms, stably across three seeds. It does **not** name the exact fault (the seen-fault attributor still does that best, 0.90), it does not repair anything (closure not measured), half the faults are not localisable this way, and the component map and invariant directions are the authors' (fixed before any score). Same injected-fault caveat as the rest of the project.
