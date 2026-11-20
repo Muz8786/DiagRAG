@@ -51,7 +51,7 @@ RAG systems answer from documents they retrieve. When an answer is wrong, the fa
 \item \emph{A measured limit of one-label dispatch.} A pre-registered study of 155 composed faults (pairs and triples) with a no-regression check, showing that a dispatcher with one label per fault group names no pair or triple inside a group, and what sequential repair still recovers (Section~\ref{sec:composed}).
 \item \emph{A telemetry-only observability loop}: a fault model of 32 injectable faults in four groups tied to public field evidence, 63 features computed from the retrieval trace alone, a gradient-boosted attributor with a family-first dispatcher and per-fault repairs, and detection and identification results against retrieval-stage, query-performance and LLM-judge baselines (Sections~\ref{sec:setting}, \ref{sec:method} and~\ref{sec:results}).
 \item \emph{Evidence under pre-registration}: gates and the SHA-256 of the exact code fixed before results, dated amendments, every judged run of the final configuration reported, natural-traffic evidence on queries no run had examined, and two retrieval stacks over three corpora (Section~\ref{sec:protocol}).
-\item \emph{Two training-free extensions}, invariant component isolation and probe-and-verify, with their negative result on unseen faults (Section~\ref{sec:ext}).
+\item \emph{Two training-free extensions}, invariant component isolation and probe-and-verify (Section~\ref{sec:ext}).
 \end{enumerate}
 Section~\ref{sec:failed} states the scope and limits of the evidence: faults are injected by the authors, the main results use one corpus (Amazon ESCI), and portability is shown on NQ and FiQA.
 
