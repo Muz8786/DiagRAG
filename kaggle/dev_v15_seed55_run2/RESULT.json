@@ -1,0 +1,173 @@
+{
+ "trial": false,
+ "role": "dev",
+ "seed": "55",
+ "params": {
+  "POOL": 600,
+  "A": 100,
+  "B": 40,
+  "NDICT": 2,
+  "NDICT_RANDOM": 4,
+  "T": 3,
+  "EPS": 0.002,
+  "KAPPA": 3.0,
+  "TRAFFIC": 100,
+  "PAIR_TRAFFIC": 40,
+  "SCREEN": 40,
+  "HARM_FRAC": 0.1,
+  "ALARM_P": 0.01,
+  "MAXM": 400,
+  "TIMEOUT": 90
+ },
+ "note": "frozen v6 executed on a judged checkpoint; measurements only",
+ "battery": {
+  "size": 101,
+  "random_part": 100,
+  "diagnostic_part": 1,
+  "undetected_faults": [
+   "R07"
+  ],
+  "indistinct_pairs": []
+ },
+ "S_primary": {
+  "harmful_singles": 41,
+  "detected": 1.0,
+  "family": 0.975609756097561,
+  "exact": 0.975609756097561,
+  "verified": 1.0,
+  "unseen_family_with_sibling": 0.9090909090909091,
+  "unseen_verified": 1.0,
+  "effective_pairs": 85,
+  "effective_same_group": 78,
+  "pairs_both_family": 0.8235294117647058,
+  "pairs_both_family_same_group": 0.8205128205128205,
+  "pairs_verified": 1.0,
+  "pairs_agg_dispatcher_both": 0.3176470588235294,
+  "traffic_closure_singles": {
+   "selftest": 1.0,
+   "loop": 0.9164144126550141,
+   "universal": 0.9263581030498323
+  },
+  "traffic_harm_singles": {
+   "selftest": 0.0,
+   "loop": 0.020485717274574985,
+   "universal": 0.05268750560045577
+  },
+  "traffic_closure_pairs": {
+   "selftest": 1.0,
+   "loop": 0.5949746570150981,
+   "universal": 0.9674979477675557
+  },
+  "traffic_harm_pairs": {
+   "selftest": 0.0007824726134585289,
+   "loop": 0.10253719297509907,
+   "universal": 0.05265270366053081
+  }
+ },
+ "S": {
+  "single": {
+   "n": 45,
+   "detected": 0.9555555555555556,
+   "exact": 0.9111111111111111,
+   "family": 0.9333333333333333,
+   "component": 0.9555555555555556,
+   "verified": 1.0,
+   "fallback": 0.2,
+   "agg_dispatcher_named": 1.0,
+   "mean_runs": 362.64444444444445,
+   "median_sec": 3.7847983837127686,
+   "traffic_closure": {
+    "selftest": 1.0,
+    "loop": 0.9164144126550141,
+    "universal": 0.9263581030498323
+   },
+   "traffic_harm": {
+    "selftest": 0.0,
+    "loop": 0.020321153053663783,
+    "universal": 0.05282021623938426
+   }
+  },
+  "unseen": {
+   "family": 0.26666666666666666,
+   "component": 0.28888888888888886,
+   "verified": 1.0,
+   "fallback": 0.7333333333333333,
+   "traffic_closure": {
+    "selftest": 1.0,
+    "loop": 0.9164144126550141,
+    "universal": 0.9263581030498323
+   },
+   "traffic_harm": {
+    "selftest": 0.0,
+    "loop": 0.020321153053663783,
+    "universal": 0.05282021623938426
+   }
+  },
+  "pairs": {
+   "n": 104,
+   "n_same_group": 90,
+   "detected": 1.0,
+   "both_exact": 0.5673076923076923,
+   "both_component": 0.7980769230769231,
+   "both_family": 0.7211538461538461,
+   "both_family_same_group": 0.7111111111111111,
+   "both_exact_same_group": 0.6333333333333333,
+   "verified": 1.0,
+   "agg_dispatcher_both": 0.4326923076923077,
+   "traffic_closure": {
+    "selftest": 1.0,
+    "loop": 0.6398935656807629,
+    "universal": 0.9698217910501647
+   },
+   "traffic_harm": {
+    "selftest": 0.0006313131313131313,
+    "loop": 0.09152375827060953,
+    "universal": 0.05215017117502694
+   }
+  }
+ },
+ "M_points": {
+  "total": 381,
+  "by_half": {
+   "dev": 187,
+   "heldout": 194
+  },
+  "by_fn": {
+   "q_terms": 3,
+   "bm25_scores": 12,
+   "enc_q": 25,
+   "ce_scores": 10,
+   "topn": 12,
+   "run": 319
+  }
+ },
+ "M": {
+  "evaluated": 187,
+  "status": {
+   "harmless": 179,
+   "crash": 5,
+   "harmful": 3
+  },
+  "harmful": 3,
+  "detected_selftest": 1.0,
+  "detected_telemetry": 1.0,
+  "detected_either": 1.0,
+  "detected_ce_drop_baseline": 0.6666666666666666,
+  "component_ok": 0.0,
+  "n_component_scored": 1,
+  "by_component": {
+   "RERANK": {
+    "n": 1,
+    "selftest": 1.0,
+    "telemetry": 1.0
+   },
+   "SHARED": {
+    "n": 2,
+    "selftest": 1.0,
+    "telemetry": 1.0
+   }
+  },
+  "median_probe_fail": 1.0,
+  "acceptance_sampling_bound": "a fault breaking a share h of working queries is missed by all 100 random probes with probability (1-h)^100"
+ }
+}

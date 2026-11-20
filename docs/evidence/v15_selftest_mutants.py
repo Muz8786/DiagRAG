@@ -72,7 +72,7 @@ class _TO(Exception): pass
 def _alarm(*a): raise _TO()
 
 
-def main(G, OUT, TRIAL, ROLE):
+def main(G, OUT, TRIAL, ROLE, PARTS=('S', 'M')):
     assert ROLE in ('dev', 'heldout'); os.makedirs(OUT, exist_ok=True); t0 = time.time(); log = lambda *a: print(f'[{time.time() - t0:6.0f}s]', *a, flush=True)
     if TRIAL: P.update(POOL=40, A=10, B=6, NDICT_RANDOM=2, TRAFFIC=8, PAIR_TRAFFIC=4, SCREEN=8, MAXM=6)
     run, succ, features, dispatch_v3, proba, apply_v3 = G['run'], G['succ'], G['features'], G['dispatch_v3'], G['proba'], G['apply_v3']
@@ -80,7 +80,7 @@ def main(G, OUT, TRIAL, ROLE):
     LAMS, GATES, stratum, mkcfg, N, E, BASE, TAU = G['LAMS'], G['GATES'], G['stratum'], G['mkcfg'], G['N'], G['E'], G['BASE'], G['TAU_NONE_G']
     A_ = GATES['ALPHA']; ESCI_PART, PARTS = G['ESCI_PART'], G['PARTS']
     rnd = lambda *tag: random.Random('|'.join(map(str, tag)))
-    R = dict(trial=bool(TRIAL), role=ROLE, seed=str(G['CFG']['SEED']), params=dict(P), note='frozen v6 executed on a judged checkpoint; measurements only')
+    R = dict(trial=bool(TRIAL), role=ROLE, parts=list(PARTS), seed=str(G['CFG']['SEED']), params=dict(P), note='frozen v6 executed on a judged checkpoint; measurements only')
 
     def sys_cfg(f, r):
         if f == 'R01': return dict(mask=(0.3, r.randrange(10**6), ()))
@@ -193,130 +193,133 @@ def main(G, OUT, TRIAL, ROLE):
         return dict(n=len(rows), broken=len(br), intact=len(it), closure=dict(selftest=cl('hb'), loop=cl('hl'), universal=cl('hu')),
                     harm=dict(selftest=hm('hb'), loop=hm('hl'), universal=hm('hu')), top_families=[l for l, _ in labs.most_common(2)])
 
-    # ---- S1: single system faults (evaluated draws), with and without the fault in the dictionary
-    tagE = 'deveval' if ROLE == 'dev' else 'heldout'; nI = 1 if TRIAL else 3
-    rowsS = []; fS = open(os.path.join(OUT, 'S_single.jsonl'), 'w')
-    for f in (SYS[:3] if TRIAL else SYS):
-        for j in range(nI):
-            over = sys_cfg(f, rnd(tagE, f, j)); res = selftest(over, SYS, posAll); lofo = selftest(over, [g for g in SYS if g != f], posA); nb = broken_by(over, traffic)
-            r = dict(fault=f, inst=j, harmful=nb > 0, traffic_broken=nb, sibling=any(FAMILY[g] == FAMILY[f] for g in SYS if g != f), detected=res['detected'], named=res['named'], exact=f in res['named'], family=FAMILY[f] in {FAMILY[g] for g in res['named']}, component=COMP[f] in {COMP[g] for g in res['named']},
-                     verified=res['verified'], fallback=res['fallback'], rounds=res['rounds'], runs=res['runs'], sec=res['sec'],
-                     lofo_named=lofo['named'], lofo_family=FAMILY[f] in {FAMILY[g] for g in lofo['named']}, lofo_component=COMP[f] in {COMP[g] for g in lofo['named']}, lofo_verified=lofo['verified'], lofo_fallback=lofo['fallback'])
-            if j == 0:
-                r['traffic'] = traffic_eval(over, res, traffic); r['traffic_lofo'] = traffic_eval(over, lofo, traffic)
-                r['agg_dispatcher_named'] = bool(r['traffic']['top_families'][:1] == [fam(f)])
-            rowsS.append(r); fS.write(json.dumps(r, default=str) + '\n'); fS.flush()
-        log('S single', f, {k: rowsS[-1][k] for k in ('detected', 'named', 'verified', 'lofo_named', 'lofo_verified')})
-    # ---- S2: pairs of system faults (all pairs that do not set the same knob)
-    prs = [pg for pg in pairs_all if not (KNOBS[pg[0]] & KNOBS[pg[1]])]
-    if TRIAL: prs = prs[:3]
-    rowsP = []; fP = open(os.path.join(OUT, 'S_pairs.jsonl'), 'w')
-    for (f, g) in prs:
-        of, og = sys_cfg(f, rnd(tagE + 'pair', f, g, 0)), sys_cfg(g, rnd(tagE + 'pair', f, g, 1)); over = dict(of, **og)
-        eff = broken_by(of, traffic) > 0 and broken_by(og, traffic) > 0
-        res = selftest(over, SYS, posAll); tv = traffic_eval(over, res, traffic[:P['PAIR_TRAFFIC']])
-        r = dict(pair=[f, g], effective=eff, same_group=GROUP[f] == GROUP[g], detected=res['detected'], named=res['named'], both_exact=f in res['named'] and g in res['named'],
-                 both_component={COMP[f], COMP[g]} <= {COMP[h] for h in res['named']}, both_family={FAMILY[f], FAMILY[g]} <= {FAMILY[h] for h in res['named']}, verified=res['verified'], fallback=res['fallback'], runs=res['runs'],
-                 traffic=tv, agg_dispatcher_both=set(tv['top_families']) >= {fam(f), fam(g)})
-        rowsP.append(r); fP.write(json.dumps(r, default=str) + '\n'); fP.flush()
-    log('S pairs done', len(rowsP))
-    m = lambda xs, k: (float(np.mean([bool(x[k]) for x in xs])) if xs else None)
-    tr0 = [r for r in rowsS if 'traffic' in r]
-    def tmean(rows, key, sub, who): v = [r[key][sub][who] for r in rows if key in r and r[key][sub][who] is not None]; return float(np.mean(v)) if v else None
-    HS = [r for r in rowsS if r['harmful']]; EP = [r for r in rowsP if r['effective']]
-    R['S_primary'] = dict(harmful_singles=len(HS), detected=m(HS, 'detected'), family=m(HS, 'family'), exact=m(HS, 'exact'), verified=m(HS, 'verified'),
-                          unseen_family_with_sibling=m([r for r in HS if r['sibling']], 'lofo_family'), unseen_verified=m(HS, 'lofo_verified'),
-                          effective_pairs=len(EP), effective_same_group=sum(r['same_group'] for r in EP), pairs_both_family=m(EP, 'both_family'),
-                          pairs_both_family_same_group=m([r for r in EP if r['same_group']], 'both_family'), pairs_verified=m(EP, 'verified'),
-                          pairs_agg_dispatcher_both=m(EP, 'agg_dispatcher_both'),
-                          traffic_closure_singles={w: tmean([r for r in tr0 if r['harmful']], 'traffic', 'closure', w) for w in ('selftest', 'loop', 'universal')},
-                          traffic_harm_singles={w: tmean([r for r in tr0 if r['harmful']], 'traffic', 'harm', w) for w in ('selftest', 'loop', 'universal')},
-                          traffic_closure_pairs={w: tmean(EP, 'traffic', 'closure', w) for w in ('selftest', 'loop', 'universal')},
-                          traffic_harm_pairs={w: tmean(EP, 'traffic', 'harm', w) for w in ('selftest', 'loop', 'universal')})
-    R['S'] = dict(single=dict(n=len(rowsS), detected=m(rowsS, 'detected'), exact=m(rowsS, 'exact'), family=m(rowsS, 'family'), component=m(rowsS, 'component'), verified=m(rowsS, 'verified'),
-                              fallback=m(rowsS, 'fallback'), agg_dispatcher_named=m(tr0, 'agg_dispatcher_named'),
-                              mean_runs=float(np.mean([r['runs'] for r in rowsS])), median_sec=float(np.median([r['sec'] for r in rowsS])),
-                              traffic_closure={w: tmean(tr0, 'traffic', 'closure', w) for w in ('selftest', 'loop', 'universal')},
-                              traffic_harm={w: tmean(tr0, 'traffic', 'harm', w) for w in ('selftest', 'loop', 'universal')}),
-                unseen=dict(family=m(rowsS, 'lofo_family'), component=m(rowsS, 'lofo_component'), verified=m(rowsS, 'lofo_verified'), fallback=m(rowsS, 'lofo_fallback'),
-                            traffic_closure={w: tmean(tr0, 'traffic_lofo', 'closure', w) for w in ('selftest', 'loop', 'universal')},
-                            traffic_harm={w: tmean(tr0, 'traffic_lofo', 'harm', w) for w in ('selftest', 'loop', 'universal')}),
-                pairs=dict(n=len(rowsP), n_same_group=sum(r['same_group'] for r in rowsP), detected=m(rowsP, 'detected'), both_exact=m(rowsP, 'both_exact'),
-                           both_component=m(rowsP, 'both_component'), both_family=m(rowsP, 'both_family'), both_family_same_group=m([r for r in rowsP if r['same_group']], 'both_family'), both_exact_same_group=m([r for r in rowsP if r['same_group']], 'both_exact'),
-                           verified=m(rowsP, 'verified'), agg_dispatcher_both=m(rowsP, 'agg_dispatcher_both'),
-                           traffic_closure={w: tmean(rowsP, 'traffic', 'closure', w) for w in ('selftest', 'loop', 'universal')},
-                           traffic_harm={w: tmean(rowsP, 'traffic', 'harm', w) for w in ('selftest', 'loop', 'universal')}))
-    log('S', R['S'])
+    if 'S' in PARTS:
+        # ---- S1: single system faults (evaluated draws), with and without the fault in the dictionary
+        tagE = 'deveval' if ROLE == 'dev' else 'heldout'; nI = 1 if TRIAL else 3
+        rowsS = []; fS = open(os.path.join(OUT, 'S_single.jsonl'), 'w')
+        for f in (SYS[:3] if TRIAL else SYS):
+            for j in range(nI):
+                over = sys_cfg(f, rnd(tagE, f, j)); res = selftest(over, SYS, posAll); lofo = selftest(over, [g for g in SYS if g != f], posA); nb = broken_by(over, traffic)
+                r = dict(fault=f, inst=j, harmful=nb > 0, traffic_broken=nb, sibling=any(FAMILY[g] == FAMILY[f] for g in SYS if g != f), detected=res['detected'], named=res['named'], exact=f in res['named'], family=FAMILY[f] in {FAMILY[g] for g in res['named']}, component=COMP[f] in {COMP[g] for g in res['named']},
+                         verified=res['verified'], fallback=res['fallback'], rounds=res['rounds'], runs=res['runs'], sec=res['sec'],
+                         lofo_named=lofo['named'], lofo_family=FAMILY[f] in {FAMILY[g] for g in lofo['named']}, lofo_component=COMP[f] in {COMP[g] for g in lofo['named']}, lofo_verified=lofo['verified'], lofo_fallback=lofo['fallback'])
+                if j == 0:
+                    r['traffic'] = traffic_eval(over, res, traffic); r['traffic_lofo'] = traffic_eval(over, lofo, traffic)
+                    r['agg_dispatcher_named'] = bool(r['traffic']['top_families'][:1] == [fam(f)])
+                rowsS.append(r); fS.write(json.dumps(r, default=str) + '\n'); fS.flush()
+            log('S single', f, {k: rowsS[-1][k] for k in ('detected', 'named', 'verified', 'lofo_named', 'lofo_verified')})
+        # ---- S2: pairs of system faults (all pairs that do not set the same knob)
+        prs = [pg for pg in pairs_all if not (KNOBS[pg[0]] & KNOBS[pg[1]])]
+        if TRIAL: prs = prs[:3]
+        rowsP = []; fP = open(os.path.join(OUT, 'S_pairs.jsonl'), 'w')
+        for (f, g) in prs:
+            of, og = sys_cfg(f, rnd(tagE + 'pair', f, g, 0)), sys_cfg(g, rnd(tagE + 'pair', f, g, 1)); over = dict(of, **og)
+            eff = broken_by(of, traffic) > 0 and broken_by(og, traffic) > 0
+            res = selftest(over, SYS, posAll); tv = traffic_eval(over, res, traffic[:P['PAIR_TRAFFIC']])
+            r = dict(pair=[f, g], effective=eff, same_group=GROUP[f] == GROUP[g], detected=res['detected'], named=res['named'], both_exact=f in res['named'] and g in res['named'],
+                     both_component={COMP[f], COMP[g]} <= {COMP[h] for h in res['named']}, both_family={FAMILY[f], FAMILY[g]} <= {FAMILY[h] for h in res['named']}, verified=res['verified'], fallback=res['fallback'], runs=res['runs'],
+                     traffic=tv, agg_dispatcher_both=set(tv['top_families']) >= {fam(f), fam(g)})
+            rowsP.append(r); fP.write(json.dumps(r, default=str) + '\n'); fP.flush()
+        log('S pairs done', len(rowsP))
+        m = lambda xs, k: (float(np.mean([bool(x[k]) for x in xs])) if xs else None)
+        tr0 = [r for r in rowsS if 'traffic' in r]
+        def tmean(rows, key, sub, who): v = [r[key][sub][who] for r in rows if key in r and r[key][sub][who] is not None]; return float(np.mean(v)) if v else None
+        HS = [r for r in rowsS if r['harmful']]; EP = [r for r in rowsP if r['effective']]
+        R['S_primary'] = dict(harmful_singles=len(HS), detected=m(HS, 'detected'), family=m(HS, 'family'), exact=m(HS, 'exact'), verified=m(HS, 'verified'),
+                              unseen_family_with_sibling=m([r for r in HS if r['sibling']], 'lofo_family'), unseen_verified=m(HS, 'lofo_verified'),
+                              effective_pairs=len(EP), effective_same_group=sum(r['same_group'] for r in EP), pairs_both_family=m(EP, 'both_family'),
+                              pairs_both_family_same_group=m([r for r in EP if r['same_group']], 'both_family'), pairs_verified=m(EP, 'verified'),
+                              pairs_agg_dispatcher_both=m(EP, 'agg_dispatcher_both'),
+                              traffic_closure_singles={w: tmean([r for r in tr0 if r['harmful']], 'traffic', 'closure', w) for w in ('selftest', 'loop', 'universal')},
+                              traffic_harm_singles={w: tmean([r for r in tr0 if r['harmful']], 'traffic', 'harm', w) for w in ('selftest', 'loop', 'universal')},
+                              traffic_closure_pairs={w: tmean(EP, 'traffic', 'closure', w) for w in ('selftest', 'loop', 'universal')},
+                              traffic_harm_pairs={w: tmean(EP, 'traffic', 'harm', w) for w in ('selftest', 'loop', 'universal')})
+        R['S'] = dict(single=dict(n=len(rowsS), detected=m(rowsS, 'detected'), exact=m(rowsS, 'exact'), family=m(rowsS, 'family'), component=m(rowsS, 'component'), verified=m(rowsS, 'verified'),
+                                  fallback=m(rowsS, 'fallback'), agg_dispatcher_named=m(tr0, 'agg_dispatcher_named'),
+                                  mean_runs=float(np.mean([r['runs'] for r in rowsS])), median_sec=float(np.median([r['sec'] for r in rowsS])),
+                                  traffic_closure={w: tmean(tr0, 'traffic', 'closure', w) for w in ('selftest', 'loop', 'universal')},
+                                  traffic_harm={w: tmean(tr0, 'traffic', 'harm', w) for w in ('selftest', 'loop', 'universal')}),
+                    unseen=dict(family=m(rowsS, 'lofo_family'), component=m(rowsS, 'lofo_component'), verified=m(rowsS, 'lofo_verified'), fallback=m(rowsS, 'lofo_fallback'),
+                                traffic_closure={w: tmean(tr0, 'traffic_lofo', 'closure', w) for w in ('selftest', 'loop', 'universal')},
+                                traffic_harm={w: tmean(tr0, 'traffic_lofo', 'harm', w) for w in ('selftest', 'loop', 'universal')}),
+                    pairs=dict(n=len(rowsP), n_same_group=sum(r['same_group'] for r in rowsP), detected=m(rowsP, 'detected'), both_exact=m(rowsP, 'both_exact'),
+                               both_component=m(rowsP, 'both_component'), both_family=m(rowsP, 'both_family'), both_family_same_group=m([r for r in rowsP if r['same_group']], 'both_family'), both_exact_same_group=m([r for r in rowsP if r['same_group']], 'both_exact'),
+                               verified=m(rowsP, 'verified'), agg_dispatcher_both=m(rowsP, 'agg_dispatcher_both'),
+                               traffic_closure={w: tmean(rowsP, 'traffic', 'closure', w) for w in ('selftest', 'loop', 'universal')},
+                               traffic_harm={w: tmean(rowsP, 'traffic', 'harm', w) for w in ('selftest', 'loop', 'universal')}))
+        log('S', R['S'])
 
-    # ---- M: blind code mutants of the retrieval path
-    SRC = open(G['__file__'], encoding='utf-8').read(); tree = ast.parse(SRC)
-    FN = {n.name: n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name in TARGETS}
-    MUT = []
-    for name, node in FN.items():
-        seg = ast.get_source_segment(SRC, node); base_line = node.lineno
-        marks = []
-        if name == 'run':
-            for k, ln in enumerate(seg.splitlines()):
-                for mk, cp in RUN_MARKERS:
-                    if mk in ln: marks.append((base_line + k, cp))
-        for k, (kind, nd, sub) in enumerate(pts_of(ast.parse(seg))):
-            line = base_line + nd.lineno - 1; pid = f'{name}|{line}|{nd.col_offset}|{getattr(nd, "end_col_offset", -1)}|{kind}|{sub}'; dkey = f'{name}|{line}|{nd.col_offset}|{kind}|{sub}'
-            half = 'dev' if int(hashlib.md5(pid.encode()).hexdigest()[0], 16) < 8 else 'heldout'
-            comp = FCOMP.get(name) or next((cp for ml, cp in sorted(marks, reverse=True) if ml <= line), 'OTHER')
-            MUT.append(dict(pid=pid, dkey=dkey, fn=name, k=k, kind=kind, line=line, half=half, comp=comp, seg=seg))
-    R['M_points'] = dict(total=len(MUT), by_half=dict(collections.Counter(x['half'] for x in MUT)), by_fn=dict(collections.Counter(x['fn'] for x in MUT)))
-    mine = sorted([x for x in MUT if x['half'] == ROLE and not (ROLE == 'heldout' and x['dkey'] in DEV_SEEN)], key=lambda x: hashlib.md5(x['pid'].encode()).hexdigest())[:P['MAXM']]
-    log('mutation points', R['M_points'], 'evaluated', len(mine))
-    ORIG = {n: G[n] for n in TARGETS}; CACHES = {'enc_q': '_QC', 'ce_scores': '_CEC'}
-    def clean_view(b):
-        tr = run(dict(q=b['q'], tenant=b['tenant'], cfg=mkcfg(), ov=None)); fe = features(tr); s = dispatch_v3(proba(fe), fe)[1]
-        return dict(s=float(s), ce1=float(np.max(tr['ce'])) if len(tr['ce']) else 0.0)
-    CV = {b['bid']: clean_view(b) for b in traffic}
-    def signp(bm, cm):
-        n = bm + cm
-        return 1.0 if n == 0 else float(sum(math.comb(n, i) for i in range(bm, n + 1)) / 2 ** n)
-    rowsM = []; fM = open(os.path.join(OUT, 'M_mutants.jsonl'), 'w'); signal.signal(signal.SIGALRM, _alarm)
-    for n_, x in enumerate(mine):
-        r = dict(pid=x['pid'], fn=x['fn'], kind=x['kind'], comp=x['comp'])
-        saved = {}
-        try:
-            code_ = compile(mutant_src(x), f"mutant:{x['pid']}", 'exec')
-            if x['fn'] in CACHES: saved[CACHES[x['fn']]] = G[CACHES[x['fn']]]; G[CACHES[x['fn']]] = {}
-            exec(code_, G); signal.alarm(P['TIMEOUT'])
-            fails = sum(not bool(succ(run(dict(q=b['q'], tenant=b['tenant'], cfg=mkcfg(), ov=None)), b['gold'], 5)) for b in screen); signal.alarm(0)
-            r['screen_fail'] = fails / len(screen); r['status'] = 'harmful' if r['screen_fail'] >= P['HARM_FRAC'] else 'harmless'
-            if r['status'] == 'harmful':
-                signal.alarm(P['TIMEOUT'] * 6)
-                y = [not bool(succ(run(dict(q=b['q'], tenant=b['tenant'], cfg=mkcfg(), ov=None)), b['gold'], 5)) for b in probes]
-                H = decode(y, SYS, posAll); r.update(selftest_alarm=any(y), probe_fail=float(np.mean(y)), decoded=list(H), decoded_comp=sorted({COMP[h] for h in H}))
-                bm = cm = bce = cce = 0; tel_err = False
-                for b in traffic:
-                    tr = run(dict(q=b['q'], tenant=b['tenant'], cfg=mkcfg(), ov=None))
-                    try: fe = features(tr); s = float(dispatch_v3(proba(fe), fe)[1])
-                    except Exception: tel_err = True; continue
-                    f1, f0 = s >= TAU, CV[b['bid']]['s'] >= TAU; bm += f1 and not f0; cm += f0 and not f1
-                    c1 = float(np.max(tr['ce'])) if len(tr['ce']) else 0.0; bce += c1 < CV[b['bid']]['ce1'] - 1e-6; cce += c1 > CV[b['bid']]['ce1'] + 1e-6
+    if 'M' in PARTS:
+        # ---- M: blind code mutants of the retrieval path
+        SRC = open(G['__file__'], encoding='utf-8').read(); tree = ast.parse(SRC)
+        FN = {n.name: n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name in TARGETS}
+        MUT = []
+        for name, node in FN.items():
+            seg = ast.get_source_segment(SRC, node); base_line = node.lineno
+            marks = []
+            if name == 'run':
+                for k, ln in enumerate(seg.splitlines()):
+                    for mk, cp in RUN_MARKERS:
+                        if mk in ln: marks.append((base_line + k, cp))
+            for k, (kind, nd, sub) in enumerate(pts_of(ast.parse(seg))):
+                line = base_line + nd.lineno - 1; pid = f'{name}|{line}|{nd.col_offset}|{getattr(nd, "end_col_offset", -1)}|{kind}|{sub}'; dkey = f'{name}|{line}|{nd.col_offset}|{kind}|{sub}'
+                half = 'dev' if int(hashlib.md5(pid.encode()).hexdigest()[0], 16) < 8 else 'heldout'
+                comp = FCOMP.get(name) or next((cp for ml, cp in sorted(marks, reverse=True) if ml <= line), 'OTHER')
+                MUT.append(dict(pid=pid, dkey=dkey, fn=name, k=k, kind=kind, line=line, half=half, comp=comp, seg=seg))
+        R['M_points'] = dict(total=len(MUT), by_half=dict(collections.Counter(x['half'] for x in MUT)), by_fn=dict(collections.Counter(x['fn'] for x in MUT)))
+        mine = sorted([x for x in MUT if x['half'] == ROLE and not (ROLE == 'heldout' and x['dkey'] in DEV_SEEN)], key=lambda x: hashlib.md5(x['pid'].encode()).hexdigest())[:P['MAXM']]
+        log('mutation points', R['M_points'], 'evaluated', len(mine))
+        ORIG = {n: G[n] for n in TARGETS}; CACHES = {'enc_q': '_QC', 'ce_scores': '_CEC'}
+        def clean_view(b):
+            tr = G['run'](dict(q=b['q'], tenant=b['tenant'], cfg=mkcfg(), ov=None)); fe = features(tr); s = dispatch_v3(proba(fe), fe)[1]
+            return dict(s=float(s), ce1=float(np.max(tr['ce'])) if len(tr['ce']) else 0.0)
+        CV = {b['bid']: clean_view(b) for b in traffic}
+        def signp(bm, cm):
+            n = bm + cm
+            return 1.0 if n == 0 else float(sum(math.comb(n, i) for i in range(bm, n + 1)) / 2 ** n)
+        rowsM = []; fM = open(os.path.join(OUT, 'M_mutants.jsonl'), 'w'); signal.signal(signal.SIGALRM, _alarm)
+        for n_, x in enumerate(mine):
+            r = dict(pid=x['pid'], fn=x['fn'], kind=x['kind'], comp=x['comp'])
+            saved = {}
+            try:
+                code_ = compile(mutant_src(x), f"mutant:{x['pid']}", 'exec')
+                if x['fn'] in CACHES: saved[CACHES[x['fn']]] = G[CACHES[x['fn']]]; G[CACHES[x['fn']]] = {}
+                exec(code_, G); signal.alarm(P['TIMEOUT'])
+                fails = sum(not bool(succ(G['run'](dict(q=b['q'], tenant=b['tenant'], cfg=mkcfg(), ov=None)), b['gold'], 5)) for b in screen); signal.alarm(0)
+                r['screen_fail'] = fails / len(screen); r['status'] = 'harmful' if r['screen_fail'] >= P['HARM_FRAC'] else 'harmless'
+                if r['status'] == 'harmful':
+                    signal.alarm(P['TIMEOUT'] * 6)
+                    y = [not bool(succ(G['run'](dict(q=b['q'], tenant=b['tenant'], cfg=mkcfg(), ov=None)), b['gold'], 5)) for b in probes]
+                    H = decode(y, SYS, posAll); r.update(selftest_alarm=any(y), probe_fail=float(np.mean(y)), decoded=list(H), decoded_comp=sorted({COMP[h] for h in H}))
+                    bm = cm = bce = cce = 0; tel_err = False
+                    for b in traffic:
+                        tr = G['run'](dict(q=b['q'], tenant=b['tenant'], cfg=mkcfg(), ov=None))
+                        try: fe = G['features'](tr); s = float(G['dispatch_v3'](G['proba'](fe), fe)[1])
+                        except Exception: tel_err = True; continue
+                        f1, f0 = s >= TAU, CV[b['bid']]['s'] >= TAU; bm += f1 and not f0; cm += f0 and not f1
+                        c1 = float(np.max(tr['ce'])) if len(tr['ce']) else 0.0; bce += c1 < CV[b['bid']]['ce1'] - 1e-6; cce += c1 > CV[b['bid']]['ce1'] + 1e-6
+                    signal.alarm(0)
+                    r.update(telemetry_p=signp(bm, cm), telemetry_alarm=bool(tel_err or signp(bm, cm) < P['ALARM_P']), telemetry_error=tel_err,
+                             ce_drop_p=signp(bce, cce), ce_drop_alarm=bool(signp(bce, cce) < P['ALARM_P']))
+                    r['either_alarm'] = bool(r['selftest_alarm'] or r['telemetry_alarm'])
+                    r['component_ok'] = (x['comp'] in r['decoded_comp']) if x['comp'] in ('DENSE', 'BM25', 'FUSION', 'RERANK', 'SERVING', 'FILTERS') else None
+            except _TO: r['status'] = 'timeout'
+            except Exception as ex: r['status'] = 'crash'; r['error'] = repr(ex)[:120]
+            finally:
                 signal.alarm(0)
-                r.update(telemetry_p=signp(bm, cm), telemetry_alarm=bool(tel_err or signp(bm, cm) < P['ALARM_P']), telemetry_error=tel_err,
-                         ce_drop_p=signp(bce, cce), ce_drop_alarm=bool(signp(bce, cce) < P['ALARM_P']))
-                r['either_alarm'] = bool(r['selftest_alarm'] or r['telemetry_alarm'])
-                r['component_ok'] = (x['comp'] in r['decoded_comp']) if x['comp'] in ('DENSE', 'BM25', 'FUSION', 'RERANK', 'SERVING', 'FILTERS') else None
-        except _TO: r['status'] = 'timeout'
-        except Exception as ex: r['status'] = 'crash'; r['error'] = repr(ex)[:120]
-        finally:
-            signal.alarm(0)
-            for nm, fn in ORIG.items(): G[nm] = fn
-            for k_, v_ in saved.items(): G[k_] = v_
-        rowsM.append(r); fM.write(json.dumps(r, default=str) + '\n'); fM.flush()
-        if n_ % 25 == 0: log('M', n_, 'of', len(mine), collections.Counter(z['status'] for z in rowsM))
-    H_ = [r for r in rowsM if r['status'] == 'harmful']; cmp_ = [r for r in H_ if r.get('component_ok') is not None]
-    R['M'] = dict(evaluated=len(rowsM), status=dict(collections.Counter(r['status'] for r in rowsM)), harmful=len(H_),
-                  detected_selftest=m(H_, 'selftest_alarm'), detected_telemetry=m(H_, 'telemetry_alarm'), detected_either=m(H_, 'either_alarm'),
-                  detected_ce_drop_baseline=m(H_, 'ce_drop_alarm'), component_ok=m(cmp_, 'component_ok'), n_component_scored=len(cmp_),
-                  by_component={c: dict(n=sum(r['comp'] == c for r in H_), selftest=m([r for r in H_ if r['comp'] == c], 'selftest_alarm'),
-                                        telemetry=m([r for r in H_ if r['comp'] == c], 'telemetry_alarm')) for c in sorted({r['comp'] for r in H_})},
-                  median_probe_fail=float(np.median([r['probe_fail'] for r in H_])) if H_ else None,
-                  acceptance_sampling_bound=f"a fault breaking a share h of working queries is missed by all {len(posA)} random probes with probability (1-h)^{len(posA)}")
-    log('M', R['M'])
+                for nm, fn in ORIG.items(): G[nm] = fn
+                for k_, v_ in saved.items(): G[k_] = v_
+            rowsM.append(r); fM.write(json.dumps(r, default=str) + '\n'); fM.flush()
+            if n_ % 25 == 0: log('M', n_, 'of', len(mine), collections.Counter(z['status'] for z in rowsM))
+        H_ = [r for r in rowsM if r['status'] == 'harmful']; cmp_ = [r for r in H_ if r.get('component_ok') is not None]
+        R['M'] = dict(evaluated=len(rowsM), status=dict(collections.Counter(r['status'] for r in rowsM)), harmful=len(H_),
+                      detected_selftest=m(H_, 'selftest_alarm'), detected_telemetry=m(H_, 'telemetry_alarm'), detected_either=m(H_, 'either_alarm'),
+                      detected_ce_drop_baseline=m(H_, 'ce_drop_alarm'), component_ok=m(cmp_, 'component_ok'), n_component_scored=len(cmp_),
+                      by_component={c: dict(n=sum(r['comp'] == c for r in H_), selftest=m([r for r in H_ if r['comp'] == c], 'selftest_alarm'),
+                                            telemetry=m([r for r in H_ if r['comp'] == c], 'telemetry_alarm')) for c in sorted({r['comp'] for r in H_})},
+                      median_probe_fail=float(np.median([r['probe_fail'] for r in H_])) if H_ else None,
+                      acceptance_sampling_bound=f"a fault breaking a share h of working queries is missed by all {len(posA)} random probes with probability (1-h)^{len(posA)}")
+        log('M', R['M'])
+
     json.dump(R, open(os.path.join(OUT, 'RESULT.json'), 'w'), indent=1, default=str)
     print(json.dumps({k: v for k, v in R.items()}, indent=1, default=str)[:15000])
