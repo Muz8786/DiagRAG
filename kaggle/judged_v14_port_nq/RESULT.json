@@ -1,0 +1,431 @@
+{
+ "trial": false,
+ "dataset": "nq",
+ "seed": 58,
+ "code_sha256": "916c3864282b1d9c168cce6943340b52d8728334c3c960d33fcb0d2d4224294f",
+ "alpha": 0.005,
+ "cap_frac": 0.2,
+ "replay_check": {
+  "mismatches": 0,
+  "n": 200
+ },
+ "calibration": {
+  "n": {
+   "common": 1552,
+   "rare": 16
+  },
+  "n_from_run": 616,
+  "n_extra": 952,
+  "losses_if_all_dispatched": {
+   "common": 0,
+   "rare": 0
+  },
+  "lambdas": {
+   "mondrian": {
+    "common": 6.20268185810291e-05,
+    "rare": Infinity
+   },
+   "capped": {
+    "common": 0.04622025818176079,
+    "rare": Infinity
+   },
+   "global_": 6.20268185810291e-05,
+   "tau_5pct_fpr": 0.2565012934695053
+  }
+ },
+ "non_ceiling_faults": [
+  "K04",
+  "R07",
+  "R22",
+  "R24"
+ ],
+ "identification_top1_on_faulted": 0.9588477366255144,
+ "median_seconds": {
+  "clean_run": 0.26413036249959987,
+  "dispatched_repair_and_run": 0.28198869049992936,
+  "universal_and_run": 0.8921028804998059
+ },
+ "policies": {
+  "none": {
+   "clean_loss": 0.0,
+   "clean_loss_wilson": [
+    0.0,
+    0.0030638638883890915
+   ],
+   "clean_n": 1250,
+   "clean_dispatch": 0.0,
+   "repairs_per_clean_query": 0.0,
+   "est_median_seconds_per_clean_query": 0.26413036249959987,
+   "mean_closure": 0.0,
+   "closure_non_ceiling": 0.0,
+   "per_fault": {
+    "Q01": 0.0,
+    "Q03": 0.0,
+    "Q04": 0.0,
+    "Q05": 0.0,
+    "K04": 0.0,
+    "K05": 0.0,
+    "K08": 0.0,
+    "R01": 0.0,
+    "R03": 0.0,
+    "R05": 0.0,
+    "R07": 0.0,
+    "R10": 0.0,
+    "R11": 0.0,
+    "R13": 0.0,
+    "R15": 0.0,
+    "R19": 0.0,
+    "R22": 0.0,
+    "R23": 0.0,
+    "R24": 0.0,
+    "R25": 0.0
+   }
+  },
+  "tau_5pct_fpr": {
+   "clean_loss": 0.0,
+   "clean_loss_wilson": [
+    0.0,
+    0.0030638638883890915
+   ],
+   "clean_n": 1250,
+   "clean_dispatch": 0.0448,
+   "repairs_per_clean_query": 0.0448,
+   "est_median_seconds_per_clean_query": 0.2767634558339967,
+   "mean_closure": 0.9034545454545453,
+   "closure_non_ceiling": 0.7,
+   "per_fault": {
+    "Q01": 0.9090909090909091,
+    "Q03": 0.68,
+    "Q04": 0.88,
+    "Q05": 0.96,
+    "K04": 0.24,
+    "K05": 1.0,
+    "K08": 0.96,
+    "R01": 1.0,
+    "R03": 1.0,
+    "R05": 1.0,
+    "R07": 0.8,
+    "R10": 1.0,
+    "R11": 1.0,
+    "R13": 1.0,
+    "R15": 1.0,
+    "R19": 0.88,
+    "R22": 0.92,
+    "R23": 1.0,
+    "R24": 0.84,
+    "R25": 1.0
+   }
+  },
+  "global_crc_0.005": {
+   "clean_loss": 0.0,
+   "clean_loss_wilson": [
+    0.0,
+    0.0030638638883890915
+   ],
+   "clean_n": 1250,
+   "clean_dispatch": 1.0,
+   "repairs_per_clean_query": 1.0,
+   "est_median_seconds_per_clean_query": 0.5461190529995292,
+   "mean_closure": 0.9234545454545454,
+   "closure_non_ceiling": 0.7999999999999999,
+   "per_fault": {
+    "Q01": 0.9090909090909091,
+    "Q03": 0.68,
+    "Q04": 0.88,
+    "Q05": 0.96,
+    "K04": 0.52,
+    "K05": 1.0,
+    "K08": 0.96,
+    "R01": 1.0,
+    "R03": 1.0,
+    "R05": 1.0,
+    "R07": 0.84,
+    "R10": 1.0,
+    "R11": 1.0,
+    "R13": 1.0,
+    "R15": 1.0,
+    "R19": 0.88,
+    "R22": 0.96,
+    "R23": 1.0,
+    "R24": 0.88,
+    "R25": 1.0
+   }
+  },
+  "mondrian_crc_0.005": {
+   "clean_loss": 0.0,
+   "clean_loss_wilson": [
+    0.0,
+    0.0030638638883890915
+   ],
+   "clean_n": 1250,
+   "clean_dispatch": 0.992,
+   "repairs_per_clean_query": 0.992,
+   "est_median_seconds_per_clean_query": 0.5438631434755298,
+   "mean_closure": 0.7560000000000001,
+   "closure_non_ceiling": 0.7999999999999999,
+   "per_fault": {
+    "Q01": 0.0,
+    "Q03": 0.2,
+    "Q04": 0.0,
+    "Q05": 0.0,
+    "K04": 0.52,
+    "K05": 1.0,
+    "K08": 0.96,
+    "R01": 1.0,
+    "R03": 1.0,
+    "R05": 1.0,
+    "R07": 0.84,
+    "R10": 1.0,
+    "R11": 0.96,
+    "R13": 1.0,
+    "R15": 1.0,
+    "R19": 0.8,
+    "R22": 0.96,
+    "R23": 1.0,
+    "R24": 0.88,
+    "R25": 1.0
+   }
+  },
+  "capped_crc_0.005": {
+   "clean_loss": 0.0,
+   "clean_loss_wilson": [
+    0.0,
+    0.0030638638883890915
+   ],
+   "clean_n": 1250,
+   "clean_dispatch": 0.2032,
+   "repairs_per_clean_query": 0.2032,
+   "est_median_seconds_per_clean_query": 0.3214304644091855,
+   "mean_closure": 0.7420000000000001,
+   "closure_non_ceiling": 0.73,
+   "per_fault": {
+    "Q01": 0.0,
+    "Q03": 0.2,
+    "Q04": 0.0,
+    "Q05": 0.0,
+    "K04": 0.28,
+    "K05": 1.0,
+    "K08": 0.96,
+    "R01": 1.0,
+    "R03": 1.0,
+    "R05": 1.0,
+    "R07": 0.8,
+    "R10": 1.0,
+    "R11": 0.96,
+    "R13": 1.0,
+    "R15": 1.0,
+    "R19": 0.8,
+    "R22": 0.96,
+    "R23": 1.0,
+    "R24": 0.88,
+    "R25": 1.0
+   }
+  },
+  "universal": {
+   "clean_loss": 0.024,
+   "clean_loss_wilson": [
+    0.016862186324962242,
+    0.03405461209678417
+   ],
+   "clean_n": 1250,
+   "clean_dispatch": 1.0,
+   "repairs_per_clean_query": 20.0,
+   "est_median_seconds_per_clean_query": 1.1562332429994058,
+   "mean_closure": 0.8814545454545455,
+   "closure_non_ceiling": 0.87,
+   "per_fault": {
+    "Q01": 0.9090909090909091,
+    "Q03": 0.56,
+    "Q04": 0.92,
+    "Q05": 0.52,
+    "K04": 0.6,
+    "K05": 1.0,
+    "K08": 1.0,
+    "R01": 0.96,
+    "R03": 0.92,
+    "R05": 1.0,
+    "R07": 1.0,
+    "R10": 0.96,
+    "R11": 0.88,
+    "R13": 0.92,
+    "R15": 0.76,
+    "R19": 0.88,
+    "R22": 0.92,
+    "R23": 0.96,
+    "R24": 0.96,
+    "R25": 1.0
+   }
+  }
+ },
+ "pass": {
+  "mondrian_loss_ok": true,
+  "capped_loss_ok": true,
+  "capped_closure_ok": true,
+  "E4_PASS": true
+ },
+ "E4b": {
+  "real_failures": 345,
+  "repairable": 23,
+  "coverage": 0.06666666666666667,
+  "unrepairable": 322,
+  "label_counts": {
+   "UNIV": 15,
+   "R19": 12,
+   "R15": 8,
+   "K08": 1,
+   "Q04": 1,
+   "K05": 1
+  },
+  "success_on_repairable": {
+   "loop_mondrian": 0.0,
+   "universal": 0.6521739130434783,
+   "random_catalogue_repair": 0.07867494824016565,
+   "oracle": 1.0,
+   "loop_minus_random": {
+    "mean": -0.07867494824016565,
+    "ci": [
+     -0.08695652173913046,
+     -0.07034161490683256
+    ]
+   },
+   "loop_minus_universal": {
+    "mean": -0.6521739130434783,
+    "ci": [
+     -0.8260869565217391,
+     -0.4782608695652174
+    ]
+   }
+  },
+  "detection_repairable_vs_success": {
+   "attributor": {
+    "auroc": 0.7516694691328369,
+    "ci": [
+     0.6382053623187041,
+     0.8549734530508916
+    ],
+    "n_pos": 23,
+    "n_neg": 905
+   },
+   "qpp_neg_nqc": {
+    "auroc": 0.7620466010088878,
+    "ci": [
+     0.6412585221313195,
+     0.8675901276629072
+    ],
+    "n_pos": 23,
+    "n_neg": 905
+   },
+   "qpp_neg_wig": {
+    "auroc": 0.7553206822003363,
+    "ci": [
+     0.6393297780507341,
+     0.8664460977048982
+    ],
+    "n_pos": 23,
+    "n_neg": 905
+   },
+   "neg_top_ce": {
+    "auroc": 0.6684602450156137,
+    "ci": [
+     0.5574071159592521,
+     0.783465267985456
+    ],
+    "n_pos": 23,
+    "n_neg": 905
+   }
+  },
+  "detection_unrepairable_vs_success": {
+   "attributor": {
+    "auroc": 0.6163378058405683,
+    "ci": [
+     0.580656992362377,
+     0.6513561768632523
+    ],
+    "n_pos": 322,
+    "n_neg": 905
+   },
+   "qpp_neg_nqc": {
+    "auroc": 0.5959816066710133,
+    "ci": [
+     0.5625388092949115,
+     0.6341314630513744
+    ],
+    "n_pos": 322,
+    "n_neg": 905
+   },
+   "qpp_neg_wig": {
+    "auroc": 0.60020932706496,
+    "ci": [
+     0.5631938313634544,
+     0.6367183699176423
+    ],
+    "n_pos": 322,
+    "n_neg": 905
+   },
+   "neg_top_ce": {
+    "auroc": 0.6240554545142583,
+    "ci": [
+     0.5891601839102928,
+     0.6601010587692547
+    ],
+    "n_pos": 322,
+    "n_neg": 905
+   }
+  },
+  "detection_all_failures_vs_success": {
+   "attributor": {
+    "auroc": 0.6253599167267195,
+    "ci": [
+     0.5898205689823178,
+     0.6562025080863115
+    ],
+    "n_pos": 345,
+    "n_neg": 905
+   },
+   "qpp_neg_nqc": {
+    "auroc": 0.6070526062935383,
+    "ci": [
+     0.572779986137537,
+     0.6413144451258602
+    ],
+    "n_pos": 345,
+    "n_neg": 905
+   },
+   "qpp_neg_wig": {
+    "auroc": 0.6105500840739851,
+    "ci": [
+     0.5755784065782437,
+     0.647590119261002
+    ],
+    "n_pos": 345,
+    "n_neg": 905
+   },
+   "neg_top_ce": {
+    "auroc": 0.6270157738810153,
+    "ci": [
+     0.595224139045277,
+     0.6619564132708122
+    ],
+    "n_pos": 345,
+    "n_neg": 905
+   }
+  },
+  "harm_on_real_successes": {
+   "n": 905,
+   "mondrian_broken": 0,
+   "capped_broken": 0,
+   "universal_broken": 30,
+   "mondrian_rate": 0.0,
+   "mondrian_wilson": [
+    0.0,
+    0.004226919190318753
+   ],
+   "universal_rate": 0.03314917127071823
+  },
+  "claims": {
+   "detects_repairable_real_failures": true,
+   "diagnosis_beats_chance": false,
+   "no_harm_on_real_traffic": true
+  }
+ }
+}
