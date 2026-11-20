@@ -11,6 +11,8 @@
 \usepackage{url}
 \usepackage{xcolor}
 \usepackage{tikz}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.16}
 \usetikzlibrary{arrows.meta,positioning,fit,calc}
 \def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em T\kern-.1667em\lower.7ex\hbox{E}\kern-.125em X}}
 \newcommand{\ci}[2]{[#1,\,#2]}
@@ -28,14 +30,10 @@
 \maketitle
 
 \begin{abstract}
-When a retrieval-augmented generation (RAG) system answers badly, the cause often lies in the retrieval stage, and that stage rarely reports it.
-We ask whether the telemetry that retrieval already produces (score gaps, rank agreement between dense and lexical legs, duplicate counts, cheap probes; 63 numbers per query) is enough to detect a fault, name its cause among 32 injectable fault types, apply a targeted repair, and bound the harm done to queries that were healthy, with no generated answer and no LLM call at run time.
-We build a gradient-boosted attributor, a family-first dispatcher, per-fault repairs, and a per-stratum conformal risk-control gate.
-Under pre-registered gates, the final configuration is adopted on two of three GPU seeds (27 of 28 core detectors and 27 of 28 repairs on seeds 50 and 55; 26 of 28 on seed 52, where Q03 and C2 miss the 0.70 bar).
-As a detector the attributor separates faulty from clean episodes at AUROC 0.977, against 0.734 for the retrieval-stage features of an existing system with the same classifier and 0.63 to 0.75 for zero-shot LLM judges; as a 32-class identifier it names the exact fault on 89.9\% of held-out faulted episodes.
-Two training-free additions are tested: invariant-based component isolation names the faulty component with accuracy 0.54 against 0.20 for the attributor (three seeds), and probe-and-verify improves component isolation on FiQA ($+0.35$) and NQ ($+0.39$).
-On 1,648 never-examined natural queries the deployed loop gains $+2.0$ to $+2.4$ points of Hit@5, almost all of it from two simple rules.
-We also report what failed: closure on unseen faults stays below its 0.50 bar (0.37 to 0.41), adding the two ideas to the ESCI unseen-fault test did not help (0.368 against 0.396), every fault is injected by the authors, and the dispatcher cannot name two faults of one group (0 of 75 within-group composed episodes).
+When a retrieval-augmented generation (RAG) system answers badly, the cause often lies in the retrieval stage, and that stage rarely reports it. We treat retrieval as something to observe: from the telemetry it already produces (score gaps, rank agreement between dense and lexical legs, duplicate counts, cheap probes; 63 numbers per query, no generated answer and no LLM call at run time) we detect a fault, name its cause among 32 injectable fault types, and apply a targeted repair.
+Our central claim is a guarantee on the repair action itself. A per-stratum conformal risk-control gate bounds the expected Hit@5 lost on queries that were healthy; a capped variant holds a clean loss of 0.08\% while dispatching on 16\% of clean queries and closing 0.838 of injected faults, against 1.63\% loss and a mean cost of 12 for a diagnosis-free universal repair. The second claim is a measured limit: a dispatcher that returns one label per fault group names every cause in 40.0\% of 155 composed-fault episodes and in 0 of 75 pairs and triples inside one group, although sequential repair still closes 72.9\% (83.9\% with oracle causes).
+Detection is a supporting result: AUROC 0.977 against 0.734 for the retrieval-stage features of an existing system with the same classifier and 0.63 to 0.75 for zero-shot LLM judges, and the exact fault is named on 89.9\% of held-out faulted episodes. Under pre-registered gates the configuration is adopted on two of three GPU seeds (Q03 and C2 miss the 0.70 bar on seed 52). The evidence spans two retrieval stacks and three corpora (Amazon ESCI, NQ, FiQA). On 1,648 never-examined natural queries the deployed loop gains $+2.0$ to $+2.4$ points of Hit@5, almost all of it from two deterministic rules.
+We also report what failed: closure on unseen faults stays below its 0.50 bar (0.37 to 0.41), adding two training-free extensions did not help on ESCI unseen faults (0.368 against 0.396), the natural-traffic gain does not come from the classifier, and every fault is injected by the authors.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -50,12 +48,11 @@ RAG systems answer from documents they retrieve. When an answer is wrong, the fa
 
 \textbf{Contributions.}
 \begin{enumerate}
-\item A fault model of 32 injectable retrieval faults in four groups, each tied to public field evidence by a tier, and a telemetry vector of 63 features computed from the retrieval trace alone (Section~\ref{sec:setting}).
-\item A diagnosis-and-repair loop: a gradient-boosted attributor, a family-first dispatcher with group fallbacks, per-fault repairs, and a per-stratum conformal risk-control gate that bounds expected loss on clean queries (Section~\ref{sec:method}).
-\item An evaluation under \emph{pre-registered} gates, with the SHA-256 of the exact code written before any result existed, dated amendments, and every failed run kept in the main table (Section~\ref{sec:protocol}).
-\item Results against retrieval-stage, query-performance and LLM-judge baselines; natural-traffic evidence on queries no run had examined; and a decomposition showing that the natural gain comes from two simple rules (Section~\ref{sec:results}).
-\item A pre-registered composed-fault study of fault pairs and triples, with a no-regression check on the single-fault gates, which exposes a structural limit of the dispatcher (Section~\ref{sec:composed}).
-\item Two training-free extensions, invariant component isolation and probe-and-verify, evaluated on held-out data of three seeds and two ported corpora, with their negative result on unseen faults (Section~\ref{sec:ext}).
+\item \emph{A guarantee on repair.} A per-stratum conformal risk-control gate that bounds the expected loss a repair action causes on healthy queries, with the cost of the guarantee shown as a closure-versus-cost trade-off across nine dispatch policies (Sections~\ref{sec:method} and~\ref{sec:cost}).
+\item \emph{A measured limit of one-label dispatch.} A pre-registered study of 155 composed faults (pairs and triples) with a no-regression check, showing that a dispatcher with one label per fault group names no pair or triple inside a group, and what sequential repair still recovers (Section~\ref{sec:composed}).
+\item \emph{A telemetry-only observability loop}: a fault model of 32 injectable faults in four groups tied to public field evidence, 63 features computed from the retrieval trace alone, a gradient-boosted attributor with a family-first dispatcher and per-fault repairs, and detection and identification results against retrieval-stage, query-performance and LLM-judge baselines (Sections~\ref{sec:setting}, \ref{sec:method} and~\ref{sec:results}).
+\item \emph{Evidence under pre-registration}: gates and the SHA-256 of the exact code fixed before results, dated amendments, every judged run of the final configuration reported, natural-traffic evidence on queries no run had examined, and two retrieval stacks over three corpora (Section~\ref{sec:protocol}).
+\item \emph{Two training-free extensions}, invariant component isolation and probe-and-verify, with their negative result on unseen faults (Section~\ref{sec:ext}).
 \end{enumerate}
 Section~\ref{sec:failed} lists what failed. We state the limits of the evidence at the outset: the faults are injected by the authors, on one English e-commerce corpus (Amazon ESCI) for the main results, with portability checked on two further corpora, NQ and FiQA.
 
@@ -67,7 +64,9 @@ Section~\ref{sec:failed} lists what failed. We state the limits of the evidence 
 
 \textbf{Query performance prediction (QPP).} QPP estimates retrieval quality without relevance labels. Normalised query commitment (NQC)~\cite{shtok2012qpp} and weighted information gain (WIG)~\cite{zhou2007wig} are standard predictors; we report both as detection baselines.
 
-\textbf{Risk control.} Conformal risk control bounds the expected value of a monotone loss~\cite{angelopoulos2024crc}; Mondrian (conditional) calibration gives the bound within strata~\cite{vovk2013mondrian}. We use both to gate when a repair may run.
+\textbf{Diagnosis and repair of RAG.} RAGChecker diagnoses retriever versus generator with modular metrics~\cite{ru2024ragchecker}. Leung et al.\ give a taxonomy of RAG error types and an auto-evaluation aligned with it~\cite{leung2026ragec}. D2R-RAG derives failure signatures from the query, the evidence and the response, then selects a corrective action under explicit latency and VRAM budgets~\cite{hashemifar2026d2r}. AgenticRAG-FP injects a certified fault at a known hop of an agentic pipeline and scores diagnosers against the known site~\cite{pothuru2026agenticfp}. These systems use generated text or model signals, name a stage or an error type, and do not bound the harm of the repair on healthy queries; we use retrieval telemetry only, name an executable fault, and bound that harm.
+
+\textbf{Risk control.} Conformal risk control bounds the expected value of a monotone loss~\cite{angelopoulos2024crc}; Mondrian (conditional) calibration gives the bound within strata~\cite{vovk2013mondrian}. C-RAG certifies generation risk for a given RAG configuration~\cite{kang2024crag}, and ToolChain-CRC calibrates an accept-or-intervene rule over agent trajectories~\cite{opoku2026toolchain}. From the abstracts we read, neither bounds the loss that a repair action causes on queries that were healthy, which is the quantity our gate controls. We use conformal risk control and Mondrian calibration to gate when a repair may run.
 
 \textbf{Retrieval components and data.} We use dense retrieval with BGE encoders~\cite{xiao2023bge}, BM25~\cite{robertson2009bm25}, reciprocal-rank fusion~\cite{cormack2009rrf}, sentence-transformer models~\cite{reimers2019sbert}, the Amazon ESCI shopping queries~\cite{reddy2022esci}, the Webis-QSpell-17 misspelling corpus~\cite{hagen2017qspell}, and BEIR for portability checks~\cite{thakur2021beir}. Classifiers are histogram gradient-boosted trees from scikit-learn~\cite{pedregosa2011sklearn}.
 
@@ -274,7 +273,7 @@ A post-hoc split by whether the gold document has real content (descriptive, not
 
 A census over the 7{,}175 queries shows why natural gains are bounded: the clean pipeline fails on 43.5\% of them, and the gold document is itself an empty placeholder (``nan'') for 58.6\% of queries and 69.1\% of failures (seed-50 GPU run), so no repair can win those.
 
-\subsection{The cost of the guarantee}
+\subsection{The cost of the guarantee}\label{sec:cost}
 Table~\ref{tab:policy} compares dispatch policies on held-out clean queries (CPU run, seed 50). The stratified Mondrian policy that carries the proof at $\alpha{=}0.005$ dispatches on 85\% of clean queries. The capped variant keeps the loss bound by construction at 16.1\% dispatch and closure 0.838, and it meets all four pre-registered targets (loss $\le$ 0.5\%, clean dispatch $\le$ 25\%, mean cost $\le$ 1.5, closure $\ge$ 0.80) on every run evaluated. The un-stratified global threshold breaks the loss bound (0.64\% in this run). We note that the capped variant was designed after the stratified one.
 
 \begin{table}[t]
@@ -297,6 +296,22 @@ universal repair, all & 1.63\% & 100\% & 12.00 & 0.761\\
 \bottomrule
 \end{tabular}
 \end{table}
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}
+\begin{axis}[width=0.95\columnwidth,height=5.6cm,xlabel={mean cost per clean query},ylabel={closure of injected faults},xmin=-0.3,xmax=12.8,ymin=0.55,ymax=0.93,grid=major,tick label style={font=\scriptsize},label style={font=\scriptsize},legend style={font=\tiny,at={(0.98,0.05)},anchor=south east}]
+\addplot[only marks,mark=*,blue] coordinates {(0.17,0.847)(2.36,0.892)(3.08,0.587)(4.03,0.846)(4.06,0.866)(4.22,0.887)(2.19,0.815)};
+\addlegendentry{gated policies}
+\addplot[only marks,mark=square*,red,mark size=3pt] coordinates {(1.03,0.838)};
+\addlegendentry{capped (bound holds)}
+\addplot[only marks,mark=triangle*,black,mark size=3pt] coordinates {(12.0,0.761)};
+\addlegendentry{universal repair}
+\end{axis}
+\end{tikzpicture}
+\caption{Closure against mean cost for the policies of Table~\ref{tab:policy} (CPU run, seed 50). The capped policy reaches 0.838 closure at cost 1.03, against 0.761 at cost 12.0 for the universal repair. The un-stratified global policy (cost 2.36) breaks the loss bound (0.64\%).}
+\label{fig:pareto}
+\end{figure}
 
 \subsection{Unseen faults}
 Leave-one-fault-out closure (U1) is 0.406 (GPU) and 0.413 (CPU) at seed 50, 0.397 at seed 52 and 0.396 at seed 55, below the 0.50 bar in every run. A group fallback repairs some unseen faults, but faults whose repair differs from the group repair stay unrepaired. We could not prove a ceiling.
@@ -414,7 +429,7 @@ The repository ships every script, every judged run (protocol with code hash, ve
 
 %--------------------------------------------------------------------------------------------------
 \section{Conclusion}
-Retrieval telemetry alone detects injected retrieval faults at AUROC 0.977, names and repairs most of them under pre-registered gates, and supports a conformal bound on harm to healthy queries, at a clean-dispatch cost that a capped variant reduces to 16\%. On real traffic, the measurable gain is small (+2.4 points) and comes from two simple rules; diagnosis adds little there. Composed faults expose a structural limit: one label per fault group. The open problems are unseen-fault generalisation (0.40 to 0.41 against a 0.50 bar), evidence beyond author-injected faults and a single corpus, and comparison with frontier models. We report these as limits, not as future-work boilerplate, because each is a place where the present evidence stops.
+The contribution that holds up best is a bound on the harm of repair: a per-stratum conformal gate keeps the expected Hit@5 lost on healthy queries below 0.5\% in every judged run, and a capped variant does so at 16\% clean dispatch and 0.838 closure. The second is a limit we measured and did not hide: one label per fault group names no pair or triple inside a group, while sequential repair still recovers most of the loss. Telemetry alone detects injected faults at AUROC 0.977 and names the exact fault on 89.9\% of faulted episodes, on two retrieval stacks and three corpora. On real traffic the measurable gain is small (+2.0 to +2.4 points) and comes from two deterministic rules, not from the classifier. The open problems are unseen-fault generalisation (0.40 to 0.41 against a 0.50 bar), evidence beyond author-injected faults, and comparison with frontier models. We state them as limits because each is a place where the present evidence stops.
 
 \section*{Disclosure and Ethics}
 The code, experiments and text were produced with an AI assistant (Claude, Anthropic) under the direction of the corresponding author. [OWNER: replace this sentence with the authorship and disclosure wording your venue requires.] No personal data are used; the corpora are public or synthetic, and no API key is stored in the repository.
@@ -430,6 +445,12 @@ The code, experiments and text were produced with an AI assistant (Claude, Anthr
 \bibitem{saadfalcon2024ares} J.~Saad-Falcon, O.~Khattab, C.~Potts, and M.~Zaharia, ``ARES: An automated evaluation framework for retrieval-augmented generation systems,'' in \emph{Proc.\ NAACL}, 2024, arXiv:2311.09476.
 \bibitem{yan2024crag} S.-Q.~Yan, J.-C.~Gu, Y.~Zhu, and Z.-H.~Ling, ``Corrective retrieval augmented generation,'' arXiv:2401.15884, 2024.
 \bibitem{raglog} RAGLog, open-source retrieval observability code, \url{https://github.com/hiraa221/raglog}, commit 7f7d068, Apache-2.0. [OWNER: add authors and paper if one exists.]
+\bibitem{ru2024ragchecker} D.~Ru \emph{et al.}, ``RAGChecker: A fine-grained framework for diagnosing retrieval-augmented generation,'' in \emph{NeurIPS Datasets and Benchmarks}, 2024, arXiv:2408.08067.
+\bibitem{leung2026ragec} K.~K.~Leung \emph{et al.}, ``Classifying and addressing the diversity of errors in retrieval-augmented generation systems,'' in \emph{Proc.\ EACL}, 2026, arXiv:2510.13975.
+\bibitem{hashemifar2026d2r} S.~Hashemifar, H.~A.~Noughabi, F.~Zarrinkalam, and A.~Dehghantanha, ``Diagnosing and repairing factual errors in RAG under budget constraints,'' arXiv:2606.29377, 2026.
+\bibitem{pothuru2026agenticfp} L.~Pothuru, ``When failures propagate: Causal failure attribution in agentic retrieval-augmented generation,'' in \emph{REALM Workshop, EMNLP}, 2026, arXiv:2608.20627.
+\bibitem{kang2024crag} M.~Kang, N.~M.~G\"urel, N.~Yu, D.~Song, and B.~Li, ``C-RAG: Certified generation risks for retrieval-augmented language models,'' in \emph{Proc.\ ICML}, 2024, arXiv:2402.03181.
+\bibitem{opoku2026toolchain} J.~Opoku and D.~Banahene, ``ToolChain-CRC: Conformal risk control for agentic AI under retrieval and tool-use drift,'' arXiv:2606.18467, 2026.
 \bibitem{shtok2012qpp} A.~Shtok, O.~Kurland, D.~Carmel, F.~Raiber, and G.~Markovits, ``Predicting query performance by query-drift estimation,'' \emph{ACM Trans.\ Inf.\ Syst.}, vol.~30, no.~2, 2012.
 \bibitem{zhou2007wig} Y.~Zhou and W.~B.~Croft, ``Query performance prediction in web search environments,'' in \emph{Proc.\ SIGIR}, 2007.
 \bibitem{angelopoulos2024crc} A.~N.~Angelopoulos, S.~Bates, A.~Fisch, L.~Lei, and T.~Schuster, ``Conformal risk control,'' in \emph{Proc.\ ICLR}, 2024, arXiv:2208.02814.
