@@ -5,12 +5,13 @@ Nothing in the frozen pipeline is changed except, temporarily and one at a time,
 import ast, collections, hashlib, itertools, json, math, os, random, signal, time
 import numpy as np
 
+RANDOM_FAULTS = {'R01', 'R07', 'R25', 'K04', 'R13', 'R06'}   # faults whose affected documents/terms change from draw to draw
 SYS = ['R01', 'R03', 'R05', 'R06', 'R07', 'R10', 'R11', 'R13', 'R15', 'R19', 'R22', 'R23', 'R24', 'R25', 'K04']
 COMP = dict(R01='DENSE', R03='DENSE', R07='DENSE', R10='DENSE', R11='DENSE', R15='DENSE', R25='DENSE', K04='DENSE', R13='BM25', R22='FUSION',
             R05='RERANK', R19='RERANK', R24='RERANK', R23='SERVING', R06='FILTERS')
 KNOBS = dict(R01={'mask'}, R03={'enc'}, R05={'ce'}, R06={'route'}, R07={'shift'}, R10={'q_noise'}, R11={'enc'}, R13={'sparse_shift'}, R15={'nprobe'},
              R19={'depth'}, R22={'fusion'}, R23={'result_cap'}, R24={'ce_trunc'}, R25={'nonfinite'}, K04={'emb_override'})
-P = dict(POOL=600, A=60, B=40, T=3, EPS=0.002, KAPPA=3.0, TRAFFIC=100, PAIR_TRAFFIC=40, SCREEN=40, HARM_FRAC=0.10, ALARM_P=0.01, MAXM=400, TIMEOUT=90)
+P = dict(POOL=600, A=100, B=40, NDICT=2, NDICT_RANDOM=4, T=3, EPS=0.002, KAPPA=3.0, TRAFFIC=100, PAIR_TRAFFIC=40, SCREEN=40, HARM_FRAC=0.10, ALARM_P=0.01, MAXM=400, TIMEOUT=90)
 TARGETS = ['run', 'bm25_scores', 'q_terms', 'topn', 'dense_all', 'ce_scores', 'enc_q']
 FCOMP = dict(bm25_scores='BM25', q_terms='BM25', dense_all='DENSE', enc_q='DENSE', ce_scores='RERANK', topn='SHARED')
 RUN_MARKERS = [('m = M(ov)', 'DENSE'), ('ok = np.ones', 'FILTERS'), ("if c['mask'] is not None", 'DENSE'), ('ss = bm25_scores', 'BM25'),
@@ -26,7 +27,7 @@ def _alarm(*a): raise _TO()
 
 def main(G, OUT, TRIAL, ROLE):
     assert ROLE in ('dev', 'heldout'); os.makedirs(OUT, exist_ok=True); t0 = time.time(); log = lambda *a: print(f'[{time.time() - t0:6.0f}s]', *a, flush=True)
-    if TRIAL: P.update(POOL=40, A=10, B=6, TRAFFIC=8, PAIR_TRAFFIC=4, SCREEN=8, MAXM=6)
+    if TRIAL: P.update(POOL=40, A=10, B=6, NDICT_RANDOM=2, TRAFFIC=8, PAIR_TRAFFIC=4, SCREEN=8, MAXM=6)
     run, succ, features, dispatch_v3, proba, apply_v3 = G['run'], G['succ'], G['features'], G['dispatch_v3'], G['proba'], G['apply_v3']
     REP, GROUP, GROUP_REPAIR, universal, FAMILY = G['REP'], G['GROUP'], G['GROUP_REPAIR'], G['universal'], G['FAMILY']
     LAMS, GATES, stratum, mkcfg, N, E, BASE, TAU = G['LAMS'], G['GATES'], G['stratum'], G['mkcfg'], G['N'], G['E'], G['BASE'], G['TAU_NONE_G']
@@ -66,7 +67,7 @@ def main(G, OUT, TRIAL, ROLE):
     log('pool', len(pool), 'traffic', len(traffic), 'screen', len(screen))
 
     # ---- dictionary (always from 'dict' draws, never the evaluated draws) and battery selection
-    DI = {f: [sys_cfg(f, rnd('dict', f, j)) for j in range(2)] for f in SYS}
+    DI = {f: [sys_cfg(f, rnd('dict', f, j)) for j in range(P['NDICT_RANDOM'] if f in RANDOM_FAULTS else P['NDICT'])] for f in SYS}
     Q = {f: np.mean([[not ok(b, over) for b in pool] for over in DI[f]], axis=0) for f in SYS}
     log('dictionary built', {f: round(float(Q[f].mean()), 3) for f in SYS})
     idx = list(range(len(pool))); A_idx = sorted(rnd('batteryA').sample(idx, min(P['A'], len(idx)))); rest = [i for i in idx if i not in set(A_idx)]
@@ -94,20 +95,21 @@ def main(G, OUT, TRIAL, ROLE):
             pk = np.full(len(pos), 1 - P['EPS'])
             for f in H: pk = pk * (1 - QB[f][pos])
             pf = 1 - pk; return float(np.sum(np.where(y, np.log(pf), np.log(1 - pf)))) - P['KAPPA'] * len(H)
-        hyps = [()] + [(f,) for f in faults] + [pg for pg in itertools.combinations(faults, 2)]
-        return max(hyps, key=ll)
-    def selftest(over, faults, pos):
-        pr = [probes[k] for k in pos]; named, nruns, a = [], 0, time.time(); y0 = None
-        for rd in range(3):
-            y = [not ok(b, over, named) for b in pr]; nruns += len(pr); y0 = y if y0 is None else y0
-            if not any(y): return dict(named=named, verified=True, fallback=False, detected=any(y0), rounds=rd, runs=nruns, sec=time.time() - a)
-            H = decode(y, [f for f in faults if f not in named], pos)
+        hyps = ([] if y.any() else [()]) + [(f,) for f in faults] + [pg for pg in itertools.combinations(faults, 2)]
+        return max(hyps, key=ll) if hyps else ()
+    def selftest(over, faults, pos, max_tries=5):
+        """Repair and retest: decode, apply the decoded repairs to the probes, keep them only if fewer probes fail; at most max_tries decodes, then rollback."""
+        pr = [probes[k] for k in pos]; a = time.time(); nruns = len(pr)
+        y = [not ok(b, over) for b in pr]; detected = any(y); named, excluded, tries = [], set(), 0
+        while any(y) and tries < max_tries:
+            H = decode(y, [f for f in faults if f not in named and f not in excluded], pos); tries += 1
             if not H: break
-            named = named + list(H)
-        y = [not ok(b, over, named) for b in pr]; nruns += len(pr)
-        if not any(y): return dict(named=named, verified=True, fallback=False, detected=True, rounds=3, runs=nruns, sec=time.time() - a)
+            y2 = [not ok(b, over, named + list(H)) for b in pr]; nruns += len(pr)
+            if sum(y2) < sum(y): named, y = named + list(H), y2
+            else: excluded |= set(H)
+        if not any(y): return dict(named=named, verified=True, fallback=False, detected=detected, rounds=tries, runs=nruns, sec=time.time() - a)
         y = [not ok(b, over, named + ['GR']) for b in pr]; nruns += len(pr)
-        return dict(named=named, verified=not any(y), fallback=True, detected=True, rounds=3, runs=nruns, sec=time.time() - a)
+        return dict(named=named, verified=not any(y), fallback=True, detected=detected, rounds=tries, runs=nruns, sec=time.time() - a)
     fam = lambda l: FAMILY.get(l, l)
     def traffic_eval(over, res, qs):
         reps_b = list(res['named']) + (['GR'] if res['fallback'] else []); rows = []
@@ -130,9 +132,9 @@ def main(G, OUT, TRIAL, ROLE):
     for f in (SYS[:3] if TRIAL else SYS):
         for j in range(nI):
             over = sys_cfg(f, rnd(tagE, f, j)); res = selftest(over, SYS, posAll); lofo = selftest(over, [g for g in SYS if g != f], posA)
-            r = dict(fault=f, inst=j, detected=res['detected'], named=res['named'], exact=f in res['named'], component=COMP[f] in {COMP[g] for g in res['named']},
+            r = dict(fault=f, inst=j, detected=res['detected'], named=res['named'], exact=f in res['named'], family=FAMILY[f] in {FAMILY[g] for g in res['named']}, component=COMP[f] in {COMP[g] for g in res['named']},
                      verified=res['verified'], fallback=res['fallback'], rounds=res['rounds'], runs=res['runs'], sec=res['sec'],
-                     lofo_named=lofo['named'], lofo_component=COMP[f] in {COMP[g] for g in lofo['named']}, lofo_verified=lofo['verified'], lofo_fallback=lofo['fallback'])
+                     lofo_named=lofo['named'], lofo_family=FAMILY[f] in {FAMILY[g] for g in lofo['named']}, lofo_component=COMP[f] in {COMP[g] for g in lofo['named']}, lofo_verified=lofo['verified'], lofo_fallback=lofo['fallback'])
             if j == 0:
                 r['traffic'] = traffic_eval(over, res, traffic); r['traffic_lofo'] = traffic_eval(over, lofo, traffic)
                 r['agg_dispatcher_named'] = bool(r['traffic']['top_families'][:1] == [fam(f)])
@@ -146,23 +148,23 @@ def main(G, OUT, TRIAL, ROLE):
         over = dict(sys_cfg(f, rnd(tagE + 'pair', f, g, 0)), **sys_cfg(g, rnd(tagE + 'pair', f, g, 1)))
         res = selftest(over, SYS, posAll); tv = traffic_eval(over, res, traffic[:P['PAIR_TRAFFIC']])
         r = dict(pair=[f, g], same_group=GROUP[f] == GROUP[g], detected=res['detected'], named=res['named'], both_exact=f in res['named'] and g in res['named'],
-                 both_component={COMP[f], COMP[g]} <= {COMP[h] for h in res['named']}, verified=res['verified'], fallback=res['fallback'], runs=res['runs'],
+                 both_component={COMP[f], COMP[g]} <= {COMP[h] for h in res['named']}, both_family={FAMILY[f], FAMILY[g]} <= {FAMILY[h] for h in res['named']}, verified=res['verified'], fallback=res['fallback'], runs=res['runs'],
                  traffic=tv, agg_dispatcher_both=set(tv['top_families']) >= {fam(f), fam(g)})
         rowsP.append(r); fP.write(json.dumps(r, default=str) + '\n'); fP.flush()
     log('S pairs done', len(rowsP))
     m = lambda xs, k: (float(np.mean([bool(x[k]) for x in xs])) if xs else None)
     tr0 = [r for r in rowsS if 'traffic' in r]
     def tmean(rows, key, sub, who): v = [r[key][sub][who] for r in rows if r[key][sub][who] is not None]; return float(np.mean(v)) if v else None
-    R['S'] = dict(single=dict(n=len(rowsS), detected=m(rowsS, 'detected'), exact=m(rowsS, 'exact'), component=m(rowsS, 'component'), verified=m(rowsS, 'verified'),
+    R['S'] = dict(single=dict(n=len(rowsS), detected=m(rowsS, 'detected'), exact=m(rowsS, 'exact'), family=m(rowsS, 'family'), component=m(rowsS, 'component'), verified=m(rowsS, 'verified'),
                               fallback=m(rowsS, 'fallback'), agg_dispatcher_named=m(tr0, 'agg_dispatcher_named'),
                               mean_runs=float(np.mean([r['runs'] for r in rowsS])), median_sec=float(np.median([r['sec'] for r in rowsS])),
                               traffic_closure={w: tmean(tr0, 'traffic', 'closure', w) for w in ('selftest', 'loop', 'universal')},
                               traffic_harm={w: tmean(tr0, 'traffic', 'harm', w) for w in ('selftest', 'loop', 'universal')}),
-                unseen=dict(component=m(rowsS, 'lofo_component'), verified=m(rowsS, 'lofo_verified'), fallback=m(rowsS, 'lofo_fallback'),
+                unseen=dict(family=m(rowsS, 'lofo_family'), component=m(rowsS, 'lofo_component'), verified=m(rowsS, 'lofo_verified'), fallback=m(rowsS, 'lofo_fallback'),
                             traffic_closure={w: tmean(tr0, 'traffic_lofo', 'closure', w) for w in ('selftest', 'loop', 'universal')},
                             traffic_harm={w: tmean(tr0, 'traffic_lofo', 'harm', w) for w in ('selftest', 'loop', 'universal')}),
                 pairs=dict(n=len(rowsP), n_same_group=sum(r['same_group'] for r in rowsP), detected=m(rowsP, 'detected'), both_exact=m(rowsP, 'both_exact'),
-                           both_component=m(rowsP, 'both_component'), both_exact_same_group=m([r for r in rowsP if r['same_group']], 'both_exact'),
+                           both_component=m(rowsP, 'both_component'), both_family=m(rowsP, 'both_family'), both_family_same_group=m([r for r in rowsP if r['same_group']], 'both_family'), both_exact_same_group=m([r for r in rowsP if r['same_group']], 'both_exact'),
                            verified=m(rowsP, 'verified'), agg_dispatcher_both=m(rowsP, 'agg_dispatcher_both'),
                            traffic_closure={w: tmean(rowsP, 'traffic', 'closure', w) for w in ('selftest', 'loop', 'universal')},
                            traffic_harm={w: tmean(rowsP, 'traffic', 'harm', w) for w in ('selftest', 'loop', 'universal')}))
@@ -184,6 +186,9 @@ def main(G, OUT, TRIAL, ROLE):
                 elif isinstance(v, float): out += [('fhalf', node, 0), ('fdouble', node, 0)]
             elif isinstance(node, ast.UnaryOp) and isinstance(node.op, ast.USub): out.append(('neg', node, 0))
             elif isinstance(node, ast.If): out.append(('ifnot', node, 0))
+            elif isinstance(node, ast.BoolOp): out.append(('andor', node, 0))
+            elif isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id in ('min', 'max'): out.append(('minmax', node, 0))
+            elif isinstance(node, ast.Slice) and node.upper is not None and not isinstance(node.upper, ast.Constant): out += [('slice+', node, 0), ('slice-', node, 0)]
         return out
     MUT = []
     for name, node in FN.items():
@@ -212,6 +217,9 @@ def main(G, OUT, TRIAL, ROLE):
         elif kind == 'fdouble': nd.value = nd.value * 2.0
         elif kind == 'neg': nd.op = ast.UAdd()
         elif kind == 'ifnot': nd.test = ast.UnaryOp(op=ast.Not(), operand=nd.test)
+        elif kind == 'andor': nd.op = ast.Or() if isinstance(nd.op, ast.And) else ast.And()
+        elif kind == 'minmax': nd.func = ast.Name(id='max' if nd.func.id == 'min' else 'min', ctx=ast.Load())
+        elif kind in ('slice+', 'slice-'): nd.upper = ast.BinOp(left=nd.upper, op=ast.Add() if kind == 'slice+' else ast.Sub(), right=ast.Constant(1))
         return ast.unparse(ast.fix_missing_locations(t))
     ORIG = {n: G[n] for n in TARGETS}; CACHES = {'enc_q': '_QC', 'ce_scores': '_CEC'}
     def clean_view(b):
