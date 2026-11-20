@@ -62,6 +62,8 @@ Arm A4.3 of `docs/evidence/llm_baselines_plan.md`, unchanged (same prompts, item
 
 - **A1 (20 Nov 2026, 19:10 IST, before any E4 run).** E4 calibration also uses up to 2,000 clean queries that have relevance labels but lie outside the port run's 2,500-query sample (taken in the port's own md5 order), the analogue of ESCI's extra census calibration queries. Reason: at alpha = 0.005 a stratum needs at least 199 calibration queries for a finite threshold, and the clean-train half alone (about 625 queries) may leave the rare stratum without one. The universal repair on the port stack is every repair of the catalogue at once (the four query repairs, then every configuration repair, then the R19 depth repair). The port trace has no corpus-mean sparse score, so port NQC and WIG use the mean of the top-100 sparse scores in its place.
 
+- **A2 (20 Nov 2026, 19:35 IST, before any judged E2 to E4 run).** Judged code: `v14_esci_analysis.py` SHA-256 `28c0e394e860ec921ecfcea19f7610efdc08f6b5d17cb6a82a39075117b03070`; `v14_port_guarantee.py` SHA-256 `67841a141a36134618911deb218e2e939e7052d219db3ad9234b5c4233e52631`. Trials (ESCI seed 55, FiQA) ran end to end; every reproduction gate agreed on 100% of trial items. Trial numbers are not results and are not reported.
+
 ## Rules
 
 - One judged run per item. Trials only check that the code runs. Amendments are dated and committed before the results they touch, with the code hash of every judged script recorded before its judged run.
