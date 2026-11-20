@@ -55,3 +55,9 @@ Unseen faults (leave-one-fault-out), macro closure over 20 faults:
 *Limits:* the verifier and the candidate rule were redesigned on development data (D1) before the held-out run; the cost is the full budget (3) on every faulted episode; clean-query harm of probing was not measured here (the unchanged gate decides whether to repair at all); port stack only, small corpora, one seed each; ESCI and NQ not tested; query faults (Q01, Q03, Q04, Q05) and R05, R23, R24 stay near 0.
 
 **A1 — NQ added (20 Nov 2026, ~07:00 UTC; before any NQ probe).** The owner asked for everything to run on Kaggle, which removes the sandbox-CPU limit that excluded NQ in section 1. The frozen script (D2, SHA-256 prefix `8da2c1627e5a2f79`) is run **unchanged**, once, on the held-out split of the **v13 judged NQ run** (seed 58, code `916c3864…`), on Kaggle (`kaggle/DiagRAG_v13_idea2_nq.ipynb`), with the same pass rule (section 4) for NQ on its own. NFCorpus, ArguAna and FiQA results (R1) are unchanged.
+
+**R2 — NQ held-out result (20 Nov 2026, ~08:30 UTC; under A1; frozen script `8da2c162…`, run once on Kaggle `muzammilveil99/diagrag-v13-idea2-nq`).** Replay check 0 mismatches of 200 clean episodes; 486 held-out faulted episodes; 0 tracebacks; peak RAM 26.2 GB. File `v13_idea2_nq.json`.
+| Corpus | P0 passive | P2 probe alone | **P12 Idea 1 + Idea 2** | Oracle | P12 minus P0 [95% CI] | Probes |
+|---|---|---|---|---|---|---|
+| NQ (seed 58, 2.68M passages) | 0.142 | 0.135 | **0.468** | 0.919 | +0.326 [+0.191, +0.473] | 3 |
+**P12 passes on NQ** (lower bound above 0); P2 does not. P12 now passes on all four corpora tested (NFCorpus, ArguAna, FiQA, NQ).
