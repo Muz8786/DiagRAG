@@ -31,3 +31,16 @@ A passes: about 0.6. U1 reaches 0.50: about 0.35. C passes: about 0.4. B attribu
 
 ## Amendments
 (none yet)
+
+**R1 — judged result and scorecard (20 Nov 2026, ~10:50 UTC; written after the results were read; everything above unedited).** Kaggle `syedmuzammilquadri/diagrag-v13-esci-ideas-judged`, run once after the trial; v11.a checkpoint staged and identity-checked (code `44176b9a…`, seed 55); 0 tracebacks; experiment 27 min; peak RAM 5.4 GB. Files: `kaggle/judged_v13_esci_ideas/` (`RESULT.json`, `partA.jsonl`, `partC.jsonl`).
+
+**Reproduction gates:** A 1,250 of 1,250 episodes agree with the stored U1 rows (recomputed U1 = stored 0.396); C 1,648 of 1,648 queries agree with the stored deployed loop.
+
+**Part A, U1 with Ideas 1 + 2 — DOES NOT PASS.** U1: stored dispatcher 0.396, Ideas 1 + 2 **0.368**; difference -0.028 [-0.114, +0.044]; bar 0.50 not met; 3 probes per flagged episode. Per fault the effect is mixed: large gains on Q02 (+0.40), K06 (+0.18), R03 (+0.14), R19 (+0.12), R01 (+0.12), and large losses on **K04 (-0.74)**, K12 (-0.32), R06 (-0.20), R13 (-0.18), R24 (-0.18). The main cause is visible in the picks: for K04 (stale vectors) the probe keeps the R01 repair (rebuild the dense view) in 36 of 46 flagged episodes; it raises the attributor's P(NONE) but does not bring the gold back, while v6's group fallback (rollback plus dense rebuild) did. **On the main ESCI stack the "largest increase in P(NONE)" verifier picks a wrong repair often enough to cancel its gains.** This differs from the port corpora (R1, R2 of `v13_idea2_protocol.md`), where the same rule passed on four corpora; a likely reason, not tested, is that v6's P0 already includes group fallbacks and family repairs, which the port stack lacks.
+
+**Part B, real failures (1,648 never-examined natural queries, 676 real failures; descriptive).** Fault score AUROC (failure vs success): attributor 0.603, invariants 0.551; excluding the 938 queries whose gold document is an empty placeholder (215 failures left of 710), attributor 0.640, invariants 0.532. **Telemetry trained on injected faults flags real failures only weakly**, and the training-free invariants barely do.
+
+**Part C, real failures repaired by Ideas 1 + 2 inside the deployed loop — PASSES (non-inferior).** Hit@5: no repair 0.590, deployed loop 0.610, with Ideas 1 + 2 0.612. Ideas minus no repair +2.18 points [+1.33, +3.03]; ideas minus deployed loop +0.18 [-0.06, +0.49] (lower bound above -0.5 points: non-inferior, **not** better); 43 fixed and 7 broken against no repair; 5 queries differ from the deployed loop; 1.37 extra retrievals per natural query on average.
+
+*Scorecard:* A passes (0.6): **did not hold**. U1 reaches 0.50 (0.35): **did not hold**. C passes (0.4): **held**. B attributor AUROC above 0.60 (0.5): **held**, barely (0.603).
+*Overall:* Idea 1 (localisation, `v13_idea1_protocol.md` R1) stands; Ideas 1 + 2 improve unseen-fault repair on four port corpora but **not** on the ESCI main stack, where U1 stays at 0.37 to 0.40 against its 0.50 bar. All of this is reported as measured.
