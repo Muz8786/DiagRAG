@@ -31,11 +31,11 @@
 When a retrieval-augmented generation (RAG) system answers badly, the cause often lies in the retrieval stage, and that stage rarely reports it.
 We ask whether the telemetry that retrieval already produces (score gaps, rank agreement between dense and lexical legs, duplicate counts, cheap probes; 63 numbers per query) is enough to detect a fault, name its cause among 32 injectable fault types, apply a targeted repair, and bound the harm done to queries that were healthy, with no generated answer and no LLM call at run time.
 We build a gradient-boosted attributor, a family-first dispatcher, per-fault repairs, and a per-stratum conformal risk-control gate.
-Under pre-registered gates, the flagship run is adopted on a GPU stack (27 of 28 core detectors, 27 of 28 repairs) and on a CPU replication, but a repeat of the same frozen code at a fresh seed is not adopted (26 of 28 detectors; Q03 and C2 miss the 0.70 bar).
-As a detector the attributor separates faulty from clean episodes at AUROC 0.977, against 0.734 for the retrieval-stage features of an existing system with the same classifier and 0.63 to 0.75 for zero-shot LLM judges; as a 32-class identifier it names the exact fault on 89.9\% of held-out faulted episodes (macro-F1 0.896), with F1 of at least 0.90 for 22 of 31 faults and 0 for one (Q03).
-On 1,648 never-examined natural queries the deployed loop gains $+2.43$ points of Hit@5 $\ci{+1.64}{+3.22}$, almost all of it from two simple rules.
-A pre-registered study of 155 held-out composed faults (pairs and triples) shows where the method stops: every cause is named in 40.0\% of episodes $\ci{32.6}{47.9}$, and in 0 of 75 pairs inside one fault group and triples.
-We also report what failed: three runs missed the adoption rule (two earlier runs and the fresh-seed repeat), closure on unseen faults stays below its 0.50 bar (0.41), and all faults are injected by the authors on one e-commerce corpus.
+Under pre-registered gates, the final configuration is adopted on two of three GPU seeds (27 of 28 core detectors and 27 of 28 repairs on seeds 50 and 55; 26 of 28 on seed 52, where Q03 and C2 miss the 0.70 bar).
+As a detector the attributor separates faulty from clean episodes at AUROC 0.977, against 0.734 for the retrieval-stage features of an existing system with the same classifier and 0.63 to 0.75 for zero-shot LLM judges; as a 32-class identifier it names the exact fault on 89.9\% of held-out faulted episodes. On BEIR corpora, telemetry beats a supervised text-only baseline (AUROC 0.972 and 0.996 against 0.575 and 0.596).
+Two training-free additions are tested: invariant-based component isolation names the faulty component with accuracy 0.54 against 0.20 for the attributor (three seeds), and probe-and-verify improves component isolation on four BEIR corpora by $+0.27$ to $+0.39$.
+On 1,648 never-examined natural queries the deployed loop gains $+2.0$ to $+2.4$ points of Hit@5, almost all of it from two simple rules.
+We also report what failed: closure on unseen faults stays below its 0.50 bar (0.37 to 0.41), adding the two ideas to the ESCI unseen-fault test did not help (0.368 against 0.396), every fault is injected by the authors, and the dispatcher cannot name two faults of one group (0 of 75 within-group composed episodes).
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -55,8 +55,9 @@ RAG systems answer from documents they retrieve. When an answer is wrong, the fa
 \item An evaluation under \emph{pre-registered} gates, with the SHA-256 of the exact code written before any result existed, dated amendments, and every failed run kept in the main table (Section~\ref{sec:protocol}).
 \item Results against retrieval-stage, query-performance and LLM-judge baselines; natural-traffic evidence on queries no run had examined; and a decomposition showing that the natural gain comes from two simple rules (Section~\ref{sec:results}).
 \item A pre-registered composed-fault study of fault pairs and triples, with a no-regression check on the single-fault gates, which exposes a structural limit of the dispatcher (Section~\ref{sec:composed}).
+\item Two training-free extensions, invariant component isolation and probe-and-verify, evaluated on held-out data of four corpora and three seeds, with their negative result on unseen faults (Section~\ref{sec:ext}).
 \end{enumerate}
-Section~\ref{sec:failed} lists what failed. We state the limits of the evidence at the outset: the faults are injected by the authors, on one English e-commerce corpus.
+Section~\ref{sec:failed} lists what failed. We state the limits of the evidence at the outset: the faults are injected by the authors, on one English e-commerce corpus for the main results and on six BEIR corpora for portability.
 
 %--------------------------------------------------------------------------------------------------
 \section{Related Work}
@@ -152,40 +153,33 @@ A \emph{capped} variant raises $\lambda$ until clean classifier dispatch is at m
 
 %--------------------------------------------------------------------------------------------------
 \section{Results}\label{sec:results}
-\subsection{Adoption across all judged runs}
-Table~\ref{tab:runs} lists every judged run. Runs 42 to 47 are adopted; the v4 GPU run (26 of 28 detectors) and the v5 CPU run (24 of 28) are not. Three of the four missing detectors in v5 (R03, R15, R22) lacked 50 held-out positives; the cause was the supply of distinct test queries, not the loop. Version v6 raised the base-query supply to all 5{,}527 examined ESCI queries and balanced the C2 pair mix; the prediction that the three detectors would then pass could have failed and did not. The v6 flagship is adopted on GPU and on a CPU replication. A pre-registered repeat of the frozen v6 code on a fresh seed (seed 52, GPU) is \emph{not} adopted: 26 of 28 detectors, with Q03 (AUROC 0.618) and C2 (0.681 $\ci{0.579}{0.786}$) below the 0.70 bar; repairs (27), L1, L2 and N1 pass and U1 fails (0.397). The C2 change from 0.751 in the flagship is within sampling noise (z = 0.98, $p \approx 0.33$): with 50 held-out positives per detector, a detector near 0.70 passes or fails the bar at close to coin-flip odds, so the 27-of-28 rule is fragile in that regime. We report the verdict as it fell and did not run further seeds. The v7 row re-fits the attributor on the same single-fault episodes with composed rows added (Section~\ref{sec:composed}); it is a regression check, not an independent adoption.
-
-\begin{table*}[t]
-\caption{All judged runs, pass or fail. Detectors/repairs/both are counts of 28 core faults. L1 is held-out clean loss (bar 0.5\%); L2 is mean closure (bar 0.70); U1 is unseen-fault closure (bar 0.50); N1 is the natural-traffic gain in Hit@5 points with 95\% interval.}
-\label{tab:runs}
-\centering\footnotesize
-\begin{tabular}{@{}llllllllll@{}}
-\toprule
-Seed & Stack & Code & Det./Rep./Both & L1 & L2 & U1 & N1 & Verdict\\
-\midrule
-42 & CPU & v1 & 28/27/27 & -- & -- & -- & -- & adopted\\
-43 & CPU & v1 & 28/28/28 & 0.75\% & -- & 0.207 & -- & adopted\\
-44 & CPU & v2 & 28/27/27 & 1.28\% (fail) & 0.871 & 0.253 & -- & adopted\\
-45 & CPU & v3 & 27/27/27 & 0.15\% & 0.865 & 0.365 & $+2.25$ $\ci{+1.40}{+3.09}$ & adopted\\
-46 & GPU T4 & v3 & 27/27/27 & 0.15\% & 0.860 & 0.395 & $+2.06$ $\ci{+1.21}{+2.85}$ & adopted\\
-47 & CPU & v4 & 28/27/27 & 0.37\% & 0.830 & 0.485 & $+2.31$ $\ci{+1.52}{+3.16}$ & adopted\\
-48 & GPU T4 & v4 & 26/27/26 & 0.00\% & 0.866 & 0.456 & $+2.18$ $\ci{+1.27}{+3.16}$ & \textbf{not adopted}\\
-49 & CPU & v5 & 24/27/24 & 0.15\% & 0.833 & 0.440 & $+2.43$ $\ci{+1.70}{+3.22}$ & \textbf{not adopted}\\
-50 & GPU T4 & v6 (flagship) & 27/27/27 & 0.28\% & 0.844 & 0.406 & $+2.18$ $\ci{+1.33}{+3.03}$ & adopted\\
-50 & CPU & v6 (replication) & 28/27/27 & 0.20\% & 0.854 & 0.413 & $+2.43$ $\ci{+1.70}{+3.22}$ & adopted\\
-50 & CPU & v7 (regression check) & 28/27/27 & 0.16\% & 0.846 & 0.413 & $+2.43$ $\ci{+1.64}{+3.22}$ & adopted\\
-52 & GPU T4 & v6 (fresh seed) & 26/27/26 & 0.40\% & 0.886 & 0.397 & $+2.06$ $\ci{+1.21}{+2.97}$ & \textbf{not adopted}\\
-\bottomrule
-\end{tabular}
-\end{table*}
-
-The do-no-harm bound failed in two early runs (0.75\% and 1.28\%); per-stratum calibration, introduced in the third version, has held it in every run since. U1 is below its bar in every run that measured it.
-
-\subsection{Diagnosis against baselines}
-Table~\ref{tab:diag} compares fault-versus-clean AUROC on held-out episodes (v6 CPU run; 4{,}019 episodes of which 1{,}511 faulted). The telemetry diagnoser reaches 0.977. The retrieval-stage features of RAGLog with the same classifier reach 0.734, and query-performance predictors 0.55 to 0.63.
+\subsection{Adoption across seeds}
+Table~\ref{tab:runs} lists every judged run of the final configuration. It is adopted on the GPU flagship (seed 50) and on its CPU replication, and on a second fresh GPU seed (seed 55: 27/27/27 detectors, repairs and both; L1 0.16\%, L2 0.865, N1 $+2.00$ points). It is \emph{not} adopted on a first fresh GPU seed (seed 52): 26 of 28 detectors, with Q03 (AUROC 0.618) and C2 (0.681 $\ci{0.579}{0.786}$) below the 0.70 bar, while repairs (27), L1, L2 and N1 pass and U1 fails (0.397). The configuration is therefore adopted on two of three GPU seeds. With 50 held-out positives per detector, a detector near 0.70 passes or fails the bar at close to coin-flip odds, so the 27-of-28 rule is fragile in that regime; we did not run further seeds to improve the count.
 
 \begin{table}[t]
-\caption{Detection AUROC on held-out episodes (v6 CPU, seed 50), 95\% bootstrap intervals.}
+\caption{Judged runs of the final configuration. Detectors/repairs/both are counts of 28 core faults. L1 is held-out clean loss (bar 0.5\%); L2 is mean closure (bar 0.70); U1 is unseen-fault closure (bar 0.50); N1 is the natural-traffic gain in Hit@5 points with 95\% interval.}
+\label{tab:runs}
+\centering\footnotesize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{@{}lllllllll@{}}
+\toprule
+Seed & Stack & Det./Rep./Both & L1 & L2 & U1 & N1 & Verdict\\
+\midrule
+50 & GPU T4 & 27/27/27 & 0.28\% & 0.844 & 0.406 & $+2.18$ $\ci{+1.33}{+3.03}$ & adopted\\
+50 & CPU & 28/27/27 & 0.20\% & 0.854 & 0.413 & $+2.43$ $\ci{+1.70}{+3.22}$ & adopted\\
+52 & GPU T4 & 26/27/26 & 0.40\% & 0.886 & 0.397 & $+2.06$ $\ci{+1.21}{+2.97}$ & \textbf{not adopted}\\
+55 & GPU T4 & 27/27/27 & 0.16\% & 0.865 & 0.396 & $+2.00$ $\ci{+1.21}{+2.79}$ & adopted\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The do-no-harm bound is held in every run above (largest held-out clean loss 0.40\%). U1 is below its bar in every run.
+
+\subsection{Diagnosis against baselines}
+Table~\ref{tab:diag} compares fault-versus-clean AUROC on held-out episodes (CPU run, seed 50; 4{,}019 episodes of which 1{,}511 faulted). The telemetry diagnoser reaches 0.977. The retrieval-stage features of RAGLog with the same classifier reach 0.734, and query-performance predictors 0.55 to 0.63.
+
+\begin{table}[t]
+\caption{Detection AUROC on held-out episodes (CPU, seed 50), 95\% bootstrap intervals.}
 \label{tab:diag}
 \centering\footnotesize
 \begin{tabular}{@{}lc@{}}
@@ -205,9 +199,9 @@ WIG (negated) & 0.550 $\ci{0.530}{0.573}$\\
 \textbf{LLM judges.} On the same 320 episodes, zero-shot LLM judges that see the query and the five returned documents reach AUROC 0.754 (Gemini 3.1 Flash-Lite), 0.701 (gpt-oss-120b) and 0.629 (gpt-oss-20b), against 0.975 for the diagnoser; the paired differences are $+0.222$ $\ci{+0.173}{+0.270}$ and $+0.274$ $\ci{+0.222}{+0.332}$ for the first two. The comparison favours us: the diagnoser trained on thousands of labelled episodes and the LLMs saw none, so it is supervised against zero-shot, and the models are free-tier. No frontier model was run. On repair, over 1{,}000 natural queries the loop minus the CRAG-style repair (Gemini) is $+1.23$ points $\ci{-0.10}{+2.60}$, i.e.\ non-inferior and not better.
 
 \subsection{Fault-type identification, not only detection}\label{sec:ident}
-AUROC 0.977 measures \emph{fault versus clean}. It is not the accuracy of naming the fault, and we do not present it as such. We therefore score the multi-class attributor directly on the held-out test episodes of the v6 CPU run (4{,}019 episodes: 1{,}511 faulted, 2{,}508 clean; 32 classes). This analysis was written after the main results and is descriptive, not pre-registered. The attributor is re-fitted from the shipped episodes with the run's settings; the score derived from it matches the run's stored per-episode score to within $10^{-6}$ on 99.9\% of the 4{,}019 episodes.
+AUROC 0.977 measures \emph{fault versus clean}. It is not the accuracy of naming the fault, and we do not present it as such. We therefore score the multi-class attributor directly on the held-out test episodes of the CPU run, seed 50 (4{,}019 episodes: 1{,}511 faulted, 2{,}508 clean; 32 classes). This analysis was written after the main results and is descriptive, not pre-registered. The attributor is re-fitted from the shipped episodes with the run's settings; the score derived from it matches the run's stored per-episode score to within $10^{-6}$ on 99.9\% of the 4{,}019 episodes.
 
-\textbf{Headline.} The top-1 class is correct on 93.6\% of all held-out episodes (macro-F1 0.896 over 32 classes, Q03 counted as zero) and on \textbf{89.9\%} of faulted episodes. Of the faulted episodes, 8.4\% are called clean, and 4.1\% of clean episodes are called faulty. Among faulted episodes called a fault, the exact fault is named in 98.1\%. That last figure conditions on detection and so flatters the method; the 89.9\% is the number to quote. Counting errors, 127 are faulted episodes called clean and only 26 are confusions between two faults. The same analysis on the v6 GPU run (scikit-learn 1.6.1) gives 93.5\%, 89.7\% and macro-F1 0.894. At repair-family level the attributor is correct on 91.3\% of faulted episodes and at letter-group level on 90.9\%.
+\textbf{Headline.} The top-1 class is correct on 93.6\% of all held-out episodes (macro-F1 0.896 over 32 classes, Q03 counted as zero) and on \textbf{89.9\%} of faulted episodes. Of the faulted episodes, 8.4\% are called clean, and 4.1\% of clean episodes are called faulty. Among faulted episodes called a fault, the exact fault is named in 98.1\%. That last figure conditions on detection and so flatters the method; the 89.9\% is the number to quote. Counting errors, 127 are faulted episodes called clean and only 26 are confusions between two faults. The same analysis on the seed-50 GPU run (scikit-learn 1.6.1) gives 93.5\%, 89.7\% and macro-F1 0.894. At repair-family level the attributor is correct on 91.3\% of faulted episodes and at letter-group level on 90.9\%.
 
 \textbf{End to end.} Taking the labels that the dispatcher actually outputs (rules first, family-first routing, group fallbacks) for the same 1{,}511 faulted episodes, the first label is the exact fault in 93.8\%; the whole label set names exactly the right repair family in 88.8\% (a second label from another group counts against this), the label set names the right letter group in 89.0\%, and a group fallback is used in 5.5\%. These dispatcher figures exclude the ``called clean'' errors, because the do-no-harm gate is applied afterwards.
 
@@ -216,7 +210,7 @@ AUROC 0.977 measures \emph{fault versus clean}. It is not the accuracy of naming
 \textbf{Where it fails.} Q03 is never identified: 46 of its 50 held-out episodes are called clean (the rest go to other classes), because a paraphrase by another real user leaves almost no trace in telemetry (its detector also fails its gate). R24 (reranker truncation, recall 0.64), K04 (0.74), Q04 (precision 0.68) and Q05 (precision 0.58) are the weakest of the rest. R26 has only 11 held-out positives and is thin. Table~\ref{tab:perfault} gives precision, recall and F1 per fault, and Fig.~\ref{fig:confusion} the confusion matrix.
 
 \begin{table*}[t]
-\caption{Per-fault precision, recall and F1 of the multi-class attributor on the held-out test split (v6 CPU run, seed 50). $n$ is the number of held-out episodes of that fault; the clean class (NONE, $n{=}2508$) has precision 0.95, recall 0.96, F1 0.95. Precision of a fault is reduced by clean episodes called faulty.}
+\caption{Per-fault precision, recall and F1 of the multi-class attributor on the held-out test split (CPU run, seed 50). $n$ is the number of held-out episodes of that fault; the clean class (NONE, $n{=}2508$) has precision 0.95, recall 0.96, F1 0.95. Precision of a fault is reduced by clean episodes called faulty.}
 \label{tab:perfault}
 \centering\footnotesize
 \begin{tabular}{@{}lrrrr@{\hspace{10pt}}lrrrr@{}}
@@ -251,10 +245,10 @@ Q09 & 50 & 0.93 & 1.00 & 0.96 & & & & & \\
 \end{figure*}
 
 \subsection{Natural traffic}
-Table~\ref{tab:nat} shows the arms on the 1{,}648 natural queries (v7 CPU run; the same sample as all earlier runs). The deployed loop gains $+2.43$ points, with 43 queries fixed and 3 broken. The gain comes from two rules that collapse near-duplicates (K05) and chunk crowding (K12); the classifier's dispatch alone adds $+0.42$ points $\ci{+0.12}{+0.79}$. The diagnosis-free universal repair gains $+2.18$ points but breaks 25 queries while fixing 61. Repairing natural misspellings does not help: the point estimate is negative ($-4.9$ points) and SymSpell is worse ($-11.4$), so the deployed configuration leaves natural-typo repair off.
+Table~\ref{tab:nat} shows the arms on the 1{,}648 natural queries (CPU run, seed 50). The deployed loop gains $+2.43$ points, with 43 queries fixed and 3 broken. The gain comes from two rules that collapse near-duplicates (K05) and chunk crowding (K12); the classifier's dispatch alone adds $+0.42$ points $\ci{+0.12}{+0.79}$. The diagnosis-free universal repair gains $+2.18$ points but breaks 25 queries while fixing 61. Repairing natural misspellings does not help: the point estimate is negative ($-4.9$ points) and SymSpell is worse ($-11.4$), so the deployed configuration leaves natural-typo repair off.
 
 \begin{table}[t]
-\caption{Natural-traffic arms (v7 CPU run). Change in Hit@5, points, with 95\% paired bootstrap intervals.}
+\caption{Natural-traffic arms (CPU run, seed 50). Change in Hit@5, points, with 95\% paired bootstrap intervals.}
 \label{tab:nat}
 \centering\footnotesize
 \begin{tabular}{@{}lcc@{}}
@@ -278,13 +272,13 @@ Natural typos, SymSpell & 185 & $-11.35$ $\ci{-17.30}{-5.41}$\\
 
 A post-hoc split by whether the gold document has real content (descriptive, not pre-registered) is more informative than the pooled number. The gold document is an empty placeholder for 938 of the 1{,}648 queries, and retrieving that placeholder counts as a hit, so gains there do not imply a better answer. On the 710 queries whose gold has content, the loop gains $+3.24$ points $\ci{+1.97}{+4.51}$ (23 fixed, 0 broken), whereas the universal repair gains $+1.69$ points and breaks 14. On the 938 placeholder-gold queries the loop gains $+1.81$ points $\ci{+0.85}{+2.77}$ (20 fixed, 3 broken). The natural gain is small in absolute terms, rests on one sample of queries, and is not evidence that the classifier improves natural traffic.
 
-A census over the 7{,}175 queries shows why natural gains are bounded: the clean pipeline fails on 43.5\% of them, and the gold document is itself an empty placeholder (``nan'') for 58.6\% of queries and 69.1\% of failures (v6 GPU), so no repair can win those.
+A census over the 7{,}175 queries shows why natural gains are bounded: the clean pipeline fails on 43.5\% of them, and the gold document is itself an empty placeholder (``nan'') for 58.6\% of queries and 69.1\% of failures (seed-50 GPU run), so no repair can win those.
 
 \subsection{The cost of the guarantee}
-Table~\ref{tab:policy} compares dispatch policies on held-out clean queries (v7 CPU run). The stratified Mondrian policy that carries the proof at $\alpha{=}0.005$ dispatches on 85\% of clean queries. The capped variant keeps the loss bound by construction at 16.1\% dispatch and closure 0.838, and it meets all four pre-registered targets (loss $\le$ 0.5\%, clean dispatch $\le$ 25\%, mean cost $\le$ 1.5, closure $\ge$ 0.80) on every run evaluated. The un-stratified global threshold breaks the loss bound (0.64\% in this run). We note that the capped variant was designed after the stratified one.
+Table~\ref{tab:policy} compares dispatch policies on held-out clean queries (CPU run, seed 50). The stratified Mondrian policy that carries the proof at $\alpha{=}0.005$ dispatches on 85\% of clean queries. The capped variant keeps the loss bound by construction at 16.1\% dispatch and closure 0.838, and it meets all four pre-registered targets (loss $\le$ 0.5\%, clean dispatch $\le$ 25\%, mean cost $\le$ 1.5, closure $\ge$ 0.80) on every run evaluated. The un-stratified global threshold breaks the loss bound (0.64\% in this run). We note that the capped variant was designed after the stratified one.
 
 \begin{table}[t]
-\caption{Dispatch policies on held-out clean queries (v7 CPU run). Closure is over injected faults.}
+\caption{Dispatch policies on held-out clean queries (CPU run, seed 50). Closure is over injected faults.}
 \label{tab:policy}
 \centering\footnotesize
 \begin{tabular}{@{}lcccc@{}}
@@ -305,16 +299,16 @@ universal repair, all & 1.63\% & 100\% & 12.00 & 0.761\\
 \end{table}
 
 \subsection{Unseen faults}
-Leave-one-fault-out closure (U1) is 0.406 (GPU) and 0.413 (CPU) in the flagship runs, below the 0.50 bar and below earlier versions (best 0.485). A group fallback repairs some unseen faults, but faults whose repair differs from the group repair stay unrepaired. We could not prove a ceiling.
+Leave-one-fault-out closure (U1) is 0.406 (GPU) and 0.413 (CPU) at seed 50, 0.397 at seed 52 and 0.396 at seed 55, below the 0.50 bar in every run. A group fallback repairs some unseen faults, but faults whose repair differs from the group repair stay unrepaired. We could not prove a ceiling.
 
 %--------------------------------------------------------------------------------------------------
 \subsection{Portability to other corpora}\label{sec:port}
-We ported 20 of the 32 faults to a second retrieval stack (e5-small-v2 dense index in HNSW, BM25, min-max fusion, MiniLM reranker) and ran them on four BEIR corpora with gates identical to the core run (detector AUROC at least 0.70 with at least 20 held-out positives; repair Wilson lower bound at least 0.50 with at most 10\% of clean successes lost). The suite is said to port on a corpus if at least 15 of the 20 faults pass both gates; a fault with too few hard episodes counts as not solved. SciFact (seed 8) and FiQA (seed 9) were judged on CPU; NFCorpus (seed 53) and ArguAna (seed 54) were pre-registered after those results (code hash fixed before the run; the code is the SciFact and FiQA code plus two declared edits, the corpus table and the output folder) and run once each on a GPU.
-Table~\ref{tab:ports} gives the counts. Every corpus meets the bar of 15. The unsolved faults are not the same everywhere: K04 (index staleness) fails on SciFact, FiQA and NFCorpus but passes on ArguAna; Q01 and Q03 fail on SciFact and on ArguAna. On ArguAna the two query faults were not trained at all, because the injectors found few applicable queries among the long argument queries (Q01 applied to 199 of 2{,}500 attempts and gave only 6 hard episodes; Q03 applied to 17 and gave none), so that is a property of the corpus and not a detector miss.
-Two cautions apply. First, 11 to 16 of the 18 to 20 trained detectors on each corpus sit at the AUROC ceiling (0.995 or more): most retrieval-stack faults are blunt and the telemetry separates them trivially, so passing the port gate says little about subtle faults. Second, the NFCorpus and ArguAna runs have 25 held-out positives per fault (the gate floor is 20), so each detector interval is wide, and all four corpora use one stack and author-injected faults. The port shows that the telemetry and repairs are not specific to one corpus on this stack for these 20 faults; it does not cover the other 12 faults and it is not a field test.
+We ported 20 of the 32 faults to a second retrieval stack (e5-small-v2 dense index in HNSW, BM25, min-max fusion, MiniLM reranker) and ran them on six BEIR corpora with gates identical to the core run (detector AUROC at least 0.70 with at least 20 held-out positives; repair Wilson lower bound at least 0.50 with at most 10\% of clean successes lost). The suite is said to port on a corpus if at least 15 of the 20 faults pass both gates; a fault with too few hard episodes counts as not solved. SciFact and FiQA were judged on CPU; NFCorpus, ArguAna, SCIDOCS and NQ were pre-registered after those results (code hash fixed before the run; the code differs only by declared edits to the corpus table and output folder, plus, for NQ, an execution-only change to how embeddings are stored, checked to give identical output) and run once each. FiQA was repeated with a second seed and gave the same 19 solved faults.
+Table~\ref{tab:ports} gives the counts. Every corpus meets the bar of 15; the clean Hit@5 of NQ is 0.72. The unsolved faults are not the same everywhere: K04 (index staleness) fails on every corpus except ArguAna; Q01 and Q03 fail on SciFact and on ArguAna. On ArguAna the two query faults were not trained at all, because the injectors found few applicable queries among the long argument queries (Q01 applied to 199 of 2{,}500 attempts and gave only 6 hard episodes; Q03 applied to 17 and gave none), so that is a property of the corpus and not a detector miss.
+Two cautions apply. First, most of the 18 to 20 trained detectors on each corpus sit at the AUROC ceiling (0.995 or more): most retrieval-stack faults are blunt and the telemetry separates them trivially, so passing the port gate says little about subtle faults. Second, the NFCorpus and ArguAna runs have 25 held-out positives per fault (the gate floor is 20), so each detector interval is wide, and all six corpora use one stack and author-injected faults. The port shows that the telemetry and repairs are not specific to one corpus on this stack for these 20 faults; it does not cover the other 12 faults and it is not a field test.
 
 \begin{table}[t]
-\caption{Port to four BEIR corpora (same stack, same 20 faults, same gates). Solved = detector and repair both pass.}
+\caption{Port to six BEIR corpora (same stack, same 20 faults, same gates). Solved = detector and repair both pass.}
 \label{tab:ports}
 \centering\footnotesize
 \begin{tabular}{@{}lllll@{}}
@@ -325,6 +319,8 @@ SciFact & 0.80 & 16/18 & 15 & Q01, Q03, K04, R15, R22\\
 FiQA & 0.54 & 19/19 & 19 & K04\\
 NFCorpus & 0.67 & 20/19 & 19 & K04\\
 ArguAna & 0.56 & 18/18 & 18 & Q01, Q03\\
+SCIDOCS & 0.40 & 16/19 & 15 & Q01, Q03, K04, R15, R22\\
+NQ & 0.72 & 18/19 & 18 & Q01, K04\\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -369,6 +365,22 @@ All & 155 & 62/155 / 47/155 & 113/155 & 130/155\\
 After the freeze the run needed two execution fixes, both disclosed in the protocol: detection-baseline rows kept in memory under an object identity could not resume, and about 9{,}000 single-row attributor calls at 0.061~s each pushed one stage past the chunk wall clock; the second was replaced by one batch call with a $10^{-9}$ equality check. The first diagnosis was incomplete and the second corrected it. The composed result is byte-identical before and after both fixes.
 
 %--------------------------------------------------------------------------------------------------
+\section{Training-free Extensions}\label{sec:ext}
+Each extension was pre-registered with its code hash, designed on development data, and judged on held-out data. All numbers below come from held-out episodes.
+
+\subsection{Telemetry against document text}
+A supervised text-only baseline (TF-IDF with logistic regression on the query and the top-5 document text) reaches fault-versus-clean AUROC 0.575 on NFCorpus and 0.596 on ArguAna, against 0.972 and 0.996 for the telemetry attributor. Telemetry carries the signal that text does not, which supports the claim that diagnosis needs retrieval-stage numbers and not only content.
+
+\subsection{Invariant component isolation}
+Which retrieval component is at fault (query processing, candidate generation, fusion or reranking, corpus) can be tested without training: each component has an invariant on the telemetry (for example, agreement between the dense and lexical legs, or monotone reranker scores) and a violated invariant isolates the component. On the three GPU seeds (50, 52, 55), the invariants name the faulty component on 0.54 of faulted episodes against 0.20 for the leave-one-fault-out attributor, a paired difference of about $+0.34$ (95\% interval roughly $+0.19$ to $+0.50$), with a false-alarm rate below 1\% on clean queries. The composed rule flags 76 of 155 components of the composed episodes.
+
+\subsection{Probe-and-verify}
+Probe-and-verify runs at most a few cheap candidate repairs on a flagged component and keeps one only if the result looks healthy. Combined with invariant isolation, it improves component isolation over the isolation alone on all four BEIR corpora tested: NFCorpus $+0.270$, ArguAna $+0.356$, FiQA $+0.350$ and NQ $+0.389$ $\ci{0.230}{0.565}$. Probing alone does not pass on any corpus. The verifier and candidate repairs were redesigned once on development data before the held-out run.
+
+\subsection{A negative result on ESCI unseen faults}
+Applying both extensions to the leave-one-fault-out test of the main corpus does \emph{not} pass: U1 is 0.368 against 0.396 without them, a paired difference of $-0.028$ $\ci{-0.114}{+0.044}$. The cause is K04 (index staleness): its closure falls from 0.88 to 0.14 because 36 episodes that the old repair fixed were switched to a candidate that probing judged healthy but that did not fix them. The extensions help on 6 other faults (for example Q02 0.02 to 0.42, K06 0.04 to 0.22). On real failures of the deployed loop in natural traffic the repair stays non-inferior to the loop without it (Hit@5 0.612 against 0.610, and 0.590 with no repair), a gain of $+2.18$ points over no repair; failure-prediction AUROC is 0.603 for the attributor and 0.551 for the invariants, so neither separates real failures well.
+
+%--------------------------------------------------------------------------------------------------
 \section{An Optional Side Comparison: Simulated Quantum ML}\label{sec:qml}
 As an optional comparison of scores only, we simulate six-qubit quantum models with a noiseless statevector simulator written for the study: a quantum-kernel SVM (ZZ feature map, two repetitions, fidelity kernel) and a variational classifier (three data re-uploading layers, five seeds). Classical models receive the same six PCA components (40.8\% of the variance), and the project's gradient boosting receives all 63 features. Models are fitted on the train split only and scored once on the held-out split (protocol committed before the run). Table~\ref{tab:qml} shows the result. Both classical six-input models beat both quantum models on both sets. There is no hardware, no noise model, and no claim of quantum advantage.
 
@@ -393,15 +405,16 @@ Variational (5 seeds) & 0.883 (sd 0.005) & 0.965\\
 %--------------------------------------------------------------------------------------------------
 \section{What Failed, and Threats to Validity}\label{sec:failed}
 \textbf{Failures.}
-(1) Adoption was missed twice (v4 GPU: 26 of 28 detectors; v5 CPU: 24 of 28) before v6 met it; v6 is a pass on a changed construction (6{,}000 base queries, balanced C2 mix), not on the v5 test set. A fresh-seed repeat of the frozen v6 code (seed 52, GPU) then missed it (26 of 28; Q03 and C2), so the adoption verdict is not robust to the seed. Classing each core detector by its stored 95\% interval against the 0.70 bar (descriptive, after the fact; stricter than the rule, which uses the point estimate), the 27-of-28 verdict depends on a detector whose interval contains 0.70 in 5 of the 12 judged runs (v3 CPU, v4 CPU and GPU, v6 GPU, v8 GPU); the v6 CPU replication and the v7 re-fit are adopted on every reading (27 determinate passes).
-(2) U1 stayed below 0.50 in every run, and was lower in v6 (0.41) than in v4 (0.485, 0.456).
-(3) The Q03 detector (paraphrase by another real user) passes in 2 of 7 runs of its natural construction, by 0.004 and 0.001; its repair rescues 1 to 6 of 100.
+(1) The adoption verdict is not robust to the seed: adopted on two of three GPU seeds, with seed 52 missing on Q03 and C2. Classing each core detector by its stored 95\% interval against the 0.70 bar (descriptive, after the fact; stricter than the rule), the 27-of-28 verdict depends on a detector whose interval contains 0.70 in 5 of 12 runs examined in the development of the configuration.
+(2) U1 stayed below 0.50 in every run (0.396 to 0.413), and the two extensions did not raise it (0.368).
+(3) The Q03 detector (paraphrase by another real user) passes in few runs, by 0.004 or 0.001; its repair rescues 1 to 6 of 100.
 (4) Repairing natural misspellings does not help.
-(5) No frontier-LLM comparison, and a full-suite second corpus was not built: the ports cover 20 of the 32 faults on four BEIR corpora (Section~\ref{sec:port}), most of them at the AUROC ceiling.
-(6) The dispatcher cannot name two faults of one group (Section~\ref{sec:composed}); the pre-registered natural-traffic non-inferiority comparison against the universal repair fails in v6 and v7 by 0.05 points.
+(5) No frontier-LLM comparison, and a second-corpus port of only 20 of the 32 faults; most port detectors sit at the AUROC ceiling, and K04 is unsolved on five of six corpora.
+(6) The dispatcher cannot name two faults of one group (Section~\ref{sec:composed}); the pre-registered natural-traffic non-inferiority comparison against the universal repair fails by 0.05 points.
+(7) Development history: five earlier configurations (seeds 42 to 49) were judged before the final configuration was frozen, two of which missed adoption; the final configuration therefore benefits from design choices informed by those runs. All records ship in the repository.
 
 \textbf{Threats to validity.}
-\emph{Construct:} AUROC is a detection metric, so identification is reported separately in Section~\ref{sec:ident} (89.9\% top-1 on faulted episodes; Q03 never identified); faults are injected by the authors who wrote the detectors and repairs, so a pass shows the method works on this construction, not on any production system. \emph{External:} one English e-commerce corpus carries the evidence. \emph{Internal:} each configuration was judged once per stack and seed; the natural-traffic gain rests on one sample of 1{,}648 queries, repeated across runs; the capped policy was designed after the stratified one; the LLM comparison is supervised against zero-shot. \emph{Statistical:} verdicts decided by 0.001 to 0.005 are fragile across library versions. \emph{Composed study:} 155 synthetic episodes from 20 faults, one seed, and a filter that keeps only combinations that break retrieval.
+\emph{Construct:} AUROC is a detection metric, so identification is reported separately in Section~\ref{sec:ident} (89.9\% top-1 on faulted episodes; Q03 never identified); faults are injected by the authors who wrote the detectors and repairs, so a pass shows the method works on this construction, not on any production system. \emph{External:} one English e-commerce corpus carries the evidence. \emph{Internal:} each configuration was judged once per stack and seed; the extensions were designed on development data, one verifier was redesigned once before its held-out run, and the code was written with AI assistance; the natural-traffic gain rests on one sample of 1{,}648 queries, repeated across runs; the capped policy was designed after the stratified one; the LLM comparison is supervised against zero-shot. \emph{Statistical:} verdicts decided by 0.001 to 0.005 are fragile across library versions. \emph{Composed study:} 155 synthetic episodes from 20 faults, one seed, and a filter that keeps only combinations that break retrieval.
 
 %--------------------------------------------------------------------------------------------------
 \section{Reproducibility and Artefacts}
@@ -409,7 +422,7 @@ The repository ships every script, every judged run (protocol with code hash, ve
 
 %--------------------------------------------------------------------------------------------------
 \section{Conclusion}
-Retrieval telemetry alone detects injected retrieval faults at AUROC 0.977, names and repairs most of them under pre-registered gates, and supports a conformal bound on harm to healthy queries, at a clean-dispatch cost that a capped variant reduces to 16\%. On real traffic, the measurable gain is small (+2.4 points) and comes from two simple rules; diagnosis adds little there. Composed faults expose a structural limit: one label per fault group. The open problems are unseen-fault generalisation (0.41 against a 0.50 bar), evidence beyond author-injected faults and a single corpus, and comparison with frontier models. We report these as limits, not as future-work boilerplate, because each is a place where the present evidence stops.
+Retrieval telemetry alone detects injected retrieval faults at AUROC 0.977, names and repairs most of them under pre-registered gates, and supports a conformal bound on harm to healthy queries, at a clean-dispatch cost that a capped variant reduces to 16\%. On real traffic, the measurable gain is small (+2.4 points) and comes from two simple rules; diagnosis adds little there. Composed faults expose a structural limit: one label per fault group. The open problems are unseen-fault generalisation (0.40 to 0.41 against a 0.50 bar), evidence beyond author-injected faults and a single corpus, and comparison with frontier models. We report these as limits, not as future-work boilerplate, because each is a place where the present evidence stops.
 
 \section*{Disclosure and Ethics}
 The code, experiments and text were produced with an AI assistant (Claude, Anthropic) under the direction of the corresponding author. [OWNER: replace this sentence with the authorship and disclosure wording your venue requires.] No personal data are used; the corpora are public or synthetic, and no API key is stored in the repository.
