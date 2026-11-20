@@ -9,6 +9,8 @@ m = re.findall(r'frozen port5 hash is `([0-9a-f]{64})`', open(os.path.join(root,
 assert m and m[-1] == SHA, 'diagrag_port5.py differs from the hash frozen in docs/evidence/v13_datasets.md'
 TRIAL = dict(N_QUERIES='120', N_HARD='3', MAX_ATT='60', N_HARM='3', TIME_BUDGET='36000')
 RUNS = {'v13_trial_nq': dict(DATASET='nq', SEED='906', **TRIAL), 'v13_trial_fiqa': dict(DATASET='fiqa', SEED='907', **TRIAL)}
+JUDGED = dict(N_QUERIES='2500', N_HARD='50', MAX_ATT='2500', N_HARM='20', TIME_BUDGET='36000')   # = judged port2 settings (docs/evidence/v13_judged_ports_protocol.md)
+RUNS.update({'v13_judged_nq': dict(DATASET='nq', SEED='58', **JUDGED), 'v13_judged_fiqa': dict(DATASET='fiqa', SEED='60', **JUDGED)})
 lines = lambda s: s.strip('\n').splitlines(True)
 md = lambda t: dict(cell_type='markdown', metadata={}, source=lines(t)); code = lambda t: dict(cell_type='code', metadata={}, execution_count=None, outputs=[], source=lines(t))
 EMBED = 'EMBED = dict(sha256=%r, size=%d, b64=(\n' % (SHA, len(raw)) + ''.join(f'    {B64[i:i + 100]!r}\n' for i in range(0, len(B64), 100)) + '))\n'
@@ -34,6 +36,19 @@ os.makedirs('/tmp/diagrag_port_data', exist_ok=True)
 for b in glob.glob('/kaggle/input/**/*.zip.bin', recursive=True):
     dst = os.path.join('/tmp/diagrag_port_data', os.path.basename(b)[:-4]); shutil.copy(b, dst); print('staged', dst, os.path.getsize(dst))
 """),
+    ] + ([code("""
+# Embedding reuse (outside the frozen code; declared in docs/evidence/v13_judged_ports_protocol.md section 3). Corpus embeddings do not depend on the seed.
+# ONLY corpus_e5.npy from the NQ trial output is copied; its checkpoint is NOT copied, and the assert below makes sure none is present.
+import glob, shutil, numpy as np
+OUTD = '/kaggle/working/port5_nq_out'; os.makedirs(OUTD, exist_ok=True)
+src = glob.glob('/kaggle/input/**/port5_nq_out/corpus_e5.npy', recursive=True)
+if src and not os.path.exists(os.path.join(OUTD, 'corpus_e5.npy')):
+    E_ = np.load(src[0], mmap_mode='r'); assert E_.shape == (2681468, 384) and E_.dtype == np.float32, E_.shape
+    nr = np.linalg.norm(np.asarray(E_[::10007]), axis=1); assert float(abs(nr - 1).max()) < 1e-3; del E_
+    shutil.copy(src[0], os.path.join(OUTD, 'corpus_e5.npy')); print('reused corpus embeddings from', src[0])
+else: print('no reusable embeddings found: the frozen code will embed the corpus')
+assert not os.path.exists(os.path.join(OUTD, 'checkpoint.pkl')), 'a checkpoint must not be present before the judged run'
+""")] if name == 'v13_judged_nq' else []) + [
         code("""
 import runpy, time
 WORK = '/kaggle/working' if ON_KAGGLE else os.getcwd(); os.environ['DIAGRAG_WORK'] = WORK
