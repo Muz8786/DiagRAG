@@ -17,7 +17,7 @@ for TRIAL in (1, 0):
         v11['cells'][2],
         v11['cells'][3],
         code(f"XEMBED = dict(sha256={XSHA!r}, size={len(raw)}, b64=(\n" + ''.join(f'    {XB[i:i + 100]!r}\n' for i in range(0, len(XB), 100)) + "))\n"
-             f"xr = gzip.decompress(base64.b64decode(''.join(XEMBED['b64']))); assert hashlib.sha256(xr).hexdigest() == XEMBED['sha256'] == {XSHA!r}\nopen(os.path.join(CODE_DIR, 'v13_esci_ideas.py'), 'wb').write(xr); print('ok v13_esci_ideas.py', XSHA[:16])"),
+             f"xr = gzip.decompress(base64.b64decode(''.join(XEMBED['b64']))); assert hashlib.sha256(xr).hexdigest() == XEMBED['sha256'] == {XSHA!r}\nopen(os.path.join(CODE_DIR, 'v13_esci_ideas.py'), 'wb').write(xr); print('ok v13_esci_ideas.py', XEMBED['sha256'][:16])"),
         code("""
 # Stage the v11.a checkpoint folder (attached kernel output) and check its identity before anything else runs.
 import glob, shutil, json
