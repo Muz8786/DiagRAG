@@ -72,7 +72,7 @@ class _TO(Exception): pass
 def _alarm(*a): raise _TO()
 
 
-def main(G, OUT, TRIAL, ROLE, PARTS=('S', 'M')):
+def main(G, OUT, TRIAL, ROLE, RUN=('S', 'M')):
     assert ROLE in ('dev', 'heldout'); os.makedirs(OUT, exist_ok=True); t0 = time.time(); log = lambda *a: print(f'[{time.time() - t0:6.0f}s]', *a, flush=True)
     if TRIAL: P.update(POOL=40, A=10, B=6, NDICT_RANDOM=2, TRAFFIC=8, PAIR_TRAFFIC=4, SCREEN=8, MAXM=6)
     run, succ, features, dispatch_v3, proba, apply_v3 = G['run'], G['succ'], G['features'], G['dispatch_v3'], G['proba'], G['apply_v3']
@@ -80,7 +80,7 @@ def main(G, OUT, TRIAL, ROLE, PARTS=('S', 'M')):
     LAMS, GATES, stratum, mkcfg, N, E, BASE, TAU = G['LAMS'], G['GATES'], G['stratum'], G['mkcfg'], G['N'], G['E'], G['BASE'], G['TAU_NONE_G']
     A_ = GATES['ALPHA']; ESCI_PART, PARTS = G['ESCI_PART'], G['PARTS']
     rnd = lambda *tag: random.Random('|'.join(map(str, tag)))
-    R = dict(trial=bool(TRIAL), role=ROLE, parts=list(PARTS), seed=str(G['CFG']['SEED']), params=dict(P), note='frozen v6 executed on a judged checkpoint; measurements only')
+    R = dict(trial=bool(TRIAL), role=ROLE, run_parts=list(RUN), seed=str(G['CFG']['SEED']), params=dict(P), note='frozen v6 executed on a judged checkpoint; measurements only')
 
     def sys_cfg(f, r):
         if f == 'R01': return dict(mask=(0.3, r.randrange(10**6), ()))
@@ -193,7 +193,7 @@ def main(G, OUT, TRIAL, ROLE, PARTS=('S', 'M')):
         return dict(n=len(rows), broken=len(br), intact=len(it), closure=dict(selftest=cl('hb'), loop=cl('hl'), universal=cl('hu')),
                     harm=dict(selftest=hm('hb'), loop=hm('hl'), universal=hm('hu')), top_families=[l for l, _ in labs.most_common(2)])
 
-    if 'S' in PARTS:
+    if 'S' in RUN:
         # ---- S1: single system faults (evaluated draws), with and without the fault in the dictionary
         tagE = 'deveval' if ROLE == 'dev' else 'heldout'; nI = 1 if TRIAL else 3
         rowsS = []; fS = open(os.path.join(OUT, 'S_single.jsonl'), 'w')
@@ -249,7 +249,7 @@ def main(G, OUT, TRIAL, ROLE, PARTS=('S', 'M')):
                                traffic_harm={w: tmean(rowsP, 'traffic', 'harm', w) for w in ('selftest', 'loop', 'universal')}))
         log('S', R['S'])
 
-    if 'M' in PARTS:
+    if 'M' in RUN:
         # ---- M: blind code mutants of the retrieval path
         SRC = open(G['__file__'], encoding='utf-8').read(); tree = ast.parse(SRC)
         FN = {n.name: n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name in TARGETS}

@@ -1,0 +1,38 @@
+{
+ "trial": false,
+ "role": "heldout",
+ "parts": [
+  "real_world_apache_esci",
+  "real_world_apache_ofbiz_docs",
+  "real_world_cc_by_4_0_abo",
+  "synthetic_shopnova"
+ ],
+ "seed": "72",
+ "params": {
+  "POOL": 600,
+  "A": 100,
+  "B": 40,
+  "NDICT": 2,
+  "NDICT_RANDOM": 4,
+  "T": 3,
+  "EPS": 0.002,
+  "KAPPA": 3.0,
+  "TRAFFIC": 100,
+  "PAIR_TRAFFIC": 40,
+  "SCREEN": 40,
+  "HARM_FRAC": 0.1,
+  "ALARM_P": 0.01,
+  "MAXM": 400,
+  "TIMEOUT": 90
+ },
+ "note": "frozen v6 executed on a judged checkpoint; measurements only",
+ "battery": {
+  "size": 103,
+  "random_part": 100,
+  "diagnostic_part": 3,
+  "undetected_faults": [
+   "R07"
+  ],
+  "indistinct_pairs": []
+ }
+}

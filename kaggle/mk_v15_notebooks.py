@@ -14,7 +14,7 @@ for name, SEED, TRIAL, ROLE, PARTS in [('dev55m', '55', 0, 'dev', ('M',)), ('hel
                                        ('heldout71m', '71', 0, 'heldout', ('M',)), ('heldout72m', '72', 0, 'heldout', ('M',)), ('heldout73m', '73', 0, 'heldout', ('M',))]:
     cells = [
         md(f"# DiagRAG v15 self-test (S) and code mutants (M) on ESCI, seed {SEED}, role {ROLE}, parts {'+'.join(PARTS)} ({'TRIAL: limited work, numbers are not results' if TRIAL else 'JUDGED RUN'})\n\nResumes the judged ESCI checkpoint of seed {SEED} and runs the frozen v6 code (`44176b9a…e28a`) up to its U1 stage, then the measurements of `docs/evidence/v15_selftest_mutants_protocol.md`. GPU T4, Internet On. No API key."),
-        code(f"import os\nCONFIG = dict(SEED='{SEED}', N_BASE_ESCI='6000', N_PRDC='528', N_HARD='100', MAX_ATT='4000', N_HARM='20', TIME_BUDGET='0')   # v6 settings; TIME_BUDGET 0 = no self-stop\nos.environ.update(CONFIG); TRIAL = {TRIAL}; ROLE = {ROLE!r}; PARTS = {PARTS!r}; print(CONFIG, 'TRIAL', TRIAL, 'ROLE', ROLE, 'PARTS', PARTS)"),
+        code(f"import os\nCONFIG = dict(SEED='{SEED}', N_BASE_ESCI='6000', N_PRDC='528', N_HARD='100', MAX_ATT='4000', N_HARM='20', TIME_BUDGET='0')   # v6 settings; TIME_BUDGET 0 = no self-stop\nos.environ.update(CONFIG); TRIAL = {TRIAL}; ROLE = {ROLE!r}; RUN_PARTS = {PARTS!r}; print(CONFIG, 'TRIAL', TRIAL, 'ROLE', ROLE, 'RUN_PARTS', RUN_PARTS)"),
         v11['cells'][2],
         v11['cells'][3],
         code(f"XEMBED = dict(sha256={XSHA!r}, size={len(raw)}, b64=(\n" + ''.join(f'    {XB[i:i + 100]!r}\n' for i in range(0, len(XB), 100)) + "))\n"
@@ -43,7 +43,7 @@ print('harness done in', round(time.time() - T0), 's; stored U1:', G['U1'])
 """),
         code("""
 sys.path.insert(0, CODE_DIR); import v15_selftest_mutants
-T1 = time.time(); v15_selftest_mutants.main(G, os.path.join(WORK, 'v15_out'), TRIAL, ROLE, PARTS); print('analysis wall time (s):', round(time.time() - T1))
+T1 = time.time(); v15_selftest_mutants.main(G, os.path.join(WORK, 'v15_out'), TRIAL, ROLE, RUN_PARTS); print('analysis wall time (s):', round(time.time() - T1))
 """),
         code("import resource\nprint('peak RSS (GB):', round(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024**2, 2)); print([l for l in open('/proc/meminfo') if l.startswith(('MemTotal', 'MemAvailable'))])"),
     ]
