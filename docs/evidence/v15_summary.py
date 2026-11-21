@@ -39,9 +39,29 @@ if Sd:
                   rule=rule, S_PASS=bool(all(rule.values())))
 if Md:
     M = [dict(r, seed=os.path.basename(d.rstrip('/'))) for d in Md for r in rd(d, 'M_mutants.jsonl')]
-    H = [r for r in M if r['status'] == 'harmful']; C = [r for r in H if r.get('component_ok') is not None]
-    R['M'] = dict(evaluated=len(M), harmful=len(H), status={s: sum(r['status'] == s for r in M) for s in sorted({r['status'] for r in M})},
+    H = [r for r in M if r['status'] == 'harmful']; C = [r for r in H if r.get('component_ok') is not None]; SB = [r for r in M if r['status'] == 'subtle']
+    ids = sorted({r['pid'] for r in C})
+    def cboot(fn, n=4000):   # bootstrap over distinct mutants (clusters), fn maps a list of rows to a number
+        by = {i: [r for r in C if r['pid'] == i] for i in ids}; vals = []
+        for _ in range(n):
+            pick = rng.integers(0, len(ids), len(ids)); rows = [r for k in pick for r in by[ids[k]]]; vals.append(fn(rows))
+        return [float(np.percentile(vals, 2.5)), float(np.percentile(vals, 97.5))]
+    loc = lambda rows: float(np.mean([r['component_ok'] for r in rows]))
+    dec = lambda rows: float(np.mean([bool(r.get('component_ok_decode')) for r in rows]))
+    def majority(rows):
+        c = {}
+        for r in rows: c[r['comp']] = c.get(r['comp'], 0) + 1
+        return max(c.values()) / len(rows)
+    M2 = dict(localization=loc(C) if C else None, decoder=dec(C) if C else None, majority=majority(C) if C else None,
+              loc_minus_decoder=dict(mean=loc(C) - dec(C), ci=cboot(lambda rw: loc(rw) - dec(rw))) if C else None,
+              loc_minus_majority=dict(mean=loc(C) - majority(C), ci=cboot(lambda rw: loc(rw) - majority(rw))) if C else None)
+    rule = {'M-0 >= 8 distinct scored harmful mutants': len(ids) >= 8, 'M-1 self-test detection >= 0.95': bool(H and m(H, 'selftest_alarm') >= 0.95),
+            'M-2 localization >= 0.80 and above decoder and majority (95% LB > 0)': bool(C and M2['localization'] >= 0.80 and M2['loc_minus_decoder']['ci'][0] > 0 and M2['loc_minus_majority']['ci'][0] > 0)}
+    R['M'] = dict(evaluated=len(M), harmful=len(H), distinct_harmful=len({r['pid'] for r in H}), distinct_scored=len(ids),
+                  status={s: sum(r['status'] == s for r in M) for s in sorted({r['status'] for r in M})},
                   detected_selftest=m(H, 'selftest_alarm'), detected_telemetry=m(H, 'telemetry_alarm'), detected_either=m(H, 'either_alarm'),
-                  detected_ce_drop_baseline=m(H, 'ce_drop_alarm'), component_ok=m(C, 'component_ok'), n_component_scored=len(C),
-                  selftest_minus_telemetry=boot_diff([int(r['selftest_alarm']) - int(r['telemetry_alarm']) for r in H]) if H else None)
+                  detected_ce_drop_baseline=m(H, 'ce_drop_alarm'), M2=M2, subtle=dict(n=len(SB), detected_selftest=m(SB, 'selftest_alarm'), detected_telemetry=m(SB, 'telemetry_alarm'),
+                  localized=m([r for r in SB if r.get('component_ok') is not None], 'component_ok')),
+                  selftest_minus_telemetry=boot_diff([int(r['selftest_alarm']) - int(r['telemetry_alarm']) for r in H]) if H else None,
+                  rule=rule, outcome='PASS' if all(rule.values()) else ('INSUFFICIENT' if not rule['M-0 >= 8 distinct scored harmful mutants'] else 'FAIL'))
 json.dump(R, open(out, 'w'), indent=1); print(json.dumps(R, indent=1)[:6000])

@@ -2,6 +2,8 @@
  "M": {
   "evaluated": 219,
   "harmful": 16,
+  "distinct_harmful": 6,
+  "distinct_scored": 6,
   "status": {
    "crash": 48,
    "harmful": 16,
@@ -12,14 +14,43 @@
   "detected_telemetry": 0.75,
   "detected_either": 1.0,
   "detected_ce_drop_baseline": 0.5,
-  "component_ok": 1.0,
-  "n_component_scored": 16,
+  "M2": {
+   "localization": 1.0,
+   "decoder": 0.5625,
+   "majority": 0.375,
+   "loc_minus_decoder": {
+    "mean": 0.4375,
+    "ci": [
+     0.11764705882352944,
+     0.8125
+    ]
+   },
+   "loc_minus_majority": {
+    "mean": 0.625,
+    "ci": [
+     0.16666666666666663,
+     0.6666666666666667
+    ]
+   }
+  },
+  "subtle": {
+   "n": 13,
+   "detected_selftest": 0.8461538461538461,
+   "detected_telemetry": 0.23076923076923078,
+   "localized": 1.0
+  },
   "selftest_minus_telemetry": {
    "mean": 0.25,
    "ci": [
     0.0625,
     0.5
    ]
-  }
+  },
+  "rule": {
+   "M-0 >= 8 distinct scored harmful mutants": false,
+   "M-1 self-test detection >= 0.95": true,
+   "M-2 localization >= 0.80 and above decoder and majority (95% LB > 0)": true
+  },
+  "outcome": "INSUFFICIENT"
  }
 }
