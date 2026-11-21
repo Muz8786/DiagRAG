@@ -1,0 +1,177 @@
+{
+ "trial": false,
+ "seed": "71",
+ "clean_false_alarm": false,
+ "U1": {
+  "n_faults": 25,
+  "U1_per_query": 0.39759999999999995,
+  "U1_two_channel": 0.608,
+  "diff": 0.2104,
+  "ci": [
+   0.084,
+   0.35362000000000005
+  ],
+  "system_faults": {
+   "n": 12,
+   "per_query": 0.5216666666666666,
+   "two": 0.96
+  },
+  "other_faults": {
+   "n": 13,
+   "per_query": 0.2830769230769231
+  },
+  "per_fault": {
+   "Q01": {
+    "P0": 0.12,
+    "two": 0.12,
+    "system": false,
+    "detected": null
+   },
+   "Q02": {
+    "P0": 0.02,
+    "two": 0.02,
+    "system": false,
+    "detected": null
+   },
+   "Q03": {
+    "P0": 0.04,
+    "two": 0.04,
+    "system": false,
+    "detected": null
+   },
+   "Q04": {
+    "P0": 0.34,
+    "two": 0.34,
+    "system": false,
+    "detected": null
+   },
+   "Q05": {
+    "P0": 0.28,
+    "two": 0.28,
+    "system": false,
+    "detected": null
+   },
+   "Q07": {
+    "P0": 0.0,
+    "two": 0.0,
+    "system": false,
+    "detected": null
+   },
+   "Q09": {
+    "P0": 0.0,
+    "two": 0.0,
+    "system": false,
+    "detected": null
+   },
+   "K03": {
+    "P0": 0.4,
+    "two": 0.4,
+    "system": false,
+    "detected": null
+   },
+   "K04": {
+    "P0": 0.52,
+    "two": 0.52,
+    "system": true,
+    "detected": 0.0
+   },
+   "K05": {
+    "P0": 0.92,
+    "two": 0.92,
+    "system": false,
+    "detected": null
+   },
+   "K06": {
+    "P0": 0.1,
+    "two": 0.1,
+    "system": false,
+    "detected": null
+   },
+   "K08": {
+    "P0": 0.32,
+    "two": 0.32,
+    "system": false,
+    "detected": null
+   },
+   "K09": {
+    "P0": 0.52,
+    "two": 0.52,
+    "system": false,
+    "detected": null
+   },
+   "R01": {
+    "P0": 0.08,
+    "two": 1.0,
+    "system": true,
+    "detected": 1.0
+   },
+   "R03": {
+    "P0": 0.94,
+    "two": 1.0,
+    "system": true,
+    "detected": 1.0
+   },
+   "R05": {
+    "P0": 0.16,
+    "two": 1.0,
+    "system": true,
+    "detected": 1.0
+   },
+   "R06": {
+    "P0": 0.58,
+    "two": 1.0,
+    "system": true,
+    "detected": 1.0
+   },
+   "R07": {
+    "P0": 1.0,
+    "two": 1.0,
+    "system": true,
+    "detected": 1.0
+   },
+   "R10": {
+    "P0": 1.0,
+    "two": 1.0,
+    "system": true,
+    "detected": 1.0
+   },
+   "R11": {
+    "P0": 1.0,
+    "two": 1.0,
+    "system": true,
+    "detected": 1.0
+   },
+   "R13": {
+    "P0": 0.14,
+    "two": 1.0,
+    "system": true,
+    "detected": 1.0
+   },
+   "R19": {
+    "P0": 0.44,
+    "two": 1.0,
+    "system": true,
+    "detected": 1.0
+   },
+   "R22": {
+    "P0": 0.16,
+    "two": 1.0,
+    "system": true,
+    "detected": 1.0
+   },
+   "R24": {
+    "P0": 0.24,
+    "two": 1.0,
+    "system": true,
+    "detected": 1.0
+   },
+   "K12": {
+    "P0": 0.62,
+    "two": 0.62,
+    "system": false,
+    "detected": null
+   }
+  },
+  "selftests_run": 222
+ }
+}
