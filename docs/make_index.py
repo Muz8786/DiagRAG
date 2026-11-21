@@ -65,8 +65,8 @@ EXP = [
     ('v19', 'unseen-fault closure of the two-channel system', ['docs/evidence/v19_two_channel_u1_protocol.md'], ['docs/evidence/v19_two_channel_u1.py'], []),
 ]
 for v, w, pr, co, ou in EXP:
-    j = lambda ps: ' · '.join(L(p, os.path.basename(p.rstrip('/'))) for p in ps) or 'pending'
-    out.append(f'| {v} | {w} | {j(pr)} | {j(co)} | {j(ou)} |')
+    j = lambda ps, empty: ' · '.join(L(p, os.path.basename(p.rstrip('/'))) for p in ps) or empty
+    out.append(f'| {v} | {w} | {j(pr, "protocol stored in each run folder (JUDGED_PROTOCOL.json)")} | {j(co, "-")} | {j(ou, "pending (running on Kaggle)")} |')
 
 out += ['', '## 4. Raw output folders (every judged, development, held-out and void run)', '']
 kd = sorted({f.split('/')[1] for f in FILES if f.startswith('kaggle/') and f.count('/') >= 2})
