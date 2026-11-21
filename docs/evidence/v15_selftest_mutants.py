@@ -14,9 +14,10 @@ KNOBS = dict(R01={'mask'}, R03={'enc'}, R05={'ce'}, R06={'route'}, R07={'shift'}
 P = dict(POOL=600, A=100, B=40, NDICT=2, NDICT_RANDOM=4, T=3, EPS=0.002, KAPPA=3.0, TRAFFIC=100, PAIR_TRAFFIC=40, SCREEN=40, HARM_FRAC=0.10, ALARM_P=0.01, MAXM=400, TIMEOUT=90)
 TARGETS = ['run', 'bm25_scores', 'q_terms', 'topn', 'dense_all', 'ce_scores', 'enc_q']
 FCOMP = dict(bm25_scores='BM25', q_terms='BM25', dense_all='DENSE', enc_q='DENSE', ce_scores='RERANK', topn='SHARED')
-RUN_MARKERS = [('m = M(ov)', 'DENSE'), ('ok = np.ones', 'FILTERS'), ("if c['mask'] is not None", 'DENSE'), ('ss = bm25_scores', 'BM25'),
-               ("if c['pfilter'] is not None and c['post_filter']", 'FILTERS'), ("if c['refresh']", 'DENSE'), ("if c['fusion'] == 'rrf'", 'FUSION'),
-               ("if c['quality']", 'CONTENT'), ("depth = fused[:c['depth']]", 'RERANK'), ("final = order[:CFG['K_FINAL']]", 'SERVING'), ('return dict(', 'TELEMETRY')]
+RUN_MARKERS = [('m = M(ov)', 'DENSE'), ('ok = np.ones', 'FILTERS'), ('dok = ok.copy()', 'DENSE'), ('ss = bm25_scores', 'BM25'),
+               ("if c['pfilter'] is not None and c['post_filter']", 'FILTERS'), ("if c['dense_only']", 'BM25'), ("if c['refresh']", 'DENSE'),
+               ("if c['fusion'] == 'rrf'", 'FUSION'),   # fusion and candidate-list post-processing (quality, parent collapse, dedup) up to the depth cut
+               ("depth = fused[:c['depth']]", 'RERANK'), ("final = order[:CFG['K_FINAL']]", 'SERVING'), ('return dict(', 'TELEMETRY')]
 DEV_SEEN = set(["bm25_scores|290|25|int+|0", "bm25_scores|290|25|int-|0", "bm25_scores|293|41|int+|0", "bm25_scores|293|4|ifnot|0", "bm25_scores|294|42|int+|0", "bm25_scores|294|42|int-|0", "bm25_scores|294|87|int-|0", "ce_scores|333|60|slice-|0", "ce_scores|335|64|int-|0", "ce_scores|335|86|bool|0", "enc_q|311|4|ifnot|0", "enc_q|312|12|bin|0", "enc_q|313|73|int-|0", "enc_q|313|8|ifnot|0", "enc_q|314|71|bool|0", "enc_q|314|77|int-|0", "enc_q|315|81|int+|0", "enc_q|317|58|int+|0", "q_terms|287|21|int+|0", "q_terms|289|13|bin|0", "run|423|4|ifnot|0", "run|428|19|andor|0", "run|429|23|int+|0", "run|429|23|int-|0", "run|429|46|slice-|0", "run|430|20|bin|0", "run|432|4|ifnot|0", "run|433|75|int+|0", "run|433|79|int+|0", "run|433|90|bin|0", "run|433|95|bin|0", "run|434|13|bin|0", "run|438|4|ifnot|0", "run|439|33|slice+|0", "run|439|33|slice-|0", "run|439|49|bin|0", "run|440|9|int-|0", "run|441|4|ifnot|0", "run|443|11|cmp|0", "run|443|48|fhalf|0", "run|443|8|ifnot|0", "run|449|4|ifnot|0", "run|450|11|slice+|0", "run|453|11|slice+|0", "run|453|11|slice-|0", "run|455|4|ifnot|0", "run|455|7|andor|0", "run|456|11|slice+|0", "run|456|11|slice-|0", "run|458|4|ifnot|0", "run|459|27|fdouble|0", "run|459|27|fhalf|0", "run|461|39|slice+|0", "run|461|57|int+|0", "run|462|26|cmp|0", "run|462|41|int-|0", "run|462|4|ifnot|0", "run|462|79|int-|0", "run|462|86|bool|0", "run|463|39|neg|0", "run|463|49|int-|0", "run|465|41|slice-|0", "run|465|60|slice+|0", "run|466|28|neg|0", "run|468|14|int-|0", "run|468|19|neg|0", "run|470|4|ifnot|0", "run|470|7|andor|0", "run|474|8|ifnot|0", "run|475|32|neg|0", "run|477|27|minmax|0", "run|477|31|int-|0", "run|478|4|ifnot|0", "run|480|4|ifnot|0", "run|481|60|int-|0", "run|482|8|ifnot|0", "run|485|19|andor|0", "run|485|64|fdouble|0", "run|486|55|int-|0", "run|488|7|cmp|0", "run|491|62|bin|0", "run|491|82|int+|0", "run|491|82|int-|0", "run|496|37|neg|0", "run|498|16|bin|0", "run|499|4|ifnot|0", "run|504|4|ifnot|0", "run|506|24|int-|0", "run|508|35|fhalf|0", "run|508|42|cmp|0", "run|508|78|fdouble|0", "run|510|16|bin|0", "run|510|29|int+|0", "run|511|18|slice+|0", "run|511|18|slice-|0", "run|512|4|ifnot|0", "run|512|50|slice-|0", "run|514|7|cmp|0", "run|515|75|int-|0", "run|515|79|int-|0", "run|521|52|int+|0", "run|522|51|andor|0", "run|522|51|cmp|0", "run|522|57|int+|0", "run|522|62|cmp|0", "run|523|101|int-|0", "run|523|105|neg|0", "run|523|63|neg|0", "run|529|46|cmp|0", "run|529|55|int-|0", "run|530|16|bin|0", "run|532|29|bin|0", "run|532|4|ifnot|0", "run|533|18|slice+|0", "run|533|18|slice-|0", "run|534|33|slice+|0", "topn|397|8|minmax|0", "topn|398|12|int-|0", "topn|399|26|neg|0", "topn|399|30|bin|0", "topn|399|37|slice+|0", "topn|399|64|neg|0"])   # mutation points evaluated in the first development run (old pid format), never used as held-out
 CONFUSE = [('ds', 'dsm'), ('ss', 'ssm'), ('dtop', 'stop'), ('ok', 'dok'), ('fused', 'depth'), ('depth', 'order'), ('order', 'fused'), ('dsm', 'ssm')]
 CMP = {ast.Lt: ast.LtE, ast.LtE: ast.Lt, ast.Gt: ast.GtE, ast.GtE: ast.Gt, ast.Eq: ast.NotEq, ast.NotEq: ast.Eq}
@@ -80,6 +81,7 @@ def main(G, OUT, TRIAL, ROLE, RUN=('S', 'M')):
     LAMS, GATES, stratum, mkcfg, N, E, BASE, TAU = G['LAMS'], G['GATES'], G['stratum'], G['mkcfg'], G['N'], G['E'], G['BASE'], G['TAU_NONE_G']
     A_ = GATES['ALPHA']; ESCI_PART, PARTS = G['ESCI_PART'], G['PARTS']
     rnd = lambda *tag: random.Random('|'.join(map(str, tag)))
+    m = lambda xs, k: (float(np.mean([bool(x[k]) for x in xs])) if xs else None)
     R = dict(trial=bool(TRIAL), role=ROLE, run_parts=list(RUN), seed=str(G['CFG']['SEED']), params=dict(P), note='frozen v6 executed on a judged checkpoint; measurements only')
 
     def sys_cfg(f, r):
@@ -250,9 +252,30 @@ def main(G, OUT, TRIAL, ROLE, RUN=('S', 'M')):
         log('S', R['S'])
 
     if 'M' in RUN:
-        # ---- M: blind code mutants of the retrieval path
+        # ---- M: blind code mutants of the retrieval path (coverage-guided; stage-wise golden-trace localization)
+        import sys as _sys
         SRC = open(G['__file__'], encoding='utf-8').read(); tree = ast.parse(SRC)
         FN = {n.name: n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name in TARGETS}
+        CACHES = {'enc_q': '_QC', 'ce_scores': '_CEC'}; ORIG = {n: G[n] for n in TARGETS}
+        qrun = lambda b: G['run'](dict(q=b['q'], tenant=b['tenant'], cfg=mkcfg(), ov=None))
+        # coverage on clean screen queries, caches bypassed so that encoder and reranker code is exercised as for a new query
+        codes = {G[f].__code__: f for f in TARGETS}; off = {f: FN[f].lineno - G[f].__code__.co_firstlineno for f in TARGETS}; COV = set()
+        def tracer(frame, event, arg):
+            f = codes.get(frame.f_code)
+            if f is None: return None
+            COV.add((f, frame.f_lineno + off[f]))
+            def lt(fr, ev, ar):
+                if ev == 'line': COV.add((f, fr.f_lineno + off[f]))
+                return lt
+            return lt
+        saved_c = {v: G[v] for v in CACHES.values()}
+        for v in CACHES.values(): G[v] = {}
+        _sys.settrace(tracer)
+        try:
+            for b in screen: qrun(b)
+        finally:
+            _sys.settrace(None)
+            for v, d_ in saved_c.items(): G[v] = d_
         MUT = []
         for name, node in FN.items():
             seg = ast.get_source_segment(SRC, node); base_line = node.lineno
@@ -265,18 +288,36 @@ def main(G, OUT, TRIAL, ROLE, RUN=('S', 'M')):
                 line = base_line + nd.lineno - 1; pid = f'{name}|{line}|{nd.col_offset}|{getattr(nd, "end_col_offset", -1)}|{kind}|{sub}'; dkey = f'{name}|{line}|{nd.col_offset}|{kind}|{sub}'
                 half = 'dev' if int(hashlib.md5(pid.encode()).hexdigest()[0], 16) < 8 else 'heldout'
                 comp = FCOMP.get(name) or next((cp for ml, cp in sorted(marks, reverse=True) if ml <= line), 'OTHER')
-                MUT.append(dict(pid=pid, dkey=dkey, fn=name, k=k, kind=kind, line=line, half=half, comp=comp, seg=seg))
-        R['M_points'] = dict(total=len(MUT), by_half=dict(collections.Counter(x['half'] for x in MUT)), by_fn=dict(collections.Counter(x['fn'] for x in MUT)))
-        mine = sorted([x for x in MUT if x['half'] == ROLE and not (ROLE == 'heldout' and x['dkey'] in DEV_SEEN)], key=lambda x: hashlib.md5(x['pid'].encode()).hexdigest())[:P['MAXM']]
+                MUT.append(dict(pid=pid, dkey=dkey, fn=name, k=k, kind=kind, line=line, half=half, comp=comp, seg=seg, covered=(name, line) in COV))
+        R['M_points'] = dict(total=len(MUT), covered=sum(x['covered'] for x in MUT), by_half=dict(collections.Counter(x['half'] for x in MUT)),
+                             covered_by_half=dict(collections.Counter(x['half'] for x in MUT if x['covered'])), by_fn=dict(collections.Counter(x['fn'] for x in MUT if x['covered'])))
+        mine = sorted([x for x in MUT if x['half'] == ROLE and x['covered'] and not (ROLE == 'heldout' and x['dkey'] in DEV_SEEN)],
+                      key=lambda x: hashlib.md5(x['pid'].encode()).hexdigest())[:P['MAXM']]
         log('mutation points', R['M_points'], 'evaluated', len(mine))
-        ORIG = {n: G[n] for n in TARGETS}; CACHES = {'enc_q': '_QC', 'ce_scores': '_CEC'}
+        # golden traces of the probes on the clean pipeline (scan-chain style: the output of every stage is recorded)
+        def sig(tr):
+            out = {}
+            for key, fn in (('D', lambda t: t['dtop'][:20]), ('S', lambda t: t['stop'][:20]), ('F', lambda t: t['fused'][:G['CFG']['DEPTH']]),
+                            ('O', lambda t: t['order'][:10]), ('V', lambda t: t['final'])):
+                try: out[key] = tuple(int(i) for i in fn(tr))
+                except Exception: out[key] = None
+            return out
+        REF = [sig(qrun(b)) for b in probes]; REF2 = [sig(qrun(b)) for b in probes]
+        STG = ['D', 'S', 'F', 'O', 'V']; clean_chg = {k: sum(a[k] != b2[k] for a, b2 in zip(REF, REF2)) for k in STG}; R['M_clean_stage_changes'] = clean_chg
+        def localize(cnt):
+            ch = {k: cnt[k] > clean_chg[k] for k in STG}
+            if ch['D'] and ch['S']: return 'FILTERS'
+            for k, c_ in (('D', 'DENSE'), ('S', 'BM25'), ('F', 'FUSION'), ('O', 'RERANK'), ('V', 'SERVING')):
+                if ch[k]: return c_
+            return 'NONE'
         def clean_view(b):
-            tr = G['run'](dict(q=b['q'], tenant=b['tenant'], cfg=mkcfg(), ov=None)); fe = features(tr); s = dispatch_v3(proba(fe), fe)[1]
+            tr = qrun(b); fe = features(tr); s = dispatch_v3(proba(fe), fe)[1]
             return dict(s=float(s), ce1=float(np.max(tr['ce'])) if len(tr['ce']) else 0.0)
         CV = {b['bid']: clean_view(b) for b in traffic}
         def signp(bm, cm):
             n = bm + cm
             return 1.0 if n == 0 else float(sum(math.comb(n, i) for i in range(bm, n + 1)) / 2 ** n)
+        SCORED = ('DENSE', 'BM25', 'FUSION', 'RERANK', 'SERVING', 'FILTERS')
         rowsM = []; fM = open(os.path.join(OUT, 'M_mutants.jsonl'), 'w'); signal.signal(signal.SIGALRM, _alarm)
         for n_, x in enumerate(mine):
             r = dict(pid=x['pid'], fn=x['fn'], kind=x['kind'], comp=x['comp'])
@@ -285,24 +326,28 @@ def main(G, OUT, TRIAL, ROLE, RUN=('S', 'M')):
                 code_ = compile(mutant_src(x), f"mutant:{x['pid']}", 'exec')
                 if x['fn'] in CACHES: saved[CACHES[x['fn']]] = G[CACHES[x['fn']]]; G[CACHES[x['fn']]] = {}
                 exec(code_, G); signal.alarm(P['TIMEOUT'])
-                fails = sum(not bool(succ(G['run'](dict(q=b['q'], tenant=b['tenant'], cfg=mkcfg(), ov=None)), b['gold'], 5)) for b in screen); signal.alarm(0)
-                r['screen_fail'] = fails / len(screen); r['status'] = 'harmful' if r['screen_fail'] >= P['HARM_FRAC'] else 'harmless'
-                if r['status'] == 'harmful':
-                    signal.alarm(P['TIMEOUT'] * 6)
-                    y = [not bool(succ(G['run'](dict(q=b['q'], tenant=b['tenant'], cfg=mkcfg(), ov=None)), b['gold'], 5)) for b in probes]
-                    H = decode(y, SYS, posAll); r.update(selftest_alarm=any(y), probe_fail=float(np.mean(y)), decoded=list(H), decoded_comp=sorted({COMP[h] for h in H}))
+                fails = sum(not bool(succ(qrun(b), b['gold'], 5)) for b in screen); signal.alarm(0)
+                r['screen_fail'] = fails / len(screen)
+                r['status'] = 'harmful' if r['screen_fail'] >= P['HARM_FRAC'] else ('subtle' if fails > 0 else 'harmless')
+                if r['status'] in ('harmful', 'subtle'):
+                    signal.alarm(P['TIMEOUT'] * 8)
+                    trs = [qrun(b) for b in probes]; y = [not bool(succ(t, b['gold'], 5)) for t, b in zip(trs, probes)]
+                    sg = [sig(t) for t in trs]; cnt = {k: sum(a[k] != b2[k] for a, b2 in zip(sg, REF)) for k in STG}
+                    H = decode(y, SYS, posAll) if any(y) else ()
+                    r.update(selftest_alarm=any(y), probe_fail=float(np.mean(y)), stage_changes=cnt, stage_comp=localize(cnt), decoded=list(H), decoded_comp=sorted({COMP[h] for h in H}))
                     bm = cm = bce = cce = 0; tel_err = False
                     for b in traffic:
-                        tr = G['run'](dict(q=b['q'], tenant=b['tenant'], cfg=mkcfg(), ov=None))
-                        try: fe = G['features'](tr); s = float(G['dispatch_v3'](G['proba'](fe), fe)[1])
+                        tr = qrun(b)
+                        try: fe = G['features'](tr); s_ = float(G['dispatch_v3'](G['proba'](fe), fe)[1])
                         except Exception: tel_err = True; continue
-                        f1, f0 = s >= TAU, CV[b['bid']]['s'] >= TAU; bm += f1 and not f0; cm += f0 and not f1
+                        f1, f0 = s_ >= TAU, CV[b['bid']]['s'] >= TAU; bm += f1 and not f0; cm += f0 and not f1
                         c1 = float(np.max(tr['ce'])) if len(tr['ce']) else 0.0; bce += c1 < CV[b['bid']]['ce1'] - 1e-6; cce += c1 > CV[b['bid']]['ce1'] + 1e-6
                     signal.alarm(0)
                     r.update(telemetry_p=signp(bm, cm), telemetry_alarm=bool(tel_err or signp(bm, cm) < P['ALARM_P']), telemetry_error=tel_err,
                              ce_drop_p=signp(bce, cce), ce_drop_alarm=bool(signp(bce, cce) < P['ALARM_P']))
                     r['either_alarm'] = bool(r['selftest_alarm'] or r['telemetry_alarm'])
-                    r['component_ok'] = (x['comp'] in r['decoded_comp']) if x['comp'] in ('DENSE', 'BM25', 'FUSION', 'RERANK', 'SERVING', 'FILTERS') else None
+                    r['component_ok'] = (r['stage_comp'] == x['comp']) if x['comp'] in SCORED else None
+                    r['component_ok_decode'] = (x['comp'] in r['decoded_comp']) if x['comp'] in SCORED else None
             except _TO: r['status'] = 'timeout'
             except Exception as ex: r['status'] = 'crash'; r['error'] = repr(ex)[:120]
             finally:
@@ -311,11 +356,15 @@ def main(G, OUT, TRIAL, ROLE, RUN=('S', 'M')):
                 for k_, v_ in saved.items(): G[k_] = v_
             rowsM.append(r); fM.write(json.dumps(r, default=str) + '\n'); fM.flush()
             if n_ % 25 == 0: log('M', n_, 'of', len(mine), collections.Counter(z['status'] for z in rowsM))
-        H_ = [r for r in rowsM if r['status'] == 'harmful']; cmp_ = [r for r in H_ if r.get('component_ok') is not None]
-        R['M'] = dict(evaluated=len(rowsM), status=dict(collections.Counter(r['status'] for r in rowsM)), harmful=len(H_),
+        H_ = [r for r in rowsM if r['status'] == 'harmful']; SB = [r for r in rowsM if r['status'] == 'subtle']; cmp_ = [r for r in H_ if r.get('component_ok') is not None]
+        maj = collections.Counter(r['comp'] for r in cmp_).most_common(1)
+        R['M'] = dict(evaluated=len(rowsM), status=dict(collections.Counter(r['status'] for r in rowsM)), harmful=len(H_), subtle=len(SB),
                       detected_selftest=m(H_, 'selftest_alarm'), detected_telemetry=m(H_, 'telemetry_alarm'), detected_either=m(H_, 'either_alarm'),
-                      detected_ce_drop_baseline=m(H_, 'ce_drop_alarm'), component_ok=m(cmp_, 'component_ok'), n_component_scored=len(cmp_),
-                      by_component={c: dict(n=sum(r['comp'] == c for r in H_), selftest=m([r for r in H_ if r['comp'] == c], 'selftest_alarm'),
+                      detected_ce_drop_baseline=m(H_, 'ce_drop_alarm'), component_ok=m(cmp_, 'component_ok'), component_ok_decode=m(cmp_, 'component_ok_decode'),
+                      component_majority_baseline=(maj[0][1] / len(cmp_)) if maj else None, n_component_scored=len(cmp_),
+                      subtle_detected_selftest=m(SB, 'selftest_alarm'), subtle_detected_telemetry=m(SB, 'telemetry_alarm'),
+                      subtle_component_ok=m([r for r in SB if r.get('component_ok') is not None], 'component_ok'),
+                      by_component={c: dict(n=sum(r['comp'] == c for r in H_), localized=m([r for r in cmp_ if r['comp'] == c], 'component_ok'),
                                             telemetry=m([r for r in H_ if r['comp'] == c], 'telemetry_alarm')) for c in sorted({r['comp'] for r in H_})},
                       median_probe_fail=float(np.median([r['probe_fail'] for r in H_])) if H_ else None,
                       acceptance_sampling_bound=f"a fault breaking a share h of working queries is missed by all {len(posA)} random probes with probability (1-h)^{len(posA)}")
