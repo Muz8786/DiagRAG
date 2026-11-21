@@ -11,7 +11,8 @@ raw = open(os.path.join(root, 'docs', 'evidence', 'v15_selftest_mutants.py'), 'r
 lines = lambda s: s.strip('\n').splitlines(True)
 md = lambda t: dict(cell_type='markdown', metadata={}, source=lines(t)); code = lambda t: dict(cell_type='code', metadata={}, execution_count=None, outputs=[], source=lines(t))
 for name, SEED, TRIAL, ROLE, PARTS in [('dev55m', '55', 0, 'dev', ('M',)), ('heldout71s', '71', 0, 'heldout', ('S',)), ('heldout72s', '72', 0, 'heldout', ('S',)), ('heldout73s', '73', 0, 'heldout', ('S',)),
-                                       ('heldout71m', '71', 0, 'heldout', ('M',)), ('heldout72m', '72', 0, 'heldout', ('M',)), ('heldout73m', '73', 0, 'heldout', ('M',))]:
+                                       ('heldout71m', '71', 0, 'heldout', ('M',)), ('heldout72m', '72', 0, 'heldout', ('M',)), ('heldout73m', '73', 0, 'heldout', ('M',)),
+                                       ('dev71m', '71', 0, 'dev', ('M',)), ('heldout74m', '74', 0, 'heldout', ('M',)), ('heldout75m', '75', 0, 'heldout', ('M',)), ('heldout76m', '76', 0, 'heldout', ('M',))]:
     cells = [
         md(f"# DiagRAG v15 self-test (S) and code mutants (M) on ESCI, seed {SEED}, role {ROLE}, parts {'+'.join(PARTS)} ({'TRIAL: limited work, numbers are not results' if TRIAL else 'JUDGED RUN'})\n\nResumes the judged ESCI checkpoint of seed {SEED} and runs the frozen v6 code (`44176b9a…e28a`) up to its U1 stage, then the measurements of `docs/evidence/v15_selftest_mutants_protocol.md`. GPU T4, Internet On. No API key."),
         code(f"import os\nCONFIG = dict(SEED='{SEED}', N_BASE_ESCI='6000', N_PRDC='528', N_HARD='100', MAX_ATT='4000', N_HARM='20', TIME_BUDGET='0')   # v6 settings; TIME_BUDGET 0 = no self-stop\nos.environ.update(CONFIG); TRIAL = {TRIAL}; ROLE = {ROLE!r}; RUN_PARTS = {PARTS!r}; print(CONFIG, 'TRIAL', TRIAL, 'ROLE', ROLE, 'RUN_PARTS', RUN_PARTS)"),

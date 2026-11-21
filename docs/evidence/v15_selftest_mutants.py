@@ -20,6 +20,7 @@ RUN_MARKERS = [('m = M(ov)', 'DENSE'), ('ok = np.ones', 'FILTERS'), ('dok = ok.c
                ("depth = fused[:c['depth']]", 'RERANK'), ("final = order[:CFG['K_FINAL']]", 'SERVING'), ('return dict(', 'TELEMETRY')]
 DEV_SEEN = set(["bm25_scores|290|25|int+|0", "bm25_scores|290|25|int-|0", "bm25_scores|293|41|int+|0", "bm25_scores|293|4|ifnot|0", "bm25_scores|294|42|int+|0", "bm25_scores|294|42|int-|0", "bm25_scores|294|87|int-|0", "ce_scores|333|60|slice-|0", "ce_scores|335|64|int-|0", "ce_scores|335|86|bool|0", "enc_q|311|4|ifnot|0", "enc_q|312|12|bin|0", "enc_q|313|73|int-|0", "enc_q|313|8|ifnot|0", "enc_q|314|71|bool|0", "enc_q|314|77|int-|0", "enc_q|315|81|int+|0", "enc_q|317|58|int+|0", "q_terms|287|21|int+|0", "q_terms|289|13|bin|0", "run|423|4|ifnot|0", "run|428|19|andor|0", "run|429|23|int+|0", "run|429|23|int-|0", "run|429|46|slice-|0", "run|430|20|bin|0", "run|432|4|ifnot|0", "run|433|75|int+|0", "run|433|79|int+|0", "run|433|90|bin|0", "run|433|95|bin|0", "run|434|13|bin|0", "run|438|4|ifnot|0", "run|439|33|slice+|0", "run|439|33|slice-|0", "run|439|49|bin|0", "run|440|9|int-|0", "run|441|4|ifnot|0", "run|443|11|cmp|0", "run|443|48|fhalf|0", "run|443|8|ifnot|0", "run|449|4|ifnot|0", "run|450|11|slice+|0", "run|453|11|slice+|0", "run|453|11|slice-|0", "run|455|4|ifnot|0", "run|455|7|andor|0", "run|456|11|slice+|0", "run|456|11|slice-|0", "run|458|4|ifnot|0", "run|459|27|fdouble|0", "run|459|27|fhalf|0", "run|461|39|slice+|0", "run|461|57|int+|0", "run|462|26|cmp|0", "run|462|41|int-|0", "run|462|4|ifnot|0", "run|462|79|int-|0", "run|462|86|bool|0", "run|463|39|neg|0", "run|463|49|int-|0", "run|465|41|slice-|0", "run|465|60|slice+|0", "run|466|28|neg|0", "run|468|14|int-|0", "run|468|19|neg|0", "run|470|4|ifnot|0", "run|470|7|andor|0", "run|474|8|ifnot|0", "run|475|32|neg|0", "run|477|27|minmax|0", "run|477|31|int-|0", "run|478|4|ifnot|0", "run|480|4|ifnot|0", "run|481|60|int-|0", "run|482|8|ifnot|0", "run|485|19|andor|0", "run|485|64|fdouble|0", "run|486|55|int-|0", "run|488|7|cmp|0", "run|491|62|bin|0", "run|491|82|int+|0", "run|491|82|int-|0", "run|496|37|neg|0", "run|498|16|bin|0", "run|499|4|ifnot|0", "run|504|4|ifnot|0", "run|506|24|int-|0", "run|508|35|fhalf|0", "run|508|42|cmp|0", "run|508|78|fdouble|0", "run|510|16|bin|0", "run|510|29|int+|0", "run|511|18|slice+|0", "run|511|18|slice-|0", "run|512|4|ifnot|0", "run|512|50|slice-|0", "run|514|7|cmp|0", "run|515|75|int-|0", "run|515|79|int-|0", "run|521|52|int+|0", "run|522|51|andor|0", "run|522|51|cmp|0", "run|522|57|int+|0", "run|522|62|cmp|0", "run|523|101|int-|0", "run|523|105|neg|0", "run|523|63|neg|0", "run|529|46|cmp|0", "run|529|55|int-|0", "run|530|16|bin|0", "run|532|29|bin|0", "run|532|4|ifnot|0", "run|533|18|slice+|0", "run|533|18|slice-|0", "run|534|33|slice+|0", "topn|397|8|minmax|0", "topn|398|12|int-|0", "topn|399|26|neg|0", "topn|399|30|bin|0", "topn|399|37|slice+|0", "topn|399|64|neg|0"])   # mutation points evaluated in the first development run (old pid format), never used as held-out
 CONFUSE = [('ds', 'dsm'), ('ss', 'ssm'), ('dtop', 'stop'), ('ok', 'dok'), ('fused', 'depth'), ('depth', 'order'), ('order', 'fused'), ('dsm', 'ssm')]
+INTKEYS = set()   # A5: set in main from the pipeline's CFG (integer-valued keys)
 CMP = {ast.Lt: ast.LtE, ast.LtE: ast.Lt, ast.Gt: ast.GtE, ast.GtE: ast.Gt, ast.Eq: ast.NotEq, ast.NotEq: ast.Eq}
 BIN = {ast.Add: ast.Sub, ast.Sub: ast.Add, ast.Mult: ast.Div, ast.Div: ast.Mult}
 
@@ -29,7 +30,9 @@ def pts_of(ft):
     for node in ast.walk(ft):
         if isinstance(node, ast.Compare):
             out += [('cmp', node, k) for k, op in enumerate(node.ops) if type(op) in CMP]
-        elif isinstance(node, ast.BinOp) and type(node.op) in BIN: out.append(('bin', node, 0))
+        elif isinstance(node, ast.BinOp):
+            if type(node.op) in BIN: out.append(('bin', node, 0))
+            out += [('aodL', node, 0), ('aodR', node, 0)]   # A5: arithmetic operand deletion
         elif isinstance(node, ast.Constant) and not isinstance(node.value, str):
             v = node.value
             if isinstance(v, bool): out.append(('bool', node, 0))
@@ -43,6 +46,10 @@ def pts_of(ft):
         elif isinstance(node, ast.BoolOp): out.append(('andor', node, 0))
         elif isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id in ('min', 'max'): out.append(('minmax', node, 0))
         elif isinstance(node, ast.Slice) and node.upper is not None and not isinstance(node.upper, ast.Constant): out += [('slice+', node, 0), ('slice-', node, 0)]
+        elif isinstance(node, ast.Subscript) and isinstance(node.value, ast.Name) and node.value.id == 'CFG' and isinstance(node.slice, ast.Constant) and node.slice.value in INTKEYS:
+            out += [('cfg+', node, 0), ('cfg-', node, 0), ('cfghalf', node, 0), ('cfgdouble', node, 0)]   # A5: configured value off by one / halved / doubled
+        elif isinstance(node, ast.IfExp): out.append(('ifexp', node, 0))   # A5: branches of a conditional expression swapped
+        elif isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and node.func.attr == 'where' and len(node.args) == 3: out.append(('whereswap', node, 0))   # A5
     return out
 
 
@@ -58,6 +65,12 @@ def mutant_src(x):
     elif kind == 'neg': nd.op = ast.UAdd()
     elif kind == 'ifnot': nd.test = ast.UnaryOp(op=ast.Not(), operand=nd.test)
     elif kind.startswith('var:'): nd.id = kind[4:]
+    elif kind in ('aodL', 'aodR'): _replace(t, nd, nd.left if kind == 'aodL' else nd.right)
+    elif kind in ('cfg+', 'cfg-', 'cfghalf', 'cfgdouble'):
+        op_, c_ = {'cfg+': (ast.Add(), 1), 'cfg-': (ast.Sub(), 1), 'cfghalf': (ast.FloorDiv(), 2), 'cfgdouble': (ast.Mult(), 2)}[kind]
+        _replace(t, nd, ast.BinOp(left=ast.Subscript(value=ast.Name(id='CFG', ctx=ast.Load()), slice=ast.Constant(nd.slice.value), ctx=ast.Load()), op=op_, right=ast.Constant(c_)))
+    elif kind == 'ifexp': nd.body, nd.orelse = nd.orelse, nd.body
+    elif kind == 'whereswap': nd.args[1], nd.args[2] = nd.args[2], nd.args[1]
     elif kind == 'del':
         for par in ast.walk(t):
             for fld in ('body', 'orelse'):
@@ -67,6 +80,15 @@ def mutant_src(x):
     elif kind == 'minmax': nd.func = ast.Name(id='max' if nd.func.id == 'min' else 'min', ctx=ast.Load())
     elif kind in ('slice+', 'slice-'): nd.upper = ast.BinOp(left=nd.upper, op=ast.Add() if kind == 'slice+' else ast.Sub(), right=ast.Constant(1))
     return ast.unparse(ast.fix_missing_locations(t))
+
+
+def _replace(t, old, new):
+    for par in list(ast.walk(t)):
+        for fld, val in ast.iter_fields(par):
+            if val is old: setattr(par, fld, new); return
+            if isinstance(val, list):
+                for k_, z in enumerate(val):
+                    if z is old: val[k_] = new; return
 
 
 class _TO(Exception): pass
@@ -251,6 +273,8 @@ def main(G, OUT, TRIAL, ROLE, RUN=('S', 'M')):
                                traffic_harm={w: tmean(rowsP, 'traffic', 'harm', w) for w in ('selftest', 'loop', 'universal')}))
         log('S', R['S'])
 
+    global INTKEYS
+    INTKEYS = {k for k, v in G['CFG'].items() if isinstance(v, int) and not isinstance(v, bool)}
     if 'M' in RUN:
         # ---- M: blind code mutants of the retrieval path (coverage-guided; stage-wise golden-trace localization)
         import sys as _sys

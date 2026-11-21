@@ -1,0 +1,25 @@
+{
+ "M": {
+  "evaluated": 219,
+  "harmful": 16,
+  "status": {
+   "crash": 48,
+   "harmful": 16,
+   "harmless": 142,
+   "subtle": 13
+  },
+  "detected_selftest": 1.0,
+  "detected_telemetry": 0.75,
+  "detected_either": 1.0,
+  "detected_ce_drop_baseline": 0.5,
+  "component_ok": 1.0,
+  "n_component_scored": 16,
+  "selftest_minus_telemetry": {
+   "mean": 0.25,
+   "ci": [
+    0.0625,
+    0.5
+   ]
+  }
+ }
+}
