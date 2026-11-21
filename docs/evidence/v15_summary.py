@@ -3,7 +3,7 @@ File reading and arithmetic only. usage: python docs/evidence/v15_summary.py <ou
 import json, os, sys
 import numpy as np
 
-a = sys.argv[1:]; out = a[0]; Sd = a[a.index('--S') + 1:a.index('--S') + 4] if '--S' in a else []; Md = a[a.index('--M') + 1:a.index('--M') + 4] if '--M' in a else []
+a = sys.argv[1:]; out = a[0]; Sd = (a[a.index('--S') + 1:a.index('--M')] if '--M' in a and a.index('--M') > a.index('--S') else a[a.index('--S') + 1:]) if '--S' in a else []; Md = a[a.index('--M') + 1:] if '--M' in a else []
 rd = lambda d, f: [json.loads(l) for l in open(os.path.join(d, f))]
 m = lambda xs, k: float(np.mean([bool(x[k]) for x in xs])) if xs else None
 rng = np.random.default_rng(7)
@@ -47,16 +47,22 @@ if Md:
             pick = rng.integers(0, len(ids), len(ids)); rows = [r for k in pick for r in by[ids[k]]]; vals.append(fn(rows))
         return [float(np.percentile(vals, 2.5)), float(np.percentile(vals, 97.5))]
     loc = lambda rows: float(np.mean([r['component_ok'] for r in rows]))
-    dec = lambda rows: float(np.mean([bool(r.get('component_ok_decode')) for r in rows]))
+    dec = lambda rows: float(np.mean([bool(r.get('component_ok_decode')) for r in rows if r.get('component_ok_decode') is not None])) if any(r.get('component_ok_decode') is not None for r in rows) else float('nan')
+    locd = lambda rows: float(np.mean([r['component_ok'] for r in rows if r.get('component_ok_decode') is not None])) if any(r.get('component_ok_decode') is not None for r in rows) else float('nan')
     def majority(rows):
         c = {}
         for r in rows: c[r['comp']] = c.get(r['comp'], 0) + 1
         return max(c.values()) / len(rows)
     M2 = dict(localization=loc(C) if C else None, decoder=dec(C) if C else None, majority=majority(C) if C else None,
-              loc_minus_decoder=dict(mean=loc(C) - dec(C), ci=cboot(lambda rw: loc(rw) - dec(rw))) if C else None,
+              loc_minus_decoder=dict(mean=locd(C) - dec(C), ci=cboot(lambda rw: locd(rw) - dec(rw)), n=sum(r.get('component_ok_decode') is not None for r in C)) if C else None,
               loc_minus_majority=dict(mean=loc(C) - majority(C), ci=cboot(lambda rw: loc(rw) - majority(rw))) if C else None)
     rule = {'M-0 >= 8 distinct scored harmful mutants': len(ids) >= 8, 'M-1 self-test detection >= 0.95': bool(H and m(H, 'selftest_alarm') >= 0.95),
             'M-2 localization >= 0.80 and above decoder and majority (95% LB > 0)': bool(C and M2['localization'] >= 0.80 and M2['loc_minus_decoder']['ci'][0] > 0 and M2['loc_minus_majority']['ci'][0] > 0)}
+    by_base = {}
+    for r in M: by_base.setdefault(r.get('code_base', 'main'), []).append(r)
+    R['M_by_code_base'] = {k: dict(evaluated=len(v), harmful=sum(r['status'] == 'harmful' for r in v), distinct_harmful=len({r['pid'] for r in v if r['status'] == 'harmful'}),
+                                     localized=m([r for r in v if r['status'] == 'harmful' and r.get('component_ok') is not None], 'component_ok'),
+                                     detected_selftest=m([r for r in v if r['status'] == 'harmful'], 'selftest_alarm'), detected_telemetry=m([r for r in v if r['status'] == 'harmful'], 'telemetry_alarm')) for k, v in by_base.items()}
     R['M'] = dict(evaluated=len(M), harmful=len(H), distinct_harmful=len({r['pid'] for r in H}), distinct_scored=len(ids),
                   status={s: sum(r['status'] == s for r in M) for s in sorted({r['status'] for r in M})},
                   detected_selftest=m(H, 'selftest_alarm'), detected_telemetry=m(H, 'telemetry_alarm'), detected_either=m(H, 'either_alarm'),
