@@ -1,5 +1,5 @@
 # v19: unseen-fault closure of the two-channel system. Pre-registration
-Written 21 Nov 2026, 14:50 IST, before any v19 code ran. Kaggle only.
+Written 21 Nov 2026, 14:45 IST, before any v19 code ran. Kaggle only.
 
 **Why.** U1 (closure of faults the per-query attributor never saw) is 0.36 to 0.41 on every seed, below its 0.50 bar, and the ceiling analysis showed that the per-query flagger alone can reach at most about 0.51 to 0.54. The deployed system now has a second channel: the diagnostic self-test, confirmed on held-out seeds (v15). U1 of the system that actually runs both channels has not been measured.
 
