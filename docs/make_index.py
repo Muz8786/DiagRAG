@@ -18,7 +18,7 @@ out = ['# DiagRAG: A to Z index of the project', '',
        '## 1. Start here', '',
        f'- Paper (IEEE conference format): {L("paper/diagrag_ieee.pdf", "PDF")} · {L("paper/diagrag_ieee.tex", "LaTeX source")}',
        f'- What the project is, in plain words: {L("PROJECT_EXPLAINED.md")} · {L("A_TO_Z_GUIDE.md")} · {L("README.md")}',
-       f'- Results of the latest programmes (every outcome, pass or fail): {L("docs/evidence/v15_v16_results.md")} · {L("docs/evidence/v14_results.md")}',
+       f'- Results of the latest programmes (every outcome, pass or fail): {L("docs/evidence/v17_v19_results.md")} · {L("docs/evidence/v15_v16_results.md")} · {L("docs/evidence/v14_results.md")}',
        f'- All judged pipeline runs in one table: {L("docs/ALL_RUNS_MATRIX.md")}',
        f'- Conference guide, novelty and evidence reports: {L("docs/CONFERENCE_GUIDE.md")} · {L("docs/EVIDENCE_AND_NOVELTY_REPORT.md")} · {L("docs/IDENTIFIABILITY.md")}',
        f'- How to reproduce: {L("docs/REPRODUCE.md")} · {L("kaggle/README.md")} · {L("kaggle/DiagRAG_A_to_Z_kaggle.ipynb", "one-notebook A-Z rerun")}', '',
@@ -37,7 +37,7 @@ rows = [
     ('Code mutants, second confirmation (two code bases)', 'PASS: 32/32 harmful runs detected, 28/28 localized', ['kaggle/v15_heldout2_M.json', 'kaggle/heldout2_v15_M_port_fiqa']),
     ('Bugs reproduced from public issue reports', 'PASS (seeds 74-76): 20/21 harmful units detected, 21/21 localized, 1,454/1,461 queries restored; telemetry 8/21', ['kaggle/v18_bugs_pooled.json', 'kaggle/judged_v18_seed75', 'docs/evidence/v18_real_bugs_protocol.md']),
     ('Self-test on the second stack', 'PASS (FiQA held-out draws): 27/27 detected, 87% same-group pairs named, all broken traffic restored, 0% harm (NQ could not finish before the freeze)', ['kaggle/v17_heldout.json', 'kaggle/heldout_v17_port_fiqa', 'docs/evidence/v17_port_selftest_protocol.md']),
-    ('Unseen faults (U1)', 'per-query 0.36-0.41 (bar 0.50); ceiling 0.51-0.54; escalation not confirmed; two-channel U1 pending', ['kaggle/judged_v14_esci_seed71', 'docs/evidence/v19_two_channel_u1_protocol.md']),
+    ('Unseen faults (U1)', 'per-query 0.36-0.41 (bar 0.50); two-channel (per-query + self-test) 0.608 on seed 71; unseen query/content faults stay at 0.28', ['kaggle/judged_v19_seed71', 'kaggle/judged_v14_esci_seed71', 'docs/evidence/v19_two_channel_u1_protocol.md']),
     ('Real failures labelled by intervention', 'ESCI: loop fixes 53-58% of repairable vs 9% random', ['kaggle/judged_v14_esci_seed71', 'kaggle/judged_v14_port_nq']),
     ('Natural traffic (1,648 never-examined queries)', '+2.0 to +2.4 points on every seed', ['kaggle/judged_cpu_run_v6_seed50', 'docs/evidence/natural_split_by_gold_v7cpu.json']),
     ('Portability of the fault suite', 'FiQA 19/20, NQ 18/20 (also SciFact, NFCorpus, ArguAna, SCIDOCS)', ['kaggle/judged_v13_port_fiqa', 'kaggle/judged_v13_port_nq', 'docs/evidence/v9_port_summary.md']),
@@ -62,7 +62,7 @@ EXP = [
     ('v16', 'diagnosability: observation vs intervention', ['docs/evidence/v16_diagnosability_protocol.md'], ['docs/evidence/v16_diagnosability.py', 'docs/evidence/v16_summary.py'], ['kaggle/dev_v16_seed55', 'kaggle/v16_heldout.json']),
     ('v17', 'self-test on the second stack (FiQA dev, NQ confirm)', ['docs/evidence/v17_port_selftest_protocol.md'], ['docs/evidence/v17_port_selftest.py', 'docs/evidence/v17_summary.py'], ['kaggle/dev_v17_port_fiqa', 'kaggle/heldout_v17_port_fiqa', 'kaggle/v17_heldout.json']),
     ('v18', 'nine bugs reproduced from public issue reports', ['docs/evidence/v18_real_bugs_protocol.md'], ['docs/evidence/v18_real_bugs.py'], ['kaggle/judged_v18_seed74', 'kaggle/judged_v18_seed75', 'kaggle/judged_v18_seed76', 'kaggle/v18_bugs_pooled.json']),
-    ('v19', 'unseen-fault closure of the two-channel system', ['docs/evidence/v19_two_channel_u1_protocol.md'], ['docs/evidence/v19_two_channel_u1.py'], []),
+    ('v19', 'unseen-fault closure of the two-channel system', ['docs/evidence/v19_two_channel_u1_protocol.md'], ['docs/evidence/v19_two_channel_u1.py'], ['kaggle/judged_v19_seed71']),
 ]
 for v, w, pr, co, ou in EXP:
     j = lambda ps, empty: ' · '.join(L(p, os.path.basename(p.rstrip('/'))) for p in ps) or empty
@@ -112,5 +112,5 @@ out += ['', '## 7. Benchmark, data and release package', '',
         '[faiss#600](https://github.com/facebookresearch/faiss/issues/600) · [jenkins plugin#542](https://github.com/jenkinsci/resources-ai-chatbot-plugin/issues/542)', '',
         '**Kaggle notebooks** (private, on the four project accounts; each output is also committed under kaggle/): https://www.kaggle.com/code/syedmuzammilquadri · https://www.kaggle.com/code/muzammilveil99 · https://www.kaggle.com/code/sqmuzammil', '',
         '## 9. Still running (as of the last regeneration of this file)', '',
-        '- v19 two-channel U1 on seeds 71-73 (NQ self-test run left running; it cannot finish before the freeze). Rules and fallbacks are in their protocols (section 3).', '']
+        '- v19 two-channel U1 on seeds 72, 73, 74 (queued). The NQ self-test run was stopped: it could not finish within Kaggle limits. Rules and fallbacks are in their protocols (section 3).', '']
 open(os.path.join(ROOT, 'INDEX_A_TO_Z.md'), 'w').write('\n'.join(out)); print('wrote INDEX_A_TO_Z.md', len(out), 'lines')
