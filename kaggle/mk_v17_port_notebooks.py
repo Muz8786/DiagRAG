@@ -8,7 +8,7 @@ E = {n: (lambda b: dict(sha256=hashlib.sha256(b).hexdigest(), b64=base64.b64enco
 assert E['diagrag_port5.py']['sha256'] == '916c3864282b1d9c168cce6943340b52d8728334c3c960d33fcb0d2d4224294f'
 lines = lambda s: s.strip('\n').splitlines(True); code = lambda t: dict(cell_type='code', metadata={}, execution_count=None, outputs=[], source=lines(t))
 emb = 'EMB = {\n' + ''.join(f"    {n!r}: dict(sha256={e['sha256']!r}, b64=(\n" + ''.join(f"        {e['b64'][i:i + 100]!r}\n" for i in range(0, len(e['b64']), 100)) + "    )),\n" for n, e in E.items()) + '}\n'
-for name, ds, trial, role in [('trial_fiqa', 'fiqa', 1, 'dev'), ('dev_fiqa', 'fiqa', 0, 'dev'), ('heldout_nq', 'nq', 0, 'heldout')]:
+for name, ds, trial, role in [('trial_fiqa', 'fiqa', 1, 'dev'), ('dev_fiqa', 'fiqa', 0, 'dev'), ('heldout_nq', 'nq', 0, 'heldout'), ('heldout_fiqa', 'fiqa', 0, 'heldout')]:
     cells = [dict(cell_type='markdown', metadata={}, source=lines(f"# DiagRAG v17 self-test on the second stack, {ds}, role {role} ({'TRIAL: numbers are not results' if trial else 'JUDGED RUN'})\n\nFrozen `v17_port_selftest.py` and frozen `diagrag_port5.py`, replaying the judged port5 {ds} run. See `docs/evidence/v17_port_selftest_protocol.md`. No API key.")),
              code(emb + f"""
 import os, gzip, base64, hashlib, glob, shutil, subprocess, sys, json
