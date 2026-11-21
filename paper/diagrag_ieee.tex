@@ -30,7 +30,7 @@
 \maketitle
 
 \begin{abstract}
-When a retrieval-augmented generation (RAG) system answers badly, the cause often lies in retrieval, and retrieval rarely reports it. We study the detection, diagnosis and repair of retrieval faults with a guarantee on the repair itself. A per-stratum conformal risk-control gate bounds the Hit@5 that repairs cost queries that were healthy: across nine GPU seeds the held-out clean loss stays at or below 0.40\% (bound 0.5\%), and a capped variant keeps it at or below 0.12\% while dispatching on 14 to 17\% of clean queries and closing 0.82 to 0.87 of injected faults; on a second retrieval stack (NQ, FiQA) the loss is 0.00\%. We then ask what can be identified from what is observed. The telemetry of one query is one observation of the system, and the per-query diagnoser never names both causes of two faults in one group (0 of 75). A self-test that runs about 100 probe queries with known answers, decodes their failures with a noisy-OR fault dictionary and accepts a repair only after the probes pass again names both causes in 85.3\% of 238 held-out same-group pairs, closes 99.7\% of the traffic those pairs break with 0.02\% harm, and gives each repair an acceptance-sampling harm certificate. A diagnosability analysis explains the gap: decoding the same probes passively names both causes of only 21\% of pairs, its success is predicted by a separability score computed from the fault dictionary alone (AUROC 0.74), and in the least separable third of pairs it names 4\% against 87\% when the self-test repairs and retests. On code mutants of two retrieval code bases, faults that nobody designed, the self-test detects all 32 harmful mutant runs (21 distinct mutants) and its stage trace localizes all scored ones, against 47\% for the fault dictionary. Telemetry alone detects injected faults at AUROC 0.977, against 0.734 for an existing system's retrieval features. All analyses were pre-registered with code hashes, and every failure is reported.
+When a retrieval-augmented generation (RAG) system answers badly, the cause often lies in retrieval, and retrieval rarely reports it. We study the detection, diagnosis and repair of retrieval faults with a guarantee on the repair itself. A per-stratum conformal risk-control gate bounds the Hit@5 that repairs cost queries that were healthy: across nine GPU seeds the held-out clean loss stays at or below 0.40\% (bound 0.5\%), and a capped variant keeps it at or below 0.12\% while dispatching on 14 to 17\% of clean queries and closing 0.82 to 0.87 of injected faults; on a second retrieval stack (NQ, FiQA) the loss is 0.00\%. We then ask what can be identified from what is observed. The telemetry of one query is one observation of the system, and the per-query diagnoser never names both causes of two faults in one group (0 of 75). A self-test that runs about 100 probe queries with known answers, decodes their failures with a noisy-OR fault dictionary and accepts a repair only after the probes pass again names both causes in 85.3\% of 238 held-out same-group pairs, closes 99.7\% of the traffic those pairs break with 0.02\% harm, and gives each repair an acceptance-sampling harm certificate. A diagnosability analysis explains the gap: decoding the same probes passively names both causes of only 21\% of pairs, its success is predicted by a separability score computed from the fault dictionary alone (AUROC 0.74), and in the least separable third of pairs it names 4\% against 87\% when the self-test repairs and retests. On nine retrieval bugs reproduced from public issue reports, the self-test detects and localizes all seven harmful ones and its verified rollback restores all 487 natural queries they break, while per-query telemetry alarms on two. On code mutants of two retrieval code bases, the self-test detects all 32 harmful mutant runs (21 distinct mutants) and its stage trace localizes all scored ones, against 47\% for the fault dictionary. Telemetry alone detects injected faults at AUROC 0.977, against 0.734 for an existing system's retrieval features. All analyses were pre-registered with code hashes, and every failure is reported.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -50,7 +50,7 @@ The second question we ask is what can be identified at all. A diagnoser that se
 \item \emph{A bound on the harm of repair.} A per-stratum conformal risk-control gate, a capped variant and a small-stratum fallback, held on nine GPU seeds and on a second retrieval stack, with the cost of the guarantee shown as a closure-versus-cost trade-off (Sections~\ref{sec:gate} and~\ref{sec:res-gate}).
 \item \emph{Observation versus intervention.} A measured limit of per-query diagnosis on composed faults, a diagnostic self-test that names both causes of same-group pairs and verifies every repair against known answers, and a diagnosability analysis that predicts passive identifiability from the fault dictionary alone (Sections~\ref{sec:selftest}, \ref{sec:res-composed}--\ref{sec:res-ladder}).
 \item \emph{A telemetry diagnoser} for 32 injectable faults with detection and identification results against retrieval-stage, query-performance and LLM-judge baselines (Section~\ref{sec:res-diag}).
-\item \emph{Evidence beyond designed faults}: code mutants of two retrieval code bases (all harmful ones detected and localized), real failures labelled by which repair fixes them, and never-examined natural traffic (Sections~\ref{sec:res-mutants} and~\ref{sec:res-real}).
+\item \emph{Evidence beyond designed faults}: nine retrieval bugs reproduced from public issue reports (every harmful one detected, localized and rolled back), code mutants of two retrieval code bases, real failures labelled by which repair fixes them, and never-examined natural traffic (Sections~\ref{sec:res-mutants} and~\ref{sec:res-real}).
 \item \emph{Pre-registration throughout}: the code hash of every judged run, dated amendments, and every outcome, including the ones that failed (Section~\ref{sec:protocol}).
 \end{enumerate}
 
@@ -349,6 +349,33 @@ Most frequent stage & \multicolumn{2}{c}{46\% (difference $+0.54$ $\ci{+0.27}{+0
 \end{tabular}
 \end{table}
 
+\subsection{Bugs reproduced from public issue reports}\label{sec:res-bugs}
+Production incidents are not available to us. The standard substitute in software testing is to reproduce bugs exactly as they were reported in public issue trackers. Before any run we selected nine retrieval-quality bugs that return wrong results silently and whose mechanism can be reproduced on the main stack (Table~\ref{tab:bugs}); seven were never used to design a detector, repair or probe, and two (B8, B9) are the same mechanism as designed faults. Each bug was switched on system-wide and measured on 600 natural ESCI queries that no run had examined. A bug is harmful if it breaks at least 1\% of the natural queries the clean pipeline answers. The self-test ran with 100 random probes; its repair rolls back the localized component to its last verified version and is accepted only if every probe passes.
+
+\begin{table}[t]
+\caption{Reproduced bugs, seed 75 \PEND{(seeds 74, 76 pending)}. Broken: natural queries (of 337 that the clean pipeline answers) that the bug breaks. Stage: localized by the self-test's stage trace; all equal the true stage. Tel.: per-query telemetry alarm. Restored: broken queries that work after the verified repair.}
+\label{tab:bugs}
+\centering\footnotesize
+\begin{tabular}{@{}llrccr@{}}
+\toprule
+Bug (report) & Mechanism & Broken & Stage & Tel. & Restored\\
+\midrule
+B1 dify\#6097 & query prefix dropped & 0 & -- & no & --\\
+B2 rank\_bm25\#50 & query tokenization & 0 & -- & no & --\\
+B3 langchain\#37046 & fusion sums chunks of one source & 7 & fusion & no & 7\\
+B4 milvus\#53672 & rerank scores misassigned & 13 & rerank & no & 13\\
+B5 graphiti\#1720 & rerank sorted ascending & 316 & rerank & no & 316\\
+B6 pygaggle\#67 & rerank order ignored & 46 & rerank & no & 46\\
+B7 llama\_index cache & previous query's scores reused & 43 & dense & no & 43\\
+B8 faiss\#600$^{*}$ & IVF nprobe $=1$ & 42 & dense & yes & 42\\
+B9 jenkins plugin\#542$^{*}$ & raw-score fusion & 20 & fusion & yes & 20\\
+\bottomrule
+\multicolumn{6}{@{}l}{\footnotesize $^{*}$Same mechanism as a designed fault (R15, R22).}
+\end{tabular}
+\end{table}
+
+Seven bugs are harmful. The self-test detects all seven, localizes all seven to the right stage and verifies every repair; 487 of 487 broken natural queries are restored and no working query is broken. Per-query telemetry alarms on only the two bugs that match designed faults, and the per-query loop restores 101 of the 487 queries (the universal repair 113). The two bugs that break nothing do so for documented reasons: bge-v1.5 is built to work without its query instruction, and ESCI queries are already lower-case. One harmful bug (B3) breaks 7 queries but helps more (Hit@5 rises from 56.2\% to 57.8\%), so rolling it back costs 1.7 points net; detection is correct, but whether to roll back is a judgement the self-test cannot make. Under the other six bugs the verified repair raises natural Hit@5 by 1.2 to 48.7 points. Rollback restores exactly the clean pipeline by construction once the stage is right, so the evidence here is detection and localization of bugs that nobody designed, and the 4:1 advantage over per-query telemetry.
+
 \subsection{Real failures and natural traffic}\label{sec:res-real}
 \textbf{Natural traffic.} On 1{,}648 ESCI queries no run had examined, the deployed loop gains $+2.0$ to $+2.4$ points of Hit@5 on every seed (seed 50: $+2.43$ $\ci{+1.64}{+3.22}$, 43 fixed, 3 broken). Almost all of it comes from two deterministic rules (near-duplicate and chunk-crowding collapse); classifier dispatch alone adds $+0.42$. Detection decides when the rules fire: gated rules beat the same rule always on by $+0.61$ $\ci{+0.12}{+1.15}$. Repairing natural misspellings hurts ($-4.9$; SymSpell $-11.4$) and is off. The gold document is an empty placeholder for 58.6\% of ESCI queries and 69.1\% of failures, which caps any repair.
 
@@ -362,7 +389,7 @@ On the second stack, 19 of 20 ported faults are solved on FiQA (the same 19 on a
 
 %--------------------------------------------------------------------------------------------------
 \section{Limitations}\label{sec:limits}
-\textbf{External validity.} No production incident data were available. We address the gap in three ways, none of which replaces field data: 22 of the faults are tied to public field reports by evidence tier; code mutants of two retrieval code bases give faults that nobody designed (Section~\ref{sec:res-mutants}); and real failures of natural queries are labelled by which repair fixes them, without human or model judgement (Section~\ref{sec:res-real}). Most real failures are not repairable by any repair in the catalogue (83\% on ESCI, 93\% on the second stack). The main results use one English e-commerce corpus; the second stack (FiQA, NQ) covers 20 of the 32 faults, the harm bound and the code mutants.
+\textbf{External validity.} No production incident data were available. We address the gap in four ways, none of which replaces field data: 22 of the faults are tied to public field reports by evidence tier; nine bugs are reproduced exactly as reported in public issue trackers (Section~\ref{sec:res-bugs}); code mutants of two retrieval code bases give faults that nobody designed (Section~\ref{sec:res-mutants}); and real failures of natural queries are labelled by which repair fixes them, without human or model judgement (Section~\ref{sec:res-real}). Most real failures are not repairable by any repair in the catalogue (83\% on ESCI, 93\% on the second stack). The main results use one English e-commerce corpus; the second stack (FiQA, NQ) covers 20 of the 32 faults, the harm bound and the code mutants.
 
 \textbf{Natural traffic.} Natural gains are small and come mostly from two rules. On ESCI the gold document is an empty placeholder for 58.6\% of queries, which caps any repair; on the 710 queries whose gold has content the loop gains $+3.24$ points $\ci{+1.97}{+4.51}$ with none broken (seed 50, post hoc).
 
