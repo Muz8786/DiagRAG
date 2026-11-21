@@ -35,7 +35,7 @@ rows = [
     ('Observation vs intervention (identifiability)', 'PASS V-1..V-4; passive 22.7% vs active 85.3%', ['kaggle/v16_heldout.json', 'kaggle/heldout_v16_seed71']),
     ('Code mutants, first confirmation', 'INSUFFICIENT (6 of 8 distinct mutants)', ['kaggle/v15_heldout_M.json']),
     ('Code mutants, second confirmation (two code bases)', 'PASS: 32/32 harmful runs detected, 28/28 localized', ['kaggle/v15_heldout2_M.json', 'kaggle/heldout2_v15_M_port_fiqa']),
-    ('Bugs reproduced from public issue reports', 'seed 75: 7/7 harmful detected, localized, rolled back; 487/487 queries restored; telemetry 2/7 (seeds 74, 76 pending)', ['kaggle/judged_v18_seed75', 'docs/evidence/v18_real_bugs_protocol.md']),
+    ('Bugs reproduced from public issue reports', 'PASS (seeds 74-76): 20/21 harmful units detected, 21/21 localized, 1,454/1,461 queries restored; telemetry 8/21', ['kaggle/v18_bugs_pooled.json', 'kaggle/judged_v18_seed75', 'docs/evidence/v18_real_bugs_protocol.md']),
     ('Self-test on the second stack', 'FiQA development: 27/27 detected, 85% pairs named; NQ confirmation pending', ['kaggle/dev_v17_port_fiqa', 'docs/evidence/v17_port_selftest_protocol.md']),
     ('Unseen faults (U1)', 'per-query 0.36-0.41 (bar 0.50); ceiling 0.51-0.54; escalation not confirmed; two-channel U1 pending', ['kaggle/judged_v14_esci_seed71', 'docs/evidence/v19_two_channel_u1_protocol.md']),
     ('Real failures labelled by intervention', 'ESCI: loop fixes 53-58% of repairable vs 9% random', ['kaggle/judged_v14_esci_seed71', 'kaggle/judged_v14_port_nq']),
@@ -61,7 +61,7 @@ EXP = [
     ('v15', 'diagnostic self-test (S) and code mutants (M)', ['docs/evidence/v15_selftest_mutants_protocol.md'], ['docs/evidence/v15_selftest_mutants.py', 'docs/evidence/v15_port_mutants.py', 'docs/evidence/v15_summary.py'], ['kaggle/v15_heldout_S.json', 'kaggle/v15_heldout_M.json', 'kaggle/v15_heldout2_M.json', 'kaggle/void_v15_A2']),
     ('v16', 'diagnosability: observation vs intervention', ['docs/evidence/v16_diagnosability_protocol.md'], ['docs/evidence/v16_diagnosability.py', 'docs/evidence/v16_summary.py'], ['kaggle/dev_v16_seed55', 'kaggle/v16_heldout.json']),
     ('v17', 'self-test on the second stack (FiQA dev, NQ confirm)', ['docs/evidence/v17_port_selftest_protocol.md'], ['docs/evidence/v17_port_selftest.py'], ['kaggle/dev_v17_port_fiqa']),
-    ('v18', 'nine bugs reproduced from public issue reports', ['docs/evidence/v18_real_bugs_protocol.md'], ['docs/evidence/v18_real_bugs.py'], ['kaggle/judged_v18_seed75']),
+    ('v18', 'nine bugs reproduced from public issue reports', ['docs/evidence/v18_real_bugs_protocol.md'], ['docs/evidence/v18_real_bugs.py'], ['kaggle/judged_v18_seed74', 'kaggle/judged_v18_seed75', 'kaggle/judged_v18_seed76', 'kaggle/v18_bugs_pooled.json']),
     ('v19', 'unseen-fault closure of the two-channel system', ['docs/evidence/v19_two_channel_u1_protocol.md'], ['docs/evidence/v19_two_channel_u1.py'], []),
 ]
 for v, w, pr, co, ou in EXP:
@@ -112,5 +112,5 @@ out += ['', '## 7. Benchmark, data and release package', '',
         '[faiss#600](https://github.com/facebookresearch/faiss/issues/600) · [jenkins plugin#542](https://github.com/jenkinsci/resources-ai-chatbot-plugin/issues/542)', '',
         '**Kaggle notebooks** (private, on the four project accounts; each output is also committed under kaggle/): https://www.kaggle.com/code/syedmuzammilquadri · https://www.kaggle.com/code/muzammilveil99 · https://www.kaggle.com/code/sqmuzammil', '',
         '## 9. Still running (as of the last regeneration of this file)', '',
-        '- v17 self-test confirmation on NQ; v18 reproduced bugs on seeds 74 and 76; v19 two-channel U1 on seeds 71-73. Rules and fallbacks are in their protocols (section 3).', '']
+        '- v17 self-test confirmation on NQ; v19 two-channel U1 on seeds 71-73. Rules and fallbacks are in their protocols (section 3).', '']
 open(os.path.join(ROOT, 'INDEX_A_TO_Z.md'), 'w').write('\n'.join(out)); print('wrote INDEX_A_TO_Z.md', len(out), 'lines')
