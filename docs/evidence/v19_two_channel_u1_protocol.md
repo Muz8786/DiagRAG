@@ -8,3 +8,7 @@ Written 21 Nov 2026, 14:45 IST, before any v19 code ran. Kaggle only.
 **Rule (held-out seeds 71, 72, 73; fixed now; no development step, because nothing is tuned):** U-1 the mean over the three seeds of the two-channel U1 is >= 0.50; U-2 on the clean system the self-test detects no fault on every seed (no false alarm, so no repair runs on healthy traffic). Reported: per-seed values, the paired difference to the per-query U1 with a bootstrap interval over faults, system and other faults separately. A trial on seed 55 checks the code; its numbers are not results.
 
 **Caveat fixed now.** The gain can only come from system faults; query and content faults (13 of 25) keep the per-query outcome. The two-channel U1 is a property of the deployed system, not of the attributor, and the per-query U1 is reported next to it.
+
+## Amendments
+
+- **A1 (21 Nov 2026, 17:05 IST; before any v19 result).** The seed-55 trial was not run because of the GPU queue; the first judged run doubles as the code check. If it fails on a code error, the error is fixed, recorded here, and the run is repeated; no number from a failed run is used. If not all three seeds finish by 21:30 IST, the seeds that finished are reported and labelled as such.
