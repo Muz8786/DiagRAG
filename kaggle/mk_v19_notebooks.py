@@ -10,7 +10,7 @@ v11 = json.load(open(os.path.join(here, 'DiagRAG_v11a_main.ipynb'), encoding='ut
 raw = open(os.path.join(root, 'docs', 'evidence', 'v19_two_channel_u1.py'), 'rb').read(); XSHA = hashlib.sha256(raw).hexdigest(); XB = base64.b64encode(gzip.compress(raw, 9, mtime=0)).decode()
 lines = lambda s: s.strip('\n').splitlines(True)
 md = lambda t: dict(cell_type='markdown', metadata={}, source=lines(t)); code = lambda t: dict(cell_type='code', metadata={}, execution_count=None, outputs=[], source=lines(t))
-for name, SEED, TRIAL in [('trial55', '55', 1), ('judged71', '71', 0), ('judged72', '72', 0), ('judged73', '73', 0)]:
+for name, SEED, TRIAL in [('trial55', '55', 1), ('judged71', '71', 0), ('judged72', '72', 0), ('judged73', '73', 0), ('judged74', '74', 0)]:
     cells = [
         md(f"# DiagRAG v19 two-channel U1 on ESCI, seed {SEED} ({'TRIAL: limited work, numbers are not results' if TRIAL else 'JUDGED RUN'})\n\nResumes the judged ESCI checkpoint of seed {SEED} and runs the frozen v6 code (`44176b9a…e28a`) up to its U1 stage, then the measurements of `docs/evidence/v19_two_channel_u1_protocol.md`. GPU T4, Internet On. No API key."),
         code(f"import os\nCONFIG = dict(SEED='{SEED}', N_BASE_ESCI='6000', N_PRDC='528', N_HARD='100', MAX_ATT='4000', N_HARM='20', TIME_BUDGET='0')   # v6 settings; TIME_BUDGET 0 = no self-stop\nos.environ.update(CONFIG); TRIAL = {TRIAL}; print(CONFIG, 'TRIAL', TRIAL)"),
