@@ -1,5 +1,5 @@
 # v18: retrieval bugs reproduced from public issue reports. Pre-registration
-Written 21 Nov 2026, 15:00 IST, before any v18 code ran. Kaggle only. Results freeze 23:00 IST.
+Written 21 Nov 2026, 14:42 IST, before any v18 code ran. Kaggle only. Results freeze 23:00 IST.
 
 **Why.** All earlier faults were injected or mutated. Production incidents are not available to us. The standard substitute in software testing is to reproduce real bugs exactly as they were reported in public issue trackers. We did that for retrieval bugs.
 
