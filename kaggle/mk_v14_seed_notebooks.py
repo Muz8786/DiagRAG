@@ -4,11 +4,12 @@ usage: python kaggle/mk_v14_seed_notebooks.py"""
 import json, os
 
 here = os.path.dirname(os.path.abspath(__file__))
-for seed in ('71', '72', '73'):
+import sys
+for seed in (sys.argv[1:] or ['71', '72', '73']):
     nb = json.load(open(os.path.join(here, 'DiagRAG_v6_kaggle.ipynb'), encoding='utf-8')); orig_embed = ''.join(nb['cells'][2]['source'])
     REPL = [("CONFIG = dict(SEED='50',", f"CONFIG = dict(SEED='{seed}',", 1),
             ("# DiagRAG v6 on Kaggle: one file, the pre-registered judged run (seed 50)",
-             f"# DiagRAG v14 E1: the frozen v6 code on an untouched seed ({seed}), pre-registered in docs/evidence/v14_flagship_protocol.md", 1),
+             f"# DiagRAG v14 E1: the frozen v6 code on an untouched seed ({seed}), pre-registered in docs/evidence/v14_flagship_protocol.md and v15 amendment A3", 1),
             ("These are the pre-registered v6 settings (seed 50, docs/evidence/v6_protocol.md section 3). The protocol allows ONE GPU run and ONE CPU replication at seed 50; do not change SEED to shop for a verdict.",
              f"These are the v6 settings with ONE change, the seed ({seed}), pre-registered in docs/evidence/v14_flagship_protocol.md (E1). One GPU run per seed; seeds 71, 72 and 73 are read together under the seed-averaged rule R-avg; do not change SEED to shop for a verdict.", 1)]
     for old, new, want in REPL:
