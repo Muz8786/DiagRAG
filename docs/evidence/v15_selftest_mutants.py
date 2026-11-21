@@ -11,7 +11,7 @@ COMP = dict(R01='DENSE', R03='DENSE', R07='DENSE', R10='DENSE', R11='DENSE', R15
             R05='RERANK', R19='RERANK', R24='RERANK', R23='SERVING', R06='FILTERS')
 KNOBS = dict(R01={'mask'}, R03={'enc'}, R05={'ce'}, R06={'route'}, R07={'shift'}, R10={'q_noise'}, R11={'enc'}, R13={'sparse_shift'}, R15={'nprobe'},
              R19={'depth'}, R22={'fusion'}, R23={'result_cap'}, R24={'ce_trunc'}, R25={'nonfinite'}, K04={'emb_override'})
-P = dict(POOL=600, A=100, B=40, NDICT=2, NDICT_RANDOM=4, T=3, EPS=0.002, KAPPA=3.0, TRAFFIC=100, PAIR_TRAFFIC=40, SCREEN=40, HARM_FRAC=0.10, ALARM_P=0.01, MAXM=400, TIMEOUT=90)
+P = dict(POOL=600, A=100, B=40, NDICT=2, NDICT_RANDOM=4, MAXH=150, T=3, EPS=0.002, KAPPA=3.0, TRAFFIC=100, PAIR_TRAFFIC=40, SCREEN=40, HARM_FRAC=0.10, ALARM_P=0.01, MAXM=400, TIMEOUT=90)
 TARGETS = ['run', 'bm25_scores', 'q_terms', 'topn', 'dense_all', 'ce_scores', 'enc_q']
 FCOMP = dict(bm25_scores='BM25', q_terms='BM25', dense_all='DENSE', enc_q='DENSE', ce_scores='RERANK', topn='SHARED')
 RUN_MARKERS = [('m = M(ov)', 'DENSE'), ('ok = np.ones', 'FILTERS'), ('dok = ok.copy()', 'DENSE'), ('ss = bm25_scores', 'BM25'),
@@ -54,7 +54,13 @@ def pts_of(ft):
 
 
 def mutant_src(x):
-    t = ast.parse(x['seg']); kind, nd, sub = pts_of(t)[x['k']]
+    """First-order mutant (x['k']) or, if x has 'k2', a second-order mutant (two mutations in the same function, A6)."""
+    t = ast.parse(x['seg']); pts = pts_of(t)
+    for kk in [x['k']] + ([x['k2']] if 'k2' in x else []): _apply(t, *pts[kk])
+    return ast.unparse(ast.fix_missing_locations(t))
+
+
+def _apply(t, kind, nd, sub):
     if kind == 'cmp': nd.ops[sub] = CMP[type(nd.ops[sub])]()
     elif kind == 'bin': nd.op = BIN[type(nd.op)]()
     elif kind == 'bool': nd.value = not nd.value
@@ -79,7 +85,6 @@ def mutant_src(x):
     elif kind == 'andor': nd.op = ast.Or() if isinstance(nd.op, ast.And) else ast.And()
     elif kind == 'minmax': nd.func = ast.Name(id='max' if nd.func.id == 'min' else 'min', ctx=ast.Load())
     elif kind in ('slice+', 'slice-'): nd.upper = ast.BinOp(left=nd.upper, op=ast.Add() if kind == 'slice+' else ast.Sub(), right=ast.Constant(1))
-    return ast.unparse(ast.fix_missing_locations(t))
 
 
 def _replace(t, old, new):
@@ -343,8 +348,9 @@ def main(G, OUT, TRIAL, ROLE, RUN=('S', 'M')):
             return 1.0 if n == 0 else float(sum(math.comb(n, i) for i in range(bm, n + 1)) / 2 ** n)
         SCORED = ('DENSE', 'BM25', 'FUSION', 'RERANK', 'SERVING', 'FILTERS')
         rowsM = []; fM = open(os.path.join(OUT, 'M_mutants.jsonl'), 'w'); signal.signal(signal.SIGALRM, _alarm)
-        for n_, x in enumerate(mine):
-            r = dict(pid=x['pid'], fn=x['fn'], kind=x['kind'], comp=x['comp'])
+        def evaluate_mutants(lst, order):
+          for n_, x in enumerate(lst):
+            r = dict(pid=x['pid'], fn=x['fn'], kind=x['kind'], comp=x['comp'], order=order, line=x['line'])
             saved = {}
             try:
                 code_ = compile(mutant_src(x), f"mutant:{x['pid']}", 'exec')
@@ -379,7 +385,20 @@ def main(G, OUT, TRIAL, ROLE, RUN=('S', 'M')):
                 for nm, fn in ORIG.items(): G[nm] = fn
                 for k_, v_ in saved.items(): G[k_] = v_
             rowsM.append(r); fM.write(json.dumps(r, default=str) + '\n'); fM.flush()
-            if n_ % 25 == 0: log('M', n_, 'of', len(mine), collections.Counter(z['status'] for z in rowsM))
+            if n_ % 25 == 0: log('M', order, n_, 'of', len(lst), collections.Counter(z['status'] for z in rowsM))
+        evaluate_mutants(mine, 1)
+        # A6: second-order mutants: two first-order mutants of `run`, both evaluated above as harmless or subtle, same ground-truth stage, different lines
+        F1 = {r['pid']: r for r in rowsM if r['order'] == 1}
+        cand = [x for x in mine if x['fn'] == 'run' and x['comp'] in SCORED and F1.get(x['pid'], {}).get('status') in ('harmless', 'subtle')]
+        homs = []
+        for a_, b_ in itertools.combinations(cand, 2):
+            if a_['comp'] == b_['comp'] and a_['line'] != b_['line']:
+                homs.append(dict(a_, pid=a_['pid'] + '+' + b_['pid'], kind=a_['kind'] + '+' + b_['kind'], k2=b_['k']))
+        homs = sorted(homs, key=lambda x: hashlib.md5(x['pid'].encode()).hexdigest())[:P['MAXH']]
+        R['M_hom'] = dict(candidates=len(cand), pairs_available=len(homs))
+        log('second-order mutants', R['M_hom'])
+        evaluate_mutants(homs, 2)
+        R['M_by_order'] = {o: dict(collections.Counter(r['status'] for r in rowsM if r['order'] == o)) for o in (1, 2)}
         H_ = [r for r in rowsM if r['status'] == 'harmful']; SB = [r for r in rowsM if r['status'] == 'subtle']; cmp_ = [r for r in H_ if r.get('component_ok') is not None]
         maj = collections.Counter(r['comp'] for r in cmp_).most_common(1)
         R['M'] = dict(evaluated=len(rowsM), status=dict(collections.Counter(r['status'] for r in rowsM)), harmful=len(H_), subtle=len(SB),
