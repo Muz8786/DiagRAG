@@ -1,5 +1,5 @@
 # v17: the diagnostic self-test on the second retrieval stack. Pre-registration of design and splits
-Written 21 Nov 2026, 12:35 IST, before any v17 code ran. Kaggle only. Results freeze 23:00 IST.
+Written 21 Nov 2026, 13:22 IST, before any v17 code ran. Kaggle only. Results freeze 23:00 IST.
 
 Purpose: external validity of the self-test (v15 S), which so far was confirmed only on the main stack. The algorithm (dictionary, battery selection, noisy-OR ranking, repair-and-retest search, rollback, verification) is the v15 A1 algorithm unchanged; only the stack-specific parts differ: the 14 system faults of the second stack (its 20 ported faults minus the query and content faults, and R06, which it does not have), their repairs from the frozen `diagrag_port5.py`, a rollback to the pinned configuration, and the per-query baseline (the second stack's attributor at its 5% false-positive threshold, dispatching its top class's repair; this stack has no frozen gated loop).
 
