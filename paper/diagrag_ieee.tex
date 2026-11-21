@@ -30,7 +30,7 @@
 \maketitle
 
 \begin{abstract}
-When a retrieval-augmented generation (RAG) system answers badly, the cause often lies in retrieval, and retrieval rarely reports it. We study the detection, diagnosis and repair of retrieval faults with a guarantee on the repair itself. A per-stratum conformal risk-control gate bounds the Hit@5 that repairs cost queries that were healthy: across eight GPU seeds the held-out clean loss stays at or below 0.40\% (bound 0.5\%), and a capped variant keeps it at or below 0.12\% while dispatching on 14 to 17\% of clean queries and closing 0.83 to 0.87 of injected faults; on a second retrieval stack (NQ, FiQA) the loss is 0.00\%. We then ask what can be identified from what is observed. The telemetry of one query is one observation of the system, and the per-query diagnoser never names both causes of two faults in one group (0 of 75). A self-test that runs about 100 probe queries with known answers, decodes their failures with a noisy-OR fault dictionary and accepts a repair only after the probes pass again names both causes in 85.3\% of 238 held-out same-group pairs, closes 99.7\% of the traffic those pairs break with 0.02\% harm, and gives each repair an acceptance-sampling harm certificate. A diagnosability analysis explains the gap: passive decoding is limited by the separability of fault signatures and by masking, and intervention removes that limit (\PEND{held-out numbers pending}). Telemetry alone detects injected faults at AUROC 0.977, against 0.734 for an existing system's retrieval features. All analyses were pre-registered with code hashes, and every failure is reported.
+When a retrieval-augmented generation (RAG) system answers badly, the cause often lies in retrieval, and retrieval rarely reports it. We study the detection, diagnosis and repair of retrieval faults with a guarantee on the repair itself. A per-stratum conformal risk-control gate bounds the Hit@5 that repairs cost queries that were healthy: across eight GPU seeds the held-out clean loss stays at or below 0.40\% (bound 0.5\%), and a capped variant keeps it at or below 0.12\% while dispatching on 14 to 17\% of clean queries and closing 0.83 to 0.87 of injected faults; on a second retrieval stack (NQ, FiQA) the loss is 0.00\%. We then ask what can be identified from what is observed. The telemetry of one query is one observation of the system, and the per-query diagnoser never names both causes of two faults in one group (0 of 75). A self-test that runs about 100 probe queries with known answers, decodes their failures with a noisy-OR fault dictionary and accepts a repair only after the probes pass again names both causes in 85.3\% of 238 held-out same-group pairs, closes 99.7\% of the traffic those pairs break with 0.02\% harm, and gives each repair an acceptance-sampling harm certificate. A diagnosability analysis explains the gap: decoding the same probes passively names both causes of only 21\% of pairs, its success is predicted by a separability score computed from the fault dictionary alone (AUROC 0.74), and in the least separable third of pairs it names 4\% against 87\% when the self-test repairs and retests. Telemetry alone detects injected faults at AUROC 0.977, against 0.734 for an existing system's retrieval features. All analyses were pre-registered with code hashes, and every failure is reported.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -270,7 +270,57 @@ Harm on working queries, pairs & 0.02\% & 6.27\% & 1.33\%\\
 Same-group pairs are named in 88\%, 87\% and 80\% on the three seeds; the difference to the aggregated per-query labels is $+0.60$ $\ci{+0.53}{+0.67}$. Faults removed from the dictionary are named in 88.6\% of cases when a fault with the same repair family remains. Against the universal repair the self-test wins on harm (0.00 to 0.02\% against 1.3 to 4.2\%) more than on closure. One fault (R07, shifted vectors in a block of 20{,}000 documents) breaks almost no probe and is not detected on seed 72. A self-test takes a median of 4.8\,s and about 390 probe runs. \textbf{Certificate.} Of the 301 verified repairs with measured traffic harm, 299 (99.3\%) lie under the 2.95\% bound; the two exceptions broke 1 of 23 queries.
 
 \subsection{Why intervention identifies what observation cannot}\label{sec:res-ladder}
-We replayed the same fault instances and probes and decoded them \emph{passively}: maximum-likelihood decoding of the failure pattern under the noisy-OR dictionary, with no repair, from $m$ random probes. For a pair $T$ we computed, from the dictionary alone, its separability $D(T)$: the smallest summed Kullback--Leibler divergence between the outcome distribution of $T$ and that of any explanation that does not cover both causes. Under the noisy-OR model the error of passive decoding falls as $D$ grows, and $D$ grows with the number of probes. Four predictions were fixed before the held-out run (V-1 to V-4). On development (seed 55), passive decoding named the right family for 0.08 of harmful single faults with one probe, 0.38 with five and 0.95 with the full battery; recording stage outputs raised the one-probe figure to 0.49. For effective pairs, passive decoding named both causes in only 0.24 (0.29 with stage traces), against 0.82 for the self-test, mostly because one fault masks the other: the decoder names the stronger fault, and for 87 of 104 pairs the nearest wrong explanation shares one of its faults. $D$ predicts passive success (AUROC 0.69; success 0.11, 0.24 and 0.36 across $D$ tertiles) but not the self-test's (0.86, 0.76, 0.86): retesting after a repair reveals the masked fault. Held-out: \PEND{V-1 to V-4 pending}.
+We replayed the same fault instances and probes and decoded them \emph{passively}: maximum-likelihood decoding of the failure pattern under the noisy-OR dictionary, with no repair, from $m$ random probes. For a pair $T$ we computed, from the dictionary alone, its separability $D(T)$: the smallest summed Kullback--Leibler divergence between the outcome distribution of $T$ and that of any explanation that does not cover both causes. Under the noisy-OR model the error of passive decoding falls as $D$ grows, and $D$ grows with the number of probes. Four predictions were fixed after development on seed 55 and before the held-out run; all four hold on seeds 71--73 (Table~\ref{tab:ladder}, Fig.~\ref{fig:ladder}).
+
+\textbf{More observations help.} Passive decoding names the right family of a harmful single fault in 7.6\% of cases from one probe, 38\% from five and 97\% from the full battery. For effective pairs, accuracy grows with the number of probes ($+0.18$ $\ci{+0.13}{+0.22}$ from 5 to 100 probes) but stays low: 21\% with the full battery.
+
+\textbf{Observation points help when probes are few.} Recording which stage's output changed raises one-probe accuracy for single faults from 7.6\% to 49\% and five-probe accuracy from 38\% to 73\%. With many probes the pass/fail channel is better (0.97 against 0.85 at 100 probes): the stage model treats the five stage bits of a probe as independent and over-counts evidence.
+
+\textbf{Separability predicts passive identifiability.} $D(T)$, computed from the dictionary before any instance is seen, predicts whether passive decoding names both causes (AUROC 0.74 $\ci{0.68}{0.81}$).
+
+\textbf{Intervention removes masking.} Passive failures are mostly masking: the stronger fault explains the observed failures and the weaker one adds little likelihood. Repairing the stronger fault and retesting reveals the weaker one. On same-group pairs the self-test names both causes in 85.3\% against 22.7\% for passive decoding ($+0.63$ $\ci{+0.56}{+0.69}$); in the least separable third of pairs, 86.7\% against 4.4\%. The per-query diagnoser, a single observation, named 0 of 75. Identification therefore climbs a ladder: one observation, many observations, observation points, intervention. This is the distinction between seeing and doing in causal inference~\cite{pearl2009causality}, measured here on a retrieval system.
+
+\begin{table}[t]
+\caption{Identifiability held-out (seeds 71--73). Passive = maximum-likelihood decoding of probe failures under the noisy-OR dictionary, no repair. Pairs: effective pairs ($n{=}270$; 238 in one group). Singles: harmful single faults ($n{=}125$).}
+\label{tab:ladder}
+\centering\footnotesize
+\begin{tabular}{@{}lc@{}}
+\toprule
+Observation channel & Both causes named (pairs)\\
+\midrule
+Per-query telemetry (composed-fault study) & 0 of 75 same-group\\
+Passive, pass/fail, full battery & 20.7\%\\
+Passive, stage-traced, full battery & 24.8\%\\
+Active self-test (repair and retest) & \textbf{83.7\%}\\
+\midrule
+Prediction test & Result\\
+\midrule
+V-1 AUROC of $D$ for passive success & 0.74 $\ci{0.68}{0.81}$\\
+V-2 singles, 1 probe / full battery & 7.6\% / 96.0\%\\
+V-3 stage minus pass/fail, singles, 1 / 5 probes & $+0.42$ / $+0.35$\\
+V-4 active minus passive, same-group pairs & $+0.63$ $\ci{+0.56}{+0.69}$\\
+V-4 lowest-$D$ third, active / passive & 86.7\% / 4.4\%\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}
+\begin{semilogxaxis}[width=0.95\columnwidth,height=5.2cm,xlabel={number of random probes $m$},ylabel={right family named},xmin=0.9,xmax=110,ymin=0,ymax=1.02,grid=major,tick label style={font=\scriptsize},label style={font=\scriptsize},legend style={font=\tiny,at={(0.02,0.98)},anchor=north west},log ticks with fixed point]
+\addplot[blue,mark=*,mark size=1.4pt] coordinates {(1,0.076)(2,0.165)(3,0.246)(5,0.383)(10,0.535)(20,0.735)(40,0.888)(60,0.930)(100,0.968)};
+\addlegendentry{singles, pass/fail}
+\addplot[blue,dashed,mark=o,mark size=1.4pt] coordinates {(1,0.491)(2,0.602)(3,0.669)(5,0.734)(10,0.789)(20,0.816)(40,0.835)(60,0.839)(100,0.848)};
+\addlegendentry{singles, stage-traced}
+\addplot[red,mark=square*,mark size=1.4pt] coordinates {(1,0.001)(2,0.004)(3,0.007)(5,0.013)(10,0.028)(20,0.062)(40,0.125)(60,0.161)(100,0.189)};
+\addlegendentry{pairs, passive}
+\addplot[red,thick,domain=1:100,samples=2] {0.837};
+\addlegendentry{pairs, self-test (active)}
+\end{semilogxaxis}
+\end{tikzpicture}
+\caption{Held-out identifiability (seeds 71--73). Passive decoding of single faults improves with more probes and, when probes are few, with stage traces. Pairs stay hard for passive decoding because one fault masks the other; the active self-test names both causes in 83.7\% of effective pairs.}
+\label{fig:ladder}
+\end{figure}
 
 \subsection{Blind faults: code mutants}\label{sec:res-mutants}
 To test the monitor on faults its authors did not design, we mutated the retrieval code itself: relational and arithmetic operators, integer and float constants, negated conditions, swapped variables, deleted statements, operand deletion and configured values off by one, one mutation per mutant, only on lines that a clean query executes. A mutant is harmful if it breaks at least 10\% of 40 working queries. Mutation points were split in half by hash; development used one half, confirmation the other. \textbf{First confirmation (seeds 71--73): insufficient.} The held-out half gave only 6 distinct harmful mutants (16 mutant-seed units), short of the 8 the rule required, because most first-order mutants of this code crash or change nothing. On them, the self-test detected 16 of 16, the stage trace localized the component in 16 of 16 against 9 of 16 for the fault dictionary and 6 of 16 for the most frequent component, and per-query telemetry detected 12 of 16. \textbf{Second confirmation (seeds 74--76), with operand deletion, configured-value and second-order mutants added on development data:} \PEND{pending}.
