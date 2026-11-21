@@ -1,0 +1,82 @@
+{
+ "run": "heldout_v17_port_fiqa",
+ "role": "heldout",
+ "dataset": "fiqa",
+ "battery": {
+  "size": 81,
+  "random_part": 80,
+  "diagnostic_part": 1,
+  "undetected_faults": [
+   "K04"
+  ]
+ },
+ "harmful_singles": 27,
+ "singles": 28,
+ "detected": 1.0,
+ "family": 0.9629629629629629,
+ "exact": 0.9629629629629629,
+ "verified_singles": 1.0,
+ "effective_pairs": 27,
+ "same_group_pairs": 23,
+ "both_family_same_group": 0.8695652173913043,
+ "both_family_all": 0.7777777777777778,
+ "agg_same_group": 0.391304347826087,
+ "diff_vs_agg": {
+  "mean": 0.4782608695652174,
+  "ci": [
+   0.21739130434782608,
+   0.7391304347826086
+  ]
+ },
+ "verified_pairs": 1.0,
+ "closure": {
+  "singles": {
+   "selftest": 1.0,
+   "selftest_per_instance_mean": 1.0,
+   "broken_queries": 117,
+   "loop": 0.9926739926739927,
+   "universal": 0.9033715644968842,
+   "diff": {
+    "mean": 0.007326007326007326,
+    "ci": [
+     0.0,
+     0.021978021978021976
+    ]
+   }
+  },
+  "pairs": {
+   "selftest": 1.0,
+   "selftest_per_instance_mean": 1.0,
+   "broken_queries": 152,
+   "loop": 0.49686659494351804,
+   "universal": 0.5974239435777897,
+   "diff": {
+    "mean": 0.503133405056482,
+    "ci": [
+     0.35031177156177157,
+     0.6653846153846155
+    ]
+   }
+  }
+ },
+ "harm": {
+  "singles": {
+   "selftest": 0.0,
+   "loop": 0.005128205128205128,
+   "universal": 0.043518562453490145
+  },
+  "pairs": {
+   "selftest": 0.0,
+   "loop": 0.09405232448710708,
+   "universal": 0.0737096237096237
+  }
+ },
+ "rule": {
+  "S-1 detection >= 0.95": true,
+  "S-2 family >= 0.90": true,
+  "S-3 verified >= 0.95 (singles, pairs)": true,
+  "S-4 same-group pairs both named >= 0.70 and above aggregated (LB > 0)": true,
+  "S-5 closure >= 0.95, harm <= 0.5%, pairs above loop (LB > 0), singles not below (LB > -0.05)": true
+ },
+ "S_PASS": true
+}
