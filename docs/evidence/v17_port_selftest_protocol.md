@@ -6,3 +6,7 @@ Purpose: external validity of the self-test (v15 S), which so far was confirmed 
 - Development: FiQA judged run (seed 60), development draws. Confirmation: **NQ** judged run (seed 58, a different corpus of 2.68M passages), held-out draws. A trial on FiQA runs first; its numbers are not results.
 - Sizes (NQ queries are about 40 times slower than FiQA): pool 300 probes, battery 80 random plus up to 20 diagnostic, 2 instances per fault, 30 pairs chosen by md5, traffic 50 test queries (25 for pairs).
 - The pass rule is the v15 A1 rule S-1 to S-5 (bars unchanged), restated as an amendment after the FiQA development run and before the NQ run, with any change needed for the second stack written there.
+
+## Amendments
+
+- **A0 (21 Nov 2026, 13:56 IST; before the development run finished).** The FiQA trial ran end to end on a CPU session (the GPU queue was full); trial numbers are not results. Fallback fixed now: if the NQ confirmation cannot start on a GPU by 16:00 IST or cannot finish by 21:30 IST, the confirmation runs on FiQA with the held-out draws, and is reported as a second-stack confirmation on the development corpus, not as a new corpus.
