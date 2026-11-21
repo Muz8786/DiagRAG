@@ -1,0 +1,55 @@
+{
+ "a: protocol-frozen hash equals kaggle/diagrag_v6.py": {
+  "ok": true,
+  "detail": "44176b9a5ad633e3"
+ },
+ "b: code writes the environment (library versions) into JUDGED_PROTOCOL.json": {
+  "ok": true,
+  "detail": ""
+ },
+ "c1: gate line is byte-identical to v5": {
+  "ok": true,
+  "detail": "AUROC_BAR=0.70, MIN_TEST_POS=50, RESCUE_BAR_LB=0.50, MIN_REPAIR_N=50, MAX_HARM=0.10, REPAIR_TARGET=24, DETECT_TARGET=27,"
+ },
+ "c2: unchanged bar present in v5 and v4: ALPHA=0.005, ALPHAS=[0.0025, 0.005, 0.01, 0.02]": {
+  "ok": true,
+  "detail": ""
+ },
+ "c2: unchanged bar present in v5 and v4: L2_BAR=0.70": {
+  "ok": true,
+  "detail": ""
+ },
+ "c2: unchanged bar present in v5 and v4: U1_BAR=0.50": {
+  "ok": true,
+  "detail": ""
+ },
+ "c2: unchanged bar present in v5 and v4: TAU_FAM=0.6": {
+  "ok": true,
+  "detail": ""
+ },
+ "c2: unchanged bar present in v5 and v4: CLEAN_FPR=0.05": {
+  "ok": true,
+  "detail": ""
+ },
+ "c3: notebook config equals protocol section 3 (seed 50, N_HARD 100, MAX_ATT 4000, N_BASE_ESCI 6000, N_PRDC 528, N_HARM 20)": {
+  "ok": true,
+  "detail": "{\"SEED\": \"50\", \"N_BASE_ESCI\": \"6000\", \"N_PRDC\": \"528\", \"N_HARD\": \"100\", \"MAX_ATT\": \"4000\", \"N_HARM\": \"20\", \"TIME_BUDGET\": \"30000\"}"
+ },
+ "c4: protocol section 3 names seed 49 and the same settings": {
+  "ok": true,
+  "detail": ""
+ },
+ "d1: notebook embeds exactly the frozen file": {
+  "ok": true,
+  "detail": ""
+ },
+ "d2: notebook asserts the hash before running (size/sha check cell + the frozen-hash assert)": {
+  "ok": true,
+  "detail": ""
+ },
+ "d3: every code cell parses": {
+  "ok": true,
+  "detail": ""
+ },
+ "ALL_PASS": true
+}

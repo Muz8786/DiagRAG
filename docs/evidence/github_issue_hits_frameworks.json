@@ -1,0 +1,698 @@
+{
+ "lc_duplicate_docs": [
+  {
+   "title": "ConversationalRetrievalChain + Memory",
+   "url": "https://github.com/langchain-ai/langchain/issues/2303",
+   "state": "closed",
+   "comments": 90,
+   "created": "2023-04-02",
+   "body": "Hi, \r\n\r\nI'm following the [Chat index examples](https://python.langchain.com/en/latest/modules/chains/index_examples/chat_vector_db.html) and was surprised that the history is not a Memory object but just an array. However, it is possible to pass a memory object to the constructor, if \r\n\r\n1. I also set memory_key to 'chat_history' (default key names are different between ConversationBufferMemory and ConversationalRetrievalChain)\r\n2. I also adjust get_chat_history to pass through the history from the memory, i.e. lambda h : h.\r\n\r\nThis is what that looks like:\r\n\r\n```\r\nmemory = ConversationBufferMemory(memory_key='chat_history', return_messages=False)\r\nconv_qa_chain = ConversationalRetrievalChain.from_llm(\r\n    llm=llm, \r\n    retriever=retriever, \r\n    memory=memory,\r\n    get_chat_history=lambda h : h)\r\n```\r\n\r\nNow, my issue is that if I also want to return sources that doesn't work with the memory - i.e. this does not work:\r\n```\r\nmemory = ConversationBufferMemory(memory_key='chat_history', return_messages=False)\r\nconv_qa_chain = ConversationalRetrievalChain.from_llm(\r\n    llm=llm, \r\n    retriever=retriever, \r\n    memory=memory,\r\n    get_chat_history=lambda h : h,\r\n    return_source_documents=True)\r\n```\r\n\r\nThe error message is \"ValueError: One output key expected, got dict_keys(['answer', 'source_documents'])\".\r\n\r\nMaybe I'm doing something wrong? If not, this seems worth fixing to me - or, more generally, make memory and the ConversationalRetrievalChain more directily compatible?"
+  },
+  {
+   "title": "ChromaDB 0.4+ is no longer compatible with client config",
+   "url": "https://github.com/langchain-ai/langchain/issues/7887",
+   "state": "closed",
+   "comments": 51,
+   "created": "2023-07-18",
+   "body": "### System Info\n\n- Python 3.9.13\r\n\r\n- langchain-0.0.235-py3-none-any.whl\r\n- chromadb-0.4.0-py3-none-any.whl\n\n### Who can help?\n\n_No response_\n\n### Information\n\n- [ ] The official example notebooks/scripts\n- [x] My own modified scripts\n\n### Related Components\n\n- [ ] LLMs/Chat Models\n- [ ] Embedding Models\n- [ ] Prompts / Prompt Templates / Prompt Selectors\n- [ ] Output Parsers\n- [ ] Document Loaders\n- [X] Vector Stores / Retrievers\n- [ ] Memory\n- [ ] Agents / Agent Executors\n- [ ] Tools / Toolkits\n- [ ] Chains\n- [ ] Callbacks/Tracing\n- [ ] Async\n\n### Reproduction\n\nSteps to reproduce:\r\n\r\n1. Create a Chroma store which is locally persisted\r\n```\r\nstore = Chroma.from_texts(\r\n    texts=docs, embedding=embeddings, metadatas=metadatas, persist_directory=environ[\"DB_DIR\"]\r\n)\r\n```\r\n2. Get the error `You are using a deprecated configuration of Chroma. Please pip install chroma-migrate and run `chroma-migrate` to upgrade your configuration. See https://docs.trychroma.com/migration for more information or join our discord at https://discord.gg/8g5FESbj for help!`\r\n3. Suffer\n\n### Expected behavior\n\n1. Create locally persisted Chroma store\r\n2. Use Chroma store\r\n\r\n\r\nThe issue:\r\n\r\nStarting chromadb 0.40 the chroma_db_impl is no longer a supported parameter, it uses sqlite instead.\r\n\r\nRemoving the line\r\n`\r\nchroma_db_impl=\"duckdb+parquet\",\r\n`\r\nfrom langchain.vectorstores/chroma.py solves the issue, but the earlier DB cannot be used or migrated."
+  },
+  {
+   "title": "\"NoIndexException: Index not found when initializing Chroma from a persisted directory\"",
+   "url": "https://github.com/langchain-ai/langchain/issues/3011",
+   "state": "closed",
+   "comments": 38,
+   "created": "2023-04-17",
+   "body": "I am facing a problem when trying to use the Chroma vector store with a persisted index. I have already loaded a document, created embeddings for it, and saved those embeddings in Chroma. The script ran perfectly with LLM and also created the necessary files in the persistence directory (.chroma\\index). The files include:\r\n\r\nchroma-collections.parquet\r\nchroma-embeddings.parquet\r\nid_to_uuid_3508d87c-12d1-4bbe-ae7f-69a0ec3c6616.pkl\r\nindex_3508d87c-12d1-4bbe-ae7f-69a0ec3c6616.bin\r\nindex_metadata_3508d87c-12d1-4bbe-ae7f-69a0ec3c6616.pkl\r\nuuid_to_id_3508d87c-12d1-4bbe-ae7f-69a0ec3c6616.pkl\r\n\r\nHowever, when I try to initialize the Chroma instance using the persist_directory to utilize the previously saved embeddings, I encounter a NoIndexException error, stating \"Index not found, please create an instance before querying\".\r\n\r\nHere is a snippet of the code I am using in a Jupyter notebook:\r\n\r\n```\r\n# Section 1\r\nimport os\r\nfrom langchain.vectorstores import Chroma\r\nfrom langchain.chat_models import ChatOpenAI\r\nfrom langchain.chains.question_answering import load_qa_chain\r\n\r\n# Load environment variables\r\n%reload_ext dotenv\r\n%dotenv info.env\r\nOPENAI_API_KEY = os.getenv(\"OPENAI_API_KEY\")\r\n\r\n# Section 2 - Initialize Chroma without an embedding function\r\npersist_directory = '.chroma\\\\index'\r\ndb = Chroma(persist_directory=persist_directory)\r\n\r\n# Section 3\r\n# Load chat model and question answering chain\r\nllm = ChatOpenAI(model_name=\"gpt-3.5-turbo\", temperature=.5, openai_api_key=OPENAI_API_K"
+  },
+  {
+   "title": "Issue: Does RetrievalQA Support Streaming Replies?",
+   "url": "https://github.com/langchain-ai/langchain/issues/4950",
+   "state": "closed",
+   "comments": 30,
+   "created": "2023-05-19",
+   "body": "## Question\r\nI'm interested in creating a conversational app using RetrievalQA that can also answer using external knowledge. However, I'm curious whether RetrievalQA supports replying in a streaming manner. I couldn't find any related articles, so I would like to ask everyone here."
+  },
+  {
+   "title": "Final answer streaming problem",
+   "url": "https://github.com/langchain-ai/langchain/issues/10316",
+   "state": "closed",
+   "comments": 22,
+   "created": "2023-09-07",
+   "body": "### System Info\n\nhi, \r\nI am unable to stream the final answer from llm chain to chianlit UI. \r\nlangchain==0.0.218\r\nPython 3.9.16\r\n\r\nhere are the details:\r\nhttps://github.com/Chainlit/chainlit/issues/313\r\n\r\nis this implemented? -  https://github.com/langchain-ai/langchain/pull/1222/\n\n### Who can help?\n\n_No response_\n\n### Information\n\n- [ ] The official example notebooks/scripts\n- [ ] My own modified scripts\n\n### Related Components\n\n- [X] LLMs/Chat Models\n- [ ] Embedding Models\n- [ ] Prompts / Prompt Templates / Prompt Selectors\n- [ ] Output Parsers\n- [ ] Document Loaders\n- [ ] Vector Stores / Retrievers\n- [ ] Memory\n- [ ] Agents / Agent Executors\n- [ ] Tools / Toolkits\n- [X] Chains\n- [X] Callbacks/Tracing\n- [ ] Async\n\n### Reproduction\n\nthe code given above can reproduce the behaviour\n\n### Expected behavior\n\nexpected behaviour :  the final answer from  llm chain to be streamed properly to chianlit UI"
+  },
+  {
+   "title": "Langchain Import Issue",
+   "url": "https://github.com/langchain-ai/langchain/issues/7509",
+   "state": "closed",
+   "comments": 21,
+   "created": "2023-07-11",
+   "body": "### System Info\r\n\r\nPython 3.10.8\r\nLangchain==0.0.229\r\n\r\nAWS Sagemaker Studio w/ **PyTorch 2.0.0 Python 3.10 GPU Optimized** image\r\n\r\n### Who can help?\r\n\r\n@hwchase17 or @agola11\r\n\r\n### Information\r\n\r\n- [ ] The official example notebooks/scripts\r\n- [X] My own modified scripts\r\n\r\n### Related Components\r\n\r\n- [ ] LLMs/Chat Models\r\n- [ ] Embedding Models\r\n- [ ] Prompts / Prompt Templates / Prompt Selectors\r\n- [ ] Output Parsers\r\n- [X] Document Loaders\r\n- [ ] Vector Stores / Retrievers\r\n- [ ] Memory\r\n- [ ] Agents / Agent Executors\r\n- [ ] Tools / Toolkits\r\n- [ ] Chains\r\n- [ ] Callbacks/Tracing\r\n- [ ] Async\r\n\r\n### Reproduction\r\n\r\nWas working fine in a Jupyter Notebook in AWS Sagemaker Studio for the past few weeks but today running into an issue with no code changes... import chain issue?\r\n\r\n!pip install langchain openai chromadb tiktoken pypdf unstructured pdf2image;\r\n\r\nfrom langchain.document_loaders import TextLoader\r\n\r\nResults in:\r\n\r\n```---------------------------------------------------------------------------\r\nTypeError                                 Traceback (most recent call last)\r\nCell In[10], line 1\r\n----> 1 from langchain.document_loaders import TextLoader\r\n      2 docLoader = TextLoader('./docs/nlitest.txt', encoding='utf8')\r\n      3 document = docLoader.load()\r\n\r\nFile /opt/conda/lib/python3.10/site-packages/langchain/__init__.py:6\r\n      3 from importlib import metadata\r\n      4 from typing import Optional\r\n----> 6 from langchain.agents import MRKLChain, ReActChain, Sel"
+  },
+  {
+   "title": "How to create a custom retriever",
+   "url": "https://github.com/langchain-ai/langchain/issues/8623",
+   "state": "closed",
+   "comments": 12,
+   "created": "2023-08-02",
+   "body": "### Feature request\n\nWhen I use RetrievalQA, I need to add and reorder the content retrieved by retriever\r\n```\r\nqa = RetrievalQA.from_chain_type(llm=chat, \r\n                                 chain_type=\"stuff\",\r\n                                 retriever=docsearch.as_retriever(search_kwargs={\"k\": 2}), \r\n                                 chain_type_kwargs={\"prompt\": PROMPT,\"memory\":memory })\r\n```\r\nI want the retrieved content from retriever to be reordered by \"source\".\r\nThe following code is used by me to manipulate the retrieved content to achieve my needs.\r\n```\r\nretriever = docsearch.as_retriever(search_kwargs={\"k\": 6})\r\nsearch_result = retriever.get_relevant_documents(quey)\r\ndef sort_paragraphs(paragraphs):\r\n    sorted_paragraphs = sorted(paragraphs, key=lambda x: x.metadata[\"source\"])\r\n    return sorted_paragraphs\r\nparagraphs = sort_paragraphs(search_result)\r\nsorted_paragraphs = \"\"\r\nfor i in paragraphs:\r\n    sorted_paragraphs = sorted_paragraphs + i.page_content + \"\\n\"\r\n```\r\nHow can I define an retriever that I can use in my chain to organize the search content as I wish\r\n\n\n### Motivation\n\nSome custom retrieval logic is required to seek optimal performance.\n\n### Your contribution\n\nI would like to have tutorials related to custom retriever documentation\r\n@hwchase17\r\nhttps://twitter.com/hwchase17/status/1646272240202432512\r\nI think langchain needs to be a custom retriever\r\n"
+  },
+  {
+   "title": "use RemoteRunnable invoke & local invoke, the return information not the same amount",
+   "url": "https://github.com/langchain-ai/langchain/issues/17703",
+   "state": "closed",
+   "comments": 12,
+   "created": "2024-02-18",
+   "body": "### Checked other resources\n\n- [X] I added a very descriptive title to this issue.\n- [X] I searched the LangChain documentation with the integrated search.\n- [X] I used the GitHub search to find a similar question and didn't find it.\n- [X] I am sure that this is a bug in LangChain rather than my code.\n\n### Example Code\n\n```\r\nfrom langserve import RemoteRunnable\r\ndatabase_answer = RemoteRunnable(\"http://localhost:2031/database_answer/\")\r\ndatabase_answer.invoke({\"input\": \"nba2k23 email address\"}, {\"configurable\": {\"session_id\": \"6666\"}})\r\n\r\n# get return\r\n{'input': 'nba2k23 email address',\r\n 'answer': 'nba2k23 email address is nba2kmyteammobilesupport@2k.com\u3002'}\r\n```\r\n\r\nbehind the RemoteRunnable, the code just like blow, so i will not show up\r\n\r\n```\r\nlocal_embedding = HuggingFaceEmbeddings(model_name=\"/root/autodl-tmp/bge-large-zh-v1.5\", multi_process=True)\r\nlocal_vdb = FAISS.load_local(\"/xg/packages/database/vector\", local_embedding, \"default\")\r\nllm = ChatOpenAI(\r\n    api_key=\"EMPTY\", \r\n    base_url=\"http://127.0.0.1:8000/v1\", \r\n    temperature=0,  \r\n    max_tokens=600,  \r\n    model=\"qwen-14b-chat\"\r\n)\r\nprompt_1 = ChatPromptTemplate.from_messages(\r\n    [\r\n        (\"system\", \"you are a helpful assiant\"), \r\n        MessagesPlaceholder(variable_name=\"history\"),\r\n        (\"human\", \"\u8bf7\u6839\u636e\u6570\u636e\u5185\u5bb9\u4f5c\u7b54\uff0c\u82e5\u95ee\u9898\u4e0e\u6570\u636e\u65e0\u5173\uff0c\u5219\u81ea\u884c\u4f5c\u7b54\u3002\u6570\u636e\uff1a{context} \u95ee\u9898\uff1a{input}\")\r\n        ]\r\n)\r\nretriever = local_vdb.as_retriever(\r\n    search_type=\"similarity_score_threshold\", \r\n    search_kwargs={\"k\": 3, 'score_threshold': 0.3}\r\n)\r"
+  }
+ ],
+ "lc_embedding_mismatch": [
+  {
+   "title": "ConversationalRetrievalChain + Memory",
+   "url": "https://github.com/langchain-ai/langchain/issues/2303",
+   "state": "closed",
+   "comments": 90,
+   "created": "2023-04-02",
+   "body": "Hi, \r\n\r\nI'm following the [Chat index examples](https://python.langchain.com/en/latest/modules/chains/index_examples/chat_vector_db.html) and was surprised that the history is not a Memory object but just an array. However, it is possible to pass a memory object to the constructor, if \r\n\r\n1. I also set memory_key to 'chat_history' (default key names are different between ConversationBufferMemory and ConversationalRetrievalChain)\r\n2. I also adjust get_chat_history to pass through the history from the memory, i.e. lambda h : h.\r\n\r\nThis is what that looks like:\r\n\r\n```\r\nmemory = ConversationBufferMemory(memory_key='chat_history', return_messages=False)\r\nconv_qa_chain = ConversationalRetrievalChain.from_llm(\r\n    llm=llm, \r\n    retriever=retriever, \r\n    memory=memory,\r\n    get_chat_history=lambda h : h)\r\n```\r\n\r\nNow, my issue is that if I also want to return sources that doesn't work with the memory - i.e. this does not work:\r\n```\r\nmemory = ConversationBufferMemory(memory_key='chat_history', return_messages=False)\r\nconv_qa_chain = ConversationalRetrievalChain.from_llm(\r\n    llm=llm, \r\n    retriever=retriever, \r\n    memory=memory,\r\n    get_chat_history=lambda h : h,\r\n    return_source_documents=True)\r\n```\r\n\r\nThe error message is \"ValueError: One output key expected, got dict_keys(['answer', 'source_documents'])\".\r\n\r\nMaybe I'm doing something wrong? If not, this seems worth fixing to me - or, more generally, make memory and the ConversationalRetrievalChain more directily compatible?"
+  },
+  {
+   "title": "langchain.embeddings.OpenAIEmbeddings is not working with AzureOpenAI",
+   "url": "https://github.com/langchain-ai/langchain/issues/1560",
+   "state": "closed",
+   "comments": 58,
+   "created": "2023-03-09",
+   "body": "When using the AzureOpenAI LLM the OpenAIEmbeddings are not working.  After reviewing source, I believe this is because the class does not accept any parameters other than an api_key.  A \"Model deployment name\" parameter would be needed, since the model name alone is not enough to identify the engine.  I did, however, find a workaround.  If you name your deployment exactly \"text-embedding-ada-002\" then OpenAIEmbeddings will work.\r\n\r\nedit: my workaround is working on version .088, but not the current version. "
+  },
+  {
+   "title": "ChromaDB 0.4+ is no longer compatible with client config",
+   "url": "https://github.com/langchain-ai/langchain/issues/7887",
+   "state": "closed",
+   "comments": 51,
+   "created": "2023-07-18",
+   "body": "### System Info\n\n- Python 3.9.13\r\n\r\n- langchain-0.0.235-py3-none-any.whl\r\n- chromadb-0.4.0-py3-none-any.whl\n\n### Who can help?\n\n_No response_\n\n### Information\n\n- [ ] The official example notebooks/scripts\n- [x] My own modified scripts\n\n### Related Components\n\n- [ ] LLMs/Chat Models\n- [ ] Embedding Models\n- [ ] Prompts / Prompt Templates / Prompt Selectors\n- [ ] Output Parsers\n- [ ] Document Loaders\n- [X] Vector Stores / Retrievers\n- [ ] Memory\n- [ ] Agents / Agent Executors\n- [ ] Tools / Toolkits\n- [ ] Chains\n- [ ] Callbacks/Tracing\n- [ ] Async\n\n### Reproduction\n\nSteps to reproduce:\r\n\r\n1. Create a Chroma store which is locally persisted\r\n```\r\nstore = Chroma.from_texts(\r\n    texts=docs, embedding=embeddings, metadatas=metadatas, persist_directory=environ[\"DB_DIR\"]\r\n)\r\n```\r\n2. Get the error `You are using a deprecated configuration of Chroma. Please pip install chroma-migrate and run `chroma-migrate` to upgrade your configuration. See https://docs.trychroma.com/migration for more information or join our discord at https://discord.gg/8g5FESbj for help!`\r\n3. Suffer\n\n### Expected behavior\n\n1. Create locally persisted Chroma store\r\n2. Use Chroma store\r\n\r\n\r\nThe issue:\r\n\r\nStarting chromadb 0.40 the chroma_db_impl is no longer a supported parameter, it uses sqlite instead.\r\n\r\nRemoving the line\r\n`\r\nchroma_db_impl=\"duckdb+parquet\",\r\n`\r\nfrom langchain.vectorstores/chroma.py solves the issue, but the earlier DB cannot be used or migrated."
+  },
+  {
+   "title": "\"NoIndexException: Index not found when initializing Chroma from a persisted directory\"",
+   "url": "https://github.com/langchain-ai/langchain/issues/3011",
+   "state": "closed",
+   "comments": 38,
+   "created": "2023-04-17",
+   "body": "I am facing a problem when trying to use the Chroma vector store with a persisted index. I have already loaded a document, created embeddings for it, and saved those embeddings in Chroma. The script ran perfectly with LLM and also created the necessary files in the persistence directory (.chroma\\index). The files include:\r\n\r\nchroma-collections.parquet\r\nchroma-embeddings.parquet\r\nid_to_uuid_3508d87c-12d1-4bbe-ae7f-69a0ec3c6616.pkl\r\nindex_3508d87c-12d1-4bbe-ae7f-69a0ec3c6616.bin\r\nindex_metadata_3508d87c-12d1-4bbe-ae7f-69a0ec3c6616.pkl\r\nuuid_to_id_3508d87c-12d1-4bbe-ae7f-69a0ec3c6616.pkl\r\n\r\nHowever, when I try to initialize the Chroma instance using the persist_directory to utilize the previously saved embeddings, I encounter a NoIndexException error, stating \"Index not found, please create an instance before querying\".\r\n\r\nHere is a snippet of the code I am using in a Jupyter notebook:\r\n\r\n```\r\n# Section 1\r\nimport os\r\nfrom langchain.vectorstores import Chroma\r\nfrom langchain.chat_models import ChatOpenAI\r\nfrom langchain.chains.question_answering import load_qa_chain\r\n\r\n# Load environment variables\r\n%reload_ext dotenv\r\n%dotenv info.env\r\nOPENAI_API_KEY = os.getenv(\"OPENAI_API_KEY\")\r\n\r\n# Section 2 - Initialize Chroma without an embedding function\r\npersist_directory = '.chroma\\\\index'\r\ndb = Chroma(persist_directory=persist_directory)\r\n\r\n# Section 3\r\n# Load chat model and question answering chain\r\nllm = ChatOpenAI(model_name=\"gpt-3.5-turbo\", temperature=.5, openai_api_key=OPENAI_API_K"
+  },
+  {
+   "title": "Error while loading saved index in chroma db ",
+   "url": "https://github.com/langchain-ai/langchain/issues/2491",
+   "state": "closed",
+   "comments": 36,
+   "created": "2023-04-06",
+   "body": "\r\npersist_directory = 'chroma_db_store/index/' or 'chroma_db_store'\r\ndocsearch = Chroma(persist_directory=persist_directory, embedding_function=embeddings)\r\nquery = \"Hey\"\r\ndocs = docsearch.similarity_search(query)\r\n\r\nNoIndexException: Index not found, please create an instance before querying\r\n\r\nFolder structure\r\nchroma_db_store:\r\n- chroma-collections.parquet\r\n- chroma-embeddings.parquet\r\n- index/"
+  },
+  {
+   "title": "RetrievalQAWithSourcesChain causing openai.error.InvalidRequestError: This model's maximum context length is 4097 tokens",
+   "url": "https://github.com/langchain-ai/langchain/issues/2133",
+   "state": "closed",
+   "comments": 33,
+   "created": "2023-03-29",
+   "body": "I want to migrate from `VectorDBQAWithSourcesChain` to `RetrievalQAWithSourcesChain`. The sample code use Qdrant vector store, it work fine with VectorDBQAWithSourcesChain.\r\n\r\nWhen I run the code with RetrievalQAWithSourcesChain changes, it prompt me the following error:\r\n```\r\nopenai.error.InvalidRequestError: This model's maximum context length is 4097 tokens, however you requested 4411 tokens (4155 in your prompt; 256 for the completion). Please reduce your prompt; or completion length.\r\n```\r\n\r\nThe following is the `git diff` of the code:\r\n```diff\r\ndiff --git a/ask_question.py b/ask_question.py\r\nindex eac37ce..e76e7c5 100644\r\n--- a/ask_question.py\r\n+++ b/ask_question.py\r\n@@ -2,7 +2,7 @@ import argparse\r\n import os\r\n \r\n from langchain import OpenAI\r\n-from langchain.chains import VectorDBQAWithSourcesChain\r\n+from langchain.chains import RetrievalQAWithSourcesChain\r\n from langchain.vectorstores import Qdrant\r\n from langchain.embeddings import OpenAIEmbeddings\r\n from qdrant_client import QdrantClient\r\n@@ -14,8 +14,7 @@ args = parser.parse_args()\r\n url = os.environ.get(\"QDRANT_URL\")\r\n api_key = os.environ.get(\"QDRANT_API_KEY\")\r\n qdrant = Qdrant(QdrantClient(url=url, api_key=api_key), \"docs_flutter_dev\", embedding_function=OpenAIEmbeddings().embed_query)\r\n-chain = VectorDBQAWithSourcesChain.from_llm(\r\n-        llm=OpenAI(temperature=0, verbose=True), vectorstore=qdrant, verbose=True)\r\n+chain = RetrievalQAWithSourcesChain.from_chain_type(OpenAI(temperature=0), chain_type=\"stuff\", "
+  },
+  {
+   "title": "Query on existing index",
+   "url": "https://github.com/langchain-ai/langchain/issues/1792",
+   "state": "closed",
+   "comments": 32,
+   "created": "2023-03-19",
+   "body": "How to query from an existing index?\r\n\r\nI filled up an index in Pinecode using:\r\n\r\n```\r\ndocsearch = Pinecone.from_texts([t.page_content for t in texts], embeddings, index_name=index_name)\r\n```\r\n\r\nNow, I'm creating a separate `.py` file, where I need to use the existing index to query. As I understand I need to use the following function:\r\n\r\n```\r\n    @classmethod\r\n    def from_existing_index(\r\n        cls,\r\n        index_name: str,\r\n        embedding: Embeddings,\r\n        text_key: str = \"text\",\r\n        namespace: Optional[str] = None,\r\n    ) -> Pinecone:\r\n        \"\"\"Load pinecone vectorstore from index name.\"\"\"\r\n        try:\r\n            import pinecone\r\n        except ImportError:\r\n            raise ValueError(\r\n                \"Could not import pinecone python package. \"\r\n                \"Please install it with `pip install pinecone-client`.\"\r\n            )\r\n\r\n        return cls(\r\n            pinecone.Index(index_name), embedding.embed_query, text_key, namespace\r\n        )\r\n```\r\n\r\nbut what are the arguments there? I know only my `index_name` . What are the rest arguments? Embeddings are embeddings from OpenAI, right?\r\ne.g.:\r\n```\r\nembeddings = OpenAIEmbeddings(openai_api_key=OPENAI_API_KEY)\r\n```\r\n\r\n What is the `text_key`? And what `name_space` ?"
+  },
+  {
+   "title": "Similarity search not working well when number of ingested documents is great, say over one hundred.",
+   "url": "https://github.com/langchain-ai/langchain/issues/2442",
+   "state": "closed",
+   "comments": 32,
+   "created": "2023-04-05",
+   "body": "When few documets embedded into vector db everything works fine, with similarity search I can always find the most relevant documents on the top of results. But when it comes to over hundred, searching result will be very confusing, given the same query I could not find any relevant documents. I've tried Chroma, Faiss, same story.\r\n\r\nAnyone has any idea? thanks.\r\nbtw, the documents are in Chinese..."
+  }
+ ],
+ "lc_score_threshold": [
+  {
+   "title": "ConversationalRetrievalChain doesn't return score with sources",
+   "url": "https://github.com/langchain-ai/langchain/issues/5067",
+   "state": "closed",
+   "comments": 21,
+   "created": "2023-05-21",
+   "body": "### System Info\r\n\r\nLangChain v0.0.171\r\nChromaDB v0.3.22\r\nPython v3.10.11\r\n\r\n### Who can help?\r\n\r\n_No response_\r\n\r\n### Information\r\n\r\n- [ ] The official example notebooks/scripts\r\n- [X] My own modified scripts\r\n\r\n### Related Components\r\n\r\n- [ ] LLMs/Chat Models\r\n- [ ] Embedding Models\r\n- [ ] Prompts / Prompt Templates / Prompt Selectors\r\n- [ ] Output Parsers\r\n- [ ] Document Loaders\r\n- [ ] Vector Stores / Retrievers\r\n- [ ] Memory\r\n- [ ] Agents / Agent Executors\r\n- [ ] Tools / Toolkits\r\n- [X] Chains\r\n- [ ] Callbacks/Tracing\r\n- [ ] Async\r\n\r\n### Reproduction\r\n\r\nThis is my code:\r\n\r\n```\r\n def askQuestion(self, collection_id, question):\r\n        collection_name = \"collection-\" + str(collection_id)\r\n        self.llm = ChatOpenAI(model_name=self.model_name, temperature=self.temperature, openai_api_key=os.environ.get('OPENAI_API_KEY'), streaming=True, callback_manager=CallbackManager([StreamingStdOutCallbackHandler()]))\r\n        self.memory = ConversationBufferMemory(memory_key=\"chat_history\", return_messages=True,  output_key='answer')\r\n        \r\n        chroma_Vectorstore = Chroma(collection_name=collection_name, embedding_function=self.embeddingsOpenAi, client=self.chroma_client)\r\n\r\n        self.chain = ConversationalRetrievalChain.from_llm(self.llm, chroma_Vectorstore.as_retriever(),\r\n                                                             return_source_documents=True,verbose=VERBOSE, \r\n                                                             memory=self.memory)\r\n\r\n    \r\n  "
+  },
+  {
+   "title": "milvus retriever.get_relevant_documents has bug?",
+   "url": "https://github.com/langchain-ai/langchain/issues/19106",
+   "state": "closed",
+   "comments": 8,
+   "created": "2024-03-15",
+   "body": "### Checked other resources\n\n- [X] I added a very descriptive title to this issue.\n- [X] I searched the LangChain documentation with the integrated search.\n- [X] I used the GitHub search to find a similar question and didn't find it.\n- [X] I am sure that this is a bug in LangChain rather than my code.\n- [X] The bug is not resolved by updating to the latest stable version of LangChain (or the specific integration package).\n\n### Example Code\n\n```py\r\nuser_input = \"\u4f60\u597d\"\r\n    embedding_model_name = fr\"/usr/local/models/BAAI/bge-m3\"\r\n    hf = HuggingFaceBgeEmbeddings(\r\n        model_name=embedding_model_name,\r\n        model_kwargs={\"device\": \"cpu\"},\r\n        encode_kwargs={\r\n            \"normalize_embeddings\": True,\r\n            \"batch_size\": 32\r\n        }\r\n    )\r\n    milvus_store = Milvus(\r\n        embedding_function=hf,\r\n        collection_name=\"qa\",\r\n        drop_old=False,\r\n        text_field=\"content\",\r\n        primary_field= \"id\",\r\n        vector_field = \"vector\",\r\n        # search_params={\r\n        #     \"metric_type\": \"IP\",\r\n        #     \"index_type\": \"IVF_FLAT\",\r\n        #     \"params\": {\"nprobe\": 10, \"nlist\": 128}\r\n        # },\r\n        connection_args={\r\n            \"host\": \"10.3.1.187\",\r\n            \"port\": \"19530\",\r\n            \"user\": \"\",\r\n            \"password\": \"\",\r\n            \"db_name\": \"qa\"\r\n        },\r\n\r\n    )\r\n    retriever=milvus_store.as_retriever(\r\n        search_type=\"similarity_score_threshold\",\r\n        search_kwargs={\"score_threshold\": 0.8}\r\n    )\r\n    d"
+  },
+  {
+   "title": "[PGVector] The scores returned by 'similarity_search_with_score' are NOT proportional to the similarity",
+   "url": "https://github.com/langchain-ai/langchain/issues/13437",
+   "state": "closed",
+   "comments": 5,
+   "created": "2023-11-16",
+   "body": "### System Info\n\nlangchain==0.0.266\n\n### Who can help?\n\n@hwchase17 \r\n@eyurtsev \r\n\n\n### Information\n\n- [X] The official example notebooks/scripts\n- [ ] My own modified scripts\n\n### Related Components\n\n- [ ] LLMs/Chat Models\n- [ ] Embedding Models\n- [ ] Prompts / Prompt Templates / Prompt Selectors\n- [ ] Output Parsers\n- [ ] Document Loaders\n- [X] Vector Stores / Retrievers\n- [ ] Memory\n- [ ] Agents / Agent Executors\n- [ ] Tools / Toolkits\n- [ ] Chains\n- [ ] Callbacks/Tracing\n- [ ] Async\n\n### Reproduction\n\n## Behavior\r\nWhen I call the `vector_store.similarity_search_with_score` function:\r\n- Expected: The returned scores will be proportional to the similarity. This means the higher score, the higher similarity.\r\n- Actual: The scores are proportional to the the distance.\r\n\r\n\r\n### Problem\r\n- When I call `as_retriever` function with the `score_threshold`, the behavior is wrong. Because when `score_threshold` is declared, it will filter documents that have score greater than or equal to `score_threshold` value. So the top documents that found from pgvector will be filter out while it's the most similar in fact.\n\n### Expected behavior\n\nThe returned scores from PGVector queries are proportional to the similarity.\r\nIn other words, the higher score, the higher similarity."
+  },
+  {
+   "title": "similarity_score_threshold not working as expected with ConversationalRetrievalChain",
+   "url": "https://github.com/langchain-ai/langchain/issues/12707",
+   "state": "closed",
+   "comments": 3,
+   "created": "2023-11-01",
+   "body": "### System Info\n\nLangChain version: langchain==0.0.327\r\nPython version: Python 3.11.4\r\nSystem: Windows 11 x64\n\n### Who can help?\n\n@hwchase17 @agola11 \n\n### Information\n\n- [ ] The official example notebooks/scripts\n- [ ] My own modified scripts\n\n### Related Components\n\n- [ ] LLMs/Chat Models\n- [ ] Embedding Models\n- [ ] Prompts / Prompt Templates / Prompt Selectors\n- [ ] Output Parsers\n- [ ] Document Loaders\n- [ ] Vector Stores / Retrievers\n- [ ] Memory\n- [ ] Agents / Agent Executors\n- [ ] Tools / Toolkits\n- [X] Chains\n- [ ] Callbacks/Tracing\n- [ ] Async\n\n### Reproduction\n\nHere is my retriever-\r\n```py\r\nretriever = vectorstore.as_retriever(\r\n    search_type=\"similarity_score_threshold\",\r\n    search_kwargs={\r\n        \"score_threshold\": 0.8,\r\n        \"k\": 5,\r\n        \"filter\": {\"source\": {\"$in\": self.config.get(\"author\")}},\r\n    }\r\n)\r\n```\r\n\r\nand chain-\r\n```py\r\nchain = ConversationalRetrievalChain.from_llm(\r\n    llm=chat_model,\r\n    retriever=retriever,\r\n    memory=memory,\r\n    chain_type=\"stuff\",\r\n    combine_docs_chain_kwargs={\"prompt\": prompt},\r\n    get_chat_history=lambda h: h,\r\n    condense_question_llm=ChatOpenAI(temperature=0.04),\r\n    verbose=True,\r\n)\r\n\r\n```\r\n\r\nIn retriever, `similarity_score_threshold` is not working as expected. For now, I am using `0.8` as `score_threshold` for retriever. I am not getting any Documents in return.\r\n\r\nHowever, this piece of code is giving me the expected Documents. Note that I am not specifying any score during similarity search. I am che"
+  },
+  {
+   "title": "Issue: similarity_score_threshold not working with pinecone as expected",
+   "url": "https://github.com/langchain-ai/langchain/issues/11386",
+   "state": "closed",
+   "comments": 2,
+   "created": "2023-10-04",
+   "body": "### Issue you'd like to raise.\n\nI am using Lang chain version 0.0.307 and I noticed an issue with the similarity_score_threshold. I just upgraded from 0.0.208 or 288 (I forgot). \r\n\r\nThis is the code I am using to retrieve the documents from pinecone:\r\n\r\n```\r\n docsearch = Pinecone.from_existing_index(index, embeddings, text_key=\"text\")\r\n  retriever = docsearch.as_retriever(\r\n  search_type=\"similarity_score_threshold\",\r\n  search_kwargs={\r\n  'score_threshold': 0.6\r\n  }\r\n )\r\nretriever_docs_result = retriever.get_relevant_documents(query)\r\n```\r\n                \r\nit used to work fine but after upgrading the langchain version it stopped returning any docs. Upon investigating the code, I've noticed that  inside the `_similarity_search_with_relevance_scores`  method in `vectorstore.py` , `docs_and_scores`   is returning the scores as expected but then this code tries to calculate the relevance score and inverts the values:\r\n`return [(doc, relevance_score_fn(score)) for doc, score in docs_and_scores]`.\r\n\r\nI am getting search score values as 0.7 to 0.85 but then the relevancy score inverts it and makes it (1-score) which is around 0.3 to 0.15. The problem is the score_threshold works the opposite way. So if I set score_threshold to 0.6 it wants scores bigger than 0.6 which is impossible because the relevancy score makes it invert (if the relevancy score is smaller it means it is more closer to what we queried). \r\n\r\nI am using dot product and I have used the following code as well but it"
+  },
+  {
+   "title": "FAISS similarity search with score",
+   "url": "https://github.com/langchain-ai/langchain/issues/11645",
+   "state": "closed",
+   "comments": 2,
+   "created": "2023-10-11",
+   "body": "### System Info\n\nlangchain==0.0.311\r\npython==3.9\r\n\r\nI am trying to find out the similarity search score. but I got the score is abnormal. I hope the score is between 0 and 1.\r\n![image](https://github.com/langchain-ai/langchain/assets/42560553/cbbf8328-29b5-423f-84e4-7d40f4baf280)\r\n\n\n### Who can help?\n\n_No response_\n\n### Information\n\n- [ ] The official example notebooks/scripts\n- [ ] My own modified scripts\n\n### Related Components\n\n- [ ] LLMs/Chat Models\n- [X] Embedding Models\n- [ ] Prompts / Prompt Templates / Prompt Selectors\n- [ ] Output Parsers\n- [ ] Document Loaders\n- [X] Vector Stores / Retrievers\n- [ ] Memory\n- [ ] Agents / Agent Executors\n- [ ] Tools / Toolkits\n- [ ] Chains\n- [ ] Callbacks/Tracing\n- [ ] Async\n\n### Reproduction\n\n```python\r\nfrom torch import cuda\r\nfrom langchain.embeddings.huggingface import HuggingFaceEmbeddings\r\nfrom langchain.vectorstores import (FAISS, Chroma)\r\nfrom langchain.document_loaders import CSVLoader\r\n\r\nembed_model_id = 'E:/modelscope/model/hggingface/text2vec-large-chinese'\r\ndevice = f'cuda:{cuda.current_device()}' if cuda.is_available() else 'cpu'\r\nembedding = HuggingFaceEmbeddings(\r\n    model_name=embed_model_id,\r\n    model_kwargs={'device': device},\r\n    encode_kwargs={'device': device, 'batch_size': 8}\r\n)\r\n\r\n\r\ndef save_faiss_index(file_path: str = './label_remark_openai.csv', encoding: str = 'utf-8',\r\n                     index_name: str = 'label_remark_openai_index',\r\n                     save_path: str = \"E:/pythonProject/information_"
+  }
+ ],
+ "lc_ensemble_weights": [
+  {
+   "title": "Implementing Hybrid Search (RRF) in LangChain Using OpenSearch Vector Store",
+   "url": "https://github.com/langchain-ai/langchain/issues/13574",
+   "state": "closed",
+   "comments": 13,
+   "created": "2023-11-19",
+   "body": "### Feature request\r\n\r\nThe feature request I am proposing involves the implementation of hybrid search, specifically using the Reciprocal Rank Fusion (RRF) method, in LangChain through the integration of OpenSearch's vector store.\r\nThis would enable the combination of keyword and similarity search. Currently, LangChain doesn't appear to support this functionality, even though OpenSearch has had this capability since its 2.10 release. The goal is to allow LangChain to call search pipelines using OpenSearch's vector implementation, enabling OpenSearch to handle the complexities of hybrid search.\r\n\r\n**Relevant Links**:\r\nhttps://opensearch.org/docs/latest/query-dsl/compound/hybrid\r\n\r\n\r\n\r\n### Motivation\r\n\r\nThe motivation behind this request stems from the current limitation in LangChain regarding hybrid search capabilities. As someone working on a search project currently, I find it frustrating that despite OpenSearch supporting hybrid search since version 2.10, LangChain has not yet integrated this feature.\r\n\r\n### Your contribution\r\n\r\nI would gladly help as long as I get guidance.."
+  },
+  {
+   "title": "Issue: Getting CLOSE_WAIT and too many files open error using ChatAnthropic and StuffDocumentsChain",
+   "url": "https://github.com/langchain-ai/langchain/issues/13509",
+   "state": "closed",
+   "comments": 12,
+   "created": "2023-11-17",
+   "body": "### Issue you'd like to raise.\n\nHi, I am trying claude-2 model using the ChatAnthropic library and iterating over my data to call the model end for predictions. Since it's a chain of input, I am using StuffDocumentsChain. I am facing two issues currently.\r\n1. CLOSE_WAIT error after the connection is established with cloud front with anthropic, it keeps creating a new connection for each iteration of data and goes into CLOSE_WAIT state after the process is completed for that iteration after some time.\r\n2. When too many connections go into the close wait state the application gives too many files open error due to the file descriptor handling too many connections.\r\n\r\n## Solutions Tried\r\n\r\n1. Giving request_default_timeout to handle the CLOSE_WAIT error. \r\n2. Tried creating a function try/catch and final to close any objects within the block.\r\n\r\n## Code\r\n\r\n```\r\nimport warnings\r\nwarnings.filterwarnings(\"ignore\")\r\nimport jaconv\r\nimport numpy as np\r\nimport pandas as pd\r\nfrom langchain import PromptTemplate\r\nfrom fuzzysearch import find_near_matches\r\nfrom langchain.vectorstores import Chroma\r\nfrom langchain.chat_models import ChatAnthropic\r\nfrom langchain.document_loaders import PDFPlumberLoader\r\nfrom langchain.embeddings.openai import OpenAIEmbeddings\r\nfrom langchain.schema import HumanMessage, SystemMessage\r\nfrom langchain.schema.output_parser import OutputParserException\r\nfrom langchain.chains import LLMChain, StuffDocumentsChain\r\nfrom langchain.retrievers import BM25Retriever, E"
+  },
+  {
+   "title": "EnsembleRetriever: arank_fusion uses different normalization logic than rank_fusion causing ValidationError in async",
+   "url": "https://github.com/langchain-ai/langchain/issues/37736",
+   "state": "closed",
+   "comments": 5,
+   "created": "2026-05-28",
+   "body": "### Submission checklist\n\n- [x] This is a bug, not a usage question.\n- [x] I added a clear and descriptive title that summarizes this issue.\n- [x] I used the GitHub search to find a similar question and didn't find it.\n- [x] I am sure that this is a bug in LangChain rather than my code.\n- [x] The bug is not resolved by updating to the latest stable version of LangChain (or the specific integration package).\n- [x] This is not related to the langchain-community package.\n- [x] I posted a self-contained, minimal, reproducible example. A maintainer can copy it and run it AS IS.\n\n### Package (Required)\n\n- [x] langchain\n- [ ] langchain-openai\n- [ ] langchain-anthropic\n- [x] langchain-classic\n- [ ] langchain-core\n- [ ] langchain-model-profiles\n- [ ] langchain-tests\n- [ ] langchain-text-splitters\n- [ ] langchain-chroma\n- [ ] langchain-deepseek\n- [ ] langchain-exa\n- [ ] langchain-fireworks\n- [ ] langchain-groq\n- [ ] langchain-huggingface\n- [ ] langchain-mistralai\n- [ ] langchain-nomic\n- [ ] langchain-ollama\n- [ ] langchain-openrouter\n- [ ] langchain-perplexity\n- [ ] langchain-qdrant\n- [ ] langchain-xai\n- [ ] Other / not sure / general\n\n### Related Issues / PRs\n\n_No response_\n\n### Reproduction Steps / Example Code (Python)\n\n```python\nimport asyncio\nfrom langchain_core.retrievers import BaseRetriever\nfrom langchain_core.documents import Document\nfrom langchain.retrievers import EnsembleRetriever\n\n\nclass WeirdRetriever(BaseRetriever):\n    def _get_relevant_documents(self, query, *, run_ma"
+  },
+  {
+   "title": "Float Error with Semantic Search when k>=75 ",
+   "url": "https://github.com/langchain-ai/langchain/issues/30232",
+   "state": "closed",
+   "comments": 2,
+   "created": "2025-03-11",
+   "body": "### Checked other resources\n\n- [x] I added a very descriptive title to this issue.\n- [x] I searched the LangChain documentation with the integrated search.\n- [x] I used the GitHub search to find a similar question and didn't find it.\n- [x] I am sure that this is a bug in LangChain rather than my code.\n- [x] The bug is not resolved by updating to the latest stable version of LangChain (or the specific integration package).\n\n### Example Code\n\n```python\nretrievers=[]\nself.prompt = PROD_ANALYSIS_SYSTEM_PROMPT if custom_prompt == '' else custom_prompt + \"{context}\"\ncommon_space_index = [\"csp-facets-prod-analysis\", \"csp-macess\", \"cns-resource-center\"]\nfor index in common_space_index:\n            k=100\n            self.index_name = index\n            if index == \"csp-macess\":\n                self.vector_store = AzureSearch(azure_search_endpoint=os.getenv(\"AZURE_SEARCH_SERVICE_NAME\"), azure_search_key=os.getenv(\"AZURE_SEARCH_ADMIN_KEY\"), index_name=self.index_name, embedding_function=self.embeddings.embed_query, semantic_configuration_name=\"my-semantic-config\")\n                retriever = self.vector_store.as_retriever(search_type=\"semantic_hybrid\",\n                    k=k,\n                    semantic_configuration_name=\"my-semantic-config\",\n                )\n            else:\n                self.vector_store = AzureSearch(azure_search_endpoint=os.getenv(\"AZURE_SEARCH_SERVICE_NAME\"), azure_search_key=os.getenv(\"AZURE_SEARCH_ADMIN_KEY\"), index_name=self.index_name, embedding_function"
+  },
+  {
+   "title": "EnsembleRetriever: arank_fusion uses different normalization logic than rank_fusion causing ValidationError in async",
+   "url": "https://github.com/langchain-ai/langchain/issues/37735",
+   "state": "closed",
+   "comments": 1,
+   "created": "2026-05-28",
+   "body": "### Submission checklist\n\n- [x] This is a bug, not a usage question.\n- [x] I added a clear and descriptive title that summarizes this issue.\n- [x] I used the GitHub search to find a similar question and didn't find it.\n- [x] I am sure that this is a bug in LangChain rather than my code.\n- [x] The bug is not resolved by updating to the latest stable version of LangChain (or the specific integration package).\n- [x] This is not related to the langchain-community package.\n- [x] I posted a self-contained, minimal, reproducible example. A maintainer can copy it and run it AS IS.\n\n### Package (Required)\n\n- [x] langchain\n\n### Language\n\n- [x] Python\n\n### LangChain / Python version info\n\n```\nlangchain==0.3.x (latest)\nlangchain-core==0.3.x (latest)\n```\n\n### Description\n\nI noticed that `EnsembleRetriever` has two separate methods for normalizing retriever output into `Document` objects \u2014 `rank_fusion` (sync) and `arank_fusion` (async) \u2014 and they use different conditions for the wrapping logic.\n\n**`rank_fusion` (sync)**:\n```python\nDocument(page_content=cast(\"str\", doc)) if isinstance(doc, str) else doc  # type: ignore[unreachable]\n```\nOnly wraps values that are already strings.\n\n**`arank_fusion` (async)**:\n```python\nDocument(page_content=doc) if not isinstance(doc, Document) else doc\n```\nWraps *anything* that isn't a `Document` \u2014 including `None`, integers, or other objects \u2014 by passing them straight into `Document(page_content=...)`.\n\nWhen a custom retriever returns a non-string, non-Doc"
+  },
+  {
+   "title": "not able to run BM25 retriever",
+   "url": "https://github.com/langchain-ai/langchain/issues/20466",
+   "state": "closed",
+   "comments": 1,
+   "created": "2024-04-15",
+   "body": "### Checked other resources\n\n- [X] I added a very descriptive title to this issue.\n- [X] I searched the LangChain documentation with the integrated search.\n- [X] I used the GitHub search to find a similar question and didn't find it.\n- [X] I am sure that this is a bug in LangChain rather than my code.\n- [X] The bug is not resolved by updating to the latest stable version of LangChain (or the specific integration package).\n\n### Example Code\n\n        doc_list_1 = [\r\n    \"I like apples\",\r\n    \"I like oranges\",\r\n    \"Apples and oranges are fruits\",\r\n]\r\n\r\n        ret2 = BM25Retriever.from_texts(\r\n    doc_list_1, metadatas=[{\"source\": 1}] * len(doc_list_1)\r\n)\r\n\r\n        retriever = EnsembleRetriever(\r\n    retrievers=[ret2, retriever], weights=[0.5, 0.5]\r\n)\n\n### Error Message and Stack Trace (if applicable)\n\n_No response_\n\n### Description\n\ni am trying to use ensemble retriever containing bm25 and opensearch\r\n\r\ni am getting the below error :-\r\n\r\n\"1 validation error for Document\\npage_content\\n  str type expected (type=type_error.str)\"\n\n### System Info\n\nlangchain==0.1.0\r\nlangchain-community==0.0.9\r\nlangchain-core==0.1.7\r\nlangchainhub==0.1.14"
+  },
+  {
+   "title": "DOC: What is the difference between LOTR(Merger Retriever) and Ensemble Retriever",
+   "url": "https://github.com/langchain-ai/langchain/issues/8677",
+   "state": "closed",
+   "comments": 1,
+   "created": "2023-08-03",
+   "body": "### Issue with current documentation:\n\nhttps://python.langchain.com/docs/integrations/retrievers/merger_retriever\r\n\r\nhttps://python.langchain.com/docs/modules/data_connection/retrievers/ensemble\r\n\r\nseems like the same.\r\n\r\nBoth task a list of exist retriever and MERGE the output together.\n\n### Idea or request for content:\n\nShould describe the difference between the both."
+  }
+ ],
+ "lc_chunk_overlap": [
+  {
+   "title": "ChromaDB 0.4+ is no longer compatible with client config",
+   "url": "https://github.com/langchain-ai/langchain/issues/7887",
+   "state": "closed",
+   "comments": 51,
+   "created": "2023-07-18",
+   "body": "### System Info\n\n- Python 3.9.13\r\n\r\n- langchain-0.0.235-py3-none-any.whl\r\n- chromadb-0.4.0-py3-none-any.whl\n\n### Who can help?\n\n_No response_\n\n### Information\n\n- [ ] The official example notebooks/scripts\n- [x] My own modified scripts\n\n### Related Components\n\n- [ ] LLMs/Chat Models\n- [ ] Embedding Models\n- [ ] Prompts / Prompt Templates / Prompt Selectors\n- [ ] Output Parsers\n- [ ] Document Loaders\n- [X] Vector Stores / Retrievers\n- [ ] Memory\n- [ ] Agents / Agent Executors\n- [ ] Tools / Toolkits\n- [ ] Chains\n- [ ] Callbacks/Tracing\n- [ ] Async\n\n### Reproduction\n\nSteps to reproduce:\r\n\r\n1. Create a Chroma store which is locally persisted\r\n```\r\nstore = Chroma.from_texts(\r\n    texts=docs, embedding=embeddings, metadatas=metadatas, persist_directory=environ[\"DB_DIR\"]\r\n)\r\n```\r\n2. Get the error `You are using a deprecated configuration of Chroma. Please pip install chroma-migrate and run `chroma-migrate` to upgrade your configuration. See https://docs.trychroma.com/migration for more information or join our discord at https://discord.gg/8g5FESbj for help!`\r\n3. Suffer\n\n### Expected behavior\n\n1. Create locally persisted Chroma store\r\n2. Use Chroma store\r\n\r\n\r\nThe issue:\r\n\r\nStarting chromadb 0.40 the chroma_db_impl is no longer a supported parameter, it uses sqlite instead.\r\n\r\nRemoving the line\r\n`\r\nchroma_db_impl=\"duckdb+parquet\",\r\n`\r\nfrom langchain.vectorstores/chroma.py solves the issue, but the earlier DB cannot be used or migrated."
+  },
+  {
+   "title": "TypeError: Object of type Document is not JSON serializable",
+   "url": "https://github.com/langchain-ai/langchain/issues/2222",
+   "state": "closed",
+   "comments": 15,
+   "created": "2023-03-31",
+   "body": "**Any comments would be appreciated.**\r\n\r\nThe issue is that the json module is unable to serialize the Document object, which is a custom class that inherits from BaseModel. The error message specifically says that the Document object is not JSON serializable, meaning it cannot be converted into a JSON string. This is likely because the json module does not know how to serialize the BaseModel class or any of its child classes. To fix the issue, we may need to provide a custom encoder or implement the jsonable_encoder function from the FastAPI library, which is designed to handle pydantic models like BaseModel.\r\n\r\n```python\r\ndef query_chromadb():\r\n    client_settings = chromadb.config.Settings(\r\n        chroma_db_impl=\"duckdb+parquet\",\r\n        persist_directory=DB_DIR,\r\n        anonymized_telemetry=False\r\n    )\r\n\r\n    embeddings = OpenAIEmbeddings()\r\n\r\n    vectorstore = Chroma(\r\n        collection_name=\"langchain_store\",\r\n        embedding_function=embeddings,\r\n        client_settings=client_settings,\r\n        persist_directory=DB_DIR,\r\n    )\r\n\r\n    result = vectorstore.similarity_search_with_score(query=\"FREDERICK\", k=4)\r\n    print(result)\r\n    print(json.dumps(result, indent=4, sort_keys=False)) // ERROR\r\n\r\n\r\ndef main():\r\n    # init_chromadb()\r\n    query_chromadb()\r\n```\r\n\r\n```python\r\nimport json\r\nfrom pydantic import BaseModel, Field\r\n\r\nclass Document(BaseModel):\r\n    \"\"\"Interface for interacting with a document.\"\"\"\r\n\r\n    page_content: str\r\n    metadata: dict = Field(defau"
+  },
+  {
+   "title": "RuntimeError: Failed to tokenize (LlamaCpp and QAWithSourcesChain)",
+   "url": "https://github.com/langchain-ai/langchain/issues/2645",
+   "state": "closed",
+   "comments": 15,
+   "created": "2023-04-09",
+   "body": "Hi there, getting the following error when attempting to run a `QAWithSourcesChain` using a local GPT4All model. The code works fine with OpenAI but seems to break if I swap in a local LLM model for the response. Embeddings work fine in the VectorStore (using OpenSearch).\r\n\r\n```py\r\ndef query_datastore(\r\n    query: str,\r\n    print_output: bool = True,\r\n    temperature: float = settings.models.DEFAULT_TEMP,\r\n) -> list[Document]:\r\n    \"\"\"Uses the `get_relevant_documents` from langchains to query a result from vectordb and returns a matching list of Documents.\r\n\r\n    NB: A `NotImplementedError: VectorStoreRetriever does not support async` is thrown as of 2023.04.04 so we need to run this in a synchronous fashion.\r\n\r\n    Args:\r\n        query: string representing the question we want to use as a prompt for the QA chain.\r\n        print_output: whether to pretty print the returned answer to stdout. Default is True.\r\n        temperature: decimal detailing how deterministic the model needs to be. Zero is fully, 2 gives it artistic licences.\r\n\r\n    Returns:\r\n        A list of langchain `Document` objects. These contain primarily a `page_content` string and a `metadata` dictionary of fields.\r\n    \"\"\"\r\n    retriever = db().as_retriever()  # use our existing persisted document repo in opensearch\r\n    docs: list[Document] = retriever.get_relevant_documents(query)\r\n    llm = LlamaCpp(\r\n        model_path=os.path.join(settings.models.DIRECTORY, settings.models.LLM),\r\n        n_batch=8192,\r\n  "
+  },
+  {
+   "title": "No current event loop in thread 'MainThread' error while using SitemapLoader()",
+   "url": "https://github.com/langchain-ai/langchain/issues/11879",
+   "state": "closed",
+   "comments": 10,
+   "created": "2023-10-16",
+   "body": "### System Info\r\n\r\nI am uing the code provided in the Chat-Langchain implementation\r\n\r\n```python\r\ndef load_langchain_docs():\r\n    return SitemapLoader(\r\n        \"https://python.langchain.com/sitemap.xml\",\r\n        filter_urls=[\"https://python.langchain.com/\"],\r\n        parsing_function=langchain_docs_extractor,\r\n        default_parser=\"lxml\",\r\n        bs_kwargs={\r\n            \"parse_only\": SoupStrainer(\r\n                name=(\"article\", \"title\", \"html\", \"lang\", \"content\")\r\n            ),\r\n        },\r\n        meta_function=metadata_extractor,\r\n    ).load()\r\n```\r\n\r\nWhen Fetcing pages complete the error comes.\r\n\r\n```\r\nFetching pages: 100%|###################################################################################################################| 944/944 [04:17<00:00,  3.66it/s]\r\nException ignored in: <function _ProactorBasePipeTransport.__del__ at 0x00000202B4D78CA0>\r\nTraceback (most recent call last):\r\n  File \"C:\\Users\\meetg\\AppData\\Local\\Programs\\Python\\Python39\\lib\\asyncio\\proactor_events.py\", line 116, in __del__\r\n    self.close()\r\n  File \"C:\\Users\\meetg\\AppData\\Local\\Programs\\Python\\Python39\\lib\\asyncio\\proactor_events.py\", line 108, in close\r\n    self._loop.call_soon(self._call_connection_lost, None)\r\n  File \"C:\\Users\\meetg\\AppData\\Local\\Programs\\Python\\Python39\\lib\\asyncio\\base_events.py\", line 746, in call_soon\r\n    self._check_closed()\r\n  File \"C:\\Users\\meetg\\AppData\\Local\\Programs\\Python\\Python39\\lib\\asyncio\\base_events.py\", line 510, in _check_closed\r\n    rais"
+  },
+  {
+   "title": "Issue: <[chain/error] [1:chain:RetrievalQAWithSourcesChain > 3:chain:MapReduceDocumentsChain > 9:chain:LLMChain] [2.01s] Chain run errored with error: \"IndexError('list index out of range')\">",
+   "url": "https://github.com/langchain-ai/langchain/issues/12903",
+   "state": "closed",
+   "comments": 9,
+   "created": "2023-11-05",
+   "body": "### Issue you'd like to raise.\r\n\r\n``I am using Google Palm,Faiss,HF Instruct Embeddings.When ever I am Quering with RetrievalQAWithSourcesChain.\r\nI am getting\r\n```\r\n [chain/error] [1:chain:RetrievalQAWithSourcesChain > 3:chain:MapReduceDocumentsChain > 9:chain:LLMChain] [2.01s] Chain run errored with error:\r\n\"IndexError('list index out of range')\"\r\n[chain/error] [1:chain:RetrievalQAWithSourcesChain > 3:chain:MapReduceDocumentsChain] [6.45s] Chain run errored with error:\r\n\"IndexError('list index out of range')\"\r\n[chain/error] [1:chain:RetrievalQAWithSourcesChain] [7.13s] Chain run errored with error:\r\n\"IndexError('list index out of range')\"\r\n```\r\n\r\nHere is my whole code\r\n``````\r\nimport` os\r\nimport streamlit as st\r\nimport pickle\r\nimport time\r\nimport langchain\r\nfrom langchain.llms import GooglePalm\r\nfrom langchain.chains import RetrievalQAWithSourcesChain\r\nfrom langchain.chains.qa_with_sources.loading import load_qa_with_sources_chain\r\nfrom langchain.text_splitter import RecursiveCharacterTextSplitter\r\nfrom langchain.document_loaders import SeleniumURLLoader\r\nfrom langchain.embeddings import HuggingFaceInstructEmbeddings\r\nfrom langchain.vectorstores import FAISS\r\n\r\nurls = [\"https://www.moneycontrol.com/india/stockpricequote/ironsteel/tatasteel/TIS\",\r\n        \"https://www.livemint.com/companies/news/tata-motorss-ev-subsidiary-to-sign-mou-with-jlr-to-strengthen-ev-business-tata-motors-to-pay-royalty-fee-to-jlr-11698925980903.html\"\r\n]\r\n\r\nloader=SeleniumURLLoader(urls=urls)\r\ndata=lo"
+  },
+  {
+   "title": "Chroma returns the same document more than once when use as a retriver",
+   "url": "https://github.com/langchain-ai/langchain/issues/22361",
+   "state": "closed",
+   "comments": 6,
+   "created": "2024-05-31",
+   "body": "### Checked other resources\r\n\r\n- [X] I added a very descriptive title to this issue.\r\n- [X] I searched the LangChain documentation with the integrated search.\r\n- [X] I used the GitHub search to find a similar question and didn't find it.\r\n- [X] I am sure that this is a bug in LangChain rather than my code.\r\n- [X] The bug is not resolved by updating to the latest stable version of LangChain (or the specific integration package).\r\n\r\n### Example Code\r\n\r\n```\r\nimport bs4\r\nfrom langchain_community.document_loaders import WebBaseLoader\r\nloader = WebBaseLoader(\r\n    web_paths=(\"https://lilianweng.github.io/posts/2023-06-23-agent/\",),\r\n    bs_kwargs=dict(\r\n        parse_only=bs4.SoupStrainer(\r\n            class_=(\"post-content\", \"post-title\", \"post-header\")\r\n        )\r\n    ),\r\n)\r\nblog_docs = loader.load()\r\n\r\n\r\nfrom langchain.text_splitter import RecursiveCharacterTextSplitter\r\ntext_splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(\r\n    chunk_size=300, \r\n    chunk_overlap=50)\r\n\r\n\r\nsplits = text_splitter.split_documents(blog_docs)\r\n\r\nfrom langchain_openai import OpenAIEmbeddings\r\nfrom langchain_community.vectorstores import Chroma\r\nvectorstore = Chroma.from_documents(documents=splits, \r\n                                    embedding=OpenAIEmbeddings())\r\n\r\nretriever = vectorstore.as_retriever()\r\n\r\nfrom langchain_openai import OpenAIEmbeddings\r\nfrom langchain_community.vectorstores import Chroma\r\nvectorstore = Chroma.from_documents(documents=splits, \r\n                       "
+  },
+  {
+   "title": "SentenceTransformersTokenTextSplitter Doesn't Preserve Text",
+   "url": "https://github.com/langchain-ai/langchain/issues/7181",
+   "state": "closed",
+   "comments": 6,
+   "created": "2023-07-05",
+   "body": "### System Info\n\n```\r\nfrom langchain.text_splitter import SentenceTransformersTokenTextSplitter\r\nsplitter = SentenceTransformersTokenTextSplitter(\r\n    tokens_per_chunk=64,\r\n    chunk_overlap=0,\r\n    model_name='intfloat/e5-base-v2',\r\n    add_start_index=True,\r\n)\r\ntext = \"- afrikaans\\n- \u0627\u0644\u0639\u0631\u0628\u064a\u0629\\n- az\u0259rbaycanca\\n- \u09ac\u09be\u0982\u09b2\u09be\\n- \u0431\u0435\u043b\u0430\u0440\u0443\u0441\u043a\u0430\u044f\\n- bosanski\\n- \u010de\u0161tina\\n- deutsch\\n- eesti\\n- \u03b5\u03bb\u03bb\u03b7\u03bd\u03b9\u03ba\u03ac\\n- espa\u00f1ol\\n- \u0641\u0627\u0631\u0633\u06cc\\n- fran\u00e7ais\\n- gaeilge\\n- \ud55c\uad6d\uc5b4\\n- \u0570\u0561\u0575\u0565\u0580\u0565\u0576\\n- bahasa indonesia\\n- \u05e2\u05d1\u05e8\u05d9\u05ea\\n- jawa\\n- kurd\u00ee\\n- latvie\u0161u\\n- lietuvi\u0173\\n- \u043c\u0430\u043a\u0435\u0434\u043e\u043d\u0441\u043a\u0438\\n- malti\\n- \u092e\u0930\u093e\u0920\u0940\\n- \u0645\u0635\u0631\u0649\\n- bahasa melayu\\n- nederlands\\n- \u65e5\u672c\u8a9e\\n- o\u02bbzbekcha / \u045e\u0437\u0431\u0435\u043a\u0447\u0430\\n- \u0a2a\u0a70\u0a1c\u0a3e\u0a2c\u0a40\\n- \u067e\u0646\u062c\u0627\u0628\u06cc\\n- \u067e\u069a\u062a\u0648\\n- portugu\u00eas\\n- rom\u00e2n\u0103\\n- \u0440\u0443\u0441\u0441\u043a\u0438\u0439\\n- simple english\\n- \u06a9\u0648\u0631\u062f\u06cc\\n- suomi\\n- \u0c24\u0c46\u0c32\u0c41\u0c17\u0c41\\n- \u0e44\u0e17\u0e22\\n- t\u00fcrk\u00e7e\\n- \u0443\u043a\u0440\u0430\u0457\u043d\u0441\u044c\u043a\u0430\\n- \u0627\u0631\u062f\u0648\\n- ti\u1ebfng vi\u1ec7t\\n- \u7cb5\u8a9e\\n- \u4e2d\u6587\\nedit links\\ncoordinates: 41\u00b043\u203232\u2033n 49\u00b056\u203249\u2033w / 41.72556\u00b0n 49.94694\u00b0w / 41.72556; -49.94694\\nfrom wikipedia, the free encyclopedia\\n2023 submersible implosion in the atlantic\\n|date||18 june 2023|\\n|location||north atlantic ocean, near the wreck of the titanic|\\n|coordinates||41\u00b043\u203232\u2033n 49\u00b056\u203249\u2033w / 41.72556\u00b0n 49.94694\u00b0w / 41.72556; -49.94694|\\n|type||maritime disaster|\\n|cause||failure of the pressure hull|\\n|participants||5 passengers|\\n|outcome||submersible destroyed by implosion|\\n|deaths||5 (see fatalities)|\\non 18 june 2023, titan, a submersible operated by american tourism and expeditions company oceangate, imploded during an expedition to view the wreck of the titanic in the north atlan"
+  },
+  {
+   "title": "bug: map_reduce (RetrievalQAWithSourcesChain.from_chain_type) with embeddings - reproducible ",
+   "url": "https://github.com/langchain-ai/langchain/issues/10735",
+   "state": "closed",
+   "comments": 6,
+   "created": "2023-09-18",
+   "body": "### System Info\r\n\r\n```\r\nlangchain==0.0.291\r\nchromadb==0.4.10\r\nPython 3.10.0\r\n22.6.0 Darwin Kernel\r\n```\r\n\r\n### Who can help?\r\n\r\n@agola11  @hwchase17 bug map_reduce - reproducible\r\n\r\n### Information\r\n\r\n- [X] The official example notebooks/scripts\r\n- [X] My own modified scripts\r\n\r\n### Related Components\r\n\r\n- [X] LLMs/Chat Models\r\n- [X] Embedding Models\r\n- [ ] Prompts / Prompt Templates / Prompt Selectors\r\n- [ ] Output Parsers\r\n- [X] Document Loaders\r\n- [X] Vector Stores / Retrievers\r\n- [ ] Memory\r\n- [ ] Agents / Agent Executors\r\n- [ ] Tools / Toolkits\r\n- [ ] Chains\r\n- [ ] Callbacks/Tracing\r\n- [ ] Async\r\n\r\n### Reproduction\r\n\r\n## Description\r\n\r\nThe bug arrises when using `map_reduce` with `RetrievalQAWithSourcesChain.from_chain_type` and `Chroma,` and adding more than 1 document.\r\n\r\nSpecifically, we have `paper.pdf` and `paper2.pdf`.\r\n`paper.pdf` talks about `'x=3'`\r\n`paper2.pdf` talks about `'y=5'`\r\n\r\n*This is key*: Embedding and searching for each one individually with just *one* works perfectly.\r\n\r\nIf you embed and add the two (or anything more than 1) back to back, and you search with `map_reduce` get this error:\r\n(NOTE: *this is also key*, for the same embedding, if you switch to using `RetrievalQAWithSourcesChain.from_chain_type` with `stuff`, it also *works perfectly*)\r\n\r\n\r\n## Example of Error:\r\n```\r\n--------------> PDF1\r\n[Document(page_content='This is a sample paper!This paper talks about x.In this case, we are going to say that \"x = 3\"', metadata={'source': '/Users/user/"
+  }
+ ],
+ "li_stale_index": [
+  {
+   "title": "[Feature Request]: Deterministic tool I/O pre/post-processing (middleware/hooks) for agents (MCP motivating case)",
+   "url": "https://github.com/run-llama/llama_index/issues/20386",
+   "state": "open",
+   "comments": 33,
+   "created": "2025-12-17",
+   "body": "### Feature Description\n\nWe need a deterministic \u201ccommunication layer\u201d between LlamaIndex agents and tool execution.\n\n**Core need**\n1) Deterministic input preprocessing **before** tool execution\n   - Example: an MCP billing tool expects an `id` field, but `id` must be filled/overridden deterministically (e.g., derived from authenticated session/customer context) \u2014 NOT chosen or hallucinated by the LLM.\n\n2) Deterministic output postprocessing **after** tool returns and **before** the agent sees it\n   - Example: tool returns ~300 fields; we need deterministic filtering down to 3 fields to avoid context bloat and keep agent behavior stable.\n\n**Observed limitation**\nWith current agent+tools patterns, once tools are registered the agent generates tool-call JSON/args and invokes tools without an obvious *native* \u201cintercept/transform\u201d layer for:\n- tool-call input args (pre)\n- tool output (post)\nin a way that is reusable across tools (cross-cutting concern), and especially clean for MCP tools.\n\n**Proposed feature (medium-detail, not a full spec)**\nSupport one (or a combination) of:\n- Agent/tool execution hook or middleware to transform tool inputs/outputs deterministically (pre/post).\n- First-class tool wrapper/adapter API pattern documented and supported for IO transforms (so it\u2019s ergonomic + consistent).\n- Maintainer guidance on preferred placement: agent runner vs tool runner vs callback/event layer.\n\n**Minimal code example (current workaround vs desired)**\n_Current workaround (pe"
+  },
+  {
+   "title": "[Bug]: VectorStoreIndex.refresh_ref_docs() duplicate docs with PGVectorStore",
+   "url": "https://github.com/run-llama/llama_index/issues/8832",
+   "state": "closed",
+   "comments": 13,
+   "created": "2023-11-10",
+   "body": "### Bug Description\r\n\r\n`VectorStoreIndex.refresh_ref_docs()` inserts every time instead of the expected upsert behavior when using PGVectorStore as vector store\r\n\r\n### Version\r\n\r\n0.8.66\r\n\r\n### Steps to Reproduce\r\n\r\nHere are snippets of my code:\r\n```py\r\nfrom llama_index.vector_stores import PGVectorStore\r\nfrom llama_index.indices.vector_store import VectorStoreIndex\r\n\r\nconfluence_vector_store = PGVectorStore.from_params(\r\n    database=os.environ.get(\"DB_DATABASE\"),\r\n    host=os.environ.get(\"DB_HOST\"),\r\n    password=os.environ.get(\"DB_PASSWORD\"),\r\n    port=os.environ.get(\"DB_PORT\"),\r\n    user=os.environ.get(\"DB_USER\"),\r\n    table_name=\"confluence\",\r\n    embed_dim=1536\r\n)\r\n\r\nconfluence_index = VectorStoreIndex.from_vector_store(\r\n    vector_store=confluence_vector_store, delete_from_docstore=True)\r\n\r\ndocs = Document(\r\n        text=\"This isn't in the index yet, but it will be soon!\",\r\n        id_=\"doc_id_3\",\r\n    )\r\n\r\nconfluence_index.refresh_ref_docs(docs, update_kwargs={\"delete_kwargs\": {\"delete_from_docstore\": True}})\r\n\r\n\r\n# Additional Debugging code I tried to run to locate the problem. It seems like the data isn't being added to the datastore at all, which is why the get_document_hash() function in refresh_ref_docs() is returning null. \r\n# print(confluence_index._storage_context.docstore._kvstore.get_all())\r\n# ^ this ends up returning an empty kvstore even when the vector storage is populated.\r\n```\r\n\r\nRunning the same code twice SHOULD have it only insert the document once i"
+  },
+  {
+   "title": "Google reader and Notion reader are not working",
+   "url": "https://github.com/run-llama/llama_index/issues/3777",
+   "state": "closed",
+   "comments": 12,
+   "created": "2023-05-23",
+   "body": "Google docs is working but google drive reader is not working \r\n\r\n```\r\nfrom llama_index import download_loader\r\n\r\nGoogleDriveReader = download_loader('GoogleDriveReader')\r\n\r\nloader = GoogleDriveReader()\r\ndocuments = loader.load_data(file_ids=['file_id'])\r\n\r\nOUTPUT:\r\nTypeError: GoogleDriveReader._load_from_file_ids() takes 2 positional arguments but 3 were given\r\n```\r\n\r\n\r\nNotion reader is also giving an error.\r\n\r\n```\r\nfrom llama_index import GPTListIndex, NotionPageReader\r\nfrom IPython.display import Markdown, display\r\nimport os\r\nintegration_token = 'notion_integration_token'\r\npage_ids = [\"page_id\"]\r\nnotion_reader = NotionPageReader(integration_token=integration_token)\r\ndocuments = notion_reader.read_page(page_id=page_ids)\r\n\r\nOUTPUT:\r\n~/.local/lib/python3.10/site-packages/llama_index/readers/notion.py in _read_block(self, block_id, num_tabs)\r\n     58             data = res.json()\r\n     59 \r\n---> 60             for result in data[\"results\"]:\r\n     61                 result_type = result[\"type\"]\r\n     62                 result_obj = result[result_type]\r\n\r\nKeyError: 'results'\r\n```\r\nHow to resolve this error?"
+  },
+  {
+   "title": "Token indices sequence length is longer than the specified maximum sequence length for this model (3793 > 1024). Running this sequence through the model will result in indexing errors",
+   "url": "https://github.com/run-llama/llama_index/issues/987",
+   "state": "closed",
+   "comments": 12,
+   "created": "2023-03-30",
+   "body": "Initially I thought the error was due to the loader not splitting chunks, but I'm still getting the mentioned error after adding a splitter. Maybe it's coming from OpenAI's API?\r\n\r\nBugfix branch: https://github.com/claysauruswrecks/llama-hub/tree/bugfix/github-repo-splitter\r\n\r\n```\r\nimport pickle\r\nimport os\r\nimport logging\r\nfrom llama_index import GPTSimpleVectorIndex\r\n\r\nassert (\r\n    os.getenv(\"OPENAI_API_KEY\") is not None\r\n), \"Please set the OPENAI_API_KEY environment variable.\"\r\n\r\nfrom llama_index import download_loader\r\n\r\nlogging.basicConfig(level=logging.DEBUG)\r\n\r\nLLAMA_HUB_CONTENTS_URL = \"https://raw.githubusercontent.com/claysauruswrecks/llama-hub/bugfix/github-repo-splitter\"\r\nLOADER_HUB_PATH = \"/loader_hub\"\r\nLOADER_HUB_URL = LLAMA_HUB_CONTENTS_URL + LOADER_HUB_PATH\r\n\r\ndownload_loader(\r\n    \"GithubRepositoryReader\", loader_hub_url=LOADER_HUB_URL, refresh_cache=True\r\n)\r\n\r\nfrom llama_index.readers.llamahub_modules.github_repo import (\r\n    GithubClient,\r\n    GithubRepositoryReader,\r\n)\r\n\r\ndocs = None\r\n\r\nif os.path.exists(\"docs.pkl\"):\r\n    with open(\"docs.pkl\", \"rb\") as f:\r\n        docs = pickle.load(f)\r\n\r\nif docs is None:\r\n    github_client = GithubClient(os.getenv(\"GITHUB_TOKEN\"))\r\n    loader = GithubRepositoryReader(\r\n        github_client,\r\n        owner=\"jerryjliu\",\r\n        repo=\"llama_index\",\r\n        filter_directories=(\r\n            [\"gpt_index\", \"docs\"],\r\n            GithubRepositoryReader.FilterType.INCLUDE,\r\n        ),\r\n        filter_file_extensions=([\".py\"], G"
+  },
+  {
+   "title": "[Bug]: Querying by specific doc_ids in the vector db not working properly",
+   "url": "https://github.com/run-llama/llama_index/issues/14121",
+   "state": "closed",
+   "comments": 7,
+   "created": "2024-06-13",
+   "body": "### Bug Description\n\nI'm using llamaindex with AzureCosmosDBMongoDBVectorSearch. While inserting the documents I'm specifying the doc_id. This is working well, and I can see the same ids in the DB. I'm trying later to run a retrieve query, in a list of doc_ids. But it doesn't seem to work properly. I followed this [example](https://docs.llamaindex.ai/en/stable/module_guides/indexing/vector_store_guide/) from the documentation\r\n\r\n` query_engine = index.as_query_engine(doc_ids=[\"1\"]) \r\nresponse = query_engine.query(\"What is this about? use only the data provided here\")`\r\n\r\nThe doc_ids are simply ignored, and the search runs in all the DB content.\n\n### Version\n\n0.10.26\n\n### Steps to Reproduce\n\ninsert some documents with specific ids\r\nfrom llama_index.core.schema import Document\r\n\r\n```\r\ndocuments = [\r\n    Document(\r\n        text=\"LlamaIndex is a simple, flexible data framework for connecting custom data sources to large language models.\",\r\n        doc_id= \"1\",\r\n        metadata={\r\n            \"library\": \"llama-index\",\r\n        },\r\n    ),\r\n    Document(\r\n        text=\"Qdrant is a vector nice database & vector similarity search engine.\",\r\n        doc_id= \"2\",\r\n        metadata={\r\n            \"library\": \"qdrant\",\r\n        },\r\n    ),\r\n]\r\nindex.refresh_ref_docs(documents)\r\n```\r\n\r\nthen query for only specif ids\r\n\r\n` query_engine = index.as_query_engine(doc_ids=[\"1\"]) \r\nresponse = query_engine.query(\"What is this about? use only the data provided here\")`\r\n\r\n\n\n### Relevant Logs/Tracbacks"
+  },
+  {
+   "title": "Updating nodes in the index with a vector store storage context",
+   "url": "https://github.com/run-llama/llama_index/issues/16833",
+   "state": "closed",
+   "comments": 6,
+   "created": "2024-11-05",
+   "body": "### Question Validation\r\n\r\n- [X] I have searched both the documentation and discord for an answer.\r\n\r\n### Question\r\n\r\nI have an index created with the Milvus vector store as the storage context where the embeddings are stored. The index was created by loading HTML documents and parsing them into nodes using HTMLNodeParser() like this `index = VectorStoreIndex(nodes, storage_context=storage_context)` I have updated versions of the raw HTML files and trying to find a way to update the index with the updated content as well as insert new content into the Index. Based on what I am reading in the docs and forums, the update_ref_docs and refresh_ref_docs functions seem to take a sequence of Document objects as input for updating existing documents in the index but don't see a way to update the relevant nodes for the existing document nodes in the vector store"
+  },
+  {
+   "title": "[Bug]: Extension to 10548",
+   "url": "https://github.com/run-llama/llama_index/issues/10550",
+   "state": "closed",
+   "comments": 6,
+   "created": "2024-02-09",
+   "body": "### Bug Description\n\nThe problem mentioned in 10548 (fix) is not working. Tried with the code changes and got below error:\r\n\r\n/usr/local/lib/python3.10/dist-packages/llama_index/vector_stores/elasticsearch.py:357: RuntimeWarning: coroutine 'ElasticsearchStore._create_index_if_not_exists' was never awaited\r\n  self._create_index_if_not_exists(\r\nRuntimeWarning: Enable tracemalloc to get the object allocation traceback\r\n/usr/local/lib/python3.10/dist-packages/llama_index/vector_stores/elasticsearch.py:388: RuntimeWarning: coroutine 'async_bulk' was never awaited\r\n  async_bulk(\r\nRuntimeWarning: Enable tracemalloc to get the object allocation traceback\r\n/usr/local/lib/python3.10/dist-packages/llama_index/vector_stores/elasticsearch.py:392: RuntimeWarning: coroutine 'async_bulk' was never awaited\r\n  success, failed = async_bulk(\r\nRuntimeWarning: Enable tracemalloc to get the object allocation traceback\r\n---------------------------------------------------------------------------\r\nTypeError                                 Traceback (most recent call last)\r\n[<ipython-input-16-4b901dfb7bfa>](https://localhost:8080/#) in <cell line: 1>()\r\n----> 1 index = VectorStoreIndex.from_documents(\r\n      2     documents, storage_context=storage_context)\r\n\r\n10 frames\r\n[/usr/local/lib/python3.10/dist-packages/llama_index/vector_stores/elasticsearch.py](https://localhost:8080/#) in async_add(self, nodes, create_index_if_not_exists, **add_kwargs)\r\n    390         )\r\n    391         try:\r\n--> 392       "
+  },
+  {
+   "title": "[Bug]: Indexing error after deleting then re-adding a page",
+   "url": "https://github.com/run-llama/llama_index/issues/7147",
+   "state": "closed",
+   "comments": 6,
+   "created": "2023-08-04",
+   "body": "### Bug Description\n\nI am exploring a CRUD system using the llama index. The system utilizes the refresh_ref_docs() function. First I tried to delete a page from a document, and the system works. But after re-adding the deleted page, the system crashed because of KeyError. crashed\n\n### Version\n\n0.6.31\n\n### Steps to Reproduce\n\n`from llama_index import SimpleDirectoryReader, LLMPredictor, GPTVectorStoreIndex, load_index_from_storage\r\nfrom llama_index.storage.storage_context import StorageContext\r\nfrom llama_index.indices.service_context import ServiceContext\r\nfrom llama_index import set_global_service_context\r\nfrom langchain.chat_models import ChatOpenAI\r\nimport openai\r\nimport gradio as gr\r\nimport sys, os\r\nimport logging\r\n\r\nfrom dotenv import load_dotenv\r\nload_dotenv()\r\n\r\nopenai.api_key = os.environ[\"OPENAI_API_KEY\"]\r\n\r\n# enable INFO level logging\r\nlogging.basicConfig(stream=sys.stdout, level=logging.INFO)\r\nlogging.getLogger().addHandler(logging.StreamHandler(stream=sys.stdout))\r\n\r\n#define LLM service\r\nllm_predictor = LLMPredictor(llm=ChatOpenAI(temperature=0.0, model_name=\"gpt-3.5-turbo\"))\r\nservice_context = ServiceContext.from_defaults(llm_predictor=llm_predictor)\r\nset_global_service_context(service_context)\r\n\r\ndef load_index(directory_path):\r\n     \r\n    documents = SimpleDirectoryReader(directory_path, filename_as_id=True).load_data()\r\n    print(f\"loaded documents with {len(documents)} pages\")\r\n    \r\n    try:\r\n        # Rebuild storage context\r\n        storage_context = Stor"
+  }
+ ],
+ "li_reranker": [
+  {
+   "title": "[Bug]: Truncation fails with HuggingFaceEmbedding due to wrong default max_length",
+   "url": "https://github.com/run-llama/llama_index/issues/10461",
+   "state": "closed",
+   "comments": 4,
+   "created": "2024-02-05",
+   "body": "### Bug Description\n\nWhen using HuggingFaceEmbedding to embed texts longer than the model's max length, embedding fails because the tokenizer returns too many tokens (pytorch.embedding raising \"IndexError: index out of range in self\").\r\n\r\nThis seems to be due to the fact that the HuggingFaceEmbedding uses \"max_position_embeddings\" from the model config as the default value for max_length passed to the tokenizer ([here](https://github.com/run-llama/llama_index/blob/main/llama_index/embeddings/huggingface.py#L102)). Instead, the minimum of \"model_max_length\" from the tokenizer config and \"max_position_embeddings\" should be used for max_length. Sentence Transformers, e.g., chooses the minimum of these two as the max length (see [here](https://github.com/UKPLab/sentence-transformers/blob/b90970c190658f7588c86e8a3fb9cc400716ecd4/sentence_transformers/models/Transformer.py#L36)). Some models, e.g.[this model]( https://huggingface.co/intfloat/multilingual-e5-base), seem to have different values for these two properties. \r\n\r\nIn addition, I think it would make sense to be able to toggle whether HuggingFaceEmbeddings should perform truncation or not, e.g. by adding a flag to its constructor.\n\n### Version\n\n0.9.19\n\n### Steps to Reproduce\n\n```\r\nfrom llama_index.embeddings import HuggingFaceEmbedding\r\n\r\nhf_embedding = HuggingFaceEmbedding(\"intfloat/multilingual-e5-base\")\r\nlong_text = \"This is a text with more than the allowed 512 tokens. \" * 50\r\nprint(len(hf_embedding._tokenizer(long_text,"
+  }
+ ],
+ "li_metadata_filter": [
+  {
+   "title": "[Bug]: llama index Odata filter for azure ai search vector store is not filtering the chunks",
+   "url": "https://github.com/run-llama/llama_index/issues/19370",
+   "state": "open",
+   "comments": 34,
+   "created": "2025-07-09",
+   "body": "### Bug Description\n\ni have more than 1200 unique relative paths among total 50k relative paths needs to perform filter so while indexing in azure ai search vector store i passed metadatafields as relative_path and i used the existing index which can able to filter based on relative_path now as per the documentation i used this code below for performing folder filter which is doing great but as the relative_path or condition is getting increased iam getting this error1  Then to solve Error 1 i was trying odata filter string which allows me to pass of all relative paths with or condition so for that i just passed this parameter in index.as_retriever which is  #vector_store_kwargs={\"odata_filters\": odata_filters}, which is throwing the below error2  \n\n#Error 1\n{\n  \"detail\": \"() Invalid expression: Recursion depth exceeded allowed limit.\\r\\nParameter name: $filter\\nCode: \\nMessage: Invalid expression: Recursion depth exceeded allowed limit.\\r\\nParameter name: $filter\"\n}\n\n\n\nLogs of cmd of vscode\n\nlength of all paths59071\nThe length of cached_all_paths are 59071\nThe cached dynamic all possible folder are  {'Sample1', 'green', 'Support', 'Data', 'Base', 'paper', 'sample2', 'test_folder'}\n  Folder: 'Sample1' contains 33 paths.\n  Folder: 'green' contains 530 paths.\n  Folder: 'Support' contains 603 paths.\n  Folder: 'Data' contains 15 paths.\n  Folder: 'Base' contains 6 paths.\n  Folder: 'paper' contains 5 paths.\n  Folder: 'sample2' contains 2 paths.\n  Folder: 'test_folder' contains 4 pa"
+  },
+  {
+   "title": "[Bug]: mmr_threshold not suported by ChromaVectorStore",
+   "url": "https://github.com/run-llama/llama_index/issues/10682",
+   "state": "closed",
+   "comments": 9,
+   "created": "2024-02-14",
+   "body": "### Bug Description\n\nI previously implemented a VectorIndexRetriever using LlamaIndex's built-in vector index without any vector database, with MMR mode and mmr_threshold. It worked fine.\r\n\r\nI then added ChromaDB and found that MMR mode works as long as you don't include the mmr_threshold. If you set the mmr_threshold in the vector_store_kwargs argument, you get an error.\n\n### Version\n\nllama-index-0.10.1\n\n### Steps to Reproduce\n\nHere are the relevant parts of my code. If I comment out the line indicated by \"# ERROR\", then the code works.\r\n\r\n```\r\nfrom llama_index.core.indices.vector_store.base import VectorStoreIndex\r\nfrom llama_index.core.storage import StorageContext\r\nfrom llama_index.core.indices.vector_store.retrievers.retriever import (\r\n    VectorIndexRetriever,\r\n)\r\nfrom llama_index.core.query_engine.retriever_query_engine import (\r\n    RetrieverQueryEngine\r\n)\r\nfrom llama_index.core import Settings\r\nfrom llama_index.vector_stores.chroma.base import ChromaVectorStore\r\nimport chromadb\r\n\r\ndef run_query(\r\n    question: str,\r\n    vectorstore: str,\r\n    top_k: int,\r\n    mmr_threshold: float,\r\n) -> RetrieverQueryEngine | None:\r\n    '''\r\n    Return an LLM response to an input query after doing a vector search.\r\n\r\n    Args:\r\n        question (str): The query to the LLM.\r\n        vectorstore (str): Folder name of vector database.\r\n        top_k (int): Number of retrievals or citations to retrieve via\r\n            vector search.\r\n        mmr_threshold (float): A float between 0 and"
+  },
+  {
+   "title": "[Bug]: Querying by specific doc_ids in the vector db not working properly",
+   "url": "https://github.com/run-llama/llama_index/issues/14121",
+   "state": "closed",
+   "comments": 7,
+   "created": "2024-06-13",
+   "body": "### Bug Description\n\nI'm using llamaindex with AzureCosmosDBMongoDBVectorSearch. While inserting the documents I'm specifying the doc_id. This is working well, and I can see the same ids in the DB. I'm trying later to run a retrieve query, in a list of doc_ids. But it doesn't seem to work properly. I followed this [example](https://docs.llamaindex.ai/en/stable/module_guides/indexing/vector_store_guide/) from the documentation\r\n\r\n` query_engine = index.as_query_engine(doc_ids=[\"1\"]) \r\nresponse = query_engine.query(\"What is this about? use only the data provided here\")`\r\n\r\nThe doc_ids are simply ignored, and the search runs in all the DB content.\n\n### Version\n\n0.10.26\n\n### Steps to Reproduce\n\ninsert some documents with specific ids\r\nfrom llama_index.core.schema import Document\r\n\r\n```\r\ndocuments = [\r\n    Document(\r\n        text=\"LlamaIndex is a simple, flexible data framework for connecting custom data sources to large language models.\",\r\n        doc_id= \"1\",\r\n        metadata={\r\n            \"library\": \"llama-index\",\r\n        },\r\n    ),\r\n    Document(\r\n        text=\"Qdrant is a vector nice database & vector similarity search engine.\",\r\n        doc_id= \"2\",\r\n        metadata={\r\n            \"library\": \"qdrant\",\r\n        },\r\n    ),\r\n]\r\nindex.refresh_ref_docs(documents)\r\n```\r\n\r\nthen query for only specif ids\r\n\r\n` query_engine = index.as_query_engine(doc_ids=[\"1\"]) \r\nresponse = query_engine.query(\"What is this about? use only the data provided here\")`\r\n\r\n\n\n### Relevant Logs/Tracbacks"
+  },
+  {
+   "title": "[Bug]: doc_ids parameter of VectorIndexRetriever being absolutely ignored",
+   "url": "https://github.com/run-llama/llama_index/issues/11602",
+   "state": "closed",
+   "comments": 6,
+   "created": "2024-03-04",
+   "body": "### Bug Description\r\n\r\n## TL;DR\r\n\r\nThe ids of the documents returned by retriever.retrieve() do not belong to 'doc_ids'.\r\nIn the docs for VectorIndexRetriever it clearly says:\r\n\r\n```\r\ndoc_ids (Optional[List[str]]) \u2013 list of documents to constrain search.\r\n```\r\n\r\nYet the search is not being constrained to the documents with ids that belong to 'doc_ids', but the entire index is being searched instead\r\n\r\n### Version\r\n\r\n0.9.45.post1 (I was able to replicate on 0.10.15 as well)\r\n\r\n### Steps to Reproduce\r\n\r\n## To reproduce\r\n\r\nConsider the following code:\r\n\r\n```python\r\n\r\n    considered_ids = [doc_id for doc_id, _ in considered_docs]\r\n\r\n    retriever = VectorIndexRetriever(\r\n        index,\r\n        similarity_top_k=k,\r\n        doc_ids=considered_ids\r\n    )\r\n    \r\n    documents = retriever.retrieve(query)\r\n\r\n    retrieved_ids = [node_with_score.node_id for node_with_score in documents]\r\n\r\n    not_matching = [doc_id for doc_id in retrieved_ids\r\n                    if doc_id not in considered_ids]\r\n\r\n    print(\"DEBUG: NOT MATCHING IDS\")\r\n    print(not_matching)\r\n```\r\n\r\n## Output\r\n\r\n```\r\nDEBUG: NOT MATCHING IDS\r\n['81c343b6-0962-499c-b338-b87d301fea89', '1cbd5aa5-b480-4ae0-a440-18af32fefe94', '807760b7-9c44-4d8f-bbde-1c9e1691b72f']\r\n```\r\n\r\n## Expected (All ids from result belong to doc_ids)\r\n\r\n```\r\nDEBUG: NOT MATCHING IDS\r\n[]\r\n```\r\n\r\n### Relevant Logs/Tracbacks\r\n\r\n_No response_"
+  },
+  {
+   "title": "[Bug]: ElasticsearchStore.query() ignores metadata_keyword_suffix on the synchronous path",
+   "url": "https://github.com/run-llama/llama_index/issues/21328",
+   "state": "closed",
+   "comments": 2,
+   "created": "2026-04-07",
+   "body": "### Bug Description\n\n`ElasticsearchStore.query()` accepts `metadata_keyword_suffix`, but the synchronous wrapper does not forward it to `aquery()`. As a result, custom metadata suffix support only works on the async path, while normal synchronous retrieval/query flows silently fall back to the default `.keyword` suffix.\n\nThis is user-facing because the standard sync retriever path calls `vector_store.query(query, **kwargs)`.\n\n### Version\n\nObserved on `main` at commit `59ca0b65b` in this clone. The integration package `pyproject.toml` currently reports version `0.6.0`.\n\n### Steps to Reproduce\n\n1. Use `ElasticsearchStore` with metadata fields that do not use the default `.keyword` suffix, for example raw fields or a custom suffix like `.enum`.\n2. Call the public synchronous query path, directly or through a retriever, while passing `metadata_keyword_suffix=\"\"` or another custom suffix.\n3. Execute a query with metadata filters.\n4. Observe that the synchronous path still behaves as if `.keyword` is being used.\n5. Compare with `aquery()`, which honors the provided suffix.\n\n### Relevant Logs/Tracebacks\n\nThere is no exception because the parameter is silently ignored.\n\nThe current sync wrapper signature includes `metadata_keyword_suffix`, but the call forwards only:\n\n```python\nself.aquery(query, custom_query, es_filter, **kwargs)\n```\n\nSo the custom suffix never reaches the async implementation, even though `aquery()` accepts and uses it when building filters.\n"
+  },
+  {
+   "title": "[Bug]: The MilvusVectorStore MetaDataFilters FilterCondition.OR is ignored",
+   "url": "https://github.com/run-llama/llama_index/issues/11565",
+   "state": "closed",
+   "comments": 2,
+   "created": "2024-03-02",
+   "body": "### Bug Description\n\nWhen setting the MetaDataFilters.condition to FilterCondition.OR enum, it is ignored and FilterCondition.AND is always used as it is hard-coded in the MilvusVectorStore class.\n\n### Version\n\nllama-index-vector-stores-milvus = \"0.1.4\" and llama-index = \"0.10.9\"\n\n### Steps to Reproduce\n\n! pip install llama-index\r\n| pip install llama-index-vector-stores-milvus\r\n\r\nfrom llama_index.core import VectorStoreIndex, Document\r\nfrom llama_index.vector_stores.milvus import MilvusVectorStore\r\nfrom llama_index.core import StorageContext\r\nfrom llama_index.core.retrievers import VectorIndexRetriever\r\nfrom llama_index.core.vector_stores.types import (\r\n    MetadataFilter,\r\n    MetadataFilters,\r\n    FilterCondition,\r\n)\r\n\r\nimport uuid\r\nimport textwrap\r\nimport openai\r\n\r\n# openai.api_key = \"sk-\"\r\n\r\ndocuments = []\r\ndocuments.append(\r\n    Document(doc_id=\"r1\", text=\"red 1\", metadata={\"color\": \"red\", \"order\": 1})\r\n)\r\ndocuments.append(\r\n    Document(doc_id=\"r2\", text=\"red 2\", metadata={\"color\": \"red\", \"order\": 2})\r\n)\r\n\r\nvector_store = MilvusVectorStore(dim=1536, overwrite=True)\r\nstorage_context = StorageContext.from_defaults(vector_store=vector_store)\r\nindex = VectorStoreIndex.from_documents(documents, storage_context=storage_context)\r\n\r\n# Use FilterCondition.AND\r\nfilters = MetadataFilters(\r\n    filters=[\r\n        MetadataFilter(key=\"color\", value=\"red\"),\r\n        MetadataFilter(key=\"order\", value=1),\r\n    ],\r\n    condition=FilterCondition.AND,\r\n)\r\nretriever = VectorIndexRetriever("
+  },
+  {
+   "title": "[Bug]: PGVectorStore metadata filters behaviour",
+   "url": "https://github.com/run-llama/llama_index/issues/9376",
+   "state": "closed",
+   "comments": 2,
+   "created": "2023-12-07",
+   "body": "### Bug Description\r\n\r\nApplying the following `MetadataFilters` object via `PGVectorStore.as_retriever` does not behave as expected:\r\n\r\n```python\r\nvector_store = PGVectorStore.from_params(\r\n    database=DB_NAME,\r\n    host=url.host,\r\n    password=url.password,\r\n    port=url.port,\r\n    user=url.username,\r\n    table_name=DB_TABLE,\r\n    embed_dim=1536,  # openai embedding dimension\r\n    perform_setup=True,\r\n    hybrid_search=True,\r\n    text_search_config=\"english\",\r\n)\r\n\r\nstorage_context = StorageContext.from_defaults(\r\n    vector_store=vector_store,\r\n)\r\n\r\nvector_index = VectorStoreIndex.from_vector_store(\r\n    vector_store=vector_store, storage_context=storage_context\r\n)\r\n\r\n# I have several files loaded into the VectorStore already.\r\n# I want to retrieve chunks from only two of them.\r\nfilenames = [\"interpretation-act.pdf\", \"llama2.pdf\"]\r\n\r\nfilters = MetadataFilters(\r\n    filters=[\r\n        MetadataFilter(key=\"filename\", value=filename) for filename in filenames\r\n    ],\r\n    condition=\"or\",  # This is being ignored\r\n)\r\n\r\nretriever = vector_index.as_retriever(\r\n    vector_store_query_mode=\"hybrid\",\r\n    similarity_top_k=top_k,\r\n    filters=filters,\r\n)\r\n```\r\n\r\nThe `PGVectorStore._apply_filters_and_limit` function creates the following SQL, which includes `AND` operators, not `OR` as requested.\r\n\r\n```sql\r\nSELECT public.data_gradio_test.id, public.data_gradio_test.text, public.data_gradio_test.metadata_, public.data_gradio_test.node_id, public.data_gradio_test.embedding, public.data_g"
+  }
+ ],
+ "li_embed_dim": [
+  {
+   "title": "[Bug]: llama index Odata filter for azure ai search vector store is not filtering the chunks",
+   "url": "https://github.com/run-llama/llama_index/issues/19370",
+   "state": "open",
+   "comments": 34,
+   "created": "2025-07-09",
+   "body": "### Bug Description\n\ni have more than 1200 unique relative paths among total 50k relative paths needs to perform filter so while indexing in azure ai search vector store i passed metadatafields as relative_path and i used the existing index which can able to filter based on relative_path now as per the documentation i used this code below for performing folder filter which is doing great but as the relative_path or condition is getting increased iam getting this error1  Then to solve Error 1 i was trying odata filter string which allows me to pass of all relative paths with or condition so for that i just passed this parameter in index.as_retriever which is  #vector_store_kwargs={\"odata_filters\": odata_filters}, which is throwing the below error2  \n\n#Error 1\n{\n  \"detail\": \"() Invalid expression: Recursion depth exceeded allowed limit.\\r\\nParameter name: $filter\\nCode: \\nMessage: Invalid expression: Recursion depth exceeded allowed limit.\\r\\nParameter name: $filter\"\n}\n\n\n\nLogs of cmd of vscode\n\nlength of all paths59071\nThe length of cached_all_paths are 59071\nThe cached dynamic all possible folder are  {'Sample1', 'green', 'Support', 'Data', 'Base', 'paper', 'sample2', 'test_folder'}\n  Folder: 'Sample1' contains 33 paths.\n  Folder: 'green' contains 530 paths.\n  Folder: 'Support' contains 603 paths.\n  Folder: 'Data' contains 15 paths.\n  Folder: 'Base' contains 6 paths.\n  Folder: 'paper' contains 5 paths.\n  Folder: 'sample2' contains 2 paths.\n  Folder: 'test_folder' contains 4 pa"
+  },
+  {
+   "title": "[Bug]: Encoding error when local loading storage_context",
+   "url": "https://github.com/run-llama/llama_index/issues/18422",
+   "state": "closed",
+   "comments": 27,
+   "created": "2025-04-10",
+   "body": "### Bug Description\n\n-> storage_context.persist(persist_dir=str(VECTOR_STORE_PATH))\n\n<- storage_context = StorageContext.from_defaults(persist_dir=str(VECTOR_STORE_PATH))\n\n\n An error is reported when loading locally\uff1a\n'utf-8' codec can't decode byte 0xbd in position 48: invalid start byte\n\n### Version\n\n0.12.29\n\n### Steps to Reproduce\n\n1\n\n### Relevant Logs/Tracbacks\n\n```shell\n\n```"
+  },
+  {
+   "title": "[Question]: how to make azure open ai async",
+   "url": "https://github.com/run-llama/llama_index/issues/19734",
+   "state": "closed",
+   "comments": 22,
+   "created": "2025-08-25",
+   "body": "### Question Validation\n\n- [x] I have searched both the documentation and discord for an answer.\n\n### Question\n\n### How can i initialize the azure open ai with async llm call accuratly please help me out \n\nfrom azure.core.credentials import AzureKeyCredential\n#from azure.search.documents import SearchClient\nfrom azure.search.documents.aio import SearchClient as AsyncSearchClient\nfrom llama_index.embeddings.azure_openai import AzureOpenAIEmbedding\nfrom llama_index.llms.azure_openai import AzureOpenAI\nfrom llama_index.core.settings import Settings\nfrom llama_index.core.callbacks import CallbackManager, TokenCountingHandler\nimport tiktoken\n\nfrom config import (\n    AZURE_OPENAI_API_VERSION,\n    AZURE_OPENAI_ENDPOINT,\n    AZURE_OPENAI_KEY,\n    AZURE_SEARCH_ENDPOINT,\n    AZURE_SEARCH_INDEX,\n    AZURE_SEARCH_KEY,\n)\n\n\n\ntoken_counter = TokenCountingHandler(\n    tokenizer=tiktoken.encoding_for_model(\"gpt-4o\").encode,  # or your model\n    verbose=False\n)\n\nSettings.callback_manager = CallbackManager([token_counter])\n\n# Initialize Azure OpenAI LLM\nllm = AzureOpenAI(\n    model=\"gpt-4o\",\n    deployment_name=\"gpt-4o\",\n    api_key=AZURE_OPENAI_KEY,\n    azure_endpoint=AZURE_OPENAI_ENDPOINT,\n    api_version=AZURE_OPENAI_API_VERSION,\n)\n\nSettings.llm = llm\n\n# Initialize Azure OpenAI Embedding\nembed_model = AzureOpenAIEmbedding(\n    model=\"text-embedding-ada-002\",\n    deployment_name=\"text-embedding-ada-002\",\n    api_key=AZURE_OPENAI_KEY,\n    azure_endpoint=AZURE_OPENAI_ENDPOINT,\n    api_version="
+  },
+  {
+   "title": "[Question]: VectorStoreIndex insert does not embed document (no node embeddings)",
+   "url": "https://github.com/run-llama/llama_index/issues/19480",
+   "state": "closed",
+   "comments": 20,
+   "created": "2025-07-20",
+   "body": "### Question Validation\n\n- [x] I have searched both the documentation and discord for an answer.\n\n### Question\n\nHi, I'm working with VectorStoreIndex using HnswlibVectorStore and HuggingFaceEmbedding (BAAI/bge-small-en-v1.5). I expected that when I insert a Document, the text would be embedded and stored in the index. However, after inserting a document and checking the nodes, it seems no embedding was applied.\n\nHere's the code I\u2019m using:\n\nfrom llama_index.core import VectorStoreIndex, Document\nfrom llama_index.vector_stores.hnswlib import HnswlibVectorStore\nfrom llama_index.embeddings.huggingface import HuggingFaceEmbedding\n\nembed_model = HuggingFaceEmbedding(model_name=\"BAAI/bge-small-en-v1.5\")\n\nvector_store = HnswlibVectorStore.from_params(\n    space=\"ip\",\n    dimension=embed_model._model.get_sentence_embedding_dimension(),\n    max_elements=100000,\n)\n\nindex = VectorStoreIndex.from_documents(\n    [], \n    vector_store=vector_store, \n    embed_model=embed_model,\n)\n\nprint(\"Transformations in index:\")\nfor t in index._transformations:\n    print(\" -\", type(t).__name__)\n\ndoc = Document(text=\"hello world\")\nindex.insert(doc)\n\nprint(\"Element count in index:\", vector_store._hnswlib_index.element_count)\n\nAfter running this, the index appears to have no embedded nodes. The element_count remains 0, and inspecting the inserted node shows no embedding was applied.\n\nAm I missing a required transformation step or configuration? Should I manually apply embedding before inserting, or is this "
+  },
+  {
+   "title": "Indexes cannot be created correctly using the MilvusVectorStore.",
+   "url": "https://github.com/run-llama/llama_index/issues/14779",
+   "state": "closed",
+   "comments": 14,
+   "created": "2024-07-16",
+   "body": "### Question Validation\n\n- [X] I have searched both the documentation and discord for an answer.\n\n### Question\n\nWhen I used MilvusVectorStore to create collections and indexes in Milvus, only the collections were successfully created and the index creation failed.\r\n\r\nCODE:\r\n`\r\nvector_store = MilvusVectorStore(\r\n            uri=self.uri,\r\n            collection_name=self._collection,\r\n            similarity_metric=self.metric_type,\r\n            dim=self.dim,\r\n            overwrite=_overwrite,\r\n            enable_sparse=True,\r\n            # sparse_embedding_function=MyEmbeddingFunction(),\r\n            hybrid_ranker=self.hybrid_ranker,\r\n            hybrid_ranker_params=self.hybrid_ranker_params,\r\n        )\r\n`\r\n\r\nERROR:\r\npymilvus.exceptions.MilvusException: <MilvusException: (code=1100, message=create index on 104 field is not supported: invalid parameter[expected=supported field][actual=create index on 104 field])>\r\n"
+  },
+  {
+   "title": "[Bug]: query pipeline didn't support OpenAILike Meta-Llama-3-8B-Instruct model and embedding model with dimension other than 384 ",
+   "url": "https://github.com/run-llama/llama_index/issues/13506",
+   "state": "closed",
+   "comments": 9,
+   "created": "2024-05-15",
+   "body": "### Bug Description\n\n(3)Use the code from https://docs.llamaindex.ai/en/stable/examples/pipeline/query_pipeline/ with the following modification:  \r\n...\r\n%pip install llama-index-llms-openai-like\r\n#Settings.llm = OpenAI(model=\"gpt-3.5-turbo\")\r\nfrom llama_index.llms.openai_like import OpenAILike\r\nllm = OpenAILike(\r\n    api_key=\"token-abc123\",\r\n    api_base=\"http://localhost:8000/v1\", \r\n    is_chat_model=True, \r\n    context_window=1024, \r\n    model=\"/home/techplus-820/w/Meta-Llama-3-8B-Instruct\",    \r\n    is_function_calling_model=True  # provide this field\r\n)\r\nSettings.llm = llm\r\n#%pip install llama-index-llms-openai-like\r\n#Settings.embed_model = OpenAIEmbedding(model=\"text-embedding-3-small\")\r\nfrom llama_index.embeddings.huggingface import HuggingFaceEmbedding\r\n#embedding dimension 384(OK)\r\n#embed_model = HuggingFaceEmbedding(model_name=\"BAAI/bge-small-en-v1.5\")\r\n#embed_model = HuggingFaceEmbedding(model_name=\"/home/techplus-820/w/bge-small-en-v1.5\")\r\n#Got ValueError: shapes (1024,) and (384,) not aligned: 1024 (dim 0) != 384 (dim 0)\r\n#embed_model = HuggingFaceEmbedding(model_name=\"/home/techplus-820/w/bge-large-en-v1.5\")\r\n#Got ValueError: shapes (512,) and (384,) not aligned: 512 (dim 0) != 384 (dim 0)\r\nembed_model = HuggingFaceEmbedding(model_name=\"/home/techplus-820/w/bge-small-zh-v1.5\")\r\nSettings.embed_model = embed_model\r\n...\r\n(4)Test results\r\n(4b)if using embed_model = HuggingFaceEmbedding(model_name=\"/home/techplus-820/w/bge-small-zh-v1.5\"):\r\nIt will report: ValueError"
+  },
+  {
+   "title": "chromadb.errors.InvalidDimensionException: Embedding dimension 384 does not match collection dimensionality 1536[Question]: ",
+   "url": "https://github.com/run-llama/llama_index/issues/10166",
+   "state": "closed",
+   "comments": 9,
+   "created": "2024-01-21",
+   "body": "### Question Validation\n\n- [X] I have searched both the documentation and discord for an answer.\n\n### Question\n\n`from pathlib import Path\r\nfrom llama_index import SimpleDirectoryReader\r\nfrom llama_index import ServiceContext, VectorStoreIndex\r\nfrom llama_index.vector_stores import ChromaVectorStore\r\nfrom llama_index.schema import TextNode\r\nfrom llama_index import StorageContext, load_index_from_storage\r\nfrom IPython.display import Markdown, display\r\nfrom llama_index.llms import OpenAI\r\nfrom llama_index.embeddings import OpenAIEmbedding\r\nfrom llama_index.embeddings.openai import OpenAIEmbeddingMode\r\nfrom llama_index.embeddings.openai import OpenAIEmbeddingModelType\r\n#from llama_index.embeddings import HuggingFaceEmbedding\r\n#from openai import OpenAI\r\nfrom sentence_transformers import SentenceTransformer\r\nimport openai\r\nimport autogen\r\nfrom autogen.agentchat.contrib.gpt_assistant_agent import GPTAssistantAgent\r\nfrom autogen.agentchat.contrib.retrieve_assistant_agent import RetrieveAssistantAgent\r\nfrom autogen.agentchat.contrib.retrieve_user_proxy_agent import RetrieveUserProxyAgent\r\nimport json\r\nimport sys\r\nimport os\r\nfrom dotenv import load_dotenv, find_dotenv\r\nfrom datetime import datetime\r\nimport asyncio\r\nimport chromadb\r\nimport chromadb.utils.embedding_functions as embedding_functions\r\nfrom chromadb.config import Settings\r\nfrom llama_index import ServiceContext, set_global_service_context\r\n\r\n\r\n\r\n\r\nos.environ['OPENAI_API_KEY'] = 'sk-'\r\nos.environ['OPENAI_API_BASE'] = 'https:"
+  },
+  {
+   "title": "[Question]: How to set vector length for WeaviateVectorStore?",
+   "url": "https://github.com/run-llama/llama_index/issues/7397",
+   "state": "closed",
+   "comments": 8,
+   "created": "2023-08-25",
+   "body": "### Question Validation\n\n- [X] I have searched both the documentation and discord for an answer.\n\n### Question\n\nWhile using the `WeaviateVectorStore` and Weaviate with the `text2vec-contextionary` module an error occurs:\r\n```bash\r\n---------------------------------------------------------------------------\r\nValueError                                Traceback (most recent call last)\r\nCell In[23], line 2\r\n      1 query_engine = index.as_query_engine()\r\n----> 2 response = query_engine.query(\"What is a good technique for doing pushups?\")\r\n      3 print(response)\r\n\r\nFile [~/Projects/abk7777/qocgpiywhm/prototyping/youtube-stream-ingest/.venv/lib/python3.10/site-packages/llama_index/indices/query/base.py:23](https://file+.vscode-resource.vscode-cdn.net/Users/ammon/Projects/abk7777/qocgpiywhm/prototyping/youtube-stream-ingest/notebooks/llm-integration/~/Projects/abk7777/qocgpiywhm/prototyping/youtube-stream-ingest/.venv/lib/python3.10/site-packages/llama_index/indices/query/base.py:23), in BaseQueryEngine.query(self, str_or_query_bundle)\r\n     21 if isinstance(str_or_query_bundle, str):\r\n     22     str_or_query_bundle = QueryBundle(str_or_query_bundle)\r\n---> 23 response = self._query(str_or_query_bundle)\r\n     24 return response\r\n\r\nFile [~/Projects/abk7777/qocgpiywhm/prototyping/youtube-stream-ingest/.venv/lib/python3.10/site-packages/llama_index/query_engine/retriever_query_engine.py:169](https://file+.vscode-resource.vscode-cdn.net/Users/ammon/Projects/abk7777/qocgpiywhm/prototypin"
+  }
+ ],
+ "hay_join_scores": [
+  {
+   "title": "DocumentJoiner._distribution_based_rank_fusion zeros scores for single-doc and all-same-score lists",
+   "url": "https://github.com/deepset-ai/haystack/issues/12507",
+   "state": "closed",
+   "comments": 6,
+   "created": "2026-08-29",
+   "body": "**Describe the bug**\n\n`DocumentJoiner._distribution_based_rank_fusion` zeros the score of every document in a list when the list has only one document or when all documents in the list have the same score. The \"delta_score == 0.0\" branch falls back to a literal `0.0` instead of preserving the original score, which destroys the relative signal a downstream `sort_by_score` consumer (or any retriever that ranks by the joiner output) needs.\n\n**Error message**\n\nNo exception is raised. The bug is a silent data-loss: a single document in a retriever, or a retriever that returns N documents with identical scores (e.g. an untuned BM25 on a tiny corpus, or a hybrid retriever that always returns score=1.0), loses its real score after the joiner runs.\n\nVerified locally with `hatch run python`:\n\n```python\nfrom haystack import Document\nfrom haystack.components.joiners import DocumentJoiner\n\n# Test 1: single-doc list\ndocs = [Document(content=\"a\", meta={\"x\": 1}, score=0.95)]\njoiner = DocumentJoiner(join_mode=\"distribution_based_rank_fusion\")\nprint(joiner.run(documents=[docs])[\"documents\"][0].score)  # \u2192 0.0 (was 0.95)\n\n# Test 2: all-same-score list\ndocs = [\n    Document(content=\"a\", meta={\"x\": 1}, score=0.5),\n    Document(content=\"b\", meta={\"x\": 2}, score=0.5),\n    Document(content=\"c\", meta={\"x\": 3}, score=0.5),\n]\nprint([d.score for d in joiner.run(documents=[docs])[\"documents\"]])\n# \u2192 [0.0, 0.0, 0.0] (was [0.5, 0.5, 0.5])\n\n# Test 3 (control): different scores still rescale correctly\ndocs = "
+  },
+  {
+   "title": "DocumentJoiner positional weights follow Variadic arrival order, not connect() order",
+   "url": "https://github.com/deepset-ai/haystack/issues/12646",
+   "state": "open",
+   "comments": 3,
+   "created": "2026-09-07",
+   "body": "## Describe the bug\n\n`DocumentJoiner` `weights=[w0, w1, \u2026]` are zipped positionally onto the Variadic `documents` list. That list order is **not** `Pipeline.connect()` order:\n\n- sync `run`: independent senders run in alphabetical component-name order, so weights bind to alphabetical arrival\n- `run_async`: completion/arrival order (nondeterministic)\n\nUsers reasonably assume `connect(sparse); connect(dense)` + `weights=[sparse_w, dense_w]` maps weights to those senders. The same graph + weights can therefore produce different hybrid scores.\n\nRelated: if a predecessor never runs (e.g. a `ConditionalRouter` branch is skipped), `len(document_lists) < len(weights)` and `zip(..., strict=True)` raises `ValueError` / `PipelineRuntimeError`.\n\n## To Reproduce\n\n```python\nfrom haystack import Pipeline, Document, component\nfrom haystack.components.joiners import DocumentJoiner\n\n@component\nclass EmitDocs:\n    def __init__(self, docs):\n        self.docs = docs\n    @component.output_types(documents=list[Document])\n    def run(self):\n        return {documents: self.docs}\n\np = Pipeline()\n# alphabetical: dense < sparse  \u2014 opposite of connect order below\np.add_component(dense, EmitDocs([Document(content=shared, score=10.0)]))\np.add_component(sparse, EmitDocs([Document(content=shared, score=1.0)]))\np.add_component(joiner, DocumentJoiner(join_mode=merge, weights=[0.9, 0.1], sort_by_score=False))\np.connect(sparse, joiner)  # intended weight 0.9\np.connect(dense, joiner)   # intended weight 0.1\n\nscore"
+  },
+  {
+   "title": "feat: add INTERSECTION join mode to DocumentJoiner",
+   "url": "https://github.com/deepset-ai/haystack/issues/11365",
+   "state": "closed",
+   "comments": 2,
+   "created": "2026-05-21",
+   "body": "**Is your feature request related to a problem? Please describe.**\nI was working with a hybrid retrieval setup (BM25 + embedding retriever, joined through DocumentJoiner) and realised that all four existing join modes: concatenate, merge, reciprocal_rank_fusion, distribution_based_rank_fusion, are variants of a union. Every document any retriever returned ends up in the\noutput, just ranked differently.\n\nWhat I actually wanted was the opposite: keep only the documents that both retrievers returned, because that two-retriever agreement is itself a strong precision signal. This is also a common pattern when you want to pre-filter results before sending them to an expensive cross-encoder reranker. Today there's no built-in way to do this. I'd have to write a custom component just to compute a set intersection.\n\n**Describe the solution you'd like**\nA new JoinMode.INTERSECTION that keeps only documents whose id appears in every input list, and scores surviving documents by aggregating their per-list scores.\n\nTwo small parameters would make it more useful in 3+ retriever setups:\n\n- min_occurrences: int | None = None. Defaults to \"all lists\" (strict intersection), but can be set to k for a \"present in at least k of N lists\" consensus.\n- score_agg: Literal[\"mean\", \"max\", \"min\", \"sum\"] = \"mean\". How to combine the per-list scores of a surviving document.\n\nDefault behaviour stays strict intersection with mean scoring, which I think matches what most users would expect.\n\n**Describe alter"
+  },
+  {
+   "title": "[Feature] Native support for hybrid retrieval scoring fusion",
+   "url": "https://github.com/deepset-ai/haystack/issues/11233",
+   "state": "closed",
+   "comments": 2,
+   "created": "2026-05-03",
+   "body": "## Description\n\nWhen using hybrid retrieval (dense + sparse), combining scores from different retrievers requires manual implementation of fusion methods like RRF or weighted combination. Built-in support would simplify production setups.\n\n## Proposed API\n\n```python\nfrom haystack.components.rankers import ScoreFusion\n\nfusion = ScoreFusion(method='rrf', weights={'dense': 0.7, 'sparse': 0.3})\n```\n\nThis would help standardize hybrid retrieval patterns across the community."
+  },
+  {
+   "title": "[Feature] Native support for hybrid retrieval scoring fusion",
+   "url": "https://github.com/deepset-ai/haystack/issues/11070",
+   "state": "closed",
+   "comments": 2,
+   "created": "2026-04-10",
+   "body": "## Description\n\nWhen using hybrid retrieval (dense + sparse), combining scores from different retrievers requires manual implementation of fusion methods like RRF or weighted combination. Built-in support would simplify production setups.\n\n## Proposed API\n\n```python\nfrom haystack.components.rankers import ScoreFusion\n\nfusion = ScoreFusion(method='rrf', weights={'dense': 0.7, 'sparse': 0.3})\n```\n\nThis would help standardize hybrid retrieval patterns across the community."
+  },
+  {
+   "title": "Documents result from the JoinDocuments node didn't sort correctly.",
+   "url": "https://github.com/deepset-ai/haystack/issues/4617",
+   "state": "closed",
+   "comments": 2,
+   "created": "2023-04-06",
+   "body": "**Describe the bug**\r\ndocuments result from the `JoinDocuments` node didn't sort correctly.\r\n\r\n**Error message**\r\nNone\r\n\r\n**Expected behavior**\r\ndocuments result from _debug property should be sorted correctly.\r\n\r\n**Additional context**\r\nI use minimal settings in the retriever, document store, and ranker node.\r\n\r\n**To Reproduce**\r\n```python\r\n def get_pipeline(self, passage_search_request: PassageSearchRequest, documents: List[Document]) -> Pipeline:\r\n        dense_retriever: BaseRetriever = self.get_dense_retriever(\r\n            passage_search_request=passage_search_request,\r\n            documents=documents\r\n        )\r\n\r\n        sparse_retriever: BaseRetriever = self.get_sparse_retriever(\r\n            passage_search_request=passage_search_request,\r\n            documents=documents\r\n        )\r\n\r\n        document_joiner: JoinDocuments = JoinDocuments(\r\n            join_mode=\"reciprocal_rank_fusion\"\r\n        )\r\n\r\n        ranker: BaseRanker = self.get_ranker(\r\n            passage_search_request=passage_search_request\r\n        )\r\n\r\n        pipeline = Pipeline()\r\n        pipeline.add_node(\r\n            component=dense_retriever,\r\n            name=\"DenseRetriever\",\r\n            inputs=[\"Query\"]\r\n        )\r\n        pipeline.add_node(\r\n            component=sparse_retriever,\r\n            name=\"SparseRetriever\",\r\n            inputs=[\"Query\"]\r\n        )\r\n        pipeline.add_node(\r\n            component=document_joiner,\r\n            name=\"DocumentJoiner\",\r\n            inputs=[\"DenseRetri"
+  },
+  {
+   "title": "Exception while running node 'Ranker': slice indices must be integers or None or have an __index__ method",
+   "url": "https://github.com/deepset-ai/haystack/issues/5036",
+   "state": "closed",
+   "comments": 2,
+   "created": "2023-05-28",
+   "body": "**Describe the bug**\r\nThe Ranker node doesn't behave normally.\r\n\r\n**Error message**\r\n```python\r\nresearch-assistant-backend-app-1  | /usr/local/lib/python3.10/dist-packages/opensearchpy/connection/http_urllib3.py:199: UserWarning: Connecting to https://ds-2:9200 using SSL with verify_certs=False is insecure.\r\nresearch-assistant-backend-app-1  |   warnings.warn(\r\nresearch-assistant-backend-app-1  | /usr/local/lib/python3.10/dist-packages/urllib3/connectionpool.py:1045: InsecureRequestWarning: Unverified HTTPS request is being made to host 'ds-2'. Adding certificate verification is strongly advised. See: https://urllib3.readthedocs.io/en/1.26.x/advanced-usage.html#ssl-warnings\r\nresearch-assistant-backend-app-1  |   warnings.warn(\r\nresearch-assistant-backend-app-1  | INFO:     172.19.0.1:54262 - \"POST /api/v1/passage-search HTTP/1.1\" 500 Internal Server Error\r\nresearch-assistant-backend-app-1  | ERROR:    Exception in ASGI application\r\nresearch-assistant-backend-app-1  | Traceback (most recent call last):\r\nresearch-assistant-backend-app-1  |   File \"/usr/local/lib/python3.10/dist-packages/haystack/pipelines/base.py\", line 552, in run\r\nresearch-assistant-backend-app-1  |     node_output, stream_id = self._run_node(node_id, node_input)\r\nresearch-assistant-backend-app-1  |   File \"/usr/local/lib/python3.10/dist-packages/haystack/pipelines/base.py\", line 467, in _run_node\r\nresearch-assistant-backend-app-1  |     return self.graph.nodes[node_id][\"component\"]._dispatch_run(**node_input"
+  },
+  {
+   "title": "[Bug]: DocumentJoiner propagates NaN scores in concatenate/merge modes and the final score sorting",
+   "url": "https://github.com/deepset-ai/haystack/issues/13678",
+   "state": "closed",
+   "comments": 1,
+   "created": "2026-11-11",
+   "body": "### Description\n\n`DocumentJoiner` still propagates non-finite (NaN) scores in three places that the recent DBSF fix (#13581 \u2192 #13582) did not cover: the default `concatenate` mode's best-duplicate selection, the `merge` mode's weighted sum, and the final `sort_by_score` ordering. Only `distribution_based_rank_fusion` was hardened.\n\n### Steps to reproduce\n\n```python\nfrom haystack import Document\nfrom haystack.components.joiners import DocumentJoiner\n\nnan_doc = Document(content=\"doc A\", score=float(\"nan\"))\ngood_doc = Document(content=\"doc A\", score=0.99)\n\n# 1) concatenate: NaN-scored duplicate wins when it arrives first\njoiner = DocumentJoiner(sort_by_score=False)\nprint(joiner.run(documents=[[nan_doc], [good_doc]])[\"documents\"][0].score)   # nan  (expected: 0.99)\nprint(joiner.run(documents=[[good_doc], [nan_doc]])[\"documents\"][0].score)  # 0.99 -> outcome depends on arrival order\n\n# 2) merge: weighted sum becomes NaN\njoiner = DocumentJoiner(join_mode=\"merge\", weights=[1, 1], sort_by_score=False)\nout = joiner.run(documents=[[Document(content=\"doc B\", score=0.9)], [Document(content=\"doc B\", score=float(\"nan\"))]])\nprint(out[\"documents\"][0].score)  # nan  (expected: 0.45)\n\n# 3) final sort: descending order silently corrupted\njoiner = DocumentJoiner()\nout = joiner.run(documents=[[Document(content=\"m\", score=0.5), Document(content=\"n\", score=float(\"nan\")), Document(content=\"p\", score=0.9)]])\nprint([(d.content, d.score) for d in out[\"documents\"]])  # [('m', 0.5), ('n', nan), ('p', 0.9"
+  }
+ ],
+ "hay_bm25_tokenizer": [
+  {
+   "title": "Introduce QueryClassifier",
+   "url": "https://github.com/deepset-ai/haystack/issues/611",
+   "state": "closed",
+   "comments": 44,
+   "created": "2020-11-23",
+   "body": "**Is your feature request related to a problem? Please describe.**\r\nWith the new flexible Pipelines introduced in https://github.com/deepset-ai/haystack/pull/596, we can build way more flexlible and complex search routes. \r\nOne common challenge that we saw in deployments: We need to distinguish between real questions and keyword queries that come in. We only want to route questions to the Reader branch in order to maximize the accuracy of results and minimize computation efforts/costs.  \r\n\r\n**Describe the solution you'd like**\r\n\r\nNew class `QueryClassifier` that takes a query as input and determines if it is a question or a keyword query. \r\nWe could start with a very basic version (maybe even rule-based) here and later extend it to use a classification model.   \r\nThe `run` method would need to return `query, \"output_1\" ` for a question and `query, \"output_2\"` for a keyword query in order to allow branching in the DAG.\r\n\r\n**Describe alternatives you've considered**\r\nLater it might also make sense to distinguish into more types  (e.g. full sentence but not a question)\r\n \r\n**Additional context**\r\nWe could use it like this in a pipeline\r\n![image](https://user-images.githubusercontent.com/1563902/99940511-9685c880-2d6c-11eb-8bbb-35b9b311761d.png)\r\n"
+  },
+  {
+   "title": "Recommendation for German DPR / German Retriever/Reader Pair",
+   "url": "https://github.com/deepset-ai/haystack/issues/198",
+   "state": "closed",
+   "comments": 9,
+   "created": "2020-07-07",
+   "body": "Hi guys,\r\n\r\nfirst of all: awesome work with Farm and Haystack. I am currently exploring the possibilities on a private project - thanks for actually providing this toolset! \r\n\r\nMy situation is the following:\r\n\r\nI have three \"datasets\", which are basically \"large\", domain specific documents. The smallest has ~500 sentences, consisting of ~12500 tokens, the biggest has ~8500 sentences, consisting of ~130000 tokens. They are'nt labeled in any form and far away from being formatted SQuAD-like. Currently I decided to simply run two of your recommended scenarios on those documents:\r\n\r\n**Scenario 1**\r\n1. Skipping the preprocessing part for the moment\r\n2. Using an ElasticSearchRetriever with default configuration\r\n3. Using a FARMReader with `deepset/bert-large-uncased-whole-word-masking-squad2`\r\n\r\n**Scenario 2**\r\n1. Skipping the preprocessing part for the moment\r\n2. Using a DensePassageRetriever with `dpr-bert-base-nq`\r\n3. Using a FARMReader with deepset/bert-large-uncased-whole-word-masking-squad2\r\n\r\nThe results are surprisingly good, ignoring the fact that everything has been designed to work with the english language. However I currently observe, that the ElasticSearchRetriever performs better than the DPR - which makes sense regarding the  BM25 / tokenization. \r\n\r\nI am convinced, that it would be worth the try to adapt everything / finetune the steps for the german language. Therefore, I have the following questions:\r\n\r\n1. Are you aware of any pretrained german SQuAD-like transfo"
+  },
+  {
+   "title": "TextEncodeInput must be Union[TextInputSequence, Tuple[InputSequence, InputSequence]] when using local PromptNode model in MultiHop tutorial",
+   "url": "https://github.com/deepset-ai/haystack/issues/4587",
+   "state": "closed",
+   "comments": 8,
+   "created": "2023-04-04",
+   "body": "### Discussed in https://github.com/deepset-ai/haystack/discussions/4586\r\n\r\nRealized this may actually be a bug, so I'm creating an issue.\r\n\r\n<div type='discussions-op-text'>\r\n\r\n<sup>Originally posted by **recursionbane** April  3, 2023</sup>\r\nI'm following this tutorial: https://haystack.deepset.ai/tutorials/23_answering_multihop_questions_with_agents\r\nUsing v1.15 of `farm-haystack[gpu]` on a local machine with GPU.\r\n\r\nIt works great when using OpenAI's API.\r\n\r\nIf I switch this definition of the PromptNode:\r\n\r\n```\r\n    # Use OpenAI API as PromptNode\r\n    from getpass import getpass\r\n    api_key_prompt = \"Enter OpenAI API key:\"\r\n    api_key = getpass(api_key_prompt)\r\n    prompt_node = PromptNode(model_name_or_path=\"text-davinci-003\", api_key=api_key, stop_words=[\"Observation:\"])\r\n    agent = Agent(prompt_node=prompt_node)\r\n```\r\n\r\nTo this one:\r\n\r\n```\r\n    # Use a local model for PromptNode\r\n    prompt_node = PromptNode(model_name_or_path=\"google/flan-t5-large\", stop_words=[\"Observation:\"])\r\n    agent = Agent(prompt_node=prompt_node)\r\n```\r\n\r\nI see this error:\r\n\r\n```\r\nAgent zero-shot-react started with {'query': 'What year was the 1st president of the USA born?', 'params': None}\r\nTraceback (most recent call last):\r\n  File \"./sample_agent_qa.py\", line 48, in <module>\r\n    result = agent.run(\"What year was the 1st president of the USA born?\")\r\n  File \"/opt/conda/lib/python3.8/site-packages/haystack/agents/base.py\", line 288, in run\r\n    agent_step = self._step(agent_step, params)\r"
+  },
+  {
+   "title": "Bigram tokenization for CJK BM25: per-character tokens fix recall but cost precision",
+   "url": "https://github.com/deepset-ai/haystack/issues/12867",
+   "state": "closed",
+   "comments": 7,
+   "created": "2026-09-23",
+   "body": "Follow-up to #12836 and #12837, opened at @sjrl's request so the design can be discussed before a PR.\n\n## The problem\n\n#12837 makes the default BM25 tokenizer split CJK text one character per token. That fixes the recall failure from #12836, but single-character tokens carry very little meaning in Korean, and the ranking suffers. Querying `\uc11c\uc6b8` (Seoul) against a corpus where five of six documents are unrelated:\n\n```\n1. [wrong]  1.250  \uc11c\uc810 \uc55e\uc5d0\uc11c \uc6b8\uace0 \uc788\ub294 \uc544\uc774\ub97c \ubcf4\uc558\ub2e4.   (\"a child crying in front of a bookstore\")\n2. [right]  1.106  \uc11c\uc6b8\uc740 \ub300\ud55c\ubbfc\uad6d\uc758 \uc218\ub3c4\uc774\uba70 \uc778\uad6c\uac00 \uac00\uc7a5 \ub9ce\ub2e4.\n3. [wrong]  1.053  \uc6b8\ud0c0\ub9ac \ub108\uba38\ub85c \uac1c\uac00 \uc9d6\uace0 \uc788\uc5c8\ub2e4.        (\"a dog barking beyond the fence\")\n```\n\nThe unrelated document wins because it happens to contain \uc11c (from \uc11c\uc810, \"bookstore\") and \uc6b8 (from \uc6b8\uace0, \"crying\"). A Hangul syllable is closer to an English letter than to a word: \uc11c on its own can be \u66f8 / \u897f / \u5e8f, and \uc6b8 can be the verb stem \"cry\" or part of \uc6b8\ud0c0\ub9ac (\"fence\"). This is why Lucene's CJK analyzer emits bigrams rather than unigrams.\n\n## Measurements\n\n`haystack-ai==3.1.1`, same corpus and same code path, swapping only the tokenizer. Script at the bottom.\n\n| tokenizer | recall@10 | top-1 correct | `\uc11c\uc6b8` precision | 1-syllable query `\uc0b0` | tokens per KO sentence |\n| --- | --- | --- | --- | --- | --- |\n| current default | 0/10 | 0/10 | no results | 0 hits | 6 |\n| #12837 (unigram) | 10/10 | 10/10 | **wrong doc at rank 1** | 3 hits | 19 |\n| bigram | 10/10 | 10/10 | correct at rank 1 | **0 hits** | 13 |\n| unigram + bigram | 10/10 | 10/10 | correct at rank 1 | 3 "
+  },
+  {
+   "title": "More than one Parallel Workers for Inference",
+   "url": "https://github.com/deepset-ai/haystack/issues/185",
+   "state": "closed",
+   "comments": 7,
+   "created": "2020-07-02",
+   "body": "Whenever I'm working with the Haystack Library, when we initialise the retriever and reader, we get an output \r\n```\r\n07/02/2020 10:04:17 - INFO - farm.infer -   Got ya 1 parallel workers to do inference ...\r\n07/02/2020 10:04:17 - INFO - farm.infer -    0 \r\n07/02/2020 10:04:17 - INFO - farm.infer -   /w\\\r\n07/02/2020 10:04:17 - INFO - farm.infer -   /'\\\r\n07/02/2020 10:04:17 - INFO - farm.infer -   \r\n```\r\n\r\nI just wanted to know what we mean by `1 parallel workers` can we initialise more than one just instance together?"
+  },
+  {
+   "title": "[2.0.0b8] Generator is being called twice instead of once after loading the pipeline yaml file",
+   "url": "https://github.com/deepset-ai/haystack/issues/7243",
+   "state": "closed",
+   "comments": 4,
+   "created": "2024-02-28",
+   "body": "**Describe the bug**\r\nNow there is a bug after loading the pipeline yaml file.\r\n\r\n**Expected behavior**\r\nGenerator is being called twice instead of once.\r\n\r\n**Additional context**\r\nIf you remove pipeline serialization and loading part, the behavior is normal. Thus I think the problem is due to the pipeline serialization issue.(either saving or loading part)\r\n\r\nThe example code below is referenced from [the official documentation](https://docs.haystack.deepset.ai/v2.0/docs/openaigenerator#in-a-pipeline)\r\n\r\n**To Reproduce**\r\n\r\n```python\r\nimport backoff\r\nimport openai\r\n\r\nfrom typing import Any, Dict, List, Optional\r\n\r\nfrom dotenv import load_dotenv\r\nfrom haystack import component, Document, Pipeline\r\nfrom haystack.components.retrievers.in_memory import InMemoryBM25Retriever\r\nfrom haystack.components.builders.prompt_builder import PromptBuilder\r\nfrom haystack.components.generators import OpenAIGenerator\r\nfrom haystack.document_stores.in_memory import InMemoryDocumentStore\r\nfrom haystack.utils.auth import Secret\r\n\r\n\r\nload_dotenv(override=True)\r\n\r\n\r\n@component\r\nclass CustomOpenAIGenerator(OpenAIGenerator):\r\n    @component.output_types(replies=List[str], meta=List[Dict[str, Any]])\r\n    @backoff.on_exception(backoff.expo, openai.RateLimitError, max_time=60)\r\n    def run(\r\n        self,\r\n        prompt: str,\r\n        generation_kwargs: Optional[Dict[str, Any]] = None\r\n    ):\r\n        print('test')\r\n        return super(CustomOpenAIGenerator, self).run(\r\n            prompt=prompt,\r\n   "
+  },
+  {
+   "title": "Invalid escape sequences in regex in the pipeline YAML",
+   "url": "https://github.com/deepset-ai/haystack/issues/11093",
+   "state": "closed",
+   "comments": 3,
+   "created": "2026-04-13",
+   "body": "**Bug Description**\nWhen serializing a pipeline containing regex patterns to YAML using `pipe.dumps()` and then deserializing it with `Pipeline.loads()`, the operation fails due to invalid escape sequences in the generated YAML.\n\n**Steps to Reproduce**\n1. Create a pipeline using the Document Cleaner example from the documentation\n2. Serialize the pipeline to YAML using `pipe.dumps()`\n3. Deserialize the YAML back to a pipeline using `Pipeline.loads()`\n4. Run the pipeline\n\nThe deserialization fails with an error about unexpected characters, e.g., `#x0008`, caused by YAML interpreting `\\b` (intended as a regex word boundary) as a backspace character escape sequence.\n\nThe error is caused by `pipe.dumps()` that generates a YAML with single backslashes in regex patterns (e.g., `\\b`, `\\w`), which YAML interprets as escape sequences. To represent literal backslashes in regex patterns, YAML requires double backslashes (`\\\\b`, `\\\\w`).\n\n**Proposed Solution**\nThe `pipe.dumps()` method should properly escape backslashes in regex strings with a double backslash when generating YAML output.\n\n**Expected behavior**\nThe pipeline should serialize to valid YAML and deserialize successfully without errors.\n\n**Error message**\nSyntaxWarning: \"\\w\" is an invalid escape sequence. Such sequences will not work in the future. Did you mean \"\\\\w\"? A raw string is also an option.\n  bm25_tokenization_regex: '(?u)\\b\\w+\\b'\nTraceback (most recent call last):\n  File \"/haystack/core/pipeline/base.py\", line 308, i"
+  },
+  {
+   "title": "Accept Callables as Tokenizers for InMemoryDocumentStore",
+   "url": "https://github.com/deepset-ai/haystack/issues/4720",
+   "state": "closed",
+   "comments": 3,
+   "created": "2023-04-21",
+   "body": "### Discussed in https://github.com/deepset-ai/haystack/discussions/4695\r\n\r\n<div type='discussions-op-text'>\r\n\r\n<sup>Originally posted by **farhanhubble** April 18, 2023</sup>\r\n`InMemoryDocumentStore` currently only accepts a tokenizing pattern through the argument `bm25_tokenization_regex: str = r\"(?u)\\b\\w\\w+\\b\"`.  The underlying BM25 supports a `callable` though. Removing this restriction will enable correct tokenization of a larger variety of corpora. I ran into this limitation trying to index JSON documents that contain key-value pairs, like:\r\n\r\n```\r\n\"casNumber\": \"96-80-0\", \r\n  \"concentration\": \"<= 100 %\", \r\n  \"detailedConcentration\": {\r\n    \"approximate\": false, \r\n    \"fromConcentration\": 0, \r\n    \"fromOperand\": \"\", \r\n    \"remainder\": false, \r\n    \"toConcentration\": 100.0, \r\n    \"toOperand\": \"<=\", \r\n    \"unavailable\": false\r\n  }, \r\n  \"ecNumber\": \"202-536-2\", \r\n  \"molecularFormula\": \"C8H19NO\", \r\n  \"molecularWeight\": \"145.24 g/mol\"\r\n```</div>"
+  }
+ ],
+ "bge_instruction": [
+  {
+   "title": "query instruction on ChromaDB",
+   "url": "https://github.com/FlagOpen/FlagEmbedding/issues/148",
+   "state": "open",
+   "comments": 8,
+   "created": "2023-09-29",
+   "body": "how can i add the query instruction in ChromaDB? (assuming that i use your model as ChromaDB docs explain)\r\nshould i add it simply as a prefix of the actual query? i have that doubt because for models like 'instructor-xl' they have an instruction argument in their class, but not for generic 'sentence_transformer' models...\r\n\r\nthanks in advance!"
+  },
+  {
+   "title": "finetune instruction for bge rerank",
+   "url": "https://github.com/FlagOpen/FlagEmbedding/issues/693",
+   "state": "open",
+   "comments": 5,
+   "created": "2024-04-16",
+   "body": "Can BGE rerank be finetuned in an instruction style, for example:\r\n    \"tool\": {\r\n         \"query\": \"Transform this user request for fetching helpful tool descriptions: \",\r\n         \"key\": \"Transform this tool description for retrieval: \"\r\n}"
+  },
+  {
+   "title": "how much memory the embedding model requires ? ",
+   "url": "https://github.com/FlagOpen/FlagEmbedding/issues/1011",
+   "state": "open",
+   "comments": 3,
+   "created": "2024-07-30",
+   "body": "I keep getting CUDA out of memory warning \r\nThanks "
+  },
+  {
+   "title": "Can BGE-M3 use commands to optimize the search effect?",
+   "url": "https://github.com/FlagOpen/FlagEmbedding/issues/978",
+   "state": "closed",
+   "comments": 2,
+   "created": "2024-07-22",
+   "body": "It is mentioned in the documentation that BGE-1.5 can optimize search performance by query instruction \"\u4e3a\u8fd9\u4e2a\u53e5\u5b50\u751f\u6210\u8868\u793a\u4ee5\u7528\u4e8e\u68c0\u7d22\u76f8\u5173\u6587\u7ae0\uff1a\", can the BGE-M3 be optimized in a similar way?"
+  },
+  {
+   "title": "BGE-VL: unsupported operand type(s) for //: 'int' and 'NoneType'",
+   "url": "https://github.com/FlagOpen/FlagEmbedding/issues/1406",
+   "state": "open",
+   "comments": 1,
+   "created": "2025-03-20",
+   "body": "When I use the demo of BGE-VL, without any change:\n`import torch\nfrom transformers import AutoModel\nfrom PIL import Image\n\nMODEL_NAME= \"./BGE-VL-MLLM-S2\"\n\nmodel = AutoModel.from_pretrained(MODEL_NAME, trust_remote_code=True)\nmodel.eval()\nmodel.cuda()\n\nwith torch.no_grad():\n    model.set_processor(MODEL_NAME)\n\n    query_inputs = model.data_process(\n        text=\"Make the background dark, as if the camera has taken the photo at night\", \n        images=\"./assets/cir_query.png\",\n        q_or_c=\"q\",\n        task_instruction=\"Retrieve the target image that best meets the combined criteria by using both the provided image and the image retrieval instructions: \"\n    )\n\n    candidate_inputs = model.data_process(\n        images=[\"./assets/cir_candi_1.png\", \"./assets/cir_candi_2.png\"],\n        q_or_c=\"c\",\n    )\n\n    query_embs = model(**query_inputs, output_hidden_states=True)[:, -1, :]\n    candi_embs = model(**candidate_inputs, output_hidden_states=True)[:, -1, :]\n    \n    query_embs = torch.nn.functional.normalize(query_embs, dim=-1)\n    candi_embs = torch.nn.functional.normalize(candi_embs, dim=-1)\n\n    scores = torch.matmul(query_embs, candi_embs.T)\nprint(scores)\n`\nIt outputs\nTraceback (most recent call last):\n  File \"/ssd4/demo/bgevl.py\", line 14, in <module>\n    query_inputs = model.data_process(\n  File \"/ssd4/.cache/huggingface/modules/transformers_modules/BGE-VL-MLLM-S2/modeling_llavanext_for_embedding.py\", line 312, in data_process\n    inputs = self.processor(images=images, tex"
+  },
+  {
+   "title": "bge-small-zh\u52a0\u8f7d\u9519\u8bef",
+   "url": "https://github.com/FlagOpen/FlagEmbedding/issues/758",
+   "state": "open",
+   "comments": 1,
+   "created": "2024-05-09",
+   "body": "Hello, I downloaded the weights from the Hugging Face mirror, but when loading the model using FlagModel or SentenceTransformer methods, the following issues occur. How can I solve this.\r\n\r\nTraceback (most recent call last):\r\n  File \"/home/ai/anaconda3/envs/langchain_chatchat/lib/python3.10/site-packages/transformers/modeling_utils.py\", line 519, in load_state_dict\r\n    return torch.load(checkpoint_file, map_location=map_location)\r\n  File \"/home/ai/anaconda3/envs/langchain_chatchat/lib/python3.10/site-packages/torch/serialization.py\", line 815, in load\r\n    return _legacy_load(opened_file, map_location, pickle_module, **pickle_load_args)\r\n  File \"/home/ai/anaconda3/envs/langchain_chatchat/lib/python3.10/site-packages/torch/serialization.py\", line 1033, in _legacy_load\r\n    magic_number = pickle_module.load(f, **pickle_load_args)\r\n_pickle.UnpicklingError: invalid load key, 'v'.\r\n\r\nDuring handling of the above exception, another exception occurred:\r\n\r\nTraceback (most recent call last):\r\n  File \"/media/ai/HDD/Teamwork/FlagEmbedding-master/test/test_bge_small.py\", line 32, in <module>\r\n    model = FlagModel('/media/ai/HDD/Teamwork/LLM_Embedding_model/Embedding/bge-small-zh', query_instruction_for_retrieval=\"\", )\r\n  File \"/home/ai/anaconda3/envs/langchain_chatchat/lib/python3.10/site-packages/FlagEmbedding/flag_models.py\", line 20, in __init__\r\n    self.model = AutoModel.from_pretrained(model_name_or_path)\r\n  File \"/home/ai/anaconda3/envs/langchain_chatchat/lib/python3.10/site-pac"
+  },
+  {
+   "title": "Proposal: add an llms.txt",
+   "url": "https://github.com/FlagOpen/FlagEmbedding/issues/1611",
+   "state": "open",
+   "comments": 0,
+   "created": "2026-10-06",
+   "body": "Hi! We would like to offer FlagEmbedding an `llms.txt`: a short, plain-markdown guide at the root of the repository that tells AI assistants what the project is and where its documentation lives ([the llms.txt format](https://llmstxt.org)). We drafted one with our open-source generator [brethof-llms-txt](https://github.com/BrethofAI/brethof-llms-txt); an AI model (Qwen3.8 27B, run on our own hardware) wrote the summary and descriptions. It is below.\n\n**No maintenance for you.** You would not have to keep it up to date. The free [Brethof llms.txt app](https://github.com/apps/brethof-llms-txt) does it for public repositories: once a week it checks your docs and, if they changed, updates the file (a moved or deleted page is fixed the same day), in one of two ways, your choice:\n\n- **You approve each update:** it opens a pull request, and nothing changes until you merge it.\n- **Fully automatic:** tick one box and updates are committed directly, with nothing for you to do.\n\nYou can switch between them at any time. Without the app the file simply stays as it is.\n\nWould you like it as a pull request? If yes, reply here and we will open one. If not, close this issue and we will not ask again.\n\n<details><summary>The proposed llms.txt (86 links)</summary>\n\n```markdown\n# FlagEmbedding\n\n> A one-stop retrieval toolkit for search and RAG that provides embedding models, rerankers, and training utilities.\n\nThe project is written in Python and integrates with Langchain. It includes BGE-VL mult"
+  }
+ ]
+}

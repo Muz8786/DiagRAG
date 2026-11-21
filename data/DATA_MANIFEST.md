@@ -25,6 +25,45 @@ is a temporary private Kaggle dataset, with byte-identical copy
 plus size, hash and py_compile verification before running, and
 deletion of the temporary dataset after outputs are secured.
 
+## Verification run, 14 Nov 2026 (downloaded signed-out, checked byte by byte)
+
+| File | Bytes | SHA-256 | Source |
+|---|---|---|---|
+| kb_tier3_186k.jsonl.gz | 53,518,791 (matches) | 5a9f7ea6ae5b8a3e7f1e1ca6e2838dddd6158efb9384d757c6aa755dbe9bda3c | Drive 1zksoRmKjBn3VKRweFM1pLfDDNAIpnzxm |
+| embeddings_cache_186k.npz | 533,012,659 (matches) | 3b43603d9689f7c0eee0cbfebdb8b5cfddd05a2fc4e3cf192c8eed1de4a88835 | Drive 1xKaTyYx3qxFFzmRYQQuPmLnKEtygNx2s |
+| shopping_queries_dataset_examples.parquet | 51,286,808 | 4a735b693b4a424a6fc67f5be6e4c811495c488bbf66d02a602d308b2744263a | github.com/amazon-science/esci-data (LFS) |
+| corpus-webis-qspell-17.zip | 2,285,705 | f13bd165544ab2ac75d63de4334feb86d74d1b3dfbe48d79423133552b5054e4 | zenodo.org/records/3570912 |
+
+Not reachable signed-out: the second corpus copy (Drive 1gN6jMNOsT1KGBEFMJ8DZCLupy92TEIRQ,
+gdown permission error), the benchmark xlsx (no Drive ID published), and the private
+Kaggle banks. None of these is needed by `kaggle/diagrag_core28.ipynb`.
+
+Passed:
+- gzip integrity, 186,290 docs, one schema, 186,290 unique doc_ids, 0 empty contents.
+- Cache: (186290, 768) float32, 0 NaN/Inf, 0 zero rows, norms 0.9999999–1.0000001,
+  doc_ids identical to the corpus in order.
+- Re-encoding 43 docs (40 random + 3 fixed) as `title + "\n" + content` with bge-base-en-v1.5 gives
+  cosine 1.0000 to the cache (min 1.0000). Content alone gives 0.946, so the cache text is title + content.
+
+Purity issues found (the notebook handles each one as noted; the corpus file is not modified):
+- 2,558 rows are exact-content duplicates beyond the first (1,537 groups). The `duplicate_text`
+  flag marks 2,541 rows. 68 duplicate groups have 2 or more unflagged members, and 45 flagged
+  rows have no exact twin. Handling: gold-equivalence includes exact-content twins.
+- 533 identical embedding rows beyond the first. These are the duplicate texts.
+- 36 ASINs exist as both an ESCI doc and an ABO doc. Handling: gold-equivalence includes the twin.
+- 3,554 ESCI chunks have `char_end - char_start` ≠ `len(content)`. This is metadata only
+  (overlapping chunk spans after whitespace trimming) and does not affect retrieval.
+- 3,993 docs carry pandas `nan` placeholders ("Brand: nan", "Description: nan"). The K08
+  fault and its repair are built around this real pattern.
+- 2 rows contain U+FFFD (ESCI-us-B07YCW6269-c01/-c02).
+- Licences: ABO has 84,993 rows `conflicting_unverified` and 86,566 `verified`. The 1,040
+  ShopNova synthetic rows are `unassigned`. Resolve both before any public release of
+  derived data.
+- ESCI queries: 459 query strings repeat under different query_ids, and 161 strings occur
+  in both the official train and test splits. Handling: the notebook dedupes by string and
+  splits by gold-product component (union-find), and it asserts zero gold leakage between
+  its own train and test splits.
+
 ## Banks (telemetry only, no document text)
 
 - ESCI bank: loop_features_qml100k_wave1.npz, 24,000 x 31,

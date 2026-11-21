@@ -1,0 +1,1123 @@
+{
+ "detectors_pass": 26,
+ "repairs_pass": 27,
+ "solved_both": 26,
+ "of": 28,
+ "new_faults": {
+  "R25": {
+   "detector": "PASS",
+   "repair": "PASS"
+  },
+  "R26": {
+   "detector": "THIN",
+   "repair": "THIN"
+  },
+  "K11": {
+   "detector": "PASS",
+   "repair": "PASS"
+  },
+  "K12": {
+   "detector": "PASS",
+   "repair": "PASS"
+  }
+ },
+ "family_repairs": [
+  {
+   "fault": "Q01",
+   "family": "QLEX",
+   "n": 100,
+   "rescued": 51,
+   "rate": 0.51,
+   "ci_lo": 0.4134784047743415
+  },
+  {
+   "fault": "Q03",
+   "family": "QLEX",
+   "n": 100,
+   "rescued": 0,
+   "rate": 0.0,
+   "ci_lo": 0.0
+  },
+  {
+   "fault": "Q04",
+   "family": "QLEX",
+   "n": 100,
+   "rescued": 73,
+   "rate": 0.73,
+   "ci_lo": 0.6356769977376873
+  },
+  {
+   "fault": "Q05",
+   "family": "QLEX",
+   "n": 100,
+   "rescued": 80,
+   "rate": 0.8,
+   "ci_lo": 0.7111690380734976
+  },
+  {
+   "fault": "K04",
+   "family": "STALE",
+   "n": 100,
+   "rescued": 92,
+   "rate": 0.92,
+   "ci_lo": 0.8500173312059693
+  },
+  {
+   "fault": "R03",
+   "family": "ENC",
+   "n": 100,
+   "rescued": 100,
+   "rate": 1.0,
+   "ci_lo": 0.963005192523998
+  },
+  {
+   "fault": "R07",
+   "family": "STALE",
+   "n": 100,
+   "rescued": 100,
+   "rate": 1.0,
+   "ci_lo": 0.963005192523998
+  },
+  {
+   "fault": "R10",
+   "family": "ENC",
+   "n": 100,
+   "rescued": 100,
+   "rate": 1.0,
+   "ci_lo": 0.963005192523998
+  },
+  {
+   "fault": "R11",
+   "family": "ENC",
+   "n": 100,
+   "rescued": 100,
+   "rate": 1.0,
+   "ci_lo": 0.963005192523998
+  }
+ ],
+ "loop_gates": {
+  "L1": "PASS",
+  "L2": "PASS",
+  "U1": "FAIL",
+  "N1": "PASS"
+ },
+ "grounded": {
+  "faults": [
+   "Q02",
+   "Q03",
+   "Q04",
+   "Q05",
+   "Q07",
+   "K04",
+   "K05",
+   "K07",
+   "K08",
+   "K09",
+   "R01",
+   "R11",
+   "R13",
+   "R15",
+   "R19",
+   "R22",
+   "R23",
+   "R24",
+   "R25",
+   "R26",
+   "K11",
+   "K12"
+  ],
+  "detectors_pass": 20,
+  "repairs_pass": 20,
+  "solved_both": 20,
+  "of": 22,
+  "not_solved": [
+   "Q03",
+   "R26"
+  ]
+ },
+ "quarantine": [
+  "Q01",
+  "Q09",
+  "K03",
+  "K06",
+  "R03",
+  "R05",
+  "R06",
+  "R07",
+  "R10",
+  "C2"
+ ],
+ "accounting": {
+  "headline": "a_core28",
+  "a_core28": {
+   "detectors_pass": 26,
+   "repairs_pass": 27,
+   "solved_both": 26,
+   "of": 28,
+   "verdict": "NOT_ADOPTED",
+   "not_solved": [
+    "Q03",
+    "C2"
+   ],
+   "thin": []
+  },
+  "b_grounded": {
+   "faults": [
+    "Q02",
+    "Q03",
+    "Q04",
+    "Q05",
+    "Q07",
+    "K04",
+    "K05",
+    "K07",
+    "K08",
+    "K09",
+    "R01",
+    "R11",
+    "R13",
+    "R15",
+    "R19",
+    "R22",
+    "R23",
+    "R24",
+    "R25",
+    "R26",
+    "K11",
+    "K12"
+   ],
+   "detectors_pass": 20,
+   "repairs_pass": 20,
+   "solved_both": 20,
+   "of": 22,
+   "not_solved": [
+    "Q03",
+    "R26"
+   ],
+   "v4_baseline": "20/22 (Q03, R26)"
+  },
+  "c_quarantine": {
+   "faults": [
+    "Q01",
+    "Q09",
+    "K03",
+    "K06",
+    "R03",
+    "R05",
+    "R06",
+    "R07",
+    "R10",
+    "C2"
+   ],
+   "detectors_pass": 9,
+   "repairs_pass": 10,
+   "solved_both": 9,
+   "of": 10,
+   "not_solved": [
+    "C2"
+   ]
+  }
+ },
+ "cheap_guarantee": {
+  "targets": {
+   "T1": "held-out clean loss <= 0.005",
+   "T2": "total clean dispatch <= 0.25",
+   "T3": "clean mean cost <= 1.5",
+   "T4": "mean closure >= 0.80"
+  },
+  "table": [
+   {
+    "policy": "tau_none_5pct_fpr",
+    "clean_loss": 0.0011961722488038277,
+    "clean_dispatch_rate": 0.029904306220095694,
+    "clean_clf_dispatch_rate": 0.029904306220095694,
+    "clean_mean_cost": 0.1511164274322169,
+    "mean_closure": 0.845,
+    "T1_loss": true,
+    "T2_dispatch": true,
+    "T3_cost": true,
+    "T4_closure": true,
+    "all_targets_met": true
+   },
+   {
+    "policy": "global_crc_0.005",
+    "clean_loss": 0.00518341307814992,
+    "clean_dispatch_rate": 0.6929824561403509,
+    "clean_clf_dispatch_rate": 0.6929824561403509,
+    "clean_mean_cost": 3.503987240829346,
+    "mean_closure": 0.8875,
+    "T1_loss": false,
+    "T2_dispatch": false,
+    "T3_cost": false,
+    "T4_closure": true,
+    "all_targets_met": false
+   },
+   {
+    "policy": "mondrian_crc_0.0025",
+    "clean_loss": 0.0027910685805422647,
+    "clean_dispatch_rate": 0.666267942583732,
+    "clean_clf_dispatch_rate": 0.666267942583732,
+    "clean_mean_cost": 3.1383572567783093,
+    "mean_closure": 0.596875,
+    "T1_loss": true,
+    "T2_dispatch": false,
+    "T3_cost": false,
+    "T4_closure": false,
+    "all_targets_met": false
+   },
+   {
+    "policy": "mondrian_crc_0.005",
+    "clean_loss": 0.003987240829346092,
+    "clean_dispatch_rate": 0.9059011164274322,
+    "clean_clf_dispatch_rate": 0.9059011164274322,
+    "clean_mean_cost": 4.111244019138756,
+    "mean_closure": 0.885625,
+    "T1_loss": true,
+    "T2_dispatch": false,
+    "T3_cost": false,
+    "T4_closure": true,
+    "all_targets_met": false
+   },
+   {
+    "policy": "mondrian_crc_0.01",
+    "clean_loss": 0.003987240829346092,
+    "clean_dispatch_rate": 0.9086921850079744,
+    "clean_clf_dispatch_rate": 0.9086921850079744,
+    "clean_mean_cost": 4.134768740031898,
+    "mean_closure": 0.885625,
+    "T1_loss": true,
+    "T2_dispatch": false,
+    "T3_cost": false,
+    "T4_closure": true,
+    "all_targets_met": false
+   },
+   {
+    "policy": "mondrian_crc_0.02",
+    "clean_loss": 0.003987240829346092,
+    "clean_dispatch_rate": 0.9318181818181818,
+    "clean_clf_dispatch_rate": 0.9318181818181818,
+    "clean_mean_cost": 4.268740031897926,
+    "mean_closure": 0.8875,
+    "T1_loss": true,
+    "T2_dispatch": false,
+    "T3_cost": false,
+    "T4_closure": true,
+    "all_targets_met": false
+   },
+   {
+    "policy": "capped_crc_0.005",
+    "clean_loss": 0.0011961722488038277,
+    "clean_dispatch_rate": 0.1547049441786284,
+    "clean_clf_dispatch_rate": 0.1547049441786284,
+    "clean_mean_cost": 1.0123604465709728,
+    "mean_closure": 0.86625,
+    "T1_loss": true,
+    "T2_dispatch": true,
+    "T3_cost": true,
+    "T4_closure": true,
+    "all_targets_met": true
+   },
+   {
+    "policy": "two_stage_0.005",
+    "clean_loss": 0.001993620414673046,
+    "clean_dispatch_rate": 0.47089314194577353,
+    "clean_clf_dispatch_rate": 0.1547049441786284,
+    "clean_mean_cost": 2.178628389154705,
+    "mean_closure": 0.8431249999999999,
+    "T1_loss": true,
+    "T2_dispatch": false,
+    "T3_cost": false,
+    "T4_closure": true,
+    "all_targets_met": false
+   },
+   {
+    "policy": "diagnosis_free_universal",
+    "clean_loss": 0.014752791068580542,
+    "clean_dispatch_rate": 1.0,
+    "clean_clf_dispatch_rate": 1.0,
+    "clean_mean_cost": 12.0,
+    "mean_closure": 0.75625,
+    "T1_loss": false,
+    "T2_dispatch": false,
+    "T3_cost": false,
+    "T4_closure": false,
+    "all_targets_met": false
+   }
+  ],
+  "guaranteed_policies_meeting_all_four": [
+   "capped_crc_0.005"
+  ],
+  "no_guarantee_policies_meeting_all_four": [
+   "tau_none_5pct_fpr"
+  ],
+  "claim": "capped_crc_0.005",
+  "claim_rule": "the guarantee claim is as strong as the best CRC-based policy meeting T1-T4 together, and no stronger; None means no CRC-based policy met all four"
+ },
+ "U1": {
+  "mean_closure": 0.3968,
+  "mean_closure_without_fallback": 0.228,
+  "mean_closure_grounded": 0.37374999999999997,
+  "status": "FAIL"
+ },
+ "N1": {
+  "arm": "N1",
+  "what": "DEPLOYED LOOP: natural rules (K12, K05) + classifier at Mondrian-CRC thresholds",
+  "n": 1648,
+  "hit_before": 0.5898058252427184,
+  "hit_after": 0.6104368932038835,
+  "delta": 0.02063106796116505,
+  "ci_lo": 0.012135922330097087,
+  "ci_hi": 0.029733009708737865,
+  "fixed": 42,
+  "broken": 8,
+  "verdict": "PASS",
+  "dispatched": 0.7317961165048543,
+  "mean_cost": 5.02123786407767
+ },
+ "detection_baselines": {
+  "ours_1_minus_pNONE": [
+   0.9734079151842311,
+   0.9675270678342889,
+   0.9780581984297226
+  ],
+  "qpp_neg_nqc": [
+   0.5837242618492618,
+   0.5671940387230755,
+   0.5996188467825379
+  ],
+  "qpp_neg_wig": [
+   0.5578243211466896,
+   0.5361990622096793,
+   0.577724887173484
+  ],
+  "neg_ce1": [
+   0.6070408027644869,
+   0.5876363076610805,
+   0.628558359230939
+  ],
+  "raglog_tier0_best_single_rag_rr_order": [
+   0.5639037132458186,
+   0.5453288916896454,
+   0.5837385078363894
+  ],
+  "raglog_tier0_features_hgb": [
+   0.7300324857890648,
+   0.7149894498640813,
+   0.7460009861805664
+  ],
+  "raglog_tier0_detect_rate_at_5pct_fa": 0.3871794871794872,
+  "raglog_tier0_features": [
+   "rag_rr_best_pos",
+   "rag_rr_order",
+   "rag_rr_top1_gap",
+   "rag_rt_best_rank",
+   "rag_rt_coverage",
+   "rag_rt_coverage_2nd",
+   "rag_rt_order",
+   "rag_rt_reconstructed"
+  ],
+  "ours_detect_rate_at_5pct_fa": 0.9314102564102564
+ },
+ "repair_baselines": {
+  "Q04:symspell": {
+   "fault": "Q04",
+   "repair": "symspell (external)",
+   "n": 100,
+   "rescued": 51,
+   "ci_lo": 0.4134784047743415
+  },
+  "Q05:wordsegment": {
+   "fault": "Q05",
+   "repair": "wordsegment (external)",
+   "n": 100,
+   "rescued": 88,
+   "ci_lo": 0.8018773199709163
+  }
+ },
+ "raglog_error": null,
+ "licence_dropped": {
+  "rows": 84993,
+  "by_partition": {
+   "real_world_cc_by_4_0_abo": 84993
+  }
+ },
+ "census": [
+  {
+   "signature": "misspelling token (q_correctable>=1)",
+   "fault": "Q04",
+   "n_queries": 7175,
+   "with_signature": 785,
+   "prevalence": 0.10940766550522649,
+   "prev_ci_lo": 0.10239274288605618,
+   "prev_ci_hi": 0.11684062200668642,
+   "fail_rate_given": 0.46496815286624205,
+   "fail_ci_lo": 0.430331658156215,
+   "fail_ci_hi": 0.499945852563301,
+   "share_of_all_failures": 0.11691223574631647
+  },
+  {
+   "signature": "token absent from corpus vocabulary",
+   "fault": "Q04/Q05",
+   "n_queries": 7175,
+   "with_signature": 728,
+   "prevalence": 0.10146341463414635,
+   "prev_ci_lo": 0.09468866735401069,
+   "prev_ci_hi": 0.1086646981806182,
+   "fail_rate_given": 0.5590659340659341,
+   "fail_ci_lo": 0.5227824414420583,
+   "fail_ci_hi": 0.5947293261316899,
+   "share_of_all_failures": 0.13036515054452275
+  },
+  {
+   "signature": "OOV token segmentable into corpus words",
+   "fault": "Q05",
+   "n_queries": 7175,
+   "with_signature": 173,
+   "prevalence": 0.02411149825783972,
+   "prev_ci_lo": 0.020808563663594456,
+   "prev_ci_hi": 0.027923755489400928,
+   "fail_rate_given": 0.5317919075144508,
+   "fail_ci_lo": 0.4575528637851965,
+   "fail_ci_hi": 0.6046496948887805,
+   "share_of_all_failures": 0.029468289557975657
+  },
+  {
+   "signature": "unfinished last word (q_prefix)",
+   "fault": "Q01",
+   "n_queries": 7175,
+   "with_signature": 48,
+   "prevalence": 0.006689895470383275,
+   "prev_ci_lo": 0.005049755294883588,
+   "prev_ci_hi": 0.008858003862248392,
+   "fail_rate_given": 0.5,
+   "fail_ci_lo": 0.36389098932037767,
+   "fail_ci_hi": 0.6361090106796222,
+   "share_of_all_failures": 0.007687379884689302
+  },
+  {
+   "signature": "identifier/code token",
+   "fault": "Q07",
+   "n_queries": 7175,
+   "with_signature": 311,
+   "prevalence": 0.04334494773519164,
+   "prev_ci_lo": 0.038872386960387625,
+   "prev_ci_hi": 0.048306246428040954,
+   "fail_rate_given": 0.2990353697749196,
+   "fail_ci_lo": 0.25085499253971905,
+   "fail_ci_hi": 0.35211996375576415,
+   "share_of_all_failures": 0.029788597053171044
+  },
+  {
+   "signature": "conjunction / multi-intent marker",
+   "fault": "Q09",
+   "n_queries": 7175,
+   "with_signature": 235,
+   "prevalence": 0.032752613240418116,
+   "prev_ci_lo": 0.02887768827836786,
+   "prev_ci_hi": 0.03712761263257577,
+   "fail_rate_given": 0.3872340425531915,
+   "fail_ci_lo": 0.32724299654688443,
+   "fail_ci_hi": 0.4508526115883818,
+   "share_of_all_failures": 0.02914798206278027
+  },
+  {
+   "signature": "exact duplicate pair in top-5",
+   "fault": "K05",
+   "n_queries": 7175,
+   "with_signature": 590,
+   "prevalence": 0.08222996515679443,
+   "prev_ci_lo": 0.07609466300711182,
+   "prev_ci_hi": 0.08881238829208386,
+   "fail_rate_given": 0.535593220338983,
+   "fail_ci_lo": 0.49524908018674163,
+   "fail_ci_hi": 0.5754768507685838,
+   "share_of_all_failures": 0.10121716848174248
+  },
+  {
+   "signature": ">=2 chunks of one parent in top-5",
+   "fault": "K12",
+   "n_queries": 7175,
+   "with_signature": 2728,
+   "prevalence": 0.3802090592334495,
+   "prev_ci_lo": 0.36904342007131996,
+   "prev_ci_hi": 0.39150290539712335,
+   "fail_rate_given": 0.3848973607038123,
+   "fail_ci_lo": 0.36681221355167865,
+   "fail_ci_hi": 0.40330622962599316,
+   "share_of_all_failures": 0.336322869955157
+  },
+  {
+   "signature": "'nan' placeholder doc in top-5",
+   "fault": "K08",
+   "n_queries": 7175,
+   "with_signature": 3100,
+   "prevalence": 0.43205574912891986,
+   "prev_ci_lo": 0.42063292065284436,
+   "prev_ci_hi": 0.4435512953632884,
+   "fail_rate_given": 0.3258064516129032,
+   "fail_ci_lo": 0.30953224319993683,
+   "fail_ci_hi": 0.3425118559577007,
+   "share_of_all_failures": 0.32351057014734147
+  },
+  {
+   "signature": "'nan' placeholder ranked above the gold",
+   "fault": "K08",
+   "n_queries": 7175,
+   "with_signature": 1127,
+   "prevalence": 0.15707317073170732,
+   "prev_ci_lo": 0.1488373411499806,
+   "prev_ci_hi": 0.1656760198914443,
+   "fail_rate_given": 0.6566104702750666,
+   "fail_ci_lo": 0.6283973785925563,
+   "fail_ci_hi": 0.6837595141146099,
+   "share_of_all_failures": 0.2370275464445868
+  },
+  {
+   "signature": "gold itself is a 'nan' placeholder doc",
+   "fault": "K08",
+   "n_queries": 7175,
+   "with_signature": 4201,
+   "prevalence": 0.5855052264808362,
+   "prev_ci_lo": 0.5740633426107399,
+   "prev_ci_hi": 0.5968555978489577,
+   "fail_rate_given": 0.5136872173292073,
+   "fail_ci_lo": 0.49856735098419586,
+   "fail_ci_hi": 0.5287820740214928,
+   "share_of_all_failures": 0.6912235746316464
+  },
+  {
+   "signature": "ALL ESCI queries",
+   "fault": "-",
+   "n_queries": 7175,
+   "with_signature": 7175,
+   "prevalence": 1.0,
+   "fail_rate_given": 0.4351219512195122,
+   "fail_ci_lo": 0.42368798172099437,
+   "fail_ci_hi": 0.44662535685441035
+  }
+ ],
+ "verdict": "NOT_ADOPTED",
+ "clean_net_hit_change": -0.00039872408293460925,
+ "guarantee": {
+  "alpha": 0.005,
+  "lambdas": {
+   "esci_common": 0.00014857559583569824,
+   "esci_rare": 0.06520671416721768,
+   "shop": 4.535584589360209e-05
+  },
+  "calibration": {
+   "esci_common": {
+    "n": 1503,
+    "losses_if_all_dispatched": 2
+   },
+   "esci_rare": {
+    "n": 269,
+    "losses_if_all_dispatched": 8
+   },
+   "shop": {
+    "n": 202,
+    "losses_if_all_dispatched": 0
+   }
+  },
+  "heldout_clean_loss": 0.003987240829346092,
+  "heldout_clean_loss_by_stratum": {
+   "esci_common": 0.004186602870813397,
+   "esci_rare": 0.008130081300813009,
+   "shop": 0.0
+  },
+  "L1": "PASS",
+  "mean_closure": 0.885625,
+  "L2": "PASS"
+ },
+ "policies": [
+  {
+   "policy": "tau_none_5pct_fpr",
+   "mean_closure": 0.845,
+   "mean_closure_grounded": 0.8545454545454547,
+   "mean_family_attribution": 0.8412499999999999,
+   "mean_group_attribution": 0.844375,
+   "mean_cost_faulted": 4.858125,
+   "clean_dispatch_rate": 0.029904306220095694,
+   "clean_clf_dispatch_rate": 0.029904306220095694,
+   "clean_mean_cost": 0.1511164274322169,
+   "clean_loss": 0.0011961722488038277,
+   "clean_net_hit_change": 0.0,
+   "clean_loss_esci_common": 0.0005980861244019139,
+   "clean_loss_esci_rare": 0.005420054200542005,
+   "clean_loss_shop": 0.0,
+   "T1_loss": true,
+   "T2_dispatch": true,
+   "T3_cost": true,
+   "T4_closure": true,
+   "all_targets_met": true
+  },
+  {
+   "policy": "global_crc_0.005",
+   "mean_closure": 0.8875,
+   "mean_closure_grounded": 0.9009090909090911,
+   "mean_family_attribution": 0.87,
+   "mean_group_attribution": 0.876875,
+   "mean_cost_faulted": 5.444374999999999,
+   "clean_dispatch_rate": 0.6929824561403509,
+   "clean_clf_dispatch_rate": 0.6929824561403509,
+   "clean_mean_cost": 3.503987240829346,
+   "clean_loss": 0.00518341307814992,
+   "clean_net_hit_change": 0.0011961722488038277,
+   "clean_loss_esci_common": 0.004186602870813397,
+   "clean_loss_esci_rare": 0.016260162601626018,
+   "clean_loss_shop": 0.0,
+   "T1_loss": false,
+   "T2_dispatch": false,
+   "T3_cost": false,
+   "T4_closure": true,
+   "all_targets_met": false
+  },
+  {
+   "policy": "mondrian_crc_0.0025",
+   "mean_closure": 0.596875,
+   "mean_closure_grounded": 0.5881818181818181,
+   "mean_family_attribution": 0.579375,
+   "mean_group_attribution": 0.585,
+   "mean_cost_faulted": 4.0493749999999995,
+   "clean_dispatch_rate": 0.666267942583732,
+   "clean_clf_dispatch_rate": 0.666267942583732,
+   "clean_mean_cost": 3.1383572567783093,
+   "clean_loss": 0.0027910685805422647,
+   "clean_net_hit_change": -0.0007974481658692185,
+   "clean_loss_esci_common": 0.004186602870813397,
+   "clean_loss_esci_rare": 0.0,
+   "clean_loss_shop": 0.0,
+   "T1_loss": true,
+   "T2_dispatch": false,
+   "T3_cost": false,
+   "T4_closure": false,
+   "all_targets_met": false
+  },
+  {
+   "policy": "mondrian_crc_0.005",
+   "mean_closure": 0.885625,
+   "mean_closure_grounded": 0.8981818181818183,
+   "mean_family_attribution": 0.8712500000000001,
+   "mean_group_attribution": 0.8787499999999999,
+   "mean_cost_faulted": 5.406875,
+   "clean_dispatch_rate": 0.9059011164274322,
+   "clean_clf_dispatch_rate": 0.9059011164274322,
+   "clean_mean_cost": 4.111244019138756,
+   "clean_loss": 0.003987240829346092,
+   "clean_net_hit_change": -0.00039872408293460925,
+   "clean_loss_esci_common": 0.004186602870813397,
+   "clean_loss_esci_rare": 0.008130081300813009,
+   "clean_loss_shop": 0.0,
+   "T1_loss": true,
+   "T2_dispatch": false,
+   "T3_cost": false,
+   "T4_closure": true,
+   "all_targets_met": false
+  },
+  {
+   "policy": "mondrian_crc_0.01",
+   "mean_closure": 0.885625,
+   "mean_closure_grounded": 0.8981818181818183,
+   "mean_family_attribution": 0.8712500000000001,
+   "mean_group_attribution": 0.8787499999999999,
+   "mean_cost_faulted": 5.4125,
+   "clean_dispatch_rate": 0.9086921850079744,
+   "clean_clf_dispatch_rate": 0.9086921850079744,
+   "clean_mean_cost": 4.134768740031898,
+   "clean_loss": 0.003987240829346092,
+   "clean_net_hit_change": 0.0,
+   "clean_loss_esci_common": 0.004186602870813397,
+   "clean_loss_esci_rare": 0.008130081300813009,
+   "clean_loss_shop": 0.0,
+   "T1_loss": true,
+   "T2_dispatch": false,
+   "T3_cost": false,
+   "T4_closure": true,
+   "all_targets_met": false
+  },
+  {
+   "policy": "mondrian_crc_0.02",
+   "mean_closure": 0.8875,
+   "mean_closure_grounded": 0.9009090909090909,
+   "mean_family_attribution": 0.871875,
+   "mean_group_attribution": 0.879375,
+   "mean_cost_faulted": 5.4399999999999995,
+   "clean_dispatch_rate": 0.9318181818181818,
+   "clean_clf_dispatch_rate": 0.9318181818181818,
+   "clean_mean_cost": 4.268740031897926,
+   "clean_loss": 0.003987240829346092,
+   "clean_net_hit_change": 0.001993620414673046,
+   "clean_loss_esci_common": 0.004186602870813397,
+   "clean_loss_esci_rare": 0.008130081300813009,
+   "clean_loss_shop": 0.0,
+   "T1_loss": true,
+   "T2_dispatch": false,
+   "T3_cost": false,
+   "T4_closure": true,
+   "all_targets_met": false
+  },
+  {
+   "policy": "capped_crc_0.005",
+   "mean_closure": 0.86625,
+   "mean_closure_grounded": 0.8736363636363638,
+   "mean_family_attribution": 0.85125,
+   "mean_group_attribution": 0.855625,
+   "mean_cost_faulted": 5.09375,
+   "clean_dispatch_rate": 0.1547049441786284,
+   "clean_clf_dispatch_rate": 0.1547049441786284,
+   "clean_mean_cost": 1.0123604465709728,
+   "clean_loss": 0.0011961722488038277,
+   "clean_net_hit_change": 0.0011961722488038277,
+   "clean_loss_esci_common": 0.0005980861244019139,
+   "clean_loss_esci_rare": 0.005420054200542005,
+   "clean_loss_shop": 0.0,
+   "T1_loss": true,
+   "T2_dispatch": true,
+   "T3_cost": true,
+   "T4_closure": true,
+   "all_targets_met": true
+  },
+  {
+   "policy": "two_stage_0.005",
+   "mean_closure": 0.8431249999999999,
+   "mean_closure_grounded": 0.8781818181818182,
+   "mean_family_attribution": 0.8518749999999999,
+   "mean_group_attribution": 0.8574999999999999,
+   "mean_cost_faulted": 6.475625,
+   "clean_dispatch_rate": 0.47089314194577353,
+   "clean_clf_dispatch_rate": 0.1547049441786284,
+   "clean_mean_cost": 2.178628389154705,
+   "clean_loss": 0.001993620414673046,
+   "clean_net_hit_change": 0.013556618819776715,
+   "clean_loss_esci_common": 0.0017942583732057417,
+   "clean_loss_esci_rare": 0.005420054200542005,
+   "clean_loss_shop": 0.0,
+   "T1_loss": true,
+   "T2_dispatch": false,
+   "T3_cost": false,
+   "T4_closure": true,
+   "all_targets_met": false
+  },
+  {
+   "policy": "diagnosis_free_universal",
+   "mean_closure": 0.75625,
+   "mean_closure_grounded": 0.8009090909090909,
+   "mean_family_attribution": 0.0,
+   "mean_group_attribution": 0.0,
+   "mean_cost_faulted": 12.0,
+   "clean_dispatch_rate": 1.0,
+   "clean_clf_dispatch_rate": 1.0,
+   "clean_mean_cost": 12.0,
+   "clean_loss": 0.014752791068580542,
+   "clean_net_hit_change": 0.007575757575757576,
+   "clean_loss_esci_common": 0.01076555023923445,
+   "clean_loss_esci_rare": 0.051490514905149054,
+   "clean_loss_shop": 0.0,
+   "T1_loss": false,
+   "T2_dispatch": false,
+   "T3_cost": false,
+   "T4_closure": false,
+   "all_targets_met": false
+  }
+ ],
+ "natural": [
+  {
+   "arm": "N1",
+   "what": "DEPLOYED LOOP: natural rules (K12, K05) + classifier at Mondrian-CRC thresholds",
+   "n": 1648,
+   "hit_before": 0.5898058252427184,
+   "hit_after": 0.6104368932038835,
+   "delta": 0.02063106796116505,
+   "ci_lo": 0.012135922330097087,
+   "ci_hi": 0.029733009708737865,
+   "fixed": 42,
+   "broken": 8,
+   "verdict": "PASS",
+   "dispatched": 0.7317961165048543,
+   "mean_cost": 5.02123786407767
+  },
+  {
+   "arm": "N1a",
+   "what": "component: natural rules only",
+   "n": 1648,
+   "hit_before": 0.5898058252427184,
+   "hit_after": 0.6116504854368932,
+   "delta": 0.021844660194174758,
+   "ci_lo": 0.013956310679611651,
+   "ci_hi": 0.03033980582524272,
+   "fixed": 41,
+   "broken": 5,
+   "verdict": "PASS"
+  },
+  {
+   "arm": "N1b",
+   "what": "component: classifier dispatch only",
+   "n": 1648,
+   "hit_before": 0.5898058252427184,
+   "hit_after": 0.5885922330097088,
+   "delta": -0.0012135922330097086,
+   "ci_lo": -0.00424757281553398,
+   "ci_hi": 0.0018203883495145632,
+   "fixed": 2,
+   "broken": 4,
+   "verdict": "INCONCLUSIVE",
+   "dispatched": 0.49271844660194175
+  },
+  {
+   "arm": "B1",
+   "what": "baseline: K12 parent collapse always on (no detection)",
+   "n": 1648,
+   "hit_before": 0.5898058252427184,
+   "hit_after": 0.6055825242718447,
+   "delta": 0.015776699029126214,
+   "ci_lo": 0.007888349514563107,
+   "ci_hi": 0.024271844660194174,
+   "fixed": 37,
+   "broken": 11,
+   "verdict": "PASS"
+  },
+  {
+   "arm": "B2",
+   "what": "baseline: diagnosis-free universal repair on every query (cost 12)",
+   "n": 1648,
+   "hit_before": 0.5898058252427184,
+   "hit_after": 0.6086165048543689,
+   "delta": 0.018810679611650484,
+   "ci_lo": 0.007888349514563107,
+   "ci_hi": 0.030946601941747573,
+   "fixed": 62,
+   "broken": 31,
+   "verdict": "PASS"
+  },
+  {
+   "arm": "NA1",
+   "what": "natural misspelling: ours (QLEX, log-gated)",
+   "n": 185,
+   "hit_before": 0.572972972972973,
+   "hit_after": 0.518918918918919,
+   "delta": -0.05405405405405406,
+   "ci_lo": -0.10270270270270271,
+   "ci_hi": -0.005405405405405406,
+   "fixed": 7,
+   "broken": 17,
+   "verdict": "HARM"
+  },
+  {
+   "arm": "NA1x",
+   "what": "natural misspelling: SymSpell lookup_compound (external)",
+   "n": 185,
+   "hit_before": 0.572972972972973,
+   "hit_after": 0.4486486486486487,
+   "delta": -0.12432432432432433,
+   "ci_lo": -0.1783783783783784,
+   "ci_hi": -0.06486486486486487,
+   "fixed": 5,
+   "broken": 28,
+   "verdict": "HARM"
+  },
+  {
+   "arm": "NA2",
+   "what": "natural missing space: ours (QLEX)",
+   "n": 47,
+   "hit_before": 0.5106382978723404,
+   "hit_after": 0.46808510638297873,
+   "delta": -0.0425531914893617,
+   "ci_lo": -0.14893617021276595,
+   "ci_hi": 0.06382978723404255,
+   "fixed": 2,
+   "broken": 4,
+   "verdict": "INCONCLUSIVE"
+  },
+  {
+   "arm": "NA2x",
+   "what": "natural missing space: wordsegment (external)",
+   "n": 47,
+   "hit_before": 0.5106382978723404,
+   "hit_after": 0.48936170212765956,
+   "delta": -0.02127659574468085,
+   "ci_lo": -0.10638297872340426,
+   "ci_hi": 0.06382978723404255,
+   "fixed": 2,
+   "broken": 3,
+   "verdict": "INCONCLUSIVE"
+  },
+  {
+   "arm": "NA4",
+   "what": "natural duplicate in top-5: K05 collapse",
+   "n": 141,
+   "hit_before": 0.5177304964539007,
+   "hit_after": 0.5815602836879432,
+   "delta": 0.06382978723404255,
+   "ci_lo": 0.014184397163120567,
+   "ci_hi": 0.11347517730496454,
+   "fixed": 11,
+   "broken": 2,
+   "verdict": "PASS"
+  },
+  {
+   "arm": "NA5",
+   "what": "natural chunk crowding: K12 parent collapse",
+   "n": 607,
+   "hit_before": 0.6490939044481054,
+   "hit_after": 0.6919275123558485,
+   "delta": 0.042833607907743,
+   "ci_lo": 0.02471169686985173,
+   "ci_hi": 0.06260296540362438,
+   "fixed": 30,
+   "broken": 4,
+   "verdict": "PASS"
+  },
+  {
+   "arm": "NA1c",
+   "what": "DEPLOYED LOOP, v5 config (natural typo repair OFF), on natural queries with q_correctable >= 1",
+   "n": 185,
+   "hit_before": 0.572972972972973,
+   "hit_after": 0.5837837837837838,
+   "delta": 0.010810810810810811,
+   "ci_lo": 0.0,
+   "ci_hi": 0.02702702702702703,
+   "fixed": 2,
+   "broken": 0,
+   "verdict": "INCONCLUSIVE"
+  },
+  {
+   "arm": "NA1d",
+   "what": "counterfactual: same loop with the v4 config (natural typo repair ON), same queries",
+   "n": 185,
+   "hit_before": 0.572972972972973,
+   "hit_after": 0.572972972972973,
+   "delta": 0.0,
+   "ci_lo": -0.032432432432432434,
+   "ci_hi": 0.032432432432432434,
+   "fixed": 4,
+   "broken": 4,
+   "verdict": "INCONCLUSIVE"
+  },
+  {
+   "arm": "N1v4",
+   "what": "counterfactual: DEPLOYED LOOP with the v4 config on all natural queries",
+   "n": 1648,
+   "hit_before": 0.5898058252427184,
+   "hit_after": 0.6092233009708737,
+   "delta": 0.019417475728155338,
+   "ci_lo": 0.010315533980582525,
+   "ci_hi": 0.028534587378640695,
+   "fixed": 46,
+   "broken": 14,
+   "verdict": "PASS"
+  }
+ ],
+ "unseen_mean_closure": 0.3968,
+ "not_solved": [
+  "Q03",
+  "C2"
+ ],
+ "device": "cuda",
+ "reranker": "BAAI/bge-reranker-large",
+ "protocol": {
+  "created_utc": "2026-11-19 04:40:44",
+  "gates": {
+   "detector": "held-out one-vs-rest AUROC >= 0.70 (point estimate) AND >= 50 held-out positives (v5 floor; fewer is THIN)",
+   "repair": ">= 50 hard episodes (v5 floor; fewer is THIN) AND Wilson 95% lower bound of rescue rate >= 0.50 AND <= 10% of clean successes lost when the repair is forced on them",
+   "solved": "detector PASS and repair PASS",
+   "targets": "ADOPTED if repairs PASS >= 24/28 AND detectors PASS >= 27/28, else NOT_ADOPTED",
+   "AUROC_BAR": 0.7,
+   "MIN_TEST_POS": 50,
+   "RESCUE_BAR_LB": 0.5,
+   "MIN_REPAIR_N": 50,
+   "MAX_HARM": 0.1,
+   "REPAIR_TARGET": 24,
+   "DETECT_TARGET": 27,
+   "guarantee": "do-no-harm dispatch: threshold lambda fitted by conformal risk control on out-of-fold clean TRAIN queries so that E[Hit@5 lost on a clean query] <= ALPHA; PASS if held-out clean loss <= ALPHA; also report 200 calibration re-splits",
+   "ALPHA": 0.005,
+   "ALPHAS": [
+    0.0025,
+    0.005,
+    0.01,
+    0.02
+   ],
+   "natural": "report, not gated: (a) real misspelled ESCI queries whose corrected spelling was typed by another ESCI user, gold from ESCI labels; (b) in-corpus superseded policy versions with the validity filter off, no injected docs. Metrics: Hit@5 before, after closed loop (guarded and unguarded), after oracle repair, oracle-referenced closure",
+   "unseen": "report, not gated: leave-one-fault-out attributor; on the held-out fault test episodes report flagged rate, right-group rate and Hit after dispatch",
+   "v2_new_faults": "R25, R26, K11 judged with the same detector and repair gates; reported beside the 28, not counted in the 28-fault verdict",
+   "v2_loop": "family-level dispatch; FAMILIES QLEX={Q01,Q03,Q04,Q05}, STALE={K04,R07}, ENC={R03,R10,R11}; attribution correct if the family is right. L1 PASS if held-out clean Hit@5 loss <= ALPHA under the CRC threshold fitted on the separate calibration split. L2 PASS if mean held-out closure over the 31 faults + C2 >= 0.70 under the same threshold",
+   "L2_BAR": 0.7,
+   "v2_natural": "arms NA1-NA6 on ESCI queries outside natural_exclusions_v1.json; selection by deployed rule only, never by gold; metric paired delta Hit@5 (repair - none) with 95% bootstrap CI (N_BOOT resamples); PASS if CI lower bound > 0, HARM if CI upper bound < 0, else INCONCLUSIVE",
+   "v3_scope": "headline = GROUNDED set (evidence tier S/M/D, docs/EVIDENCE_AND_NOVELTY_REPORT.md section 2 + v3 additions); QUARANTINE set (tier N/P) is run and reported but excluded from headline claims",
+   "L1": "do-no-harm, classifier dispatch: Mondrian CRC, one threshold per stratum (rarity x source), fitted on clean TRAIN queries never used to fit the attributor; PASS iff held-out clean Hit@5 loss <= ALPHA overall",
+   "L2": "mean held-out closure over all faults + C2 >= 0.70 under the L1 thresholds",
+   "U1": "unseen faults: mean leave-one-fault-out closure >= 0.50 with family-first dispatch + group fallback repairs",
+   "N1": "natural traffic: deployed loop (natural rules K05/K12 + classifier at L1 thresholds) on ESCI queries outside natural_exclusions_v2.json; PASS iff the 95% bootstrap CI of paired delta Hit@5 has lower bound > 0",
+   "G1": "grounded set: claim solved iff detector PASS and repair PASS; report count of the grounded set",
+   "U1_BAR": 0.5,
+   "v5_policies": "capped_crc_0.005: Mondrian CRC threshold, raised per stratum to the 80th percentile of the calibration clean score so classifier dispatch on clean is <= 20%; two_stage_0.005: precise rules (alone) or natural rules K12/K05 (additive) then the attributor at a capped threshold, calibrated on the combined loss. Targets reported together: T1 clean loss <= 0.005, T2 total clean dispatch <= 0.25, T3 clean mean cost <= 1.5, T4 mean closure >= 0.80. L1 and L2 stay defined on mondrian_crc_0.005 (L2 bar 0.70).",
+   "v6_changes": "D1 base-query supply (N_BASE_ESCI 6000 = all examined ESCI queries); D2 C2 pair mix balanced within each split. Nothing else differs from v5.",
+   "v5_accounting": "VERDICT.accounting: (a) core 28 under the original rule [headline], (b) grounded set, (c) quarantine set",
+   "v5_deploy": "deployed config: natural-misspelling repair OFF on natural traffic (rep_QLEX not applied); injected-typo repair stays on; counterfactual v4 behaviour reported as h_loop_v4cfg, arms NA1c, NA1d, N1v4"
+  },
+  "cfg": {
+   "SEED": 52,
+   "QUERY_DATE": "2026-11-14",
+   "K_FINAL": 5,
+   "DEPTH": 25,
+   "RRF_K": 60,
+   "CAND": 100,
+   "ENCODER": "BAAI/bge-base-en-v1.5",
+   "ENCODER_V1": "BAAI/bge-base-en",
+   "QPROMPT": "Represent this sentence for searching relevant passages: ",
+   "RERANKER": "BAAI/bge-reranker-large",
+   "CE_MAXLEN": 512,
+   "N_BASE_ESCI": 6000,
+   "N_HARD": 100,
+   "MAX_ATT": 4000,
+   "TEST_FRAC": 0.5,
+   "CLEAN_FPR": 0.05,
+   "IVF_NLIST": 1024,
+   "N_PRDC": 528,
+   "PROBE_K": 20,
+   "N_HARM": 20,
+   "N_NAT": 400,
+   "TIME_BUDGET": 30000,
+   "N_NATQ": 100000,
+   "CAL_FRAC": 0.5,
+   "N_BOOT": 2000,
+   "EF_SEARCH": 40,
+   "CLEAN_CORPUS": 1,
+   "N_CAL_EXTRA": 100000,
+   "N_CENSUS": 100000,
+   "TAU_FAM": 0.6,
+   "QLEX_MAX_W": 1,
+   "QLEX_MIN_C": 5,
+   "QLOG_NN_MIN": 0.8,
+   "WARM_CACHE": "",
+   "RAGLOG_COMMIT": "7f7d0686cc69e00f3081369039ae1247878aa928",
+   "CAP_FRAC": 0.2,
+   "T_DISPATCH": 0.25,
+   "T_COST": 1.5,
+   "T_CLOSURE": 0.8,
+   "DEPLOY": {
+    "natural_typo_repair": false,
+    "injected_typo_repair": true,
+    "date": "2026-11-16",
+    "evidence": "natural-misspelling repair: negative point estimate in all 5 runs that measured it (-4.9 to -7.1 pts); 95% CI excludes 0 in GPU seeds 46 and 48 (-5.4 [-10.8, -0.5]); SymSpell worse. docs/evidence/v5_protocol.md C3, B3"
+   }
+  },
+  "device": "cuda",
+  "code_sha256": "44176b9a5ad633e39ec29581237d9919619b9944471178effb172be1d276e28a",
+  "env": {
+   "python": "3.13.16",
+   "platform": "Linux-6.18.55+-x86_64-with-glibc2.39",
+   "cpu_count": 4,
+   "numpy": "2.1.3",
+   "pandas": "2.3.3",
+   "scipy": "1.16.3",
+   "scikit-learn": "1.6.1",
+   "torch": "2.11.0+cu130",
+   "transformers": "5.20.2",
+   "sentence-transformers": "5.7.0",
+   "nltk": "3.9.1",
+   "threadpoolctl": "3.7.0",
+   "cuda": "13.0",
+   "gpu": "Tesla T4"
+  }
+ }
+}

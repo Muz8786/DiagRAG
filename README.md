@@ -23,6 +23,27 @@ shows it, without digging through the working workspace.
   Markdown document you can open and edit in any Markdown
   editor (Typora, Obsidian, VS Code preview, or GitHub preview)
   with every figure embedded and captioned.
+- `kaggle/DiagRAG_v4_kaggle.ipynb` — **the one-file Kaggle notebook**. It embeds the frozen `diagrag_v4.py`, checks its SHA-256
+  and runs the judged GPU configuration (about 2 h 10 min on a T4). Judged result of that configuration: NOT_ADOPTED, 26/28
+  detectors (27 needed), 27/28 repairs. See `docs/ROADMAP_V3.md` section 8.
+- **`PROJECT_EXPLAINED.md` — start here.** The whole project in depth: the idea, what was built, every result (including the failures), the limitations and the honest score.
+- `kaggle/DiagRAG_v6_kaggle.ipynb` — the one-file notebook of the **latest pre-registered run (v6, seed 50)**. The GPU flagship (`kaggle/judged_gpu_v6_seed50/`) and the CPU replication (`kaggle/judged_cpu_run_v6_seed50/`) are both **ADOPTED** (27/28 and 28/28 detectors); U1 is still below its bar. v5 (CPU, NOT_ADOPTED) and v4 (GPU, NOT_ADOPTED) stay in the record: `docs/ALL_RUNS_MATRIX.md`.
+- `kaggle/diagrag_v7.py` and `kaggle/judged_cpu_run_v7_seed50/` — the **composed-fault arm** (fault pairs and triples, descriptive, no adoption gate) with a retrained attributor and a single-fault regression check (none found). Protocol and amendments: `docs/evidence/v7_composed_protocol.md`. `docs/evidence/qml_protocol.md` and `qml_result.json` — an optional **simulated** quantum-ML score comparison (no quantum advantage, none claimed).
+- **`A_TO_Z_GUIDE.md`** and **`kaggle/DiagRAG_A_to_Z_kaggle.ipynb`** — the one-notebook A-to-Z route: the notebook plus a private data zip (`DiagRAG_KAGGLE_A_to_Z.zip`, about 1.2 GB, built by `kaggle/build_a_to_z_package.sh`, **not in git** because of its size and its third-party data) runs integrity checks, the detector re-fit, the stored results, the QML comparison and the benchmark, and optionally regenerates the v6 GPU run and the composed-fault arm.
+- `kaggle/` — the other notebooks (v1 to v4, port, port2, LangChain v1 and v2), their `.py` sources, `build_notebook.py`,
+  `build_final_notebook.py`, and one `judged_*` folder per judged run. See `kaggle/README.md`.
+- `release/DiagRAG_FULL_PROJECT_A_to_Z.zip` — everything: code, notebooks, every judged run with its episodes, docs, evidence, benchmark, drafts. `release/DiagRAG_RUN_PACKAGE.zip` — what is needed to run and check it (`RUN_GUIDE.md`, runners, verifier). `release/DiagRAG-Bench_v1.0_public_STAGED.zip` — the benchmark package, staged and not released.
+- `docs/ROADMAP_V3.md` — execution record of roadmap Phases A–E (v3,
+  port2, LangChain): every gate, result, failure and remaining decision.
+- `bench/` — DiagRAG-Bench v1.0: public dev episodes, unlabelled
+  held-out episodes, scorer, datasheet, reference baseline.
+- `docs/IDENTIFIABILITY.md`, `docs/CROSSWALK_CATALOGUE.md`, `NOTICE.md`.
+- `docs/EVIDENCE_AND_NOVELTY_REPORT.md` — field evidence for every
+  fault, verdicts, missing faults, the natural-validation, portability
+  and loop findings, and the execution record of the v2 and portability
+  judged runs. Raw evidence is in `docs/evidence/`.
+- `docs/CORE28_FAULTS.md` — for each core fault: the problem, the
+  episodes, the detector and the repair.
 - `paper/` — the publication paper outline, with sections,
   headline numbers, and honest boundaries. The canonical
   manuscript is separate; do not edit it from here.

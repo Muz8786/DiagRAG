@@ -1,0 +1,39 @@
+{
+ "created_utc": "2026-11-15 23:16:58",
+ "gates": {
+  "detector": "held-out one-vs-rest AUROC >= 0.70 AND >= 20 held-out positives",
+  "repair": ">= 20 hard episodes AND Wilson 95% lower bound >= 0.50 AND <= 10% of clean successes lost",
+  "AUROC_BAR": 0.7,
+  "MIN_TEST_POS": 20,
+  "RESCUE_BAR_LB": 0.5,
+  "MIN_REPAIR_N": 20,
+  "MAX_HARM": 0.1,
+  "summary": "claim \"the suite runs on a framework stack\" only if >= 11 of the 15 framework-expressible faults pass both gates",
+  "TARGET": 11
+ },
+ "cfg": {
+  "SEED": 11,
+  "K": 25,
+  "TOP_N": 5,
+  "W": [
+   0.5,
+   0.5
+  ],
+  "THRESH": null,
+  "N_HARD": 50,
+  "MAX_ATT": 2500,
+  "N_HARM": 20,
+  "TIME_BUDGET": 40000,
+  "EMB": "BAAI/bge-small-en-v1.5",
+  "EMB_SWAP": "sentence-transformers/all-MiniLM-L6-v2",
+  "CE": "cross-encoder/ms-marco-MiniLM-L-6-v2",
+  "INSTR": "Represent this sentence for searching relevant passages: "
+ },
+ "device": "cuda",
+ "versions": {
+  "langchain_core": "1.7.0",
+  "langchain_community": "0.4.2",
+  "faiss": "1.16.0"
+ },
+ "code_sha256": "7f6f650a5610e1ff76433d71b8052fcd08627e7666f933af102bf970b2f4e5ed"
+}

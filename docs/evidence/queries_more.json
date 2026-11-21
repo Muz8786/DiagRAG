@@ -1,0 +1,17 @@
+{
+ "st_max_seq_length": "repo:huggingface/sentence-transformers max_seq_length truncation",
+ "st_prompt": "repo:huggingface/sentence-transformers prompt query passage e5",
+ "st_normalize": "repo:huggingface/sentence-transformers normalize_embeddings",
+ "st_fp16": "repo:huggingface/sentence-transformers fp16 different embeddings",
+ "st_crossencoder_trunc": "repo:huggingface/sentence-transformers CrossEncoder max_length truncation",
+ "weaviate_hybrid": "repo:weaviate/weaviate hybrid search fusion",
+ "weaviate_missing": "repo:weaviate/weaviate objects missing search",
+ "opensearch_normalization": "repo:opensearch-project/neural-search normalization hybrid",
+ "es_knn_num_candidates": "repo:elastic/elasticsearch knn num_candidates recall",
+ "vespa_rank": "repo:vespa-engine/vespa nearestNeighbor approximate recall",
+ "pgvector_nan": "repo:pgvector/pgvector NaN",
+ "faiss_nan": "repo:facebookresearch/faiss NaN search results",
+ "hnswlib_recall_deleted": "repo:nmslib/hnswlib markDeleted recall",
+ "lc_multi_tenant": "repo:langchain-ai/langchain filter tenant leak",
+ "lc_parent_retriever": "repo:langchain-ai/langchain ParentDocumentRetriever missing"
+}

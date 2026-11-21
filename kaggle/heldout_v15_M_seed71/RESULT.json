@@ -1,0 +1,106 @@
+{
+ "trial": false,
+ "role": "heldout",
+ "run_parts": [
+  "M"
+ ],
+ "seed": "71",
+ "params": {
+  "POOL": 600,
+  "A": 100,
+  "B": 40,
+  "NDICT": 2,
+  "NDICT_RANDOM": 4,
+  "T": 3,
+  "EPS": 0.002,
+  "KAPPA": 3.0,
+  "TRAFFIC": 100,
+  "PAIR_TRAFFIC": 40,
+  "SCREEN": 40,
+  "HARM_FRAC": 0.1,
+  "ALARM_P": 0.01,
+  "MAXM": 400,
+  "TIMEOUT": 90
+ },
+ "note": "frozen v6 executed on a judged checkpoint; measurements only",
+ "battery": {
+  "size": 103,
+  "random_part": 100,
+  "diagnostic_part": 3,
+  "undetected_faults": [],
+  "indistinct_pairs": []
+ },
+ "M_points": {
+  "total": 381,
+  "covered": 193,
+  "by_half": {
+   "dev": 187,
+   "heldout": 194
+  },
+  "covered_by_half": {
+   "dev": 89,
+   "heldout": 104
+  },
+  "by_fn": {
+   "q_terms": 3,
+   "bm25_scores": 8,
+   "enc_q": 8,
+   "ce_scores": 10,
+   "topn": 12,
+   "run": 152
+  }
+ },
+ "M_clean_stage_changes": {
+  "D": 0,
+  "S": 0,
+  "F": 0,
+  "O": 0,
+  "V": 0
+ },
+ "M": {
+  "evaluated": 73,
+  "status": {
+   "harmless": 48,
+   "crash": 16,
+   "harmful": 6,
+   "subtle": 3
+  },
+  "harmful": 6,
+  "subtle": 3,
+  "detected_selftest": 1.0,
+  "detected_telemetry": 0.6666666666666666,
+  "detected_either": 1.0,
+  "detected_ce_drop_baseline": 0.5,
+  "component_ok": 1.0,
+  "component_ok_decode": 0.6666666666666666,
+  "component_majority_baseline": 0.3333333333333333,
+  "n_component_scored": 6,
+  "subtle_detected_selftest": 1.0,
+  "subtle_detected_telemetry": 0.0,
+  "subtle_component_ok": 1.0,
+  "by_component": {
+   "FILTERS": {
+    "n": 1,
+    "localized": 1.0,
+    "telemetry": 1.0
+   },
+   "FUSION": {
+    "n": 2,
+    "localized": 1.0,
+    "telemetry": 1.0
+   },
+   "RERANK": {
+    "n": 2,
+    "localized": 1.0,
+    "telemetry": 0.5
+   },
+   "SERVING": {
+    "n": 1,
+    "localized": 1.0,
+    "telemetry": 0.0
+   }
+  },
+  "median_probe_fail": 0.5825242718446602,
+  "acceptance_sampling_bound": "a fault breaking a share h of working queries is missed by all 100 random probes with probability (1-h)^100"
+ }
+}

@@ -1,0 +1,73 @@
+{"pid": "run|534|77|81|var:stop|0", "fn": "run", "kind": "var:stop", "comp": "TELEMETRY", "screen_fail": 0.0, "status": "harmless"}
+{"pid": "run|513|35|40|var:order|0", "fn": "run", "kind": "var:order", "comp": "RERANK", "status": "crash", "error": "UnboundLocalError(\"cannot access local variable 'order' where it is not associated with a value\")"}
+{"pid": "ce_scores|336|70|89|del|0", "fn": "ce_scores", "kind": "del", "comp": "RERANK", "screen_fail": 0.0, "status": "harmless"}
+{"pid": "ce_scores|334|4|89|ifnot|0", "fn": "ce_scores", "kind": "ifnot", "comp": "RERANK", "screen_fail": 0.85, "status": "harmful", "selftest_alarm": true, "probe_fail": 0.5533980582524272, "stage_changes": {"D": 0, "S": 0, "F": 0, "O": 103, "V": 102}, "stage_comp": "RERANK", "decoded": ["R01", "R19"], "decoded_comp": ["DENSE", "RERANK"], "telemetry_p": 0.6875, "telemetry_alarm": false, "telemetry_error": false, "ce_drop_p": 1.0, "ce_drop_alarm": false, "either_alarm": true, "component_ok": true, "component_ok_decode": true}
+{"pid": "run|490|20|24|var:stop|0", "fn": "run", "kind": "var:stop", "comp": "FUSION", "screen_fail": 0.15, "status": "harmful", "selftest_alarm": true, "probe_fail": 0.1553398058252427, "stage_changes": {"D": 0, "S": 0, "F": 103, "O": 90, "V": 62}, "stage_comp": "FUSION", "decoded": ["R22", "R25"], "decoded_comp": ["DENSE", "FUSION"], "telemetry_p": 8.470329472543003e-22, "telemetry_alarm": true, "telemetry_error": false, "ce_drop_p": 0.0035986900329589844, "ce_drop_alarm": true, "either_alarm": true, "component_ok": true, "component_ok_decode": true}
+{"pid": "run|517|48|53|var:fused|0", "fn": "run", "kind": "var:fused", "comp": "RERANK", "status": "crash", "error": "IndexError('list index out of range')"}
+{"pid": "enc_q|313|67|71|bool|0", "fn": "enc_q", "kind": "bool", "comp": "DENSE", "screen_fail": 0.0, "status": "harmless"}
+{"pid": "run|451|14|16|var:dok|0", "fn": "run", "kind": "var:dok", "comp": "FILTERS", "screen_fail": 0.0, "status": "harmless"}
+{"pid": "run|518|13|18|var:fused|0", "fn": "run", "kind": "var:fused", "comp": "RERANK", "screen_fail": 0.0, "status": "harmless"}
+{"pid": "run|444|31|33|var:dsm|0", "fn": "run", "kind": "var:dsm", "comp": "DENSE", "screen_fail": 0.0, "status": "harmless"}
+{"pid": "run|467|93|100|neg|0", "fn": "run", "kind": "neg", "comp": "BM25", "screen_fail": 0.0, "status": "harmless"}
+{"pid": "run|447|11|13|slice+|0", "fn": "run", "kind": "slice+", "comp": "FILTERS", "screen_fail": 0.0, "status": "harmless"}
+{"pid": "run|458|29|31|var:dok|0", "fn": "run", "kind": "var:dok", "comp": "FILTERS", "screen_fail": 0.0, "status": "harmless"}
+{"pid": "enc_q|313|73|74|int+|0", "fn": "enc_q", "kind": "int+", "comp": "DENSE", "status": "crash", "error": "IndexError('index 1 is out of bounds for axis 0 with size 1')"}
+{"pid": "run|511|12|17|var:order|0", "fn": "run", "kind": "var:order", "comp": "RERANK", "status": "crash", "error": "UnboundLocalError(\"cannot access local variable 'order' where it is not associated with a value\")"}
+{"pid": "run|447|8|10|var:dok|0", "fn": "run", "kind": "var:dok", "comp": "FILTERS", "status": "crash", "error": "UnboundLocalError(\"cannot access local variable 'dok' where it is not associated with a value\")"}
+{"pid": "run|514|4|77|ifnot|0", "fn": "run", "kind": "ifnot", "comp": "RERANK", "screen_fail": 0.625, "status": "harmful", "selftest_alarm": true, "probe_fail": 0.6116504854368932, "stage_changes": {"D": 0, "S": 0, "F": 0, "O": 103, "V": 103}, "stage_comp": "RERANK", "decoded": ["R05"], "decoded_comp": ["RERANK"], "telemetry_p": 5.048709793414476e-29, "telemetry_alarm": true, "telemetry_error": false, "ce_drop_p": 1.0, "ce_drop_alarm": false, "either_alarm": true, "component_ok": true, "component_ok_decode": true}
+{"pid": "run|458|29|53|del|0", "fn": "run", "kind": "del", "comp": "FILTERS", "screen_fail": 0.0, "status": "harmless"}
+{"pid": "bm25_scores|292|34|35|int+|0", "fn": "bm25_scores", "kind": "int+", "comp": "BM25", "status": "crash", "error": "ValueError('axis out of range for ndim')"}
+{"pid": "run|468|4|26|del|0", "fn": "run", "kind": "del", "comp": "BM25", "screen_fail": 0.0, "status": "harmless"}
+{"pid": "run|466|50|53|var:ds|0", "fn": "run", "kind": "var:ds", "comp": "DENSE", "screen_fail": 0.0, "status": "harmless"}
+{"pid": "run|531|39|44|var:depth|0", "fn": "run", "kind": "var:depth", "comp": "RERANK", "screen_fail": 0.0, "status": "harmless"}
+{"pid": "run|468|8|10|var:ssm|0", "fn": "run", "kind": "var:ssm", "comp": "BM25", "screen_fail": 0.0, "status": "harmless"}
+{"pid": "bm25_scores|292|34|35|int-|0", "fn": "bm25_scores", "kind": "int-", "comp": "BM25", "status": "crash", "error": "ValueError('operands could not be broadcast together with shapes (101297,) (2,) () ')"}
+{"pid": "run|464|4|89|ifnot|0", "fn": "run", "kind": "ifnot", "comp": "DENSE", "screen_fail": 0.0, "status": "harmless"}
+{"pid": "run|513|35|40|var:fused|0", "fn": "run", "kind": "var:fused", "comp": "RERANK", "screen_fail": 0.0, "status": "harmless"}
+{"pid": "run|531|78|83|var:fused|0", "fn": "run", "kind": "var:fused", "comp": "RERANK", "screen_fail": 0.0, "status": "harmless"}
+{"pid": "run|511|12|17|var:depth|0", "fn": "run", "kind": "var:depth", "comp": "RERANK", "status": "crash", "error": "UnboundLocalError(\"cannot access local variable 'depth' where it is not associated with a value\")"}
+{"pid": "run|534|102|106|var:dtop|0", "fn": "run", "kind": "var:dtop", "comp": "TELEMETRY", "screen_fail": 0.0, "status": "harmless"}
+{"pid": "run|450|11|13|slice-|0", "fn": "run", "kind": "slice-", "comp": "FILTERS", "status": "crash", "error": "ValueError('operands could not be broadcast together with shapes (101296,) (101297,) (101296,) ')"}
+{"pid": "q_terms|287|21|22|int-|0", "fn": "q_terms", "kind": "int-", "comp": "BM25", "screen_fail": 0.0, "status": "harmless"}
+{"pid": "run|491|41|84|del|0", "fn": "run", "kind": "del", "comp": "FUSION", "screen_fail": 1.0, "status": "harmful", "selftest_alarm": true, "probe_fail": 1.0, "stage_changes": {"D": 0, "S": 0, "F": 103, "O": 103, "V": 103}, "stage_comp": "FUSION", "decoded": ["R06"], "decoded_comp": ["FILTERS"], "telemetry_p": 5.048709793414476e-29, "telemetry_alarm": true, "telemetry_error": false, "ce_drop_p": 7.888609052210118e-31, "ce_drop_alarm": true, "either_alarm": true, "component_ok": true, "component_ok_decode": false}
+{"pid": "run|469|11|14|fhalf|0", "fn": "run", "kind": "fhalf", "comp": "BM25", "screen_fail": 0.0, "status": "harmless"}
+{"pid": "topn|399|37|39|slice-|0", "fn": "topn", "kind": "slice-", "comp": "SHARED", "screen_fail": 0.0, "status": "harmless"}
+{"pid": "run|512|44|49|var:order|0", "fn": "run", "kind": "var:order", "comp": "RERANK", "screen_fail": 0.0, "status": "harmless"}
+{"pid": "run|520|28|33|var:fused|0", "fn": "run", "kind": "var:fused", "comp": "RERANK", "screen_fail": 0.0, "status": "harmless"}
+{"pid": "run|468|40|43|var:dsm|0", "fn": "run", "kind": "var:dsm", "comp": "BM25", "screen_fail": 0.025, "status": "subtle", "selftest_alarm": true, "probe_fail": 0.06796116504854369, "stage_changes": {"D": 0, "S": 103, "F": 101, "O": 87, "V": 54}, "stage_comp": "BM25", "decoded": ["R13", "K04"], "decoded_comp": ["BM25", "DENSE"], "telemetry_p": 0.0625, "telemetry_alarm": false, "telemetry_error": false, "ce_drop_p": 0.982421875, "ce_drop_alarm": false, "either_alarm": true, "component_ok": true, "component_ok_decode": true}
+{"pid": "enc_q|320|8|48|del|0", "fn": "enc_q", "kind": "del", "comp": "DENSE", "status": "crash", "error": "KeyError(('clarinet reeds', 'v15'))"}
+{"pid": "run|534|73|76|var:ssm|0", "fn": "run", "kind": "var:ssm", "comp": "TELEMETRY", "screen_fail": 0.0, "status": "harmless"}
+{"pid": "run|520|28|33|var:depth|0", "fn": "run", "kind": "var:depth", "comp": "RERANK", "screen_fail": 0.0, "status": "harmless"}
+{"pid": "run|491|55|58|fdouble|0", "fn": "run", "kind": "fdouble", "comp": "FUSION", "screen_fail": 0.0, "status": "harmless"}
+{"pid": "topn|399|34|35|int-|0", "fn": "topn", "kind": "int-", "comp": "SHARED", "screen_fail": 0.0, "status": "harmless"}
+{"pid": "topn|398|12|13|int+|0", "fn": "topn", "kind": "int+", "comp": "SHARED", "screen_fail": 0.0, "status": "harmless"}
+{"pid": "run|451|8|85|ifnot|0", "fn": "run", "kind": "ifnot", "comp": "FILTERS", "status": "crash", "error": "TypeError(\"'NoneType' object is not subscriptable\")"}
+{"pid": "run|491|55|58|fhalf|0", "fn": "run", "kind": "fhalf", "comp": "FUSION", "screen_fail": 0.0, "status": "harmless"}
+{"pid": "run|518|13|18|var:order|0", "fn": "run", "kind": "var:order", "comp": "RERANK", "status": "crash", "error": "UnboundLocalError(\"cannot access local variable 'order' where it is not associated with a value\")"}
+{"pid": "run|534|115|120|var:order|0", "fn": "run", "kind": "var:order", "comp": "TELEMETRY", "screen_fail": 0.0, "status": "harmless"}
+{"pid": "run|531|39|44|var:fused|0", "fn": "run", "kind": "var:fused", "comp": "RERANK", "screen_fail": 0.0, "status": "harmless"}
+{"pid": "run|534|99|101|var:ssm|0", "fn": "run", "kind": "var:ssm", "comp": "TELEMETRY", "screen_fail": 0.0, "status": "harmless"}
+{"pid": "run|534|33|35|slice-|0", "fn": "run", "kind": "slice-", "comp": "TELEMETRY", "screen_fail": 0.0, "status": "harmless"}
+{"pid": "run|446|4|82|ifnot|0", "fn": "run", "kind": "ifnot", "comp": "FILTERS", "screen_fail": 0.025, "status": "subtle", "selftest_alarm": true, "probe_fail": 0.009708737864077669, "stage_changes": {"D": 70, "S": 20, "F": 75, "O": 11, "V": 2}, "stage_comp": "FILTERS", "decoded": ["R07"], "decoded_comp": ["DENSE"], "telemetry_p": 0.25, "telemetry_alarm": false, "telemetry_error": false, "ce_drop_p": 0.75, "ce_drop_alarm": false, "either_alarm": true, "component_ok": true, "component_ok_decode": false}
+{"pid": "run|444|4|49|ifnot|0", "fn": "run", "kind": "ifnot", "comp": "DENSE", "status": "crash", "error": "TypeError(\"'NoneType' object is not subscriptable\")"}
+{"pid": "run|497|4|97|ifnot|0", "fn": "run", "kind": "ifnot", "comp": "FUSION", "screen_fail": 0.0, "status": "harmless"}
+{"pid": "run|468|14|15|int+|0", "fn": "run", "kind": "int+", "comp": "BM25", "screen_fail": 0.0, "status": "harmless"}
+{"pid": "run|534|63|67|var:stop|0", "fn": "run", "kind": "var:stop", "comp": "TELEMETRY", "screen_fail": 0.0, "status": "harmless"}
+{"pid": "run|452|4|55|ifnot|0", "fn": "run", "kind": "ifnot", "comp": "FILTERS", "screen_fail": 1.0, "status": "harmful", "selftest_alarm": true, "probe_fail": 1.0, "stage_changes": {"D": 103, "S": 101, "F": 103, "O": 103, "V": 103}, "stage_comp": "FILTERS", "decoded": ["R06"], "decoded_comp": ["FILTERS"], "telemetry_p": 5.048709793414476e-29, "telemetry_alarm": true, "telemetry_error": false, "ce_drop_p": 7.888609052210118e-31, "ce_drop_alarm": true, "either_alarm": true, "component_ok": true, "component_ok_decode": true}
+{"pid": "run|466|19|22|var:ok|0", "fn": "run", "kind": "var:ok", "comp": "DENSE", "screen_fail": 0.0, "status": "harmless"}
+{"pid": "run|479|14|15|int-|0", "fn": "run", "kind": "int-", "comp": "BM25", "screen_fail": 0.0, "status": "harmless"}
+{"pid": "ce_scores|332|23|40|del|0", "fn": "ce_scores", "kind": "del", "comp": "RERANK", "screen_fail": 0.0, "status": "harmless"}
+{"pid": "run|531|27|106|bin|0", "fn": "run", "kind": "bin", "comp": "RERANK", "screen_fail": 0.0, "status": "harmless"}
+{"pid": "run|460|4|70|ifnot|0", "fn": "run", "kind": "ifnot", "comp": "DENSE", "status": "crash", "error": "TypeError('cannot unpack non-iterable NoneType object')"}
+{"pid": "run|468|40|43|var:ss|0", "fn": "run", "kind": "var:ss", "comp": "BM25", "screen_fail": 0.0, "status": "harmless"}
+{"pid": "run|533|12|17|var:depth|0", "fn": "run", "kind": "var:depth", "comp": "SERVING", "screen_fail": 0.175, "status": "harmful", "selftest_alarm": true, "probe_fail": 0.1553398058252427, "stage_changes": {"D": 0, "S": 0, "F": 0, "O": 0, "V": 102}, "stage_comp": "SERVING", "decoded": ["R19"], "decoded_comp": ["RERANK"], "telemetry_p": 0.75, "telemetry_alarm": false, "telemetry_error": false, "ce_drop_p": 1.0, "ce_drop_alarm": false, "either_alarm": true, "component_ok": true, "component_ok_decode": false}
+{"pid": "run|534|30|32|var:ssm|0", "fn": "run", "kind": "var:ssm", "comp": "TELEMETRY", "screen_fail": 0.0, "status": "harmless"}
+{"pid": "run|466|24|26|var:dsm|0", "fn": "run", "kind": "var:dsm", "comp": "DENSE", "status": "crash", "error": "UnboundLocalError(\"cannot access local variable 'dsm' where it is not associated with a value\")"}
+{"pid": "run|532|41|46|var:depth|0", "fn": "run", "kind": "var:depth", "comp": "RERANK", "screen_fail": 0.0, "status": "harmless"}
+{"pid": "run|535|33|38|var:fused|0", "fn": "run", "kind": "var:fused", "comp": "TELEMETRY", "screen_fail": 0.0, "status": "harmless"}
+{"pid": "topn|399|34|35|int+|0", "fn": "topn", "kind": "int+", "comp": "SHARED", "screen_fail": 0.0, "status": "harmless"}
+{"pid": "run|451|14|85|del|0", "fn": "run", "kind": "del", "comp": "FILTERS", "screen_fail": 0.0, "status": "harmless"}
+{"pid": "run|462|7|53|andor|0", "fn": "run", "kind": "andor", "comp": "DENSE", "status": "crash", "error": "TypeError(\"'NoneType' object is not subscriptable\")"}
+{"pid": "run|490|26|30|var:dtop|0", "fn": "run", "kind": "var:dtop", "comp": "FUSION", "screen_fail": 0.025, "status": "subtle", "selftest_alarm": true, "probe_fail": 0.06796116504854369, "stage_changes": {"D": 0, "S": 0, "F": 101, "O": 87, "V": 54}, "stage_comp": "FUSION", "decoded": ["R13", "K04"], "decoded_comp": ["BM25", "DENSE"], "telemetry_p": 1.0, "telemetry_alarm": false, "telemetry_error": false, "ce_drop_p": 0.982421875, "ce_drop_alarm": false, "either_alarm": true, "component_ok": true, "component_ok_decode": false}
+{"pid": "run|462|79|80|int+|0", "fn": "run", "kind": "int+", "comp": "DENSE", "screen_fail": 0.0, "status": "harmless"}
+{"pid": "run|519|40|45|var:fused|0", "fn": "run", "kind": "var:fused", "comp": "RERANK", "screen_fail": 0.0, "status": "harmless"}

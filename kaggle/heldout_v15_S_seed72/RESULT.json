@@ -1,0 +1,132 @@
+{
+ "trial": false,
+ "role": "heldout",
+ "run_parts": [
+  "S"
+ ],
+ "seed": "72",
+ "params": {
+  "POOL": 600,
+  "A": 100,
+  "B": 40,
+  "NDICT": 2,
+  "NDICT_RANDOM": 4,
+  "T": 3,
+  "EPS": 0.002,
+  "KAPPA": 3.0,
+  "TRAFFIC": 100,
+  "PAIR_TRAFFIC": 40,
+  "SCREEN": 40,
+  "HARM_FRAC": 0.1,
+  "ALARM_P": 0.01,
+  "MAXM": 400,
+  "TIMEOUT": 90
+ },
+ "note": "frozen v6 executed on a judged checkpoint; measurements only",
+ "battery": {
+  "size": 103,
+  "random_part": 100,
+  "diagnostic_part": 3,
+  "undetected_faults": [
+   "R07"
+  ],
+  "indistinct_pairs": []
+ },
+ "S_primary": {
+  "harmful_singles": 41,
+  "detected": 0.975609756097561,
+  "family": 0.975609756097561,
+  "exact": 0.975609756097561,
+  "verified": 1.0,
+  "unseen_family_with_sibling": 0.9090909090909091,
+  "unseen_verified": 1.0,
+  "effective_pairs": 88,
+  "effective_same_group": 78,
+  "pairs_both_family": 0.8522727272727273,
+  "pairs_both_family_same_group": 0.8717948717948718,
+  "pairs_verified": 1.0,
+  "pairs_agg_dispatcher_both": 0.2840909090909091,
+  "traffic_closure_singles": {
+   "selftest": 0.9333333333333333,
+   "loop": 0.9678510378510379,
+   "universal": 0.9384897819380578
+  },
+  "traffic_harm_singles": {
+   "selftest": 0.0,
+   "loop": 0.0037392905275317675,
+   "universal": 0.06150167778325081
+  },
+  "traffic_closure_pairs": {
+   "selftest": 1.0,
+   "loop": 0.5741380112515543,
+   "universal": 0.967253518445379
+  },
+  "traffic_harm_pairs": {
+   "selftest": 0.0,
+   "loop": 0.06632732236898903,
+   "universal": 0.04049950178093827
+  }
+ },
+ "S": {
+  "single": {
+   "n": 45,
+   "detected": 0.9333333333333333,
+   "exact": 0.9333333333333333,
+   "family": 0.9333333333333333,
+   "component": 0.9333333333333333,
+   "verified": 1.0,
+   "fallback": 0.08888888888888889,
+   "agg_dispatcher_named": 1.0,
+   "mean_runs": 353.9555555555556,
+   "median_sec": 4.537166595458984,
+   "traffic_closure": {
+    "selftest": 0.9333333333333333,
+    "loop": 0.9678510378510379,
+    "universal": 0.9384897819380578
+   },
+   "traffic_harm": {
+    "selftest": 0.0,
+    "loop": 0.0037392905275317675,
+    "universal": 0.06150167778325081
+   }
+  },
+  "unseen": {
+   "family": 0.26666666666666666,
+   "component": 0.26666666666666666,
+   "verified": 1.0,
+   "fallback": 0.7111111111111111,
+   "traffic_closure": {
+    "selftest": 0.9333333333333333,
+    "loop": 0.9678510378510379,
+    "universal": 0.9384897819380578
+   },
+   "traffic_harm": {
+    "selftest": 0.0,
+    "loop": 0.0037392905275317675,
+    "universal": 0.06150167778325081
+   }
+  },
+  "pairs": {
+   "n": 104,
+   "n_same_group": 90,
+   "detected": 1.0,
+   "both_exact": 0.6442307692307693,
+   "both_component": 0.8173076923076923,
+   "both_family": 0.7403846153846154,
+   "both_family_same_group": 0.7555555555555555,
+   "both_exact_same_group": 0.6666666666666666,
+   "verified": 1.0,
+   "agg_dispatcher_both": 0.375,
+   "traffic_closure": {
+    "selftest": 0.9966996699669968,
+    "loop": 0.6203210469721826,
+    "universal": 0.9649730207345234
+   },
+   "traffic_harm": {
+    "selftest": 0.0,
+    "loop": 0.05489157713295644,
+    "universal": 0.03968279036847694
+   }
+  }
+ }
+}

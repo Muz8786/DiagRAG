@@ -1,0 +1,1811 @@
+# %% [markdown]
+# # DiagRAG v5 — v4 + a 50-positive measurement floor, capped and two-stage dispatch policies, and a deployed-config correction
+# v5 changes are pre-registered in docs/evidence/v5_protocol.md (amendments B1-B3), committed before this file existed. Bars are unchanged from v4:
+# AUROC >= 0.70, rescue Wilson LB >= 0.50, harm <= 10%, adoption >= 27 detectors and >= 24 repairs, L1 0.005, L2 0.70, U1 0.50, N1 CI lower bound > 0.
+# C1 floor: >= 50 held-out positives per detector gate and >= 50 hard episodes per repair gate (else THIN); N_HARD 100, MAX_ATT 4000.
+# C2 policies: capped_crc_0.005 and two_stage_0.005 are added to the policy table, with four targets reported together.
+# C3 deployed config: natural-misspelling repair (rep_QLEX) is OFF on natural traffic; the v4 behaviour is kept as a counterfactual (h_loop_v4cfg).
+# C5 accounting: VERDICT.accounting reports (a) the core 28, (b) the grounded set, (c) the quarantine set; the headline is (a).
+# ---- v4 header, unchanged below ----
+# # DiagRAG v4 — v3 + a GROUP-level attributor (NONE/Q/K/R) for dispatch and a complete K fallback repair
+# Motivation (v3 seed 45, unseen_faults.csv): leave-one-fault-out closure 0.365 was limited by the right-group rate, not by the
+# group repairs. A model trained on group labels learns 'Q-ness / K-ness / R-ness' from the sibling faults, so a fault it has
+# never seen can still be routed to its group fallback. Everything else is v3, unchanged. Gates unchanged (U1 bar 0.50).
+# v3 = v2 plus: licence-clean corpus, evidence tiers (grounded vs quarantined faults), Q03 rebuilt from real query pairs,
+# K12 and R26 testbeds, family-first attribution with group fallback repairs, rarity-stratified (Mondrian) conformal
+# do-no-harm calibration, natural-traffic loop judged on never-examined queries, prevalence census, and external
+# baselines (diagnosis-free, SymSpell, wordsegment, RAGLog tier-0, QPP). Roadmap and evidence: docs/ROADMAP_V3.md
+# v2 keeps the 28 judged v1 faults unchanged and adds:
+# - 3 field-evidenced faults (R25 non-finite vectors, R26 post-filtered ANN, K11 deleted docs served)
+#   and one natural fault (K12 chunk crowding);
+# - family-level attribution (QLEX, STALE, ENC), with a conformal do-no-harm threshold fitted on a
+#   SEPARATE calibration split scored by the same model;
+# - natural-validation arms NA1-NA6 on ESCI queries that no earlier run examined.
+# Evidence and plan: docs/EVIDENCE_AND_NOVELTY_REPORT.md
+# Settings: GPU T4 (or P100), Internet ON. Outputs go to /kaggle/working/diagrag_out.
+
+# %%
+import os, sys, subprocess, json, gzip, re, time, math, random, hashlib, zipfile, csv, collections, shutil
+ON_KAGGLE = os.path.exists('/kaggle')
+WORK = '/kaggle/working' if ON_KAGGLE else os.environ.get('DIAGRAG_WORK', os.getcwd())
+DATA = '/tmp/diagrag_data' if ON_KAGGLE else os.path.join(WORK, 'diagrag_data')   # data kept out of the saved output
+OUT = os.path.join(WORK, 'diagrag_out')
+os.makedirs(DATA, exist_ok=True); os.makedirs(OUT, exist_ok=True)
+
+def pip(*pk):
+    subprocess.run([sys.executable, '-m', 'pip', 'install', '-q', *pk], check=False)
+for mod, pk in [('gdown', 'gdown'), ('sentence_transformers', 'sentence-transformers'), ('pyarrow', 'pyarrow'), ('nltk', 'nltk'), ('tabulate', 'tabulate'),
+                ('symspellpy', 'symspellpy'), ('wordsegment', 'wordsegment')]:
+    try: __import__(mod)
+    except ImportError: pip(pk)
+
+import numpy as np, pandas as pd, torch
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.ensemble import HistGradientBoostingClassifier
+from sklearn.metrics import roc_auc_score
+from sentence_transformers import SentenceTransformer, CrossEncoder
+DEV = 'cuda' if torch.cuda.is_available() else 'cpu'
+GPU = DEV == 'cuda'
+print('device', DEV, 'kaggle', ON_KAGGLE)
+
+CFG = dict(
+    SEED=int(os.environ.get('SEED', 42)), QUERY_DATE='2026-11-14', K_FINAL=5, DEPTH=25, RRF_K=60, CAND=100,
+    ENCODER='BAAI/bge-base-en-v1.5', ENCODER_V1='BAAI/bge-base-en',
+    QPROMPT='Represent this sentence for searching relevant passages: ',
+    RERANKER=os.environ.get('RERANKER', 'BAAI/bge-reranker-large' if GPU else 'BAAI/bge-reranker-base'),
+    CE_MAXLEN=int(os.environ.get('CE_MAXLEN', 512 if GPU else 320)),
+    N_BASE_ESCI=int(os.environ.get('N_BASE_ESCI', 4000 if GPU else 320)),
+    N_HARD=int(os.environ.get('N_HARD', 100 if GPU else 10)),       # hard episodes per fault, split 50/50 train/test by quota
+    MAX_ATT=int(os.environ.get('MAX_ATT', 4000 if GPU else 70)),   # injection attempts per fault
+    TEST_FRAC=0.5, CLEAN_FPR=0.05, IVF_NLIST=1024,
+    N_PRDC=int(os.environ.get('N_PRDC', 528 if GPU else 120)), PROBE_K=20 if GPU else 8,
+    N_HARM=int(os.environ.get('N_HARM', 60 if GPU else 8)), N_NAT=int(os.environ.get('N_NAT', 400 if GPU else 200)),
+    TIME_BUDGET=int(os.environ.get('TIME_BUDGET', 0)),               # seconds per invocation; 0 = no limit (Kaggle Run All)
+    N_NATQ=int(os.environ.get('N_NATQ', 100000)), CAL_FRAC=0.5, N_BOOT=2000, EF_SEARCH=40,
+    CLEAN_CORPUS=int(os.environ.get('CLEAN_CORPUS', 1)), N_CAL_EXTRA=int(os.environ.get('N_CAL_EXTRA', 100000)),
+    N_CENSUS=int(os.environ.get('N_CENSUS', 100000)),   # cap for smoke tests only; judged runs use every query
+    TAU_FAM=0.6, QLEX_MAX_W=1, QLEX_MIN_C=5, QLOG_NN_MIN=0.80, WARM_CACHE=os.environ.get('WARM_CACHE', ''),
+    RAGLOG_COMMIT='7f7d0686cc69e00f3081369039ae1247878aa928',
+    CAP_FRAC=0.20, T_DISPATCH=0.25, T_COST=1.5, T_CLOSURE=0.80,   # v5 C2: clean-dispatch cap used by the capped policies; targets T2, T3, T4
+    DEPLOY=dict(natural_typo_repair=False, injected_typo_repair=True, date='2026-11-16',
+                evidence='natural-misspelling repair: negative point estimate in all 5 runs that measured it (-4.9 to -7.1 pts); 95% CI excludes 0 in GPU seeds 46 and 48 (-5.4 [-10.8, -0.5]); SymSpell worse. docs/evidence/v5_protocol.md C3, B3'),
+)
+# Judged-run gates, fixed BEFORE any result exists (written to JUDGED_PROTOCOL.json on first start).
+GATES = dict(
+    detector='held-out one-vs-rest AUROC >= 0.70 (point estimate) AND >= 50 held-out positives (v5 floor; fewer is THIN)',
+    repair='>= 50 hard episodes (v5 floor; fewer is THIN) AND Wilson 95% lower bound of rescue rate >= 0.50 AND <= 10% of clean successes lost when the repair is forced on them',
+    solved='detector PASS and repair PASS',
+    targets='ADOPTED if repairs PASS >= 24/28 AND detectors PASS >= 27/28, else NOT_ADOPTED',
+    AUROC_BAR=0.70, MIN_TEST_POS=50, RESCUE_BAR_LB=0.50, MIN_REPAIR_N=50, MAX_HARM=0.10, REPAIR_TARGET=24, DETECT_TARGET=27,
+    guarantee=('do-no-harm dispatch: threshold lambda fitted by conformal risk control on out-of-fold clean TRAIN queries so that '
+               'E[Hit@5 lost on a clean query] <= ALPHA; PASS if held-out clean loss <= ALPHA; also report 200 calibration re-splits'),
+    ALPHA=0.005, ALPHAS=[0.0025, 0.005, 0.01, 0.02],
+    natural=('report, not gated: (a) real misspelled ESCI queries whose corrected spelling was typed by another ESCI user, '
+             'gold from ESCI labels; (b) in-corpus superseded policy versions with the validity filter off, no injected docs. '
+             'Metrics: Hit@5 before, after closed loop (guarded and unguarded), after oracle repair, oracle-referenced closure'),
+    unseen=('report, not gated: leave-one-fault-out attributor; on the held-out fault test episodes report flagged rate, '
+            'right-group rate and Hit after dispatch'),
+    v2_new_faults='R25, R26, K11 judged with the same detector and repair gates; reported beside the 28, not counted in the 28-fault verdict',
+    v2_loop=('family-level dispatch; FAMILIES QLEX={Q01,Q03,Q04,Q05}, STALE={K04,R07}, ENC={R03,R10,R11}; attribution correct if the family '
+             'is right. L1 PASS if held-out clean Hit@5 loss <= ALPHA under the CRC threshold fitted on the separate calibration split. '
+             'L2 PASS if mean held-out closure over the 31 faults + C2 >= 0.70 under the same threshold'),
+    L2_BAR=0.70,
+    v2_natural=('arms NA1-NA6 on ESCI queries outside natural_exclusions_v1.json; selection by deployed rule only, never by gold; '
+                'metric paired delta Hit@5 (repair - none) with 95% bootstrap CI (N_BOOT resamples); '
+                'PASS if CI lower bound > 0, HARM if CI upper bound < 0, else INCONCLUSIVE'))
+GATES.update(
+    v3_scope=('headline = GROUNDED set (evidence tier S/M/D, docs/EVIDENCE_AND_NOVELTY_REPORT.md section 2 + v3 additions); '
+              'QUARANTINE set (tier N/P) is run and reported but excluded from headline claims'),
+    L1=('do-no-harm, classifier dispatch: Mondrian CRC, one threshold per stratum (rarity x source), fitted on clean TRAIN '
+        'queries never used to fit the attributor; PASS iff held-out clean Hit@5 loss <= ALPHA overall'),
+    L2='mean held-out closure over all faults + C2 >= 0.70 under the L1 thresholds',
+    U1='unseen faults: mean leave-one-fault-out closure >= 0.50 with family-first dispatch + group fallback repairs',
+    N1=('natural traffic: deployed loop (natural rules K05/K12 + classifier at L1 thresholds) on ESCI queries outside '
+        'natural_exclusions_v2.json; PASS iff the 95% bootstrap CI of paired delta Hit@5 has lower bound > 0'),
+    G1='grounded set: claim solved iff detector PASS and repair PASS; report count of the grounded set',
+    U1_BAR=0.50)
+GATES.update(
+    v5_policies=('capped_crc_0.005: Mondrian CRC threshold, raised per stratum to the 80th percentile of the calibration clean score so classifier dispatch on clean is <= 20%; '
+                 'two_stage_0.005: precise rules (alone) or natural rules K12/K05 (additive) then the attributor at a capped threshold, calibrated on the combined loss. '
+                 'Targets reported together: T1 clean loss <= 0.005, T2 total clean dispatch <= 0.25, T3 clean mean cost <= 1.5, T4 mean closure >= 0.80. '
+                 'L1 and L2 stay defined on mondrian_crc_0.005 (L2 bar 0.70).'),
+    v5_accounting='VERDICT.accounting: (a) core 28 under the original rule [headline], (b) grounded set, (c) quarantine set',
+    v5_deploy=('deployed config: natural-misspelling repair OFF on natural traffic (rep_QLEX not applied); injected-typo repair stays on; '
+               'counterfactual v4 behaviour reported as h_loop_v4cfg, arms NA1c, NA1d, N1v4'))
+random.seed(CFG['SEED']); np.random.seed(CFG['SEED']); torch.manual_seed(CFG['SEED'])
+if not GPU: torch.set_num_threads(int(os.environ.get('TORCH_THREADS', os.cpu_count() or 4)))
+T0 = time.time()
+def log(*a): print(f'[{time.time()-T0:7.0f}s]', *a, flush=True)
+
+# Resumable run: state is checkpointed so an interrupted session (or a TIME_BUDGET stop) continues where it left off.
+import pickle
+CKPT = os.path.join(OUT, 'checkpoint.pkl')
+RES = pickle.load(open(CKPT, 'rb')) if os.path.exists(CKPT) else {}
+if RES: print('resuming from checkpoint, stage:', RES.get('stage'))
+def over_budget(): return CFG['TIME_BUDGET'] > 0 and time.time() - T0 > CFG['TIME_BUDGET']
+def save_ckpt(stage):
+    keep = {k: globals()[k] for k in ('CLEAN', 'EPIS', 'GEN', 'GSTATE', 'SEEN', 'HARM', 'CAL', 'NATR', 'LOFO', 'FAMR', 'NAT2', 'CENS', 'BASEL', 'NAT3') if k in globals()}
+    keep.update(stage=stage, caches=dict(QC=globals().get('_QC', {}), CEC=globals().get('_CEC', {}), DC=globals().get('_DC', {})))
+    with open(CKPT + '.tmp', 'wb') as fh: pickle.dump(keep, fh, protocol=4)
+    os.replace(CKPT + '.tmp', CKPT); log('checkpoint saved:', stage)
+def maybe_stop(stage):
+    if over_budget():
+        save_ckpt(stage); log('TIME_BUDGET reached - run the notebook/script again to resume'); raise SystemExit(0)
+PROTO = os.path.join(OUT, 'JUDGED_PROTOCOL.json')
+def _env_versions():   # v5 B5: a re-fit of the detectors from shipped episodes differed on Kaggle's stack, and the library versions were not recorded
+    import importlib.metadata as _im, platform
+    v = dict(python=platform.python_version(), platform=platform.platform(), cpu_count=os.cpu_count())
+    for n_ in ('numpy', 'pandas', 'scipy', 'scikit-learn', 'torch', 'transformers', 'sentence-transformers', 'faiss-cpu', 'faiss-gpu', 'rank-bm25', 'nltk', 'threadpoolctl'):
+        try: v[n_] = _im.version(n_)
+        except Exception: pass
+    try: v['cuda'] = torch.version.cuda; v['gpu'] = torch.cuda.get_device_name(0) if torch.cuda.is_available() else None
+    except Exception: pass
+    return v
+ENV_VERSIONS = _env_versions()
+if not os.path.exists(PROTO):
+    _code_sha = hashlib.sha256(open(__file__, 'rb').read()).hexdigest() if '__file__' in globals() else 'notebook'
+    json.dump(dict(created_utc=time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime()), gates=GATES, cfg=CFG, device=DEV,
+                   code_sha256=_code_sha, env=ENV_VERSIONS), open(PROTO, 'w'), indent=1)
+
+# %% [markdown]
+# ## 1. Fetch and verify data (exact bytes + SHA-256, observed 14 Nov 2026)
+
+# %%
+FILES = {
+    'corpus': dict(name='kb_tier3_186k.jsonl.gz', size=53518791, gdrive='1zksoRmKjBn3VKRweFM1pLfDDNAIpnzxm',
+                   sha='5a9f7ea6ae5b8a3e7f1e1ca6e2838dddd6158efb9384d757c6aa755dbe9bda3c'),
+    'cache': dict(name='embeddings_cache_186k.npz', size=533012659, gdrive='1xKaTyYx3qxFFzmRYQQuPmLnKEtygNx2s',
+                  sha='3b43603d9689f7c0eee0cbfebdb8b5cfddd05a2fc4e3cf192c8eed1de4a88835'),
+    'esci': dict(name='shopping_queries_dataset_examples.parquet', size=51286808,
+                 url='https://media.githubusercontent.com/media/amazon-science/esci-data/main/shopping_queries_dataset/shopping_queries_dataset_examples.parquet',
+                 sha='4a735b693b4a424a6fc67f5be6e4c811495c488bbf66d02a602d308b2744263a'),
+    'exclusions': dict(name='natural_exclusions_v2.json', size=165858,
+                       url='https://raw.githubusercontent.com/Muz8786/DiagRAG/core28-kaggle-notebook/kaggle/natural_exclusions_v2.json',
+                       sha='974341cfb502af67e70ec15c8e9a31c96f8c03002eb9b901321b4db1ed83aeca'),
+    'qspell': dict(name='corpus-webis-qspell-17.zip', size=2285705,
+                   url='https://zenodo.org/api/records/3570912/files/corpus-webis-qspell-17.zip/content',
+                   sha='f13bd165544ab2ac75d63de4334feb86d74d1b3dfbe48d79423133552b5054e4'),
+}
+def sha256(p, bs=1 << 22):
+    h = hashlib.sha256()
+    with open(p, 'rb') as f:
+        for b in iter(lambda: f.read(bs), b''): h.update(b)
+    return h.hexdigest()
+
+VERIFY = {}
+for key, f in FILES.items():
+    p = os.path.join(DATA, f['name']); f['path'] = p
+    _local = os.path.join(os.path.dirname(os.path.abspath(__file__)) if '__file__' in globals() else '.', f['name'])
+    if key == 'exclusions' and not os.path.exists(p) and os.path.exists(_local): shutil.copy(_local, p)
+    if not (os.path.exists(p) and os.path.getsize(p) == f['size']):
+        log('fetch', f['name'])
+        if 'gdrive' in f:
+            import gdown; gdown.download(id=f['gdrive'], output=p, quiet=True)
+        else:
+            subprocess.run(['curl', '-sL', '--retry', '3', '-o', p, f['url']], check=True)
+    size = os.path.getsize(p); dig = sha256(p)
+    VERIFY[key] = dict(file=f['name'], bytes=size, size_ok=size == f['size'], sha256=dig, sha_ok=dig == f['sha'])
+    log(key, VERIFY[key])
+    assert VERIFY[key]['size_ok'] and VERIFY[key]['sha_ok'], f'{key} failed verification — stop'
+
+# %% [markdown]
+# ## 2. Load corpus + cache, purity checks, gold-equivalence map
+
+# %%
+DOCS = [json.loads(l) for l in gzip.open(FILES['corpus']['path'], 'rt', encoding='utf-8')]
+N = len(DOCS)
+z = np.load(FILES['cache']['path']); E = z['embeddings'].astype(np.float32); EIDS = z['doc_ids']; del z
+FULL_IDS = [d['doc_id'] for d in DOCS]
+DROPPED = {}
+if CFG['CLEAN_CORPUS']:   # v3 licence-clean corpus: drop rows whose licence is conflicting/unverified (84,993 ABO rows)
+    keep_ = np.array([d['license_status'] != 'conflicting_unverified' for d in DOCS])
+    DROPPED = dict(rows=int((~keep_).sum()), by_partition=dict(collections.Counter(d['source_partition'] for d, k in zip(DOCS, keep_) if not k)))
+    DOCS = [d for d, k in zip(DOCS, keep_) if k]; E = np.ascontiguousarray(E[keep_]); EIDS = EIDS[keep_]
+N = len(DOCS)
+TEXT = [(d['title'] or '') + '\n' + d['content'] for d in DOCS]      # verified: cos(re-encode, cache) = 1.0
+ID2I = {d['doc_id']: i for i, d in enumerate(DOCS)}
+VALID_RE = re.compile(r'In force from (\d{4}-\d{2}-\d{2})(?: until (\d{4}-\d{2}-\d{2}))?')
+def pkey(d):
+    p = d['parent_doc_id'] or d['doc_id']
+    if p.startswith('ESCI-'): return p.split('-', 2)[2]
+    if p.startswith('ABO-'): return p[4:]
+    return p
+def chash(s): return hashlib.md5(re.sub(r'\s+', ' ', s.strip().lower()).encode()).hexdigest()
+PKEY = [pkey(d) for d in DOCS]; CH = [chash(d['content']) for d in DOCS]
+BY_PKEY = collections.defaultdict(list); BY_CH = collections.defaultdict(list)
+for i in range(N): BY_PKEY[PKEY[i]].append(i); BY_CH[CH[i]].append(i)
+
+PUR = {'licence_dropped': DROPPED}
+PUR['docs'] = N; PUR['schemas'] = len({tuple(sorted(d)) for d in DOCS}); PUR['unique_ids'] = len(ID2I)
+PUR['empty_content'] = sum(not d['content'].strip() for d in DOCS)
+grp = [g for g in BY_CH.values() if len(g) > 1]
+PUR['exact_dup_rows_beyond_first'] = sum(len(g) - 1 for g in grp); PUR['exact_dup_groups'] = len(grp)
+PUR['dup_groups_with_2plus_unflagged'] = sum(sum(not DOCS[i]['duplicate_text'] for i in g) > 1 for g in grp)
+PUR['flagged_dup_without_exact_twin'] = sum(DOCS[i]['duplicate_text'] and len(BY_CH[CH[i]]) == 1 for i in range(N))
+PUR['chunk_span_mismatch'] = sum((d['char_end'] - d['char_start']) != len(d['content']) for d in DOCS)
+PUR['replacement_char_rows'] = sum('\ufffd' in d['content'] for d in DOCS)
+NANDOC = np.array([('Brand: nan' in d['content']) or ('Description: nan' in d['content']) for d in DOCS])
+PUR['nan_placeholder_docs'] = int(NANDOC.sum())
+PUR['license_status'] = dict(collections.Counter(f"{d['source_partition']}|{d['license_status']}" for d in DOCS))
+PUR['asin_in_both_esci_and_abo'] = sum(1 for k, g in BY_PKEY.items() if {DOCS[i]['source_partition'] for i in g} >= {'real_world_apache_esci', 'real_world_cc_by_4_0_abo'})
+nrm = np.linalg.norm(E, axis=1)
+PUR['emb'] = dict(shape=list(E.shape), nan=int(np.isnan(E).sum()), zero_rows=int((nrm == 0).sum()),
+                  norm_min=float(nrm.min()), norm_max=float(nrm.max()), ids_in_order=bool((EIDS == np.array([d['doc_id'] for d in DOCS])).all()),
+                  identical_rows_beyond_first=int(N - len({hashlib.md5(E[i].tobytes()).hexdigest() for i in range(N)})))
+assert PUR['emb']['ids_in_order'] and PUR['emb']['nan'] == 0 and PUR['emb']['zero_rows'] == 0
+log('purity', json.dumps(PUR, indent=1)[:3000])
+
+def gold_set(idxs):
+    """Purity fix: gold = the labelled doc + its chunks + same-ASIN twins (ESCI<->ABO) + exact-content twins."""
+    g = set()
+    for i in idxs:
+        g.update(BY_PKEY[PKEY[i]])
+    for i in list(g): g.update(BY_CH[CH[i]])
+    return g
+
+# %% [markdown]
+# ## 3. Document metadata + BM25 sparse index
+
+# %%
+PARTS = sorted({d['source_partition'] for d in DOCS}); PART = np.array([PARTS.index(d['source_partition']) for d in DOCS])
+SCOPE = [d['access_scope'] for d in DOCS]
+VERIFIED = np.array([d['license_status'] == 'verified' for d in DOCS])
+CLEN = np.array([len(d['content']) for d in DOCS])
+def validity(text):
+    m = VALID_RE.search(text); return (m.group(1), m.group(2) or '') if m else ('', '')
+VAL = [validity(d['content']) for d in DOCS]
+def valid_on(v, day): return (not v[0] or v[0] <= day) and (not v[1] or v[1] >= day)
+VALID_NOW = np.array([valid_on(v, CFG['QUERY_DATE']) for v in VAL])
+TENANTS = ['ALL', 'T1', 'T2', 'T3', 'T4']
+def scope_ok(scope, t): return scope == 'all_tenants' or scope == f'tenant:{t}'
+SCOPE_OK = {t: np.array([scope_ok(s, t) for s in SCOPE]) for t in TENANTS}
+TOKRE = re.compile(r'[a-z0-9]+')
+def tok(s): return TOKRE.findall(s.lower())
+
+log('building BM25')
+CV = CountVectorizer(token_pattern=r'[a-z0-9]+', lowercase=True, dtype=np.float32)
+TF = CV.fit_transform(TEXT).tocsr()
+VOC = CV.vocabulary_; IVOC = np.empty(len(VOC), dtype=object)
+for w, j in VOC.items(): IVOC[j] = w
+V = len(VOC); DF = np.bincount(TF.indices, minlength=V).astype(np.int64)
+IDF = np.log(1 + (N - DF + 0.5) / (DF + 0.5)).astype(np.float32)
+DL = np.asarray(TF.sum(1)).ravel(); AVGDL = DL.mean(); K1, B = 0.9, 0.4
+def bm25_weight(tf_csr, dl):
+    tf_csr = tf_csr.tocsr(copy=True); rows = np.repeat(np.arange(tf_csr.shape[0]), np.diff(tf_csr.indptr))
+    t = tf_csr.data; tf_csr.data = IDF[tf_csr.indices] * t * (K1 + 1) / (t + K1 * (1 - B + B * dl[rows] / AVGDL))
+    return tf_csr
+BM = bm25_weight(TF, DL).tocsc(); del TF
+log('BM25 vocab', V)
+
+def q_terms(q, shift=0):
+    ids = [VOC[t] for t in tok(q) if t in VOC]
+    return [(j + shift) % V for j in ids]
+def bm25_scores(q, shift=0, extra=None):
+    ids = q_terms(q, shift)
+    s = np.asarray(BM[:, ids].sum(1)).ravel() if ids else np.zeros(N, np.float32)
+    if extra is not None and extra.shape[0]:
+        se = np.asarray(extra[:, ids].sum(1)).ravel() if ids else np.zeros(extra.shape[0], np.float32)
+        s = np.concatenate([s, se])
+    return s.astype(np.float32)
+
+# %% [markdown]
+# ## 4. Models: bge-base-en-v1.5 encoder, bge-base-en (v1, for the real model-drift fault R11), bge reranker, IVF index
+
+# %%
+ENC = SentenceTransformer(CFG['ENCODER'], device=DEV)
+ENC_V1 = SentenceTransformer(CFG['ENCODER_V1'], device=DEV)
+ENC_SWAP = SentenceTransformer('sentence-transformers/all-mpnet-base-v2', device=DEV)
+CE = CrossEncoder(CFG['RERANKER'], max_length=CFG['CE_MAXLEN'], device=DEV)
+if GPU: ENC.half(); ENC_V1.half(); ENC_SWAP.half(); CE.model.half()
+ET = torch.from_numpy(E).to(DEV, dtype=torch.float16 if GPU else torch.float32)
+_QC = {}
+def enc_q(q, mode='v15'):
+    k = (q, mode)
+    if k not in _QC:
+        s = CFG['QPROMPT'] + q
+        if mode == 'v15': v = ENC.encode([s], normalize_embeddings=True)[0]
+        elif mode == 'v1': v = ENC_V1.encode([s], normalize_embeddings=True)[0]
+        elif mode == 'swap': v = ENC_SWAP.encode([q], normalize_embeddings=True)[0]   # R11: different 768-d model deployed
+        elif mode == 'v15_trunc':                     # R03: max_seq_length misconfig, the prompt eats the query
+            ml = ENC.max_seq_length; ENC.max_seq_length = 12
+            try: v = ENC.encode([s], normalize_embeddings=True)[0]
+            finally: ENC.max_seq_length = ml
+        _QC[k] = np.asarray(v, dtype=np.float32)
+    return _QC[k]
+def enc_docs(texts, bs=32):
+    return np.asarray(ENC.encode(list(texts), normalize_embeddings=True, batch_size=bs), dtype=np.float32)
+def dense_all(qv):
+    with torch.no_grad():
+        return (ET @ torch.from_numpy(qv).to(ET.device, ET.dtype)).float().cpu().numpy()
+_CEC = {}
+def ce_scores(q, keys, texts, trunc=None):
+    out = np.empty(len(keys), np.float32); todo = []
+    for j, (k, t) in enumerate(zip(keys, texts)):
+        ck = (q, k, trunc)
+        if ck in _CEC: out[j] = _CEC[ck]
+        else: todo.append((j, ck, t if trunc is None else t[:trunc]))
+    if todo:
+        s = CE.predict([(q, t) for _, _, t in todo], batch_size=64, show_progress_bar=False)
+        for (j, ck, _), v in zip(todo, np.atleast_1d(s)): out[j] = v; _CEC[ck] = float(v)
+    return out
+
+log('IVF k-means', CFG['IVF_NLIST'])
+g = torch.Generator().manual_seed(0)
+X = torch.from_numpy(E).to(DEV); C = X[torch.randperm(N, generator=g)[:CFG['IVF_NLIST']].to(DEV)].clone()
+samp = X[torch.randperm(N, generator=g)[:min(N, 80000)].to(DEV)]
+for _ in range(8):
+    a = (samp @ C.T).argmax(1)
+    C = torch.zeros_like(C).index_add_(0, a, samp); C = C / C.norm(dim=1, keepdim=True).clamp_min(1e-6)
+ASSIGN = torch.cat([(X[i:i + 20000] @ C.T).argmax(1) for i in range(0, N, 20000)]).cpu().numpy()
+CENT = C.cpu().numpy(); del X, samp, C
+if GPU: torch.cuda.empty_cache()
+log('IVF list sizes min/median/max', np.bincount(ASSIGN).min(), int(np.median(np.bincount(ASSIGN))), np.bincount(ASSIGN).max())
+
+# %% [markdown]
+# ## 5. Retrieval pipeline (dense + BM25 → RRF k=60 → depth 25 → cross-encoder → top-5), with fault knobs
+
+# %%
+INJ_PART = len(PARTS)          # partition code for injected (synthetic) overlay docs
+def make_overlay(docs):
+    """Per-episode injected docs (synthetic). Each doc: title, content, access_scope, license_status, part, source_name."""
+    if not docs: return None
+    texts = [(d['title'] or '') + '\n' + d['content'] for d in docs]
+    tf = CV.transform(texts).astype(np.float32)
+    return dict(docs=docs, text=texts, E=enc_docs(texts), BMX=bm25_weight(tf, np.asarray(tf.sum(1)).ravel()).tocsr(),
+                scope=[d.get('access_scope', 'all_tenants') for d in docs], part=np.array([d.get('part', INJ_PART) for d in docs]),
+                verified=np.array([d.get('license_status') == 'verified' for d in docs]),
+                val=[validity(d['content']) for d in docs], clen=np.array([len(d['content']) for d in docs]),
+                nan=np.array([('Brand: nan' in d['content']) or ('Description: nan' in d['content']) for d in docs]),
+                deleted=np.array([bool(d.get('deleted')) for d in docs]), parent=[d.get('parent') for d in docs])
+def M(ov): return 0 if ov is None else len(ov['docs'])
+def dtext(i, ov): return TEXT[i] if i < N else ov['text'][i - N]
+def dcontent(i, ov): return DOCS[i]['content'] if i < N else ov['docs'][i - N]['content']   # spec/body field, not the (stuffable) title
+def dtitle(i, ov): return (DOCS[i]['title'] if i < N else ov['docs'][i - N]['title']) or ''
+def dverified(i, ov): return VERIFIED[i] if i < N else ov['verified'][i - N]
+def dthin(i, ov, q):
+    """Placeholder doc (nan fields / <60 chars of content) whose title just echoes the query."""
+    ph = (NANDOC[i] or CLEN[i] < 60) if i < N else (ov['nan'][i - N] or ov['clen'][i - N] < 60)
+    return bool(ph) and jacc(set(tok(dtitle(i, ov))), set(tok(q))) >= 0.6
+def dscope(i, ov): return SCOPE[i] if i < N else ov['scope'][i - N]
+def dval(i, ov): return VAL[i] if i < N else ov['val'][i - N]
+def dpart(i, ov): return PART[i] if i < N else ov['part'][i - N]
+def demb(i, ov): return E[i] if i < N else ov['E'][i - N]
+def ddeleted(i, ov): return False if i < N else bool(ov['deleted'][i - N])   # source-of-truth registry: overlay docs flagged deleted
+PARENT = [d['parent_doc_id'] or d['doc_id'] for d in DOCS]
+def dparent(i, ov): return PARENT[i] if i < N else (ov['parent'][i - N] or f'ov{i}')
+def dkey(i, ov): return DOCS[i]['doc_id'] if i < N else ('ov', hashlib.md5(ov['text'][i - N].encode()).hexdigest())
+
+DEFAULT = dict(enc='v15', q_noise=0.0, mask=None, emb_override=None, shift=None, nprobe=None, sparse_shift=0,
+               route=None, fusion='rrf', depth=CFG['DEPTH'], ce='ok', ce_trunc=None, result_cap=None,
+               tenant_filter=True, validity=True, dedup=False, attr_rerank=False, authority=False,
+               quality=False, refresh=False, parts=None,
+               nonfinite=None, pfilter=None, post_filter=False, reconcile=False, parent_collapse=False,   # v2 knobs
+               dense_only=False)                                                                       # v3 testbed knob
+def mkcfg(**kw):
+    c = dict(DEFAULT); c.update(kw); return c
+def drop_mask(spec):
+    frac, seed, forced = spec; r = np.random.default_rng(seed); m = r.random(N) < frac
+    m[list(forced)] = True; return m
+def topn(s, n):
+    n = min(n, int(np.isfinite(s).sum()))
+    if n <= 0: return np.array([], dtype=np.int64)
+    idx = np.argpartition(-s, n - 1)[:n]; return idx[np.argsort(-s[idx])]
+
+COLORS = set('black white red blue green yellow pink purple orange brown grey gray silver gold beige navy ivory cream teal maroon'.split())
+SIZES = set('xs s m l xl xxl xxxl small medium large mini twin queen king full'.split())
+def attrs(q):
+    """Discriminating attribute tokens of a query: numbers, codes, colours, sizes."""
+    return [t for t in tok(q) if any(c.isdigit() for c in t) or t in COLORS or t in SIZES]
+def attr_cov(at, text):
+    if not at: return 1.0
+    tt = set(tok(text)); return sum(a in tt for a in at) / len(at)
+def shingles(t, n=4):
+    w = tok(t); return {' '.join(w[i:i + n]) for i in range(max(1, len(w) - n + 1))}
+def jacc(a, b): return len(a & b) / max(1, len(a | b))
+def title_key(t): return ' '.join(w for w in tok(t) if not any(c.isdigit() for c in w))[:80]
+
+def served_vec(i, c, ov):
+    """The vector the (possibly faulty) dense index actually holds for doc i."""
+    if c['emb_override'] and i in c['emb_override']: return c['emb_override'][i]
+    if c['shift'] and c['shift'][0] <= i < c['shift'][1]: return E[i + c['shift'][2]]
+    return demb(i, ov)
+
+def run(st):
+    """Run the pipeline for state st = {q, tenant, cfg, ov}. Returns a trace dict (telemetry source)."""
+    c, ov, q = st['cfg'], st.get('ov'), st['q']
+    if c['parts']:                                   # Q09 repair: decomposed sub-queries, interleaved
+        subs = [run(dict(st, q=p, cfg=dict(c, parts=None))) for p in c['parts']]
+        fin, seen = [], set()
+        for r in range(CFG['K_FINAL']):
+            for t in subs:
+                if r < len(t['final']) and t['final'][r] not in seen: fin.append(t['final'][r]); seen.add(t['final'][r])
+        tr = dict(subs[0]); tr['final'] = fin[:CFG['K_FINAL']]; return tr
+    m = M(ov); NT = N + m
+    qv = enc_q(q, c['enc'])
+    if c['q_noise']:
+        r = np.random.default_rng(int(hashlib.md5(q.encode()).hexdigest()[:8], 16)); qv = qv + c['q_noise'] * r.standard_normal(qv.shape).astype(np.float32) / math.sqrt(qv.size)
+        qv = qv / np.linalg.norm(qv)
+    ds = dense_all(qv)
+    if c['emb_override']:
+        for i, v in c['emb_override'].items(): ds[i] = float(v @ qv)
+    if c['shift']:
+        a, b, s = c['shift']; ds[a:b] = ds[a + s:b + s].copy()
+    nf = 0
+    if c['nonfinite']:                               # R25: non-finite vectors in the index (qdrant#9201, faiss#5684)
+        nf_mode, nf_idx = c['nonfinite']; nf = len(nf_idx)
+        if nf_mode == 'top': ds[list(nf_idx)] = 1e9      # NaN scores ranked above every finite score
+    if m: ds = np.concatenate([ds, ov['E'] @ qv])
+    ok = np.ones(NT, bool)
+    if c['tenant_filter']:
+        ok[:N] &= SCOPE_OK[st['tenant']]
+        if m: ok[N:] &= np.array([scope_ok(s, st['tenant']) for s in ov['scope']])
+    if c['validity']:
+        ok[:N] &= VALID_NOW
+        if m: ok[N:] &= np.array([valid_on(v, CFG['QUERY_DATE']) for v in ov['val']])
+    if c['route'] is not None:
+        ok[:N] &= np.isin(PART, c['route'])
+        if m: ok[N:] &= np.isin(ov['part'], c['route'])
+    if c['pfilter'] is not None and not c['post_filter']:   # metadata filter applied BEFORE the search (correct)
+        ok[:N] &= np.isin(PART, c['pfilter'])
+        if m: ok[N:] &= np.isin(ov['part'], c['pfilter'])
+    if c['reconcile'] and m: ok[N:] &= ~ov['deleted']     # K11 repair: drop ids absent from the source of truth
+    dok = ok.copy(); cov = 1.0
+    if c['mask'] is not None:
+        mk = drop_mask(c['mask']); dok[:N] &= ~mk; cov = 1 - mk.mean()
+    if c['nonfinite'] and c['nonfinite'][0] == 'drop': dok[list(c['nonfinite'][1])] = False   # rows silently dropped
+    exact_top = topn(np.where(dok, ds, -np.inf), 10)       # exact search on the index as built (ANN probe reference)
+    if c['nprobe']:
+        lists = np.argsort(-(CENT @ qv))[:c['nprobe']]; dok[:N] &= np.isin(ASSIGN, lists)
+    dsm = np.where(dok, ds, -np.inf); dtop = topn(dsm, CFG['CAND'])
+    ss = bm25_scores(q, c['sparse_shift'], ov['BMX'] if m else None); ssm = np.where(ok, ss, -np.inf)
+    ssm[ss <= 0] = -np.inf; stop = topn(ssm, CFG['CAND'])
+    surv = 1.0
+    if c['pfilter'] is not None and c['post_filter']:
+        # R26, as documented by pgvector: "With approximate indexes, filtering is applied after the index is scanned";
+        # the dense candidate list is hnsw.ef_search (default 40). The keyword side keeps its correct WHERE pre-filter.
+        pf = np.isin(PART, c['pfilter'])
+        if m: pf = np.concatenate([pf, np.isin(ov['part'], c['pfilter'])])
+        ssm = np.where(pf, ssm, -np.inf); stop = topn(ssm, CFG['CAND'])
+        cand = topn(dsm, CFG['EF_SEARCH']); dtop = np.array([i for i in cand if pf[i]], dtype=np.int64)
+        surv = len(dtop) / max(1, len(cand))
+    if c['dense_only']: stop = np.array([], dtype=np.int64)   # v3: dense-only deployment (no keyword side)
+    n_stale = 0
+    if c['refresh']:                                 # K04 repair: re-embed full-corpus sparse candidates missing from dense list
+        dset = set(dtop.tolist()); miss = [i for i in stop[:50] if i not in dset]
+        if miss:
+            fv = enc_docs([dtext(i, ov) for i in miss])
+            for i, v in zip(miss, fv):
+                if dok[i] and float(v @ served_vec(i, c, ov)) < 0.98:
+                    dsm[i] = float(v @ qv); n_stale += 1
+            dtop = topn(dsm, CFG['CAND'])
+    if c['fusion'] == 'rrf':
+        fs = collections.defaultdict(float)
+        for lst in (dtop, stop):
+            for r_, i in enumerate(lst): fs[int(i)] += 1.0 / (CFG['RRF_K'] + r_ + 1)
+    else:                                            # R22 fault: raw-score sum (BM25 scale swamps cosine)
+        fs = collections.defaultdict(float)
+        for i in dtop: fs[int(i)] += float(dsm[i])
+        for i in stop: fs[int(i)] += float(ss[i])
+    fused = sorted(fs, key=lambda i: -fs[i])
+    if c['quality']:                                 # K08 repair: thin/placeholder docs go behind informative ones before rerank
+        fused = [i for i in fused if not dthin(i, ov, q)] + [i for i in fused if dthin(i, ov, q)]
+    if c['parent_collapse']:                         # K12 repair: one chunk per parent document, refill from depth
+        seenp, kp, rp = set(), [], []
+        for i in fused:
+            (rp if dparent(i, ov) in seenp else kp).append(i); seenp.add(dparent(i, ov))
+        fused = kp + rp
+    if c['dedup']:                                   # K05 repair: collapse near-duplicates before rerank, refill from depth
+        kept, sh, rest = [], [], []
+        for i in fused[:150]:
+            s_ = shingles(dtext(i, ov)); e_ = served_vec(i, c, ov)
+            if any(jacc(s_, s2) >= 0.8 or float(e_ @ served_vec(k, c, ov)) >= 0.985 for k, s2 in zip(kept, sh)): rest.append(i); continue
+            kept.append(i); sh.append(s_)
+        fused = kept + fused[150:] + rest
+    depth = fused[:c['depth']]
+    if c['result_cap'] is not None: depth = depth[:c['result_cap']]
+    texts = [dtext(i, ov) for i in depth]
+    if c['ce'] == 'random':                          # R05 fault: reranker plugin returns garbage
+        r = np.random.default_rng(int(hashlib.md5(q.encode()).hexdigest()[:8], 16)); ce = r.standard_normal(len(depth)).astype(np.float32)
+    else:
+        ce = ce_scores(q, [dkey(i, ov) for i in depth], texts, c['ce_trunc'])
+    order = [depth[j] for j in np.argsort(-ce, kind='stable')]
+    cmap = {i: float(s) for i, s in zip(depth, ce)}
+    if c['attr_rerank'] and order:                   # K03 repair: inside the top-1 identity cluster, rank by attribute match in the body
+        at = attrs(q); s0 = shingles(dcontent(order[0], ov))
+        pos = [r_ for r_, i in enumerate(order) if r_ == 0 or jacc(s0, shingles(dcontent(i, ov))) >= 0.5]
+        mem = sorted([order[r_] for r_ in pos], key=lambda i: (-round(attr_cov(at, dcontent(i, ov)), 3), -cmap[i]))
+        order = list(order)
+        for r_, i in zip(pos, mem): order[r_] = i
+    if c['authority']:                               # K06 repair: in conflict clusters keep verified sources first
+        grp_ = collections.defaultdict(list)
+        for i in order: grp_[title_key(dtitle(i, ov))].append(i)
+        demote = {i for g in grp_.values() if len(g) > 1 and any(dverified(j, ov) for j in g) for i in g if not dverified(i, ov)}
+        order = [i for i in order if i not in demote] + [i for i in order if i in demote]
+    if c['dedup']: order = [i for i in order if i in set(kept)] + [i for i in order if i not in set(kept)]
+    if c['quality']: order = [i for i in order if not dthin(i, ov, q)] + [i for i in order if dthin(i, ov, q)]
+    final = order[:CFG['K_FINAL']]
+    return dict(ss_mean=float(ss[:N].mean()), q=q, qv=qv, dtop=dtop, dsc=dsm[dtop], stop=stop, ssc=ss[stop], fused=fused, depth=depth, ce=ce,
+                cmap=cmap, order=order, final=final, cov=cov, exact_top=exact_top, n_stale=n_stale, ov=ov, st=st, nf=nf, surv=surv)
+
+# %% [markdown]
+# ## 6. Lexical tools from the corpus itself: spelling (SymSpell-style), segmentation, prefix completion, synonyms
+
+# %%
+import bisect, nltk
+nltk.download('wordnet', quiet=True); nltk.download('omw-1.4', quiet=True)
+from nltk.corpus import wordnet as wn
+FREQ = {w: int(DF[j]) for w, j in VOC.items() if DF[j] >= 3 and w.isalpha() and 3 <= len(w) <= 20}
+def deletes1(w): return {w[:i] + w[i + 1:] for i in range(len(w))}
+DEL = collections.defaultdict(list)
+for w in FREQ:
+    for d in deletes1(w): DEL[d].append(w)
+def dl_dist(a, b):
+    d = [[0] * (len(b) + 1) for _ in range(len(a) + 1)]
+    for i in range(len(a) + 1): d[i][0] = i
+    for j in range(len(b) + 1): d[0][j] = j
+    for i in range(1, len(a) + 1):
+        for j in range(1, len(b) + 1):
+            d[i][j] = min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] != b[j - 1]))
+            if i > 1 and j > 1 and a[i - 1] == b[j - 2] and a[i - 2] == b[j - 1]: d[i][j] = min(d[i][j], d[i - 2][j - 2] + 1)
+    return d[-1][-1]
+def df_of(w): return int(DF[VOC[w]]) if w in VOC else 0
+def spell(w, ratio=10):
+    """Best in-corpus correction within Damerau distance 2 that is >= ratio x more frequent; else None."""
+    if not w.isalpha() or len(w) < 3: return None
+    keys = {w} | deletes1(w); keys |= {d2 for d in list(keys) for d2 in deletes1(d)} if len(w) >= 6 else set()
+    cand = {c for k in keys for c in DEL.get(k, [])} | {k for k in keys if k in FREQ}
+    best = None; base = df_of(w); out = []
+    for c_ in cand:
+        if c_ == w: continue
+        dd = dl_dist(w, c_)
+        if dd <= (1 if len(w) < 5 else 2) and FREQ[c_] >= (3 if base == 0 else ratio * base):
+            key = (dd, -FREQ[c_])
+            if best is None or key < best[0]: best = (key, c_)
+            out.append((key, c_))
+    SPELLC[w] = [c_ for _, c_ in sorted(out)[:8]]
+    return best[1] if best else None
+SPELLC = {}
+def spell_cands(w):
+    spell(w); return SPELLC.get(w, [])
+SEGW = {w: math.log(N / FREQ[w]) for w in FREQ}
+for w in ('for', 'and', 'the', 'with', 'of', 'in', 'to', 'men', 'kit', 'set'):
+    if w in VOC: SEGW[w] = math.log(N / max(1, df_of(w)))
+def segment(w):
+    if len(w) < 7 or w in VOC and df_of(w) >= 5: return None
+    best = [(0.0, [])] + [(1e9, None)] * len(w)
+    for i in range(1, len(w) + 1):
+        for j in range(max(0, i - 20), i):
+            p = w[j:i]
+            if p in SEGW and best[j][1] is not None and best[j][0] + SEGW[p] + 2 < best[i][0]:
+                best[i] = (best[j][0] + SEGW[p] + 2, best[j][1] + [p])
+    s = best[-1][1]; return s if s and len(s) >= 2 else None
+PREF = sorted(FREQ)
+def complete(p):
+    """Most frequent corpus word that strictly extends prefix p."""
+    if len(p) < 2: return None
+    i = bisect.bisect_left(PREF, p); best = None
+    while i < len(PREF) and PREF[i].startswith(p):
+        if PREF[i] != p and (best is None or FREQ[PREF[i]] > FREQ[best]): best = PREF[i]
+        i += 1
+    return best
+def synonyms(w, first_sense=False):
+    out = set(); ss = wn.synsets(w)
+    for s in (ss[:1] if first_sense else ss):
+        for l in s.lemmas():
+            n_ = l.name().lower()
+            if n_ != w and n_.isalpha(): out.add(n_)
+    return out
+import functools
+spell = functools.lru_cache(maxsize=None)(spell); segment = functools.lru_cache(maxsize=None)(segment)
+complete = functools.lru_cache(maxsize=None)(complete); synonyms = functools.lru_cache(maxsize=None)(synonyms)
+_enc_docs_raw = enc_docs; _DC = {}
+if CFG['WARM_CACHE'] and os.path.exists(CFG['WARM_CACHE']) and not RES:   # optional warm cache from another run (speed only)
+    _W = pickle.load(open(CFG['WARM_CACHE'], 'rb'))['caches']; _QC.update(_W['QC']); _DC.update(_W['DC'])
+    # v2 caches key corpus docs by row index of the FULL corpus; re-key by doc_id (overlay keys are content hashes)
+    _CEC.update({(k_[0], FULL_IDS[k_[1]] if isinstance(k_[1], (int, np.integer)) else k_[1], k_[2]): v_ for k_, v_ in _W['CEC'].items()}); del _W
+if RES:                                              # restore caches from the checkpoint (speed only)
+    _QC.update(RES['caches']['QC']); _CEC.update(RES['caches']['CEC']); _DC.update(RES['caches']['DC'])
+def enc_docs(texts, bs=32):
+    miss = [t for t in dict.fromkeys(texts) if t not in _DC]
+    if miss:
+        for t, v in zip(miss, _enc_docs_raw(miss, bs)): _DC[t] = v
+    return np.stack([_DC[t] for t in texts]) if texts else np.zeros((0, E.shape[1]), np.float32)
+FILLER = set('hi hello please thanks thank you i im am looking for want need my wife husband sister brother friend who loves really very just some kind of something that would be great maybe could help me find buy get order'.split())
+log('lexical tools: freq words', len(FREQ), 'delete keys', len(DEL))
+
+# %% [markdown]
+# ## 7. Telemetry features (no gold, no injection markers). v2 adds identity-collision, attribute-coverage,
+# redundancy, alignment-probe and ANN-probe features.
+
+# %%
+def spearman(a, b):
+    if len(a) < 3: return 0.0
+    ra = np.argsort(np.argsort(a)); rb = np.argsort(np.argsort(b))
+    v = np.corrcoef(ra, rb)[0, 1]; return 0.0 if np.isnan(v) else float(v)
+NULL_TOP = None
+def features(tr):
+    q, st, ov = tr['q'], tr['st'], tr['ov']; qt = tok(q); f = {}
+    inv = [t for t in qt if t in VOC]; oov = [t for t in qt if t not in VOC]
+    f['q_len'] = len(qt); f['q_oov'] = len(oov) / max(1, len(qt))
+    f['q_oov_long'] = sum(len(t) >= 9 for t in oov); f['q_lowdf'] = sum(df_of(t) < 3 for t in qt) / max(1, len(qt))
+    idf = [IDF[VOC[t]] for t in inv]; f['q_idf_mean'] = float(np.mean(idf)) if idf else 0.0; f['q_idf_max'] = float(max(idf)) if idf else 0.0
+    f['q_digit'] = sum(any(c.isdigit() for c in t) for t in qt) / max(1, len(qt))
+    codes = [t for t in qt if re.search(r'[a-z]', t) and re.search(r'\d', t)]
+    f['q_code'] = len(codes); f['q_code_oov'] = sum(df_of(t) == 0 for t in codes); f['q_code_rare'] = sum(df_of(t) < 3 for t in codes)
+    f['q_conj'] = len(re.findall(r'\band\b|,|&|\bplus\b|\balso\b', q.lower()))
+    f['q_correctable'] = sum(df_of(t) < 3 and spell(t) is not None for t in qt)
+    f['q_segmentable'] = sum(segment(t) is not None for t in oov)
+    f['q_prefix'] = int(bool(qt) and df_of(qt[-1]) < 5 and complete(qt[-1]) is not None)
+    f['q_synlow'] = sum(t.isalpha() and df_of(t) < 30 and any(df_of(s) >= 300 for s in synonyms(t)) for t in qt)
+    f['q_filler'] = sum(t in FILLER for t in qt) / max(1, len(qt))
+    d, s_ = tr['dsc'], tr['ssc']
+    f['d1'] = float(d[0]) if len(d) else 0.0; f['d_gap'] = float(d[0] - d[1]) if len(d) > 1 else 0.0
+    f['d_m5'] = float(d[:5].mean()) if len(d) else 0.0; f['d_std20'] = float(d[:20].std()) if len(d) > 1 else 0.0
+    f['d_n'] = len(d)
+    f['s1'] = float(s_[0]) if len(s_) else 0.0; f['s_gap'] = float(s_[0] - s_[1]) if len(s_) > 1 else 0.0; f['s_n'] = len(s_)
+    qs = set(inv)
+    f['s_lex5'] = float(np.mean([len(qs & set(tok(dtext(i, ov)))) / max(1, len(qs)) for i in tr['stop'][:5]])) if len(tr['stop']) else 0.0
+    f['d_lex5'] = float(np.mean([len(qs & set(tok(dtext(i, ov)))) / max(1, len(qs)) for i in tr['dtop'][:5]])) if len(tr['dtop']) else 0.0
+    dt, stp = set(tr['dtop'][:10].tolist()), set(tr['stop'][:10].tolist())
+    f['ov_ds10'] = len(dt & stp) / 10; dall, sall = set(tr['dtop'].tolist()), set(tr['stop'].tolist())
+    dep = tr['depth']; f['dep_dense'] = sum(i in dall for i in dep) / max(1, len(dep)); f['dep_sparse'] = sum(i in sall for i in dep) / max(1, len(dep))
+    ce = tr['ce']; srt = np.sort(ce)[::-1] if len(ce) else ce
+    f['ce1'] = float(srt[0]) if len(ce) else 0.0; f['ce_gap'] = float(srt[0] - srt[1]) if len(ce) > 1 else 0.0
+    f['ce_std'] = float(ce.std()) if len(ce) > 1 else 0.0; f['ce_mean'] = float(ce.mean()) if len(ce) else 0.0
+    f['ce_rrf_rho'] = spearman(-np.arange(len(dep)), ce)
+    dmap = {int(i): float(v) for i, v in zip(tr['dtop'], tr['dsc'])}
+    both = [(dmap[i], tr['cmap'][i]) for i in dep if i in dmap]
+    f['ce_dense_rho'] = spearman([a for a, _ in both], [b for _, b in both]) if len(both) >= 3 else 0.0
+    f['n_depth'] = len(dep); f['n_final'] = len(tr['final'])
+    fin = tr['final']; at = attrs(q)
+    if len(fin) >= 2:
+        em = np.stack([served_vec(i, st['cfg'], ov) for i in fin]); cs = em @ em.T
+        f['red_cos5'] = float((cs.sum() - len(fin)) / (len(fin) * (len(fin) - 1)))
+        sh = [shingles(dtext(i, ov)) for i in fin]
+        f['dup5'] = sum(jacc(sh[a], sh[b]) >= 0.8 for a in range(len(fin)) for b in range(a + 1, len(fin)))
+        tk = [title_key(dtitle(i, ov)) for i in fin]
+        f['ident5'] = sum(tk[a] == tk[b] and tk[a] != '' for a in range(len(fin)) for b in range(a + 1, len(fin)))
+    else: f['red_cos5'] = f['dup5'] = f['ident5'] = 0.0
+    f['attr_n'] = len(at); f['attrcov1'] = attr_cov(at, dcontent(fin[0], ov)) if fin else 0.0
+    f['attr_gain'] = (max(attr_cov(at, dcontent(i, ov)) for i in dep) - f['attrcov1']) if dep else 0.0
+    f['attr_title_body_gap'] = (attr_cov(at, dtitle(fin[0], ov)) - f['attrcov1']) if fin else 0.0   # title claims an attribute the body lacks
+    f['thin5'] = sum(dthin(i, ov, q) for i in fin); f['unver5'] = sum(not dverified(i, ov) for i in fin)
+    f['tenant_mis5'] = sum(not scope_ok(dscope(i, ov), st['tenant']) for i in fin)
+    f['expired5'] = sum(not valid_on(dval(i, ov), CFG['QUERY_DATE']) for i in fin)
+    f['versioned5'] = sum(bool(dval(i, ov)[0]) for i in fin)
+    pc = collections.Counter(dpart(i, ov) for i in dep); p_ = np.array(list(pc.values())) / max(1, len(dep))
+    f['part_ent'] = float(-(p_ * np.log(p_)).sum()) if len(dep) else 0.0; f['part_top'] = float(p_.max()) if len(dep) else 0.0
+    f['cov'] = tr['cov']; f['ann_probe'] = len(set(tr['dtop'][:10].tolist()) & set(tr['exact_top'].tolist())) / max(1, len(tr['exact_top']))
+    if len(tr['dtop']):
+        i0 = int(tr['dtop'][0]); f['align_probe'] = float(enc_docs([dtext(i0, ov)])[0] @ served_vec(i0, st['cfg'], ov))
+    else: f['align_probe'] = 1.0
+    f['q_probe_cos'] = float(tr['qv'] @ enc_q(q, 'v15'))   # query-path probe: served vector vs pinned re-encode
+    global NULL_TOP
+    if NULL_TOP is None: NULL_TOP = set(topn(dense_all(enc_q('', 'v15')), 10).tolist())
+    f['d_null10'] = len(set(tr['dtop'][:10].tolist()) & NULL_TOP) / 10    # dense results that ignore the query text
+    sp20 = [int(i) for i in tr['stop'][:CFG['PROBE_K']]]  # index-health probe: are the sparse top-k docs' dense vectors current?
+    if sp20:
+        fv = enc_docs([dtext(i, ov) for i in sp20]); cs_ = [float(v @ served_vec(i, st['cfg'], ov)) for i, v in zip(sp20, fv)]
+        f['stale_sparse20'] = sum(c_ < 0.98 for c_ in cs_); f['stale_min'] = float(min(cs_))
+        f['sparse_absent_dense'] = sum(i not in dall for i in sp20) / len(sp20)
+    else: f['stale_sparse20'] = 0; f['stale_min'] = 1.0; f['sparse_absent_dense'] = 0.0
+    f['nonfinite'] = tr['nf']                          # v2: index health counter of non-finite vectors
+    f['filter_survival'] = tr['surv']                  # v2: share of ANN/BM25 candidates surviving the metadata filter
+    f['deleted5'] = sum(ddeleted(i, ov) for i in fin)  # v2: delivered ids missing from the source of truth
+    f['chunk_crowd5'] = (max(collections.Counter(dparent(i, ov) for i in fin).values()) - 1) if fin else 0   # v2
+    return f
+
+# %% [markdown]
+# ## 8. Base queries: real ESCI queries (us, Exact labels) + ShopNova in-corpus questions/policies. Purity filters.
+
+# %%
+def split_of(key): return 'test' if int(hashlib.md5(key.encode()).hexdigest()[:8], 16) / 2**32 < CFG['TEST_FRAC'] else 'train'
+ex = pd.read_parquet(FILES['esci']['path'], columns=['query', 'query_id', 'product_id', 'product_locale', 'esci_label'])
+ESCI_PK = {PKEY[i] for i in range(N) if DOCS[i]['doc_id'].startswith('ESCI-us-')}
+ex = ex[(ex.product_locale == 'us') & (ex.esci_label == 'E') & ex.product_id.isin(ESCI_PK)]
+ex['query'] = ex['query'].str.strip().str.lower()
+qg = ex.groupby('query').product_id.agg(lambda s: sorted(set(s))).reset_index()
+qg = qg[qg['query'].map(lambda s: len(tok(s)) >= 1 and s.isascii())]
+par_ = {}                                            # union-find: queries sharing a gold product (or ESCI/ABO twin) share a split
+def find(x):
+    while par_.setdefault(x, x) != x: par_[x] = par_[par_[x]]; x = par_[x]
+    return x
+for ps in qg.product_id:
+    for p in ps[1:]: par_[find(p)] = find(ps[0])
+qg['comp'] = qg.product_id.map(lambda ps: find(ps[0]))
+qg['split'] = qg['comp'].map(split_of)
+train_pk = {p for ps, s in zip(qg.product_id, qg.split) if s == 'train' for p in ps}
+leak = qg[(qg.split == 'test') & qg.product_id.map(lambda ps: any(p in train_pk for p in ps))]
+assert len(leak) == 0, 'gold-product leakage between splits'
+PUR['esci_queries_us_E_in_corpus'] = len(qg); PUR['esci_split_counts'] = qg.split.value_counts().to_dict()
+PUR['esci_gold_components'] = int(qg.comp.nunique()); PUR['esci_test_gold_leak'] = 0
+qg = qg.sample(frac=1.0, random_state=CFG['SEED'])
+NATX = set(json.load(open(FILES['exclusions']['path']))['queries'])      # query strings examined by v1 runs
+QG_BASE, QG_NAT = qg[qg['query'].isin(NATX)], qg[~qg['query'].isin(NATX)]
+PUR['v2_base_pool_seen'] = len(QG_BASE); PUR['v2_natural_pool_unseen'] = len(QG_NAT)
+BASE = []
+for r in QG_BASE.head(CFG['N_BASE_ESCI']).itertuples():                  # injected episodes: only already-seen queries
+    BASE.append(dict(bid=f'esci:{r.query}', q=r.query, tenant='ALL', split=r.split, src='esci', pids=list(r.product_id),
+                     gold=gold_set([j for p in r.product_id for j in BY_PKEY[p]])))
+QRE = re.compile(r'^Question: (.*?\?)\s*Answer:', re.S)
+for i, d in enumerate(DOCS):
+    if d['source_partition'] != 'synthetic_shopnova': continue
+    t = d['tenant_id'] if d['tenant_id'] != 'ALL' else random.choice(TENANTS[1:])
+    m = QRE.match(d['content'])
+    if m: BASE.append(dict(bid=f'faq:{d["doc_id"]}', q=m.group(1).lower(), tenant=t, split=split_of(d['doc_id']), src='faq', gold=gold_set([i])))
+    elif d['doc_id'].startswith('INP') and VAL[i][0] and not VAL[i][1]:
+        core = re.sub(r'\s*v\d+\b', '', d['title']).strip().lower()
+        BASE.append(dict(bid=f'inp:{d["doc_id"]}', q=f'what is the current {core} rule?', tenant=t, split=split_of(d['doc_id']), src='inp', gold=gold_set([i])))
+    elif d['doc_id'].startswith('PRD'):
+        mm = re.search(r'(\d+) GB of RAM', d['content'])
+        if mm: BASE.append(dict(bid=f'prd:{d["doc_id"]}', q=f'{d["title"].lower()} {mm.group(1)} gb ram', tenant=t, split=split_of(d['doc_id']), src='prd', gold=gold_set([i])))
+CODE_RE = re.compile(r'\b([A-Z]\d{3})\b'); n_prdc = 0
+for i, d in enumerate(DOCS):                         # identifier-centric product queries ("<brand> <model code>") for Q07
+    m = CODE_RE.search(d['title'] or '') if d['doc_id'].startswith('PRD') else None
+    if m and n_prdc < CFG['N_PRDC']:
+        t = d['tenant_id'] if d['tenant_id'] != 'ALL' else 'T1'; n_prdc += 1
+        BASE.append(dict(bid=f'prdc:{d["doc_id"]}', q=f"{d['title'].split()[0].lower()} {m.group(1).lower()}", tenant=t,
+                         split=split_of(d['doc_id']), src='prdc', gold=gold_set([i])))
+log('base queries', collections.Counter(b['src'] for b in BASE), collections.Counter(b['split'] for b in BASE))
+# Query log for autocomplete (Q01 repair): every ESCI 'us' query EXCEPT the ones used as base queries (no leakage).
+_used = set(qg['query'])                                       # v3: no evaluated ESCI query string (base, calibration, census, natural) is in the log
+_allq = pd.read_parquet(FILES['esci']['path'], columns=['query', 'product_locale'])
+_allq = _allq[_allq.product_locale == 'us']['query'].str.strip().str.lower().drop_duplicates()
+QLOG_UNI, QLOG_CO, QLOG_UNI_Q = collections.Counter(), collections.defaultdict(collections.Counter), set()
+for s_ in _allq:
+    if s_ in _used: continue
+    ws_ = set(tok(s_)); QLOG_UNI.update(ws_); QLOG_UNI_Q.add(s_)
+    for a_ in ws_:
+        for b2 in ws_:
+            if a_ != b2: QLOG_CO[a_][b2] += 1
+PUR['query_log_queries'] = int(sum(1 for s_ in _allq if s_ not in _used)); ALLQ = set(_allq); del _allq
+
+def succ(tr, gold, k): return any(i in gold for i in tr['final'][:k])
+def grank(tr, gold):
+    for r, i in enumerate(tr['order']):
+        if i in gold: return r + 1
+    return 999
+log('clean runs')
+CLEAN = RES.get('CLEAN', {})
+for n_, b in enumerate(BASE):
+    if b['bid'] not in CLEAN:
+        st = dict(q=b['q'], tenant=b['tenant'], cfg=mkcfg(), ov=None); tr = run(st)
+        CLEAN[b['bid']] = dict(clean_tr=tr, h5=succ(tr, b['gold'], 5), h1=succ(tr, b['gold'], 1), rank=grank(tr, b['gold']))
+        if n_ % 50 == 0: maybe_stop('clean_runs')
+    b.update(CLEAN[b['bid']])
+_bb = {b['bid'] for b in BASE}; EXTRA = [r for r in qg.itertuples() if f'esci:{r.query}' not in _bb][:CFG['N_CENSUS']]
+NATSET = set(QG_NAT['query'])
+CENS = RES.get('CENS', {})
+for n_, r in enumerate(EXTRA):
+    if r.query in CENS: continue
+    gold = gold_set([j for p in r.product_id for j in BY_PKEY[p]])
+    st = dict(q=r.query, tenant='ALL', cfg=mkcfg(), ov=None, gold=gold, k=5, meta={}); tr = run(st)
+    gr = [k for k, i in enumerate(tr['order']) if i in gold]
+    CENS[r.query] = dict(split=r.split, fresh=r.query in NATSET, h5=succ(tr, gold, 5), feats=features(tr),
+                         nan_in_top5=any(NANDOC[i] for i in tr['final'] if i < N), gold_is_nan=any(NANDOC[i] for i in gold if i < N),
+                         nan_above_gold=bool(gr) and any(NANDOC[i] for i in tr['order'][:gr[0]] if i < N), pids=list(r.product_id))
+    if n_ % 50 == 0: maybe_stop('census_runs')
+log('clean runs for census/calibration/natural pools', len(CENS))
+for s_ in ['esci', 'faq', 'inp', 'prd', 'prdc']:
+    xs = [b for b in BASE if b['src'] == s_]
+    if xs: log(f'clean {s_}: n={len(xs)} Hit@1={np.mean([b["h1"] for b in xs]):.3f} Hit@5={np.mean([b["h5"] for b in xs]):.3f}')
+
+# %% [markdown]
+# ## 9. Fault injectors — 28 core faults. Real data where it exists (ESCI queries, Webis typos, in-corpus
+# policy versions, tenant variants, real bge v1 model drift, real IVF ANN); synthetic overlay docs otherwise.
+
+# %%
+WEBIS = collections.defaultdict(list); WOPS = collections.Counter()
+with zipfile.ZipFile(FILES['qspell']['path']) as zf:
+    nm = [n for n in zf.namelist() if n.endswith('error-annotations.csv')][0]
+    rd = csv.reader(zf.read(nm).decode('utf-8', 'replace').splitlines(), delimiter=';'); hdr = next(rd)
+    for row in rd:
+        if len(row) < 9: continue
+        for k_, v_ in zip(hdr[5:9], row[5:9]):
+            if v_.isdigit(): WOPS[k_] += int(v_)
+        a, b_ = row[1].split(), row[2].split()
+        if len(a) == len(b_):
+            for x, y in zip(a, b_):
+                if x != y and x.isalpha() and y.isalpha() and len(y) >= 4 and dl_dist(x, y) <= 2: WEBIS[y].append(x)
+log('Webis real misspelling pairs', sum(map(len, WEBIS.values())), 'edit ops', dict(WOPS))
+KEYB = 'qwertyuiop asdfghjkl zxcvbnm'.split()
+def near_key(ch, rng):
+    for row in KEYB:
+        if ch in row:
+            j = row.index(ch); return rng.choice([row[k] for k in (j - 1, j + 1) if 0 <= k < len(row)])
+    return ch
+def webis_edit(w, rng):
+    """Real misspelling from Webis if the word has one, else one edit drawn from Webis' edit-type distribution."""
+    if w in WEBIS: return rng.choice(WEBIS[w]), True
+    ops, wt = zip(*WOPS.items()); op = rng.choices(ops, weights=wt)[0]; i = rng.randrange(1, len(w) - 1)
+    if op == 'Deletion': return w[:i] + w[i + 1:], False
+    if op == 'Insertion': return w[:i] + near_key(w[i], rng) + w[i:], False
+    if op == 'Substitution': return w[:i] + near_key(w[i], rng) + w[i + 1:], False
+    return w[:i] + w[i + 1] + w[i] + w[i + 2:], False
+def content_toks(q): return [t for t in q.split() if t.isalpha() and len(t) >= 4 and t not in FILLER]
+def by_idf(ts): return sorted(ts, key=lambda t: -(IDF[VOC[t]] if t in VOC else 0))
+def S(b, **kw):
+    st = dict(q=b['q'], tenant=b['tenant'], cfg=mkcfg(), ov=None, gold=b['gold'], k=5, bid=b['bid'], split=b['split'], meta={})
+    st.update(kw); return st
+def best_gold(b):
+    for i in b['clean_tr']['order']:
+        if i in b['gold'] and i < N: return i
+    return min(i for i in b['gold'] if i < N)
+def perturb_numbers(text, rng):
+    def f(m):
+        v = int(m.group(0)); return str(v + rng.choice([1, 2, 3, 5, 10, 12]) if v < 1000 else v + rng.randint(11, 400))
+    return re.sub(r'\b\d{1,6}\b', f, text)
+def swap_attr(text, a, rng):
+    if a.isdigit(): new = str(int(a) + rng.choice([1, 2, 4, 8, 16]))
+    elif a in COLORS: new = rng.choice(sorted(COLORS - {a}))
+    elif a in SIZES: new = rng.choice(sorted(SIZES - {a}))
+    else: new = re.sub(r'\d', lambda m: str((int(m.group(0)) + rng.randint(1, 9)) % 10), a)
+    return re.sub(rf'(?i)\b{re.escape(a)}\b', new, text)
+def meta_of(i): d = DOCS[i]; return dict(access_scope=d['access_scope'], license_status=d['license_status'], part=PART[i])
+
+def inj_Q01(b, rng):   # incomplete last word (user stopped typing)
+    ws = b['q'].split()
+    if not ws or not (ws[-1].isalpha() and len(ws[-1]) >= 5): return None
+    p = ws[-1][:max(3, len(ws[-1]) // 2)]
+    if df_of(p) >= 5: return None
+    return S(b, q=' '.join(ws[:-1] + [p]))
+HOBBY = 'gardening cooking hiking gaming travel yoga fishing painting reading music'.split()
+def inj_Q02(b, rng):   # verbose chatty query (filler + context clause)
+    pre = rng.choice(['hi im looking for', 'hello i need', 'can you help me find', 'i want to buy'])
+    post = rng.choice(['for my sister who loves {h}', 'for my husband who likes {h}', 'for my friend who enjoys {h} thanks', 'please thank you'])
+    return S(b, q=f"{pre} {b['q']} {post.format(h=rng.choice(HOBBY))}")
+PROD2Q = collections.defaultdict(list)
+for r_ in QG_BASE.itertuples():
+    for p_ in r_.product_id: PROD2Q[p_].append(r_.query)
+def inj_Q03(b, rng):   # v3: natural vocabulary variation. Another REAL user's query for the same Exact product (no synthesis)
+    if b['src'] != 'esci': return None
+    alts = sorted({q2 for p_ in b['pids'] for q2 in PROD2Q[p_] if q2 != b['q']})
+    if not alts: return None
+    q2 = rng.choice(alts); shared = [p_ for p_ in b['pids'] if q2 in PROD2Q[p_]]
+    return S(b, q=q2, gold=gold_set([j for p_ in shared for j in BY_PKEY[p_]]), meta=dict(q1=b['q']))
+def inj_Q04(b, rng):   # real typos (Webis-QSpell-17 misspellings / edit distribution)
+    q = b['q']; n = 0; real = 0
+    for t in by_idf(content_toks(q))[:2]:
+        for _ in range(5):
+            w, isreal = webis_edit(t, rng)
+            if df_of(w) < 3 and w != t: break
+        else: continue
+        q = re.sub(rf'\b{t}\b', w, q, count=1); n += 1; real += isreal
+    return S(b, q=q, meta=dict(real_typos=real)) if n else None
+def inj_Q05(b, rng):   # missing spaces: adjacent words concatenated
+    ws = b['q'].split(); idx = [i for i in range(len(ws) - 1) if ws[i].isalpha() and ws[i + 1].isalpha() and len(ws[i]) >= 3 and len(ws[i + 1]) >= 3]
+    if not idx: return None
+    i = rng.choice(idx); merged = ws[i] + ws[i + 1]
+    if df_of(merged) >= 5: return None
+    return S(b, q=' '.join(ws[:i] + [merged] + ws[i + 2:]))
+def corrupt_code(t, rng):
+    ds = [i for i, ch in enumerate(t) if ch.isdigit()]
+    if len(ds) >= 2 and rng.random() < 0.5:
+        i = rng.choice(ds[:-1]); j = i + 1
+        if t[j].isdigit() and t[i] != t[j]: return t[:i] + t[j] + t[i] + t[j + 1:]
+    i = rng.choice(ds); return t[:i] + str((int(t[i]) + rng.randint(1, 9)) % 10) + t[i + 1:]
+def is_code(t): return len(t) >= 3 and t.isalnum() and any(ch.isdigit() for ch in t) and (any(ch.isalpha() for ch in t) or len(t) >= 3)
+def inj_Q07(b, rng):   # identifier / model-number corruption: 1-2 digit edits that give a code the catalogue does not have
+    cs = [t for t in b['q'].split() if is_code(t)]
+    if not cs: return None
+    t = rng.choice(cs)
+    for _ in range(6):
+        w = corrupt_code(t, rng)
+        if rng.random() < 0.5: w = corrupt_code(w, rng)
+        if w != t and df_of(w) == 0: return S(b, q=b['q'].replace(t, w, 1), k=1)
+    return None
+ESCI_BASE = [x for x in BASE if x['src'] == 'esci']
+def inj_Q09(b, rng):   # multi-intent: two shopping needs in one query
+    o = rng.choice(ESCI_BASE)
+    if o['bid'] == b['bid']: return None
+    return S(b, q=f"{b['q']} and also {o['q']}")
+
+def nonattr(q): return ' '.join(t for t in q.split() if t not in set(attrs(q)))
+def inj_K03(b, rng):   # sibling variants share the gold's identity but differ on the asked attribute
+    g = best_gold(b); gt = set(tok(DOCS[g]['content'])); at = [a for a in attrs(b['q']) if a in gt]
+    if not at: return None
+    docs = []
+    for k in range(6):      # variant body differs on the asked attribute; seller title is keyword-stuffed with the query
+        ti, co = DOCS[g]['title'] or '', DOCS[g]['content']
+        for a in at: ti, co = swap_attr(ti, a, rng), swap_attr(co, a, rng)
+        ti = f"{ti} - {b['q']}" if k % 2 == 0 else f"{b['q']} {ti}"
+        docs.append(dict(title=ti, content=co, **meta_of(g)))
+    return S(b, ov=make_overlay(docs), k=1)
+def inj_K04(b, rng):   # stale index entry: gold's dense vector is out of sync with its text
+    ov_ = {i: E[rng.randrange(N)] for i in b['gold'] if i < N}
+    return S(b, cfg=mkcfg(emb_override=ov_))
+def inj_K05(b, rng):   # near-duplicate flood of a competing doc
+    x = next((i for i in b['clean_tr']['order'] if i not in b['gold']), None)
+    if x is None or x >= N: return None
+    docs = []
+    for k in range(7):
+        ti = (DOCS[x]['title'] or '') + ('' if k % 2 else f" | {b['q']}")
+        co = DOCS[x]['content'] + f" Ref {rng.randint(1000, 9999)}."
+        docs.append(dict(title=ti, content=co, **meta_of(x)))
+    return S(b, ov=make_overlay(docs))
+def inj_K06(b, rng):   # conflicting third-party copies of the gold (unverified source, altered values)
+    g = best_gold(b)
+    if not VERIFIED[g]: return None
+    docs = [dict(title=DOCS[g]['title'], content=perturb_numbers(DOCS[g]['content'], rng) + f" Keywords: {b['q']}.",
+                 access_scope=DOCS[g]['access_scope'], license_status='unverified', part=PART[g], source_name='third-party feed')
+            for _ in range(6)]
+    return S(b, ov=make_overlay(docs), k=1)
+def inj_K07(b, rng):   # tenant filter dropped: other tenants' versions leak in
+    g = best_gold(b); others = [t for t in TENANTS[1:] if t != b['tenant']]
+    docs = [dict(title=DOCS[g]['title'], content=perturb_numbers(DOCS[g]['content'], rng), access_scope=f'tenant:{t}',
+                 license_status=DOCS[g]['license_status'], part=PART[g]) for t in others]
+    return S(b, cfg=mkcfg(tenant_filter=False), ov=make_overlay(docs), k=1)
+def inj_K08(b, rng):   # thin placeholder docs ('Brand: nan / Description: nan', mimics 3,993 real such docs)
+    g = best_gold(b); docs = []
+    for k in range(6):
+        ti = f"{b['q'].title()} {rng.choice(['', 'New', 'Pack', 'Set', 'Pro', '2-Pack'])}".strip()
+        docs.append(dict(title=ti, content=f'Title: {ti}\nBrand: nan\nDescription: nan', **meta_of(g)))
+    return S(b, ov=make_overlay(docs))
+def inj_K09(b, rng):   # validity filter off: superseded versions served (natural V1/V2 pairs + synthetic older versions)
+    g = best_gold(b); docs = []
+    for k in range(2):
+        y = 2023 + k; base_c = VALID_RE.sub('', DOCS[g]['content']).strip()
+        docs.append(dict(title=DOCS[g]['title'], content=f"{perturb_numbers(base_c, rng)} {b['q']} In force from {y}-01-01 until {y}-12-31.",
+                         access_scope=DOCS[g]['access_scope'], license_status=DOCS[g]['license_status'], part=PART[g]))
+    return S(b, cfg=mkcfg(validity=False), ov=make_overlay(docs), k=1)
+
+def inj_R01(b, rng): return S(b, cfg=mkcfg(mask=(0.3, rng.randrange(10**6), tuple(i for i in b['gold'] if i < N))))   # dense shard loss
+def inj_R03(b, rng): return S(b, cfg=mkcfg(enc='v15_trunc'))                      # encoder max_seq_length misconfig
+def inj_R05(b, rng): return S(b, cfg=mkcfg(ce='random'))                          # reranker plugin returns garbage
+def inj_R06(b, rng):                                                              # router sends query to the wrong collection
+    gp = {PART[i] for i in b['gold'] if i < N}; opts = [[p] for p in range(len(PARTS)) if p not in gp]
+    return S(b, cfg=mkcfg(route=rng.choice(opts))) if opts else None
+def inj_R07(b, rng):                                                              # embedding rows shifted by one in a block
+    g = best_gold(b); a = max(0, g - 10000); b_ = min(N - 4, a + 20000)
+    return S(b, cfg=mkcfg(shift=(a, b_, rng.choice([1, 2, 3]))))
+def inj_R10(b, rng): return S(b, cfg=mkcfg(q_noise=rng.uniform(2.0, 3.5)))       # numeric noise on the query vector
+def inj_R11(b, rng): return S(b, cfg=mkcfg(enc=rng.choice(['v1', 'swap'])))       # real model drift: bge v1 or mpnet query encoder vs v1.5 index
+def inj_R13(b, rng): return S(b, cfg=mkcfg(sparse_shift=rng.randint(1, 5000)))    # BM25 term dictionary out of sync
+def inj_R15(b, rng): return S(b, cfg=mkcfg(nprobe=1))                             # IVF ANN recall collapse (nprobe=1/1024)
+def inj_R19(b, rng): return S(b, cfg=mkcfg(depth=5))                              # rerank depth truncated 25 -> 5
+def inj_R22(b, rng): return S(b, cfg=mkcfg(fusion='raw'))                         # raw-score fusion instead of RRF
+def inj_R23(b, rng): return S(b, cfg=mkcfg(result_cap=rng.choice([1, 2])))        # partial results after a timeout
+def inj_R24(b, rng): return S(b, cfg=mkcfg(ce_trunc=24))                          # reranker sees 24 chars per doc
+
+def merge_states(a, b2):
+    c = dict(a['cfg'])
+    for k_, v_ in b2['cfg'].items():
+        if v_ != DEFAULT[k_]: c[k_] = v_
+    docs = (a['ov']['docs'] if a['ov'] else []) + (b2['ov']['docs'] if b2['ov'] else [])
+    q = a['q'] if a['q'] != a.get('q0') else b2['q']
+    return dict(a, q=q, cfg=c, ov=make_overlay(docs), k=min(a['k'], b2['k']))
+C2_PAIRS = [('Q04', 'R10'), ('Q04', 'R19'), ('Q05', 'R24'), ('Q01', 'R13'), ('Q03', 'R05'), ('Q02', 'R22'),
+            ('K05', 'R10'), ('K08', 'R19'), ('K04', 'R24'), ('Q04', 'K05'), ('Q05', 'K08'), ('K04', 'R03')]
+def inj_C2(b, rng):    # compositional: two faults from different factor groups at once
+    fa, fb = rng.choice(C2_PAIRS); A = INJ[fa](b, rng); Bs = INJ[fb](b, rng)
+    if A is None or Bs is None: return None
+    A['q0'] = b['q']; st = merge_states(A, Bs); st['meta'] = dict(combo=[fa, fb]); return st
+
+# --- v2: field-evidenced faults (docs/EVIDENCE_AND_NOVELTY_REPORT.md section 3) ---
+ESCI_PART = PARTS.index('real_world_apache_esci')
+def inj_R25(b, rng):   # non-finite vectors: rows silently dropped (faiss#5684) or NaN ranked first (qdrant#9201)
+    if rng.random() < 0.5: return S(b, cfg=mkcfg(nonfinite=('drop', tuple(i for i in b['gold'] if i < N))))
+    return S(b, cfg=mkcfg(nonfinite=('top', tuple(rng.sample(range(N), 40)))))
+def inj_R26(b, rng):   # metadata filter applied after the ANN candidate list (pgvector#259/#263, milvus#44854)
+    if not any(PART[i] == ESCI_PART for i in b['gold'] if i < N): return None
+    st = S(b, cfg=mkcfg(pfilter=[ESCI_PART], post_filter=True, dense_only=True))          # v3: dense-only deployment testbed
+    st['clean_cfg'] = mkcfg(pfilter=[ESCI_PART], post_filter=False, dense_only=True); return st
+def inj_K12(b, rng):   # chunk crowding: several chunks of ONE competing parent fill the top-k (langchain#22361, census 625/1,528)
+    x = next((i for i in b['clean_tr']['order'] if i not in b['gold'] and i < N), None)
+    if x is None: return None
+    words = DOCS[x]['content'].split(); n_ = max(1, len(words) // 5); par = 'ovp:' + DOCS[x]['doc_id']
+    docs = [dict(title=f"{DOCS[x]['title']} {b['q']}", content=' '.join(words[k * n_:(k + 2) * n_]) or DOCS[x]['content'], parent=par, **meta_of(x))
+            for k in range(5)]
+    return S(b, ov=make_overlay(docs))
+def inj_K11(b, rng):   # deleted listings still served (weaviate#3868, milvus#16961): tombstoned copies stay in the index
+    g = best_gold(b)
+    docs = [dict(title=f"{DOCS[g]['title']} {b['q']}", content=perturb_numbers(DOCS[g]['content'], rng), deleted=True, **meta_of(g))
+            for _ in range(5)]
+    return S(b, ov=make_overlay(docs), k=1)
+INJ = {f: globals()[f'inj_{f}'] for f in
+       ['Q01', 'Q02', 'Q03', 'Q04', 'Q05', 'Q07', 'Q09', 'K03', 'K04', 'K05', 'K06', 'K07', 'K08', 'K09',
+        'R01', 'R03', 'R05', 'R06', 'R07', 'R10', 'R11', 'R13', 'R15', 'R19', 'R22', 'R23', 'R24', 'R25', 'R26', 'K11', 'K12', 'C2']}
+FAULTS = list(INJ); SINGLE = [f for f in FAULTS if f != 'C2']
+GROUP = {f: f[0] for f in FAULTS}
+POOL = {f: ('esci',) for f in FAULTS}
+POOL.update(Q03=('esci',), Q07=('esci', 'prdc'), K03=('esci', 'prd'), K07=('faq',), K09=('inp', 'faq'))
+TIER0 = {'Q04', 'K07', 'R15', 'R23', 'C2', 'R25', 'R26', 'K11'}
+assert len(FAULTS) == 32
+V1_FAULTS = [f for f in FAULTS if f not in ('R25', 'R26', 'K11', 'K12')]; NEW_FAULTS = ['R25', 'R26', 'K11', 'K12']; assert len(V1_FAULTS) == 28
+# Evidence tier per fault (docs/EVIDENCE_AND_NOVELTY_REPORT.md section 2; v3 additions in docs/ROADMAP_V3.md).
+# S = multiple independent field reports, M = single report / practitioner / our data census, P = plausible, N = no evidence found.
+TIER = dict(Q01='N', Q02='M', Q03='M', Q04='S', Q05='M', Q07='M', Q09='P', K03='N', K04='M', K05='S', K06='N', K07='S', K08='M',
+            K09='M', K11='S', K12='S', R01='S', R03='N', R05='N', R06='P', R07='P', R10='N', R11='S', R13='M', R15='S', R19='S',
+            R22='S', R23='S', R24='M', R25='S', R26='S', C2='N')
+GROUNDED = [f for f in FAULTS if TIER[f] in 'SM']; QUARANTINE = [f for f in FAULTS if TIER[f] in 'NP']; assert set(TIER) == set(FAULTS)
+FAMILY = {f: f for f in FAULTS}
+FAMILY.update(Q01='QLEX', Q03='QLEX', Q04='QLEX', Q05='QLEX', K04='STALE', R07='STALE', R03='ENC', R10='ENC', R11='ENC')
+
+# %% [markdown]
+# ## 10. Repairs — one concrete repair per fault. Each maps (state, trace) -> repaired state.
+# Repairs never see gold. Ladders verify with telemetry (CE floor fitted on clean train, ANN probe, alignment probe).
+
+# %%
+def with_q(st, q): return dict(st, q=q)
+def with_cfg(st, **kw): c = dict(st['cfg']); c.update(kw); return dict(st, cfg=c)
+def ce_top(st):
+    t = run(st); return float(t['ce'].max()) if len(t['ce']) else -1e9
+def best_by_ce(st, cands):
+    """Candidate ladder: keep the query rewrite the reranker is most confident about (original included)."""
+    best, bs = st, ce_top(st)
+    for s2 in cands:
+        sc = ce_top(s2)
+        if sc > bs: best, bs = s2, sc
+    return best
+def completions(p, n=5):
+    i = bisect.bisect_left(PREF, p); out = []
+    while i < len(PREF) and PREF[i].startswith(p):
+        if PREF[i] != p: out.append(PREF[i])
+        i += 1
+    return sorted(out, key=lambda w: -FREQ[w])[:n]
+def docs_with(w): return set(BM[:, VOC[w]].indices.tolist()) if w in VOC else set()
+def cooc_rank(cands, context, n):
+    """Rank candidate words by how many corpus docs contain them together with the other query words."""
+    ctx = [docs_with(t) for t in context if t in VOC and df_of(t) < 60000 and t not in FILLER]
+    joint = set.intersection(*ctx) if ctx else set()
+    def sc(w):                                       # docs with the candidate AND all context words, then pairwise, then df
+        dw = docs_with(w); return (len(dw & joint), sum(len(dw & c_) for c_ in ctx), FREQ.get(w, df_of(w)))
+    return sorted(cands, key=sc, reverse=True)[:n]
+def ctx_rank(cands, tr, context, n):
+    """Rank candidates by (occurrences in the docs already retrieved for this query, corpus co-occurrence, df)."""
+    seen = collections.Counter(t for i in (tr['depth'] if tr else [])[:25] for t in set(tok(dtext(i, tr['ov']))))
+    co = {w: r for r, w in enumerate(cooc_rank(cands, context, len(cands)))}
+    return sorted(cands, key=lambda w: (-seen[w], co[w]))[:n]
+def rep_Q01(st, tr):   # complete the unfinished last word: corpus completions ranked by co-occurrence with the query, then df
+    ws = st['q'].split()
+    if not ws or df_of(ws[-1]) >= 5: return st
+    cands = completions(ws[-1], 200)
+    if not cands: return st
+    ctx = [t for t in ws[:-1] if t not in FILLER]
+    best = max(cands, key=lambda w: (sum(QLOG_CO[t][w] for t in ctx), QLOG_UNI[w], FREQ.get(w, 0)))   # query-log autocomplete
+    return with_q(st, ' '.join(ws[:-1] + [best]))
+def rep_Q02(st, tr):
+    q = re.sub(r'\b(who|that)\s+(loves|likes|enjoys)\s+\w+', ' ', st['q'])
+    ws = [w for w in q.split() if w not in FILLER]; return with_q(st, ' '.join(ws) or st['q'])
+QLOG_NN = [None]
+def qlog_neighbour(q):
+    if QLOG_NN[0] is None:   # embeddings of the query log, persisted so resumed sessions do not re-encode ~10^5 queries
+        lq = sorted(QLOG_UNI_Q); fp = os.path.join(OUT, f"qlog_nn_{hashlib.md5('|'.join(lq).encode()).hexdigest()[:12]}.npy")
+        if os.path.exists(fp): LV = np.load(fp)
+        else:   # resumable: partial matrix saved after every batch, TIME_BUDGET respected
+            pp = fp + '.partial.npy'; LV = np.load(pp) if os.path.exists(pp) else np.zeros((0, E.shape[1]), np.float32)
+            while len(LV) < len(lq):
+                a_ = len(LV); LV = np.concatenate([LV, np.asarray(ENC.encode([CFG['QPROMPT'] + x for x in lq[a_:a_ + 2048]], normalize_embeddings=True, batch_size=256), np.float32)])
+                np.save(pp, LV); maybe_stop('qlog_embedding')
+            np.save(fp, LV); os.remove(pp)
+        QLOG_NN[0] = (lq, LV)
+    lq, LV = QLOG_NN[0]; sc = LV @ enc_q(q); j = int(np.argmax(sc)); return lq[j], float(sc[j])
+def rep_Q03(st, tr):   # v3: query-log neighbour rewrite (nearest historical query of OTHER users), results interleaved
+    qn, cs = qlog_neighbour(st['q'])
+    if cs >= CFG['QLOG_NN_MIN'] and qn != st['q']: return with_cfg(st, parts=[st['q'], qn])
+    return st
+def rep_Q03_v2(st, tr):   # v2 synonym repair (kept for reference, unused)
+    cur = st
+    for w in st['q'].split():
+        if not (w.isalpha() and df_of(w) < 30): continue
+        sy = [s for s in synonyms(w) if df_of(s) >= 300]
+        if not sy: continue
+        ctx = [t for t in cur['q'].split() if t != w and t not in FILLER]
+        best = max(sy, key=lambda c_: (sum(QLOG_CO[t][c_] for t in ctx), QLOG_UNI[c_], df_of(c_)))   # the word real users type here
+        cur = with_q(cur, re.sub(rf'\b{w}\b', best, cur['q'], count=1))
+    return cur
+def rep_Q04(st, tr):   # corpus spelling candidates, ranked by co-occurrence with the rest of the query, CE-verified per word
+    cur = st
+    for w in st['q'].split():
+        if df_of(w) >= 3: continue
+        cs = spell_cands(w)
+        if not cs: continue
+        d0 = dl_dist(w, cs[0]); cs = [c_ for c_ in cs if dl_dist(w, c_) == d0]      # closest candidates only
+        best = cooc_rank(cs, [t for t in cur['q'].split() if t != w], 1)[0]           # context breaks ties, then df
+        cur = with_q(cur, re.sub(rf'\b{re.escape(w)}\b', best, cur['q'], count=1))
+    return cur
+def rep_Q05(st, tr): return with_q(st, ' '.join(' '.join(segment(w)) if (w not in VOC and segment(w)) else w for w in st['q'].split()))
+def code_variants1(t):
+    out = set()
+    for i, ch in enumerate(t):
+        if ch.isdigit(): out |= {t[:i] + str(d) + t[i + 1:] for d in range(10)}
+        if i + 1 < len(t): out.add(t[:i] + t[i + 1] + t[i] + t[i + 2:])
+    out.discard(t); return out
+def code_variants(t):
+    v1 = code_variants1(t); v2 = {y for x in v1 for y in code_variants1(x)}
+    return [v for v in (v1 | v2) if v != t and df_of(v) >= 1]
+def rep_Q07(st, tr):   # in-corpus codes within 2 digit edits, ranked by co-occurrence with the rest of the query, CE-verified
+    cur = st
+    for t in [t for t in st['q'].split() if is_code(t) and df_of(t) < 3]:
+        ctx = [w for w in cur['q'].split() if w != t]
+        cs = cooc_rank(code_variants(t), ctx, 3)
+        if cs: cur = best_by_ce(with_q(cur, cur['q'].replace(t, cs[0], 1)), [with_q(cur, cur['q'].replace(t, v, 1)) for v in cs[1:]])
+    return cur
+def rep_Q09(st, tr):
+    parts = [p.strip() for p in re.split(r'\band also\b|\band\b|,|&|\bplus\b', st['q']) if len(tok(p)) >= 1]
+    return with_cfg(st, parts=parts) if len(parts) >= 2 else st
+def rep_K03(st, tr): return with_cfg(st, attr_rerank=True)
+def rep_K04(st, tr): return with_cfg(st, refresh=True)
+def rep_K05(st, tr): return with_cfg(st, dedup=True)
+def rep_K06(st, tr): return with_cfg(st, authority=True)
+def rep_K07(st, tr): return with_cfg(st, tenant_filter=True)
+def rep_K08(st, tr): return with_cfg(st, quality=True)
+def rep_K09(st, tr): return with_cfg(st, validity=True)
+def rep_R01(st, tr):   # ONE coverage check (was three 0.999 checks): rebuild the dense view from the verified cache
+    return with_cfg(st, mask=None) if tr['cov'] < 0.999 else st
+def rep_encoder_reset(st, tr):   # R03/R10/R11: re-encode the query through the pinned, verified encoder path
+    return with_cfg(st, enc='v15', q_noise=0.0)
+rep_R03 = rep_R10 = rep_R11 = rep_encoder_reset
+def rep_R05(st, tr):   # plugin swap to the fresh reranker; fall back to RRF order if it still disagrees badly
+    s2 = with_cfg(st, ce='ok'); t2 = run(s2)
+    return s2 if spearman(-np.arange(len(t2['depth'])), t2['ce']) > -0.5 else with_cfg(st, ce='ok', depth=CFG['K_FINAL'])
+def rep_R06(st, tr): return with_cfg(st, route=None)
+def rep_R07(st, tr):   # alignment probe on dense top-5: re-embed text, compare with served vectors
+    top = [int(i) for i in tr['dtop'][:5] if i < N]
+    if not top: return st
+    fv = enc_docs([TEXT[i] for i in top]); al = np.mean([float(v @ served_vec(i, st['cfg'], st['ov'])) for i, v in zip(top, fv)])
+    return with_cfg(st, shift=None, refresh=True) if al < 0.98 else with_cfg(st, refresh=True)
+def rep_R13(st, tr): return with_cfg(st, sparse_shift=0)
+def rep_R15(st, tr):   # ladder nprobe 32 -> 128 -> exact, stop when the ANN top-10 equals the exact top-10
+    for npb in (32, 128, None):
+        s2 = with_cfg(st, nprobe=npb)
+        if npb is None or features_ann(run(s2)) >= 0.999: return s2
+CE_FLOOR = [None]
+def rep_R19(st, tr):   # widen-k ladder 50 -> 100, verified against the CE floor fitted on clean train
+    for dp in (50, 100):
+        s2 = with_cfg(st, depth=dp); t2 = run(s2)
+        if len(t2['ce']) and float(t2['ce'].max()) >= CE_FLOOR[0]: return s2
+    return s2
+def rep_R22(st, tr): return with_cfg(st, fusion='rrf')
+def rep_R23(st, tr): return with_cfg(st, result_cap=None)
+def rep_R24(st, tr): return with_cfg(st, ce_trunc=None)
+def rep_R25(st, tr): return with_cfg(st, nonfinite=None, refresh=True)     # quarantine non-finite rows, re-embed from text
+def rep_R26(st, tr): return with_cfg(st, post_filter=False)                 # pre-filter (iterative scan), pgvector#678
+def rep_K11(st, tr): return with_cfg(st, reconcile=True)                    # reconcile ids with the source of truth
+def rep_K12(st, tr): return with_cfg(st, parent_collapse=True)              # natural fault: one chunk per parent
+def qlog_support(words, ctx):
+    return (sum(QLOG_CO[t][u] for t in ctx for u in words) + (QLOG_CO[words[0]][words[1]] if len(words) == 2 else 0),
+            min(QLOG_UNI[u] for u in words), min(df_of(u) for u in words))
+def rep_QLEX(st, tr):
+    """Family repair for QLEX = {Q01, Q03, Q04, Q05}. These four are confusable in telemetry, because each one leaves a
+    low-df token near frequent words. So the repair does not guess the fault: it pools the candidate rewrites of all four
+    (spelling, completion, segmentation, synonym) and keeps the one real users type with this context (query log).
+    It changes a word only if the candidate has more query-log support than the word itself."""
+    ws = st['q'].split(); out = list(ws)
+    for k, w in enumerate(ws):
+        if df_of(w) >= 5: continue
+        ctx = [t for j, t in enumerate(out) if j != k and t not in FILLER]
+        cands = [[c_] for c_ in spell_cands(w)]
+        if k == len(ws) - 1: cands += [[c_] for c_ in completions(w, 200)]
+        sg = segment(w) if w not in VOC else None
+        if sg: cands.append(list(sg))
+        if w.isalpha() and df_of(w) < 30: cands += [[s_] for s_ in synonyms(w) if df_of(s_) >= 300]
+        if not cands: continue
+        best = max(cands, key=lambda c_: qlog_support(c_, ctx))
+        if (qlog_support(best, ctx) > qlog_support([w], ctx) and QLOG_UNI[w] <= CFG['QLEX_MAX_W']
+                and min(QLOG_UNI[u] for u in best) >= CFG['QLEX_MIN_C']): out[k] = ' '.join(best)   # v3: only words users never type
+    return with_q(st, ' '.join(out))
+def features_ann(tr): return len(set(tr['dtop'][:10].tolist()) & set(tr['exact_top'].tolist())) / max(1, len(tr['exact_top']))
+REP = {f: globals()[f'rep_{f}'] for f in SINGLE}
+def rep_C2(st, tr, faults):     # compose one repair per factor group, in Q -> K -> R order
+    for f in sorted(faults, key=lambda f: 'QKR'.index(GROUP[f])):
+        st = REP[f](st, run(st))
+    return st
+REP['K12'] = rep_K12
+REPF = {'QLEX': rep_QLEX, 'STALE': rep_R07, 'ENC': rep_encoder_reset}
+CONFIG_KNOBS = ['enc', 'q_noise', 'nprobe', 'sparse_shift', 'route', 'fusion', 'depth', 'ce', 'ce_trunc', 'result_cap']
+def rep_group_K(st, tr):   # v4: corpus hygiene + attribute-checked identity rerank + source authority in conflict clusters
+    return with_cfg(st, dedup=True, parent_collapse=True, reconcile=True, validity=True, tenant_filter=True, attr_rerank=True, authority=True)
+def rep_group_R(st, tr):   # rollback to the pinned config manifest + rebuild the dense view from the verified cache
+    return with_cfg(st, **{k: DEFAULT[k] for k in CONFIG_KNOBS}, post_filter=False, mask=None, shift=None, emb_override=None,
+                    nonfinite=None, refresh=True)
+GROUP_REPAIR = {'Q': rep_QLEX, 'K': rep_group_K, 'R': rep_group_R}
+COST = {'Q': 1, 'K': 3, 'R': 8}   # illustrative cost vector of the original DiagRAG outline, not measured
+def fam_repair(f): return REPF.get(FAMILY[f], REP[f])
+assert set(REP) == set(SINGLE) and all(callable(REP[f]) for f in SINGLE)   # every fault served by this file's ladder (R05 plugin check)
+
+# %% [markdown]
+# ## 11. Hard-episode generation. An episode is kept only if the clean pipeline succeeds AND the faulted one fails,
+# so every stored episode has something to repair (fixes "episodes too easy" and "baseline already right").
+
+# %%
+K_OF = dict(Q07=1, K03=1, K06=1, K07=1, K09=1, K11=1)
+qlog_neighbour('warm up')   # builds (or loads) the persisted query-log embedding matrix before episode generation
+EPIS, GEN, SEEN, GSTATE = RES.get('EPIS', []), RES.get('GEN', {}), RES.get('SEEN', set()), RES.get('GSTATE', {})
+QUOTA = CFG['N_HARD'] // 2                              # hard episodes wanted in EACH split (guarantees held-out positives)
+for f in FAULTS:
+    if GSTATE.get(f, {}).get('done'): continue
+    rng = random.Random(f'{CFG["SEED"]}-{f}'); k = K_OF.get(f, 5)
+    pool = [b for b in BASE if b['src'] in POOL[f] and (b['h1'] if k == 1 else b['h5'])]
+    rng.shuffle(pool)
+    gs = GSTATE.get(f) or dict(ptr=0, per_bid=collections.Counter(), g=dict(pool=len(pool), attempts=0, not_applicable=0, easy=0,
+                                                                         hard=0, hard_train=0, hard_test=0, real_typos=0))
+    if 'rng' in gs: rng.setstate(gs['rng'])
+    g_, per_bid = gs['g'], gs['per_bid']; t0 = time.time()
+    while pool and g_['attempts'] < CFG['MAX_ATT'] and gs['ptr'] < 4 * len(pool) and \
+            (g_['hard_train'] < QUOTA or g_['hard_test'] < QUOTA):
+        b = pool[gs['ptr'] % len(pool)]; gs['ptr'] += 1
+        if g_['hard_' + b['split']] >= QUOTA or per_bid[b['bid']] >= 2: continue   # split quota full / max 2 per base query
+        g_['attempts'] += 1
+        if g_['attempts'] % 25 == 0 and over_budget():
+            gs['rng'] = rng.getstate(); GSTATE[f] = gs; maybe_stop(f'generation:{f}')
+        st = INJ[f](b, rng)
+        if st is None: g_['not_applicable'] += 1; continue
+        sig = hashlib.md5(repr((b['bid'], st['q'], sorted((k_, str(v_)) for k_, v_ in st['cfg'].items() if k_ != 'emb_override'),
+                                st['ov']['text'] if st['ov'] else None)).encode()).hexdigest()
+        if sig in SEEN: g_['not_applicable'] += 1; continue
+        SEEN.add(sig)
+        if 'clean_cfg' in st and not succ(run(dict(st, cfg=st['clean_cfg'])), st['gold'], st['k']):
+            g_['not_applicable'] += 1; continue                       # R26: needs a pre-filtered clean success
+        tr = run(st)
+        if succ(tr, st['gold'], st['k']): g_['easy'] += 1; continue
+        g_['hard'] += 1; g_['hard_' + b['split']] += 1; g_['real_typos'] += st['meta'].get('real_typos', 0); per_bid[b['bid']] += 1
+        EPIS.append(dict(fault=f, bid=b['bid'], split=b['split'], st=st, feats=features(tr), meta=st['meta']))
+    tried = g_['attempts'] - g_['not_applicable']
+    g_['hard_yield'] = round(g_['hard'] / tried, 3) if tried else 0.0; GEN[f] = g_
+    gs['done'] = True; GSTATE[f] = gs
+    log(f, g_, f'{time.time()-t0:.0f}s')
+if not GSTATE.get('_none_done'):
+    for b in BASE:
+        EPIS.append(dict(fault='NONE', bid=b['bid'], split=b['split'], st=dict(q=b['q'], tenant=b['tenant'], cfg=mkcfg(), ov=None,
+                         gold=b['gold'], k=5, bid=b['bid'], split=b['split'], meta={}), feats=features(b['clean_tr']), meta={},
+                         clean_h5=b['h5'], clean_h1=b['h1'], src=b['src']))
+    GSTATE['_none_done'] = True
+save_ckpt('generation_done')
+log('episodes', collections.Counter(e['fault'] for e in EPIS))
+
+# %% [markdown]
+# ## 12. Detectors: tier-0 rules (Q04, K07, R15, R23, C2) and per-fault HistGB heads; held-out AUROC with bootstrap CI.
+
+# %%
+from sklearn.model_selection import GroupKFold
+FEATS = sorted(EPIS[0]['feats']); 
+def mat(es): return np.array([[e['feats'][k] for k in FEATS] for e in es], dtype=np.float32)
+SING = [e for e in EPIS if e['fault'] != 'C2']; TR = [e for e in SING if e['split'] == 'train']; TE = [e for e in SING if e['split'] == 'test']
+Xtr, Xte = mat(TR), mat(TE); ytr = np.array([e['fault'] for e in TR]); yte = np.array([e['fault'] for e in TE])
+RULE = {'Q04': lambda f: f['q_correctable'], 'K07': lambda f: f['tenant_mis5'],
+        'R15': lambda f: 1 - f['ann_probe'], 'R23': lambda f: CFG['K_FINAL'] - f['n_final'],
+        'R25': lambda f: f['nonfinite'], 'R26': lambda f: 1 - f['filter_survival'], 'K11': lambda f: f['deleted5']}
+RULE_FIRE = {'Q04': lambda f: f['q_correctable'] >= 1, 'K07': lambda f: f['tenant_mis5'] >= 1,
+             'R15': lambda f: f['ann_probe'] < 0.9, 'R23': lambda f: f['n_final'] < CFG['K_FINAL'],
+             'R25': lambda f: f['nonfinite'] >= 1, 'R26': lambda f: f['filter_survival'] < 0.5, 'K11': lambda f: f['deleted5'] >= 1}
+def boot_auc(y, s, n=500, seed=0):
+    if len(set(y)) < 2: return (float('nan'),) * 3
+    r = np.random.default_rng(seed); a = roc_auc_score(y, s); bs = []
+    for _ in range(n):
+        i = r.integers(0, len(y), len(y))
+        if len(set(y[i])) == 2: bs.append(roc_auc_score(y[i], s[i]))
+    return a, float(np.percentile(bs, 2.5)), float(np.percentile(bs, 97.5))
+def hgb(): return HistGradientBoostingClassifier(max_iter=250, learning_rate=0.08, max_leaf_nodes=15, min_samples_leaf=5, l2_regularization=1.0,
+                                                 class_weight='balanced', random_state=CFG['SEED'])
+DET, HEADS = [], {}
+for f in SINGLE:
+    npos_tr, npos_te = int((ytr == f).sum()), int((yte == f).sum())
+    row = dict(fault=f, detector='tier0_rule' if f in TIER0 else 'histgb_head', n_pos_train=npos_tr, n_pos_test=npos_te, n_neg_test=int((yte != f).sum()))
+    if f in RULE:
+        s = np.array([RULE[f](e['feats']) for e in TE])
+    elif npos_tr >= 3:
+        m_ = hgb().fit(Xtr, (ytr == f).astype(int)); HEADS[f] = m_; s = m_.predict_proba(Xte)[:, 1]
+    else:
+        s = None; row['status'] = 'UNTRAINED (no training positives — routing check failed)'
+    if s is not None:
+        a, lo, hi = boot_auc((yte == f).astype(int), s); row.update(auroc=a, ci_lo=lo, ci_hi=hi)
+        cm = (yte == f) | (yte == 'NONE'); a2 = boot_auc((yte[cm] == f).astype(int), s[cm], n=1)[0]; row['auroc_vs_clean'] = a2
+        row['status'] = ('THIN' if npos_te < GATES['MIN_TEST_POS'] else 'PASS' if a >= GATES['AUROC_BAR'] else 'FAIL')
+    DET.append(row); log('detector', {k: (round(v, 4) if isinstance(v, float) else v) for k, v in row.items()})
+if CFG['N_HARD'] >= 20: assert all(r['n_pos_train'] >= 5 for r in DET if r['fault'] in V1_FAULTS), 'a fault head has <5 training positives (R06-style routing bug)'
+
+# v2: a separate calibration split of clean TRAIN queries, never used to fit the attributor, scored by the SAME model as the
+# held-out test. This restores the exchangeability that conformal risk control needs (seed-43 v1 broke it).
+CALB = {e['bid'] for e in TR if e['fault'] == 'NONE' and int(hashlib.md5(('cal|' + e['bid']).encode()).hexdigest()[:8], 16) / 2**32 < CFG['CAL_FRAC']}
+tra = np.array([not (e['fault'] == 'NONE' and e['bid'] in CALB) for e in TR]); TRA = [e for e, k_ in zip(TR, tra) if k_]
+Xtra, ytra = Xtr[tra], ytr[tra]
+ATT = hgb().fit(Xtra, ytra); CLS = list(ATT.classes_)
+oof = np.zeros((len(TRA), len(CLS)))
+for a_, b_ in GroupKFold(5).split(Xtra, ytra, [e['bid'] for e in TRA]):
+    mm = hgb().fit(Xtra[a_], ytra[a_]); p_ = mm.predict_proba(Xtra[b_])
+    for j, c_ in enumerate(mm.classes_): oof[b_, CLS.index(c_)] = p_[:, j]
+iN = CLS.index('NONE'); tn = 1 - oof[ytra == 'NONE', iN]
+def to_group(y_): return np.array(['NONE' if v == 'NONE' else GROUP[v] for v in y_])
+ATTG = hgb().fit(Xtra, to_group(ytra)); GCLS = list(ATTG.classes_)   # v4 group attributor
+oofg = np.zeros((len(TRA), len(GCLS)))
+for a_, b_ in GroupKFold(5).split(Xtra, ytra, [e['bid'] for e in TRA]):
+    mm = hgb().fit(Xtra[a_], to_group(ytra[a_])); p_ = mm.predict_proba(Xtra[b_])
+    for j, c_ in enumerate(mm.classes_): oofg[b_, GCLS.index(c_)] = p_[:, j]
+TAU_NONE_G = float(np.quantile(1 - oofg[ytra == 'NONE', GCLS.index('NONE')], 1 - CFG['CLEAN_FPR']))
+TAU_NONE = float(np.quantile(tn, 1 - CFG['CLEAN_FPR'])) if len(tn) else 0.5
+def gmass(p): return {g: sum(p[j] for j, c_ in enumerate(CLS) if c_ != 'NONE' and c_[0] == g) for g in 'QKR'}
+C2tr = [e for e in EPIS if e['fault'] == 'C2' and e['split'] == 'train']
+sec = lambda p: sorted(gmass(p).values())[-2]
+s_neg = [sec(p) for p, y_ in zip(oof, ytra) if y_ != 'NONE']       # single-fault episodes, out-of-fold
+TAU_C2 = float(np.quantile(s_neg, 0.90)) if s_neg else 0.5        # <=10% of single faults get a spurious second repair
+C2te = [e for e in EPIS if e['fault'] == 'C2' and e['split'] == 'test']
+if C2te:
+    sc = np.array([sec(p) for p in ATT.predict_proba(mat(C2te + TE))]); yy = np.array([1] * len(C2te) + [0] * len(TE))
+    a, lo, hi = boot_auc(yy, sc); DET.append(dict(fault='C2', detector='tier0_rule(second factor-group mass)', n_pos_train=len(C2tr),
+        n_pos_test=len(C2te), n_neg_test=len(TE), auroc=a, ci_lo=lo, ci_hi=hi,
+        status='THIN' if len(C2te) < GATES['MIN_TEST_POS'] else 'PASS' if a >= GATES['AUROC_BAR'] else 'FAIL'))
+ok_ = [b['clean_tr']['ce'].max() for b in BASE if b['split'] == 'train' and b['h1'] and len(b['clean_tr']['ce'])]
+CE_FLOOR[0] = float(np.percentile(ok_, 10)); log('TAU_NONE', TAU_NONE, 'TAU_C2', TAU_C2, 'CE floor (fitted, was default 0.5)', CE_FLOOR[0])
+
+# %% [markdown]
+# ## 13. Repair gates (oracle-dispatched): rescue rate on hard episodes + harm when applied to clean successes.
+
+# %%
+def wilson(k, n, z=1.96):
+    if n == 0: return (float('nan'),) * 2
+    p = k / n; d = 1 + z * z / n; c = p + z * z / (2 * n); h = z * math.sqrt(p * (1 - p) / n + z * z / (4 * n * n))
+    return (c - h) / d, (c + h) / d
+def apply_repairs(st, faults):
+    if not faults: return st
+    if len(faults) == 1: return REP[faults[0]](st, run(st))
+    return rep_C2(st, None, faults)
+REPG, HARM = [], RES.get('HARM', {})
+for f in FAULTS:
+    es = [e for e in EPIS if e['fault'] == f]
+    for n_, e in enumerate(es):
+        if 'oracle_rescued' in e: continue
+        fs = e['meta']['combo'] if f == 'C2' else [f]
+        e['oracle_rescued'] = bool(succ(run(apply_repairs(e['st'], fs)), e['st']['gold'], e['st']['k']))
+        if n_ % 10 == 0: maybe_stop(f'repair:{f}')
+    ok_n = sum(e['oracle_rescued'] for e in es); k = K_OF.get(f, 5)
+    if f not in HARM:
+        cl = [b for b in BASE if b['src'] in POOL[f] and b['split'] == 'test' and (b['h1'] if k == 1 else b['h5'])][:CFG['N_HARM']]
+        lost = 0
+        if f != 'C2':
+            for b in cl:
+                st = dict(q=b['q'], tenant=b['tenant'], cfg=mkcfg(), ov=None)
+                lost += not succ(run(REP[f](st, b['clean_tr'])), b['gold'], k)
+        HARM[f] = (len(cl) if f != 'C2' else 0, lost); maybe_stop(f'harm:{f}')
+    cn, lost = HARM[f]; lo, hi = wilson(ok_n, len(es)); harm_rate = lost / cn if cn else 0.0
+    status = ('THIN' if len(es) < GATES['MIN_REPAIR_N'] else
+              'PASS' if lo >= GATES['RESCUE_BAR_LB'] and harm_rate <= GATES['MAX_HARM'] else 'FAIL')
+    row = dict(fault=f, n_hard=len(es), rescued=ok_n, rescue_rate=ok_n / len(es) if es else float('nan'), ci_lo=lo, ci_hi=hi,
+               clean_n=cn, clean_lost=lost, harm_rate=harm_rate, status=status)
+    REPG.append(row); log('repair', {k_: (round(v, 3) if isinstance(v, float) else v) for k_, v in row.items()})
+save_ckpt('repair_done')
+
+# %% [markdown]
+# ## 14. Closed loop on the held-out split: telemetry -> rules + attributor -> dispatch -> repair -> re-score.
+
+# %%
+RULE_PRIO = ['R26', 'R25', 'K11', 'R23', 'R15', 'K07']   # precise rules only
+NAT_RULES = [('K12', lambda f: f['chunk_crowd5'] >= 1), ('K05', lambda f: f['dup5'] >= 1)]   # validated on natural traffic in v2
+def src_of(bid): return 'esci' if bid.startswith('esci:') else 'shop'
+def stratum(fe, src): return 'shop' if src != 'esci' else ('esci_rare' if fe['q_lowdf'] > 0 else 'esci_common')
+def dispatch_v3(p, fe, cls=None, inone=None, mg=None):
+    """Family-first: group by probability mass, then family within the group; if the family is not clearly ahead
+    (share of the group mass < TAU_FAM) the GROUP fallback repair is used. Returns ([(label, fn)], score)."""
+    cls = cls or CLS; inone = iN if inone is None else inone
+    gm = {g: 0.0 for g in 'QKR'}; fam_p = collections.defaultdict(float); best = {}
+    for j, c_ in enumerate(cls):
+        if c_ == 'NONE': continue
+        gm[GROUP[c_]] += p[j]; fam_p[FAMILY[c_]] += p[j]
+        if FAMILY[c_] not in best or p[j] > p[cls.index(best[FAMILY[c_]])]: best[FAMILY[c_]] = c_
+    def pick(g):
+        fams = [fa for fa in fam_p if GROUP[best[fa]] == g]
+        if not fams: return ('G' + g, GROUP_REPAIR[g])
+        fa = max(fams, key=lambda x: fam_p[x])
+        return (best[fa], fam_repair(best[fa])) if fam_p[fa] / max(gm[g], 1e-9) >= CFG['TAU_FAM'] else ('G' + g, GROUP_REPAIR[g])
+    rules = [f for f in RULE_PRIO if RULE_FIRE[f](fe)]
+    mg = mg or ATTG; pg = mg.predict_proba(np.array([[fe[k] for k in FEATS]], dtype=np.float32))[0]; gc = list(mg.classes_)   # v4
+    if rules: out, s, g0 = [(rules[0], REP[rules[0]])], 1.0, GROUP[rules[0]]
+    else:
+        g0 = max([g for g in 'QKR' if g in gc], key=lambda g: pg[gc.index(g)]); out, s = [pick(g0)], float(1 - pg[gc.index('NONE')])
+    other = [f for f in rules[1:] if GROUP[f] != g0]
+    if other: out.append((other[0], REP[other[0]]))
+    elif sorted(gm.values())[-2] >= TAU_C2:
+        g2 = [g for g in sorted(gm, key=gm.get, reverse=True) if g != g0][0]; out.append(pick(g2))
+    return out, s
+def proba(fe): return ATT.predict_proba(np.array([[fe[k] for k in FEATS]], dtype=np.float32))[0]
+def lab_group(l): return l[1] if l.startswith('G') else GROUP[l]
+def apply_v3(st, reps):
+    for l, fn in sorted(reps, key=lambda x: 'QKR'.index(lab_group(x[0]))): st = fn(st, run(st))
+    return st
+def cost_of(reps): return sum(COST[lab_group(l)] for l, _ in reps)
+def universal(st, tr=None): return rep_group_R(rep_group_K(rep_QLEX(st, run(st)), None), None)   # diagnosis-free baseline (cost 12)
+def fam_ok(labels, truth): return bool(labels) and all(not l.startswith('G') for l in labels) and {FAMILY[x] for x in labels} == {FAMILY[x] for x in truth}
+def grp_ok(labels, truth): return bool(labels) and {lab_group(x) for x in labels} == {GROUP[x] for x in truth}
+
+# --- family repairs, oracle-dispatched (report) ---
+FAMR = RES.get('FAMR', {})
+for f in [f for f in SINGLE if FAMILY[f] != f]:
+    if f in FAMR: continue
+    es = [e for e in EPIS if e['fault'] == f]
+    FAMR[f] = dict(family=FAMILY[f], n=len(es), rescued=int(sum(succ(run(fam_repair(f)(e['st'], run(e['st']))), e['st']['gold'], e['st']['k']) for e in es)))
+    maybe_stop(f'family_repair:{f}')
+FAMG = [dict(fault=f, **v, rate=v['rescued'] / v['n'] if v['n'] else float('nan'), ci_lo=wilson(v['rescued'], v['n'])[0]) for f, v in FAMR.items()]
+for r in FAMG: log('family repair', r)
+
+# --- L1: Mondrian (per-stratum) conformal risk control on clean TRAIN queries never used to fit the attributor ---
+CAL = RES.get('CAL', {})
+cal_items = [('esci:' + q, dict(q=q, tenant='ALL', gold=gold_set([j for p_ in r['pids'] for j in BY_PKEY[p_]]), h5=r['h5'], feats=r['feats'], src='esci'))
+             for q, r in CENS.items() if r['split'] == 'train' and not r['fresh']][:CFG['N_CAL_EXTRA']]
+cal_items += [(e['bid'], dict(q=e['st']['q'], tenant=e['st']['tenant'], gold=e['st']['gold'], h5=e['clean_h5'], feats=e['feats'], src=src_of(e['bid'])))
+              for e in TR if e['fault'] == 'NONE' and e['bid'] in CALB]
+for n_, (bid, x) in enumerate(cal_items):
+    if bid in CAL: continue
+    reps, s = dispatch_v3(proba(x['feats']), x['feats'])
+    st = dict(q=x['q'], tenant=x['tenant'], cfg=mkcfg(), ov=None, gold=x['gold'], k=5, meta={})
+    lost = int(bool(x['h5']) and not succ(run(apply_v3(st, reps)), x['gold'], 5))
+    nat_r = [(f_, REP[f_]) for f_, cond_ in NAT_RULES if cond_(x['feats'])]   # v5: natural rules are additive in the two-stage policy
+    lost_nat = int(bool(x['h5']) and bool(nat_r) and not succ(run(apply_v3(st, nat_r)), x['gold'], 5))
+    lost_comb = int(bool(x['h5']) and not succ(run(apply_v3(st, nat_r + reps)), x['gold'], 5)) if nat_r else lost
+    CAL[bid] = (s, lost, stratum(x['feats'], x['src']), lost_nat, lost_comb)
+    if n_ % 50 == 0: maybe_stop('calibration')
+def crc_lambda(s_arr, l_arr, alpha):
+    """Smallest threshold lam with (n/(n+1)) * mean(1[s>=lam] * loss) + 1/(n+1) <= alpha (loss in [0,1], nonincreasing in lam)."""
+    n = len(s_arr)
+    if n == 0: return float('inf')
+    for lam in sorted(set(s_arr.tolist())) + [float('inf')]:
+        if n / (n + 1) * np.mean((s_arr >= lam) * l_arr) + 1 / (n + 1) <= alpha: return lam
+    return float('inf')
+STRATA = ['esci_common', 'esci_rare', 'shop']
+cv = list(CAL.values())
+def cal_arr(sname=None): return (np.array([v[0] for v in cv if sname is None or v[2] == sname]), np.array([v[1] for v in cv if sname is None or v[2] == sname]))
+LAMS = {a: {sn: crc_lambda(*cal_arr(sn), a) for sn in STRATA} for a in GATES['ALPHAS']}
+LAM_GLOBAL = crc_lambda(*cal_arr(), GATES['ALPHA'])
+def crc_lambda_ts(s_arr, ln_arr, lc_arr, alpha):
+    """Two-stage CRC: per-query loss is lost_nat if the classifier does not dispatch (s < lam), else max(lost_nat, lost_comb). Non-increasing in lam."""
+    n = len(s_arr)
+    if n == 0: return float('inf')
+    for lam in sorted(set(s_arr.tolist())) + [float('inf')]:
+        if n / (n + 1) * np.mean(np.where(s_arr >= lam, np.maximum(ln_arr, lc_arr), ln_arr)) + 1 / (n + 1) <= alpha: return lam
+    return float('inf')
+def cap_lambda(s_arr, frac):
+    """Smallest lam with at most `frac` of the calibration clean scores >= lam (caps clean classifier dispatch)."""
+    if len(s_arr) == 0: return float('inf')
+    for lam in sorted(set(s_arr.tolist())) + [float('inf')]:
+        if np.mean(s_arr >= lam) <= frac: return lam
+    return float('inf')
+def cal_arr5(sname):
+    rows_ = [v for v in cv if v[2] == sname]; return np.array([v[0] for v in rows_]), np.array([v[3] for v in rows_]), np.array([v[4] for v in rows_])
+LAMS_CAP = {sn: max(LAMS[GATES['ALPHA']][sn], cap_lambda(cal_arr(sn)[0], CFG['CAP_FRAC'])) for sn in STRATA}
+LAMS_TS = {sn: max(crc_lambda_ts(*cal_arr5(sn), GATES['ALPHA']), cap_lambda(cal_arr5(sn)[0], CFG['CAP_FRAC'])) for sn in STRATA}
+CALN = {sn: dict(n=len(cal_arr(sn)[0]), losses_if_all_dispatched=int(cal_arr(sn)[1].sum())) for sn in STRATA}
+log('Mondrian CRC lambdas', LAMS, 'calibration', CALN, 'global lambda', LAM_GLOBAL, 'capped', LAMS_CAP, 'two-stage', LAMS_TS); save_ckpt('calibration_done')
+
+# --- closed loop on held-out episodes ---
+for n_, e in enumerate([x for x in EPIS if x['split'] == 'test']):
+    if 'loop3' not in e:
+        reps, s = dispatch_v3(proba(e['feats']), e['feats']); k_ = 5 if e['fault'] == 'NONE' else e['st']['k']
+        nat_r = [(f_, REP[f_]) for f_, cond_ in NAT_RULES if cond_(e['feats'])]   # v5: for the two-stage policy
+        e['loop3'] = dict(nat=[f_ for f_, _ in nat_r], cost_nat=cost_of(nat_r), cost_comb=cost_of(nat_r + reps),
+                          ok_nat=(bool(succ(run(apply_v3(e['st'], nat_r)), e['st']['gold'], k_)) if nat_r else None),
+                          ok_comb=(bool(succ(run(apply_v3(e['st'], nat_r + reps)), e['st']['gold'], k_)) if nat_r else None),
+                          lab=[l for l, _ in reps], s=s, cost=cost_of(reps), ok_rep=bool(succ(run(apply_v3(e['st'], reps)), e['st']['gold'], k_)),
+                          ok_none=bool(e['clean_h5']) if e['fault'] == 'NONE' else False, strat=stratum(e['feats'], src_of(e['bid'])),
+                          ok_univ=bool(succ(run(universal(e['st'])), e['st']['gold'], k_)))
+        if n_ % 25 == 0: maybe_stop('closed_loop')
+def thr_of(pol, strat):
+    if pol == 'tau_none_5pct_fpr': return TAU_NONE_G
+    if pol == 'global_crc_0.005': return LAM_GLOBAL
+    if pol == 'capped_crc_0.005': return LAMS_CAP[strat]
+    if pol == 'two_stage_0.005': return LAMS_TS[strat]
+    return LAMS[float(pol.split('_')[-1])][strat]
+POLS = ['tau_none_5pct_fpr', 'global_crc_0.005'] + [f'mondrian_crc_{a}' for a in GATES['ALPHAS']] + ['capped_crc_0.005', 'two_stage_0.005']
+CLOSED, POLICY = [], []
+truth = lambda e: e['meta']['combo'] if e['fault'] == 'C2' else [e['fault']]
+for pol in POLS + ['diagnosis_free_universal']:
+    for f in FAULTS + ['NONE']:
+        es = [e for e in EPIS if e['split'] == 'test' and e['fault'] == f]
+        if not es: continue
+        cd = None
+        if pol == 'diagnosis_free_universal':
+            disp = [True] * len(es); ok = [e['loop3']['ok_univ'] for e in es]; costs = [12] * len(es)
+            fa = ga = [False] * len(es)
+        elif pol == 'two_stage_0.005':   # v5: natural rules additive, classifier at the capped two-stage threshold
+            cd = [e['loop3']['s'] >= thr_of(pol, e['loop3']['strat']) for e in es]; nt = [bool(e['loop3']['nat']) for e in es]
+            disp = [c_ or n_ for c_, n_ in zip(cd, nt)]
+            ok = [e['loop3']['ok_comb'] if (c_ and n_) else e['loop3']['ok_rep'] if c_ else e['loop3']['ok_nat'] if n_ else e['loop3']['ok_none'] for e, c_, n_ in zip(es, cd, nt)]
+            costs = [e['loop3']['cost_comb'] if (c_ and n_) else e['loop3']['cost'] if c_ else e['loop3']['cost_nat'] if n_ else 0 for e, c_, n_ in zip(es, cd, nt)]
+            labs = [e['loop3']['lab'] if c_ else e['loop3']['nat'] for e, c_ in zip(es, cd)]
+            fa = [(not d) if f == 'NONE' else (d and fam_ok(l_, truth(e))) for e, d, l_ in zip(es, disp, labs)]
+            ga = [(not d) if f == 'NONE' else (d and grp_ok(l_, truth(e))) for e, d, l_ in zip(es, disp, labs)]
+        else:
+            disp = [e['loop3']['s'] >= thr_of(pol, e['loop3']['strat']) for e in es]
+            ok = [e['loop3']['ok_rep'] if d else e['loop3']['ok_none'] for e, d in zip(es, disp)]
+            costs = [e['loop3']['cost'] if d else 0 for e, d in zip(es, disp)]
+            fa = [(not d) if f == 'NONE' else (d and fam_ok(e['loop3']['lab'], truth(e))) for e, d in zip(es, disp)]
+            ga = [(not d) if f == 'NONE' else (d and grp_ok(e['loop3']['lab'], truth(e))) for e, d in zip(es, disp)]
+        row = dict(policy=pol, fault=f, tier=TIER.get(f, '-'), n_test=len(es), dispatch_rate=float(np.mean(disp)), family_attribution=float(np.mean(fa)),
+                   group_attribution=float(np.mean(ga)), mean_cost=float(np.mean(costs)),
+                   clf_dispatch_rate=float(np.mean(cd)) if cd is not None else float(np.mean(disp)))
+        if f == 'NONE':
+            row['clean_loss'] = float(np.mean([e['clean_h5'] and not o for e, o in zip(es, ok)]))
+            row['clean_net_hit_change'] = float(np.mean([o - e['clean_h5'] for e, o in zip(es, ok)]))
+            for sn in STRATA:
+                xs = [(e, o) for e, o in zip(es, ok) if e['loop3']['strat'] == sn]
+                row[f'clean_loss_{sn}'] = float(np.mean([e['clean_h5'] and not o for e, o in xs])) if xs else None
+        else: row['closure'] = float(np.mean(ok))
+        CLOSED.append(row)
+    fr = [r for r in CLOSED if r['policy'] == pol and r['fault'] != 'NONE']; nr = [r for r in CLOSED if r['policy'] == pol and r['fault'] == 'NONE'][0]
+    POLICY.append(dict(policy=pol, mean_closure=float(np.mean([r['closure'] for r in fr])),
+                       mean_closure_grounded=float(np.mean([r['closure'] for r in fr if r['fault'] in GROUNDED])),
+                       mean_family_attribution=float(np.mean([r['family_attribution'] for r in fr])), mean_group_attribution=float(np.mean([r['group_attribution'] for r in fr])),
+                       mean_cost_faulted=float(np.mean([r['mean_cost'] for r in fr])), clean_dispatch_rate=nr['dispatch_rate'], clean_clf_dispatch_rate=nr['clf_dispatch_rate'], clean_mean_cost=nr['mean_cost'],
+                       clean_loss=nr['clean_loss'], clean_net_hit_change=nr['clean_net_hit_change'], **{f'clean_loss_{sn}': nr[f'clean_loss_{sn}'] for sn in STRATA}))
+    p_ = POLICY[-1]
+    p_.update(T1_loss=bool(p_['clean_loss'] <= GATES['ALPHA']), T2_dispatch=bool(p_['clean_dispatch_rate'] <= CFG['T_DISPATCH']),
+              T3_cost=bool(p_['clean_mean_cost'] <= CFG['T_COST']), T4_closure=bool(p_['mean_closure'] >= CFG['T_CLOSURE']))
+    p_['all_targets_met'] = bool(p_['T1_loss'] and p_['T2_dispatch'] and p_['T3_cost'] and p_['T4_closure'])
+    log('policy', POLICY[-1])
+main_pol = [p_ for p_ in POLICY if p_['policy'] == f'mondrian_crc_{GATES["ALPHA"]}'][0]
+GUARANTEE = dict(alpha=GATES['ALPHA'], lambdas=LAMS[GATES['ALPHA']], calibration=CALN, heldout_clean_loss=main_pol['clean_loss'],
+                 heldout_clean_loss_by_stratum={sn: main_pol[f'clean_loss_{sn}'] for sn in STRATA},
+                 L1='PASS' if main_pol['clean_loss'] <= GATES['ALPHA'] else 'FAIL', mean_closure=main_pol['mean_closure'],
+                 L2='PASS' if main_pol['mean_closure'] >= GATES['L2_BAR'] else 'FAIL')
+log('LOOP GATES', GUARANTEE); save_ckpt('loop_done')
+
+# %% [markdown]
+# ## 14b. Natural traffic (never-examined queries), external repair baselines, unseen faults, detection baselines, census
+
+# %%
+def boot_ci(x, n=CFG['N_BOOT'], seed=CFG['SEED']):
+    x = np.asarray(x, float)
+    if len(x) == 0: return (float('nan'),) * 3
+    r = np.random.default_rng(seed); bs = x[r.integers(0, len(x), (n, len(x)))].mean(1)
+    return float(x.mean()), float(np.percentile(bs, 2.5)), float(np.percentile(bs, 97.5))
+def verdict(lo, hi): return 'PASS' if lo > 0 else 'HARM' if hi < 0 else 'INCONCLUSIVE'
+from symspellpy import SymSpell   # external spelling corrector (Wolf Garbe), bundled English frequency dictionary
+import importlib.resources as _ir, wordsegment   # external word segmenter (Grant Jenks)
+SYM = SymSpell(max_dictionary_edit_distance=2, prefix_length=7)
+SYM.load_dictionary(str(_ir.files('symspellpy') / 'frequency_dictionary_en_82_765.txt'), term_index=0, count_index=1)
+wordsegment.load()
+def rep_ext_symspell(st, tr): return with_q(st, SYM.lookup_compound(st['q'], max_edit_distance=2)[0].term)
+def rep_ext_wordsegment(st, tr): return with_q(st, ' '.join(' '.join(wordsegment.segment(w)) if (w not in VOC and len(w) >= 7) else w for w in st['q'].split()))
+nat_q = [q for q, r in CENS.items() if r['fresh']][:CFG['N_NATQ']]
+NAT3 = RES.get('NAT3', {})
+for n_, q in enumerate(nat_q):
+    if q in NAT3: continue
+    r = CENS[q]; gold = gold_set([j for p_ in r['pids'] for j in BY_PKEY[p_]])
+    st = dict(q=q, tenant='ALL', cfg=mkcfg(), ov=None, gold=gold, k=5, meta={}); tr = run(st); fe = r['feats']; h0 = succ(tr, gold, 5)
+    reps, s = dispatch_v3(proba(fe), fe); lam = LAMS[GATES['ALPHA']][stratum(fe, 'esci')]
+    nat_reps = [(f, REP[f]) for f, cond in NAT_RULES if cond(fe)]
+    clf_full = reps if s >= lam else []
+    clf_reps = clf_full if CFG['DEPLOY']['natural_typo_repair'] else [(l_, fn_) for l_, fn_ in clf_full if fn_ is not rep_QLEX]   # v5 deployed config (C3, B3)
+    h = lambda rs: succ(run(apply_v3(st, rs)), gold, 5) if rs else h0
+    row = dict(h0=h0, s=s, lam=lam, nat=[f for f, _ in nat_reps], clf=[l for l, _ in clf_reps], h_loop=h(nat_reps + clf_reps), clf_v4cfg=[l for l, _ in clf_full],
+               h_loop_v4cfg=(h(nat_reps + clf_full) if len(clf_full) != len(clf_reps) else h(nat_reps + clf_reps)), h_rules=h(nat_reps),
+               h_clf=h(clf_reps), h_k12_always=succ(run(rep_K12(st, tr)), gold, 5), h_univ=succ(run(universal(st)), gold, 5),
+               cost_loop=cost_of(nat_reps + clf_reps), sel={})
+    if fe['q_correctable'] >= 1: row['sel']['NA1'] = dict(ours=succ(run(rep_QLEX(st, tr)), gold, 5), symspell=succ(run(rep_ext_symspell(st, tr)), gold, 5))
+    if fe['q_segmentable'] >= 1: row['sel']['NA2'] = dict(ours=succ(run(rep_QLEX(st, tr)), gold, 5), wordsegment=succ(run(rep_ext_wordsegment(st, tr)), gold, 5))
+    if fe['dup5'] >= 1: row['sel']['NA4'] = dict(ours=succ(run(rep_K05(st, tr)), gold, 5))
+    if fe['chunk_crowd5'] >= 1: row['sel']['NA5'] = dict(ours=succ(run(rep_K12(st, tr)), gold, 5))
+    NAT3[q] = row
+    if n_ % 25 == 0: maybe_stop('natural_traffic')
+save_ckpt('natural_done')
+rows_ = list(NAT3.values()); NAT = []
+def nat_row(arm, what, xs, after, extra=None):
+    d = [int(after(r)) - int(r['h0']) for r in xs]; m_, lo, hi = boot_ci(d)
+    NAT.append(dict(arm=arm, what=what, n=len(xs), hit_before=float(np.mean([r['h0'] for r in xs])) if xs else None,
+                    hit_after=float(np.mean([after(r) for r in xs])) if xs else None, delta=m_, ci_lo=lo, ci_hi=hi,
+                    fixed=int(sum(x > 0 for x in d)), broken=int(sum(x < 0 for x in d)), verdict=verdict(lo, hi) if xs else 'NO DATA', **(extra or {})))
+nat_row('N1', 'DEPLOYED LOOP: natural rules (K12, K05) + classifier at Mondrian-CRC thresholds', rows_, lambda r: r['h_loop'],
+        dict(dispatched=float(np.mean([bool(r['nat'] or r['clf']) for r in rows_])), mean_cost=float(np.mean([r['cost_loop'] for r in rows_]))))
+nat_row('N1a', 'component: natural rules only', rows_, lambda r: r['h_rules'])
+nat_row('N1b', 'component: classifier dispatch only', rows_, lambda r: r['h_clf'], dict(dispatched=float(np.mean([bool(r['clf']) for r in rows_]))))
+nat_row('B1', 'baseline: K12 parent collapse always on (no detection)', rows_, lambda r: r['h_k12_always'])
+nat_row('B2', 'baseline: diagnosis-free universal repair on every query (cost 12)', rows_, lambda r: r['h_univ'])
+for arm, what, key in [('NA1', 'natural misspelling: ours (QLEX, log-gated)', 'ours'), ('NA1x', 'natural misspelling: SymSpell lookup_compound (external)', 'symspell'),
+                       ('NA2', 'natural missing space: ours (QLEX)', 'ours'), ('NA2x', 'natural missing space: wordsegment (external)', 'wordsegment'),
+                       ('NA4', 'natural duplicate in top-5: K05 collapse', 'ours'), ('NA5', 'natural chunk crowding: K12 parent collapse', 'ours')]:
+    a0 = arm[:3]; xs = [r for r in rows_ if a0 in r['sel']]; nat_row(arm, what, xs, lambda r, a0=a0, key=key: r['sel'][a0][key])
+xs_c = [r for r in rows_ if 'NA1' in r['sel']]
+nat_row('NA1c', 'DEPLOYED LOOP, v5 config (natural typo repair OFF), on natural queries with q_correctable >= 1', xs_c, lambda r: r['h_loop'])
+nat_row('NA1d', 'counterfactual: same loop with the v4 config (natural typo repair ON), same queries', xs_c, lambda r: r['h_loop_v4cfg'])
+nat_row('N1v4', 'counterfactual: DEPLOYED LOOP with the v4 config on all natural queries', rows_, lambda r: r['h_loop_v4cfg'])
+N1 = [r for r in NAT if r['arm'] == 'N1'][0]
+for r in NAT: log('natural', {k_: (round(v_, 4) if isinstance(v_, float) else v_) for k_, v_ in r.items()})
+
+# --- external repair baselines on injected held-out episodes (oracle-dispatched, same gates' rescue metric) ---
+BASEL = RES.get('BASEL', {})
+for f, fn_name in [('Q04', 'symspell'), ('Q05', 'wordsegment')]:
+    key = f'{f}:{fn_name}'
+    if key in BASEL: continue
+    fn = rep_ext_symspell if fn_name == 'symspell' else rep_ext_wordsegment
+    es = [e for e in EPIS if e['fault'] == f]
+    k = sum(succ(run(fn(e['st'], run(e['st']))), e['st']['gold'], e['st']['k']) for e in es)
+    BASEL[key] = dict(fault=f, repair=fn_name + ' (external)', n=len(es), rescued=int(k), ci_lo=wilson(k, len(es))[0]); maybe_stop('baselines')
+
+# --- detection baselines on held-out: RAGLog tier-0 feature set (their code), QPP (NQC, WIG), ours ---
+TEST_EP = [e for e in EPIS if e['split'] == 'test']; TRAIN_EP = [e for e in EPIS if e['split'] == 'train']
+def raglog_setup():
+    d = os.path.join(DATA, 'raglog')
+    if not os.path.exists(d):
+        subprocess.run(['git', 'clone', '-q', 'https://github.com/hiraa221/raglog.git', d], check=True)
+    subprocess.run(['git', '-C', d, 'checkout', '-q', CFG['RAGLOG_COMMIT']], check=True)
+    for mod, pk in [('openai', 'openai'), ('dotenv', 'python-dotenv')]:
+        try: __import__(mod)
+        except ImportError: pip(pk)
+    sys.path.insert(0, os.path.join(d, 'RAGLog'))
+    from raglog.embed import EmbeddingStore
+    from raglog.features import FeatureExtractor
+    from raglog.runview import RunView
+    import tempfile
+    return FeatureExtractor(EmbeddingStore('all-MiniLM-L6-v2', root=tempfile.mkdtemp()), retriever_recon=True), RunView
+def qpp(tr):
+    s_ = np.sort(tr['ssc'])[::-1] if len(tr['ssc']) else np.zeros(1); mu = max(tr['ss_mean'], 1e-6); ql = max(1, len(tok(tr['q'])))
+    return dict(nqc=float(np.std(s_[:100]) / mu), wig=float(np.mean(s_[:5] - mu) / math.sqrt(ql)), d1=float(tr['dsc'][0]) if len(tr['dsc']) else 0.0,
+                ce1=float(np.max(tr['ce'])) if len(tr['ce']) else 0.0)
+if 'det' not in BASEL:
+    try:
+        FX, RunView = raglog_setup(); rag_ok = True
+    except Exception as ex:
+        rag_ok = False; BASEL['raglog_error'] = repr(ex)[:300]
+    DETF = {}
+    for n_, e in enumerate(TRAIN_EP + TEST_EP):
+        tr = run(e['st']); ov = tr['ov']; row = qpp(tr)
+        if rag_ok:
+            T = lambda L: [dtext(int(i), ov)[:500] for i in L[:25]]
+            ch = T(tr['depth']); order = list(np.argsort(-tr['ce'], kind='stable'))
+            FX.store.add([tr['q']] + T(tr['dtop']) + T(tr['stop']) + ch)
+            v = RunView(dataset='diagrag', pipeline='v3', scenario=e['fault'], run_id=n_, user_query=tr['q'], effective_query=tr['q'],
+                        retrievers=[dict(chunks=x, scores=[]) for x in (T(tr['dtop']), T(tr['stop'])) if x],
+                        rerankers=[dict(query=tr['q'], input_chunks=ch, order=order, scores=[float(x) for x in tr['ce']])] if len(ch) >= 2 else [])
+            for stg in ('retriever', 'reranker'):
+                for k_, v_ in (getattr(FX, stg)(v) or {}).items(): row['rag_' + k_] = float(v_)
+        DETF[id(e)] = row
+        if n_ % 50 == 0: maybe_stop('detection_baselines')
+    def auc_for(score_fn, es):
+        y = np.array([e['fault'] != 'NONE' for e in es], int); s_ = np.array([score_fn(e) for e in es]); return boot_auc(y, s_)
+    ours = lambda e: 1 - proba(e['feats'])[iN]
+    res = dict(ours_1_minus_pNONE=auc_for(ours, TEST_EP), qpp_neg_nqc=auc_for(lambda e: -DETF[id(e)]['nqc'], TEST_EP),
+               qpp_neg_wig=auc_for(lambda e: -DETF[id(e)]['wig'], TEST_EP), neg_ce1=auc_for(lambda e: -DETF[id(e)]['ce1'], TEST_EP))
+    if rag_ok:
+        rk = sorted({k_ for e in TRAIN_EP + TEST_EP for k_ in DETF[id(e)] if k_.startswith('rag_')})
+        Xr = lambda es: np.array([[DETF[id(e)].get(k_, 0.0) for k_ in rk] for e in es], np.float32)
+        yr = lambda es: np.array([e['fault'] != 'NONE' for e in es], int)
+        best_single = max(rk, key=lambda k_: abs(roc_auc_score(yr(TRAIN_EP), Xr(TRAIN_EP)[:, rk.index(k_)]) - 0.5))   # chosen on TRAIN
+        sgn = 1 if roc_auc_score(yr(TRAIN_EP), Xr(TRAIN_EP)[:, rk.index(best_single)]) >= 0.5 else -1
+        res['raglog_tier0_best_single_' + best_single] = auc_for(lambda e: sgn * DETF[id(e)].get(best_single, 0.0), TEST_EP)
+        mr = hgb().fit(Xr(TRAIN_EP), yr(TRAIN_EP)); pr = mr.predict_proba(Xr(TEST_EP))[:, 1]
+        res['raglog_tier0_features_hgb'] = boot_auc(yr(TEST_EP), pr)
+        cl_tr = mr.predict_proba(Xr([e for e in TRAIN_EP if e['fault'] == 'NONE']))[:, 1]; thr_ = float(np.quantile(cl_tr, 0.95))   # B-baselining, alpha 0.05
+        res['raglog_tier0_detect_rate_at_5pct_fa'] = float(np.mean(pr[yr(TEST_EP) == 1] >= thr_)); res['raglog_tier0_features'] = rk
+    p_te = np.array([ours(e) for e in TEST_EP]); cl_ours = np.array([ours(e) for e in TRAIN_EP if e['fault'] == 'NONE'])
+    res['ours_detect_rate_at_5pct_fa'] = float(np.mean(p_te[np.array([e['fault'] != 'NONE' for e in TEST_EP])] >= np.quantile(cl_ours, 0.95)))
+    BASEL['det'] = res; save_ckpt('detection_baselines_done')
+for k_, v_ in BASEL.items(): log('baseline', k_, v_)
+
+# --- unseen faults: leave-one-fault-out, family-first + group fallback vs family-only (v2) ---
+LOFO = RES.get('LOFO', {})
+for f in SINGLE:
+    if f in LOFO or f in RULE_PRIO: continue
+    keep_ = ytra != f; mf = hgb().fit(Xtra[keep_], ytra[keep_]); clf = list(mf.classes_); inf_ = clf.index('NONE')
+    mgf = hgb().fit(Xtra[keep_], to_group(ytra[keep_])); gcf = list(mgf.classes_)
+    thr_f = float(np.quantile(1 - mgf.predict_proba(Xtra[(ytra == 'NONE')])[:, gcf.index('NONE')], 1 - CFG['CLEAN_FPR']))
+    rows = []
+    for e in [x for x in EPIS if x['fault'] == f and x['split'] == 'test']:
+        reps, s = dispatch_v3(mf.predict_proba(np.array([[e['feats'][k] for k in FEATS]], dtype=np.float32))[0], e['feats'], clf, inf_, mgf)
+        flagged = s >= thr_f; lab = [l for l, _ in reps]
+        fam_only = [(l, fam_repair(l)) if not l.startswith('G') else (l, rep_QLEX if l == 'GQ' else (lambda st, tr: st)) for l in lab]
+        rows.append(dict(flagged=flagged, right_group=flagged and lab_group(lab[0]) == GROUP[f],
+                         ok=flagged and bool(succ(run(apply_v3(e['st'], reps)), e['st']['gold'], e['st']['k'])),
+                         ok_no_fallback=flagged and bool(succ(run(apply_v3(e['st'], [x for x in fam_only])), e['st']['gold'], e['st']['k']))))
+    LOFO[f] = rows; maybe_stop(f'lofo:{f}')
+save_ckpt('lofo_done')
+UNSEEN = [dict(fault=f, tier=TIER[f], family=FAMILY[f], n_test=len(r), flagged=float(np.mean([x['flagged'] for x in r])),
+               right_group=float(np.mean([x['right_group'] for x in r])), closure=float(np.mean([x['ok'] for x in r])),
+               closure_without_group_fallback=float(np.mean([x['ok_no_fallback'] for x in r]))) for f, r in LOFO.items() if r]
+U1 = dict(mean_closure=float(np.mean([r['closure'] for r in UNSEEN])), mean_closure_without_fallback=float(np.mean([r['closure_without_group_fallback'] for r in UNSEEN])),
+          mean_closure_grounded=float(np.mean([r['closure'] for r in UNSEEN if r['fault'] in GROUNDED])))
+U1['status'] = 'PASS' if U1['mean_closure'] >= GATES['U1_BAR'] else 'FAIL'
+for r in UNSEEN: log('unseen', r)
+log('U1', U1)
+
+# --- prevalence census: every ESCI query with an Exact product in the corpus (descriptive, no tuning) ---
+CEN_ROWS = [dict(h5=r['h5'], feats=r['feats'], nan_in_top5=r['nan_in_top5'], gold_is_nan=r['gold_is_nan'], nan_above_gold=r['nan_above_gold'])
+            for r in CENS.values()]
+for b in [b for b in BASE if b['src'] == 'esci']:
+    tr = b['clean_tr']; gr = [k for k, i in enumerate(tr['order']) if i in b['gold']]
+    CEN_ROWS.append(dict(h5=b['h5'], feats=features(tr), nan_in_top5=any(NANDOC[i] for i in tr['final'] if i < N),
+                         gold_is_nan=any(NANDOC[i] for i in b['gold'] if i < N), nan_above_gold=bool(gr) and any(NANDOC[i] for i in tr['order'][:gr[0]] if i < N)))
+SIG = [('misspelling token (q_correctable>=1)', 'Q04', lambda r: r['feats']['q_correctable'] >= 1),
+       ('token absent from corpus vocabulary', 'Q04/Q05', lambda r: r['feats']['q_oov'] > 0),
+       ('OOV token segmentable into corpus words', 'Q05', lambda r: r['feats']['q_segmentable'] >= 1),
+       ('unfinished last word (q_prefix)', 'Q01', lambda r: r['feats']['q_prefix'] >= 1),
+       ('identifier/code token', 'Q07', lambda r: r['feats']['q_code'] >= 1),
+       ('conjunction / multi-intent marker', 'Q09', lambda r: r['feats']['q_conj'] >= 1),
+       ('exact duplicate pair in top-5', 'K05', lambda r: r['feats']['dup5'] >= 1),
+       ('>=2 chunks of one parent in top-5', 'K12', lambda r: r['feats']['chunk_crowd5'] >= 1),
+       ("'nan' placeholder doc in top-5", 'K08', lambda r: r['nan_in_top5']),
+       ("'nan' placeholder ranked above the gold", 'K08', lambda r: r['nan_above_gold']),
+       ("gold itself is a 'nan' placeholder doc", 'K08', lambda r: r['gold_is_nan'])]
+nC = len(CEN_ROWS); fail_all = sum(not r['h5'] for r in CEN_ROWS); CENSUS = []
+for name, fault, fn in SIG:
+    xs = [r for r in CEN_ROWS if fn(r)]; k = len(xs); fk = sum(not r['h5'] for r in xs)
+    CENSUS.append(dict(signature=name, fault=fault, n_queries=nC, with_signature=k, prevalence=k / nC, prev_ci_lo=wilson(k, nC)[0], prev_ci_hi=wilson(k, nC)[1],
+                       fail_rate_given=fk / k if k else None, fail_ci_lo=wilson(fk, k)[0] if k else None, fail_ci_hi=wilson(fk, k)[1] if k else None,
+                       share_of_all_failures=fk / fail_all if fail_all else None))
+CENSUS.append(dict(signature='ALL ESCI queries', fault='-', n_queries=nC, with_signature=nC, prevalence=1.0, fail_rate_given=fail_all / nC,
+                   fail_ci_lo=wilson(fail_all, nC)[0], fail_ci_hi=wilson(fail_all, nC)[1]))
+for r in CENSUS: log('census', {k_: (round(v_, 4) if isinstance(v_, float) else v_) for k_, v_ in r.items()})
+
+# %% [markdown]
+# ## 15. Write results (JSON + CSV + Markdown report) to diagrag_out/
+
+# %%
+def J(x):
+    if isinstance(x, (np.integer,)): return int(x)
+    if isinstance(x, (np.floating,)): return float(x)
+    if isinstance(x, (np.bool_,)): return bool(x)
+    if isinstance(x, set): return sorted(x)
+    return str(x)
+gen_df = pd.DataFrame([dict(fault=f, **g) for f, g in GEN.items()])
+det_df, rep_df, loop_df = pd.DataFrame(DET), pd.DataFrame(REPG), pd.DataFrame(CLOSED)
+dstat = {r['fault']: r['status'] for r in DET}; rstat = {r['fault']: r['status'] for r in REPG}
+sol_df = pd.DataFrame([dict(fault=f, tier=TIER[f], grounded=f in GROUNDED, detector=dstat.get(f, 'MISSING'), repair=rstat.get(f, 'MISSING'),
+                            solved=dstat.get(f) == 'PASS' and rstat.get(f) == 'PASS') for f in FAULTS])
+v1s = sol_df[sol_df.fault.isin(V1_FAULTS)]
+n_det, n_rep, n_sol = int((v1s.detector == 'PASS').sum()), int((v1s.repair == 'PASS').sum()), int(v1s.solved.sum())
+clean_row = [r for r in CLOSED if r['fault'] == 'NONE' and r['policy'] == f'mondrian_crc_{GATES["ALPHA"]}']
+gsol = sol_df[sol_df.grounded]
+qsol = sol_df[~sol_df.grounded]
+_ver = 'ADOPTED' if n_rep >= GATES['REPAIR_TARGET'] and n_det >= GATES['DETECT_TARGET'] else 'NOT_ADOPTED'
+ACCT = dict(headline='a_core28',
+            a_core28=dict(detectors_pass=n_det, repairs_pass=n_rep, solved_both=n_sol, of=len(V1_FAULTS), verdict=_ver, not_solved=v1s[~v1s.solved].fault.tolist(),
+                          thin=v1s[(v1s.detector == 'THIN') | (v1s.repair == 'THIN')].fault.tolist()),
+            b_grounded=dict(faults=GROUNDED, detectors_pass=int((gsol.detector == 'PASS').sum()), repairs_pass=int((gsol.repair == 'PASS').sum()),
+                            solved_both=int(gsol.solved.sum()), of=len(gsol), not_solved=gsol[~gsol.solved].fault.tolist(), v4_baseline='20/22 (Q03, R26)'),
+            c_quarantine=dict(faults=QUARANTINE, detectors_pass=int((qsol.detector == 'PASS').sum()), repairs_pass=int((qsol.repair == 'PASS').sum()),
+                              solved_both=int(qsol.solved.sum()), of=len(qsol), not_solved=qsol[~qsol.solved].fault.tolist()))
+_has_guarantee = lambda p_: p_['policy'].startswith(('mondrian_crc', 'global_crc', 'capped_crc', 'two_stage'))
+_meets = [p_ for p_ in POLICY if p_['all_targets_met'] and _has_guarantee(p_)]
+CHEAP = dict(targets=dict(T1='held-out clean loss <= 0.005', T2='total clean dispatch <= 0.25', T3='clean mean cost <= 1.5', T4='mean closure >= 0.80'),
+             table=[{k_: p_[k_] for k_ in ('policy', 'clean_loss', 'clean_dispatch_rate', 'clean_clf_dispatch_rate', 'clean_mean_cost', 'mean_closure', 'T1_loss', 'T2_dispatch', 'T3_cost', 'T4_closure', 'all_targets_met')} for p_ in POLICY],
+             guaranteed_policies_meeting_all_four=[p_['policy'] for p_ in _meets], no_guarantee_policies_meeting_all_four=[p_['policy'] for p_ in POLICY if p_['all_targets_met'] and not _has_guarantee(p_)],
+             claim=(min(_meets, key=lambda p_: p_['clean_mean_cost'])['policy'] if _meets else None),
+             claim_rule='the guarantee claim is as strong as the best CRC-based policy meeting T1-T4 together, and no stronger; None means no CRC-based policy met all four')
+VERDICT = dict(detectors_pass=n_det, repairs_pass=n_rep, solved_both=n_sol, of=len(V1_FAULTS),
+               new_faults={f: dict(detector=dstat.get(f), repair=rstat.get(f)) for f in NEW_FAULTS},
+               family_repairs=FAMG, loop_gates=dict(L1=GUARANTEE['L1'], L2=GUARANTEE['L2'], U1=U1['status'], N1=N1['verdict']),
+               grounded=dict(faults=GROUNDED, detectors_pass=int((gsol.detector == 'PASS').sum()), repairs_pass=int((gsol.repair == 'PASS').sum()),
+                             solved_both=int(gsol.solved.sum()), of=len(gsol), not_solved=gsol[~gsol.solved].fault.tolist()),
+               quarantine=QUARANTINE, accounting=ACCT, cheap_guarantee=CHEAP, U1=U1, N1=N1, detection_baselines=BASEL.get('det'), repair_baselines={k_: v_ for k_, v_ in BASEL.items() if ':' in k_},
+               raglog_error=BASEL.get('raglog_error'), licence_dropped=DROPPED, census=CENSUS,
+               verdict='ADOPTED' if n_rep >= GATES['REPAIR_TARGET'] and n_det >= GATES['DETECT_TARGET'] else 'NOT_ADOPTED',
+               clean_net_hit_change=clean_row[0]['clean_net_hit_change'] if clean_row else None,
+               guarantee=GUARANTEE, policies=POLICY, natural=NAT, unseen_mean_closure=U1['mean_closure'],
+               not_solved=v1s[~v1s.solved].fault.tolist(), device=DEV, reranker=CFG['RERANKER'], protocol=json.load(open(PROTO)))
+json.dump(VERDICT, open(os.path.join(OUT, 'VERDICT.json'), 'w'), indent=1, default=str); sol_df.to_csv(os.path.join(OUT, 'solved.csv'), index=False)
+log('VERDICT', {k_: v_ for k_, v_ in VERDICT.items() if k_ != 'protocol'})
+pol_df, nat_df, uns_df, fam_df = pd.DataFrame(POLICY), pd.DataFrame(NAT), pd.DataFrame(UNSEEN), pd.DataFrame(FAMG)
+cens_df = pd.DataFrame(CENSUS); basel_df = pd.DataFrame([v_ for k_, v_ in BASEL.items() if ':' in k_])
+detb_df = pd.DataFrame([dict(method=k_, auroc=v_[0], ci_lo=v_[1], ci_hi=v_[2]) for k_, v_ in (BASEL.get('det') or {}).items() if isinstance(v_, tuple)])
+for name, df_ in [('episodes_summary', gen_df), ('detector_gates', det_df), ('repair_gates', rep_df), ('closed_loop', loop_df),
+                  ('policies', pol_df), ('natural_traffic', nat_df), ('unseen_faults', uns_df), ('family_repairs', fam_df),
+                  ('prevalence_census', cens_df), ('repair_baselines', basel_df), ('detection_baselines', detb_df)]:
+    df_.to_csv(os.path.join(OUT, f'{name}.csv'), index=False)
+with open(os.path.join(OUT, 'data_verification.json'), 'w') as fh:
+    json.dump(dict(files=VERIFY, purity=PUR, cfg=CFG, tau_none=TAU_NONE, tau_c2=TAU_C2, ce_floor=CE_FLOOR[0],
+                   features=FEATS, webis_pairs=sum(map(len, WEBIS.values()))), fh, indent=1, default=J)
+with open(os.path.join(OUT, 'episodes.jsonl'), 'w') as fh:
+    for e in EPIS:
+        st = e['st']
+        fh.write(json.dumps(dict(fault=e['fault'], bid=e['bid'], split=e['split'], query=st['q'], tenant=st['tenant'], k=st['k'],
+                                 cfg={k_: v_ for k_, v_ in st['cfg'].items() if v_ != DEFAULT[k_] and k_ != 'emb_override'},
+                                 injected_docs=[dict(title=d['title'], content=d['content'][:400], access_scope=d.get('access_scope'),
+                                                     license_status=d.get('license_status')) for d in (st['ov']['docs'] if st['ov'] else [])],
+                                 gold=[DOCS[i]['doc_id'] for i in sorted(st['gold']) if i < N][:20], meta=e['meta'],
+                                 oracle_rescued=e.get('oracle_rescued'), feats=e['feats']), default=J) + '\n')
+md = ['# DiagRAG v5 judged run report', '', f'Device: {DEV}. Reranker: {CFG["RERANKER"]}. Last session runtime: {time.time()-T0:.0f}s.', '',
+      '## Verdict (gates fixed in JUDGED_PROTOCOL.json before results)', '', '```', json.dumps({k_: v_ for k_, v_ in VERDICT.items() if k_ != "protocol"}, indent=1, default=str), '```', '',
+      json.dumps(GATES, indent=1), '', sol_df.to_markdown(index=False), '',
+      '## Data verification', '', pd.DataFrame(VERIFY).T.to_markdown(), '', '## Purity', '', '```', json.dumps(PUR, indent=1, default=J), '```', '',
+      '## Episode generation (hard = clean succeeds, faulted fails)', '', gen_df.to_markdown(index=False), '',
+      f'## Detector gates (AUROC bar {GATES["AUROC_BAR"]}, min test positives {GATES["MIN_TEST_POS"]})', '', det_df.to_markdown(index=False, floatfmt='.4f'), '',
+      f'## Repair gates (Wilson lower bound >= {GATES["RESCUE_BAR_LB"]})', '', rep_df.to_markdown(index=False, floatfmt='.3f'), '',
+      '## Dispatch policies (held-out)', '', pol_df.to_markdown(index=False, floatfmt='.4f'), '',
+      '## Loop gates (L1 do-no-harm on held-out clean, L2 mean closure, U1 unseen, N1 natural traffic)', '', '```',
+      json.dumps(dict(GUARANTEE=GUARANTEE, U1=U1, N1=N1), indent=1, default=str), '```', '',
+      '## Prevalence census (every ESCI query with an Exact product in the corpus)', '', cens_df.to_markdown(index=False, floatfmt='.4f'), '',
+      '## Detection baselines (held-out, fault vs clean AUROC with 95% bootstrap CI)', '', detb_df.to_markdown(index=False, floatfmt='.4f'), '',
+      '## External repair baselines (oracle-dispatched, injected held-out + train episodes)', '', basel_df.to_markdown(index=False, floatfmt='.3f'), '',
+      '## Family repairs, oracle-dispatched', '', fam_df.to_markdown(index=False, floatfmt='.3f'), '',
+      '## Natural traffic (no injection, never-examined queries): deployed loop, components, baselines', '', nat_df.to_markdown(index=False, floatfmt='.4f'), '',
+      '## Unseen faults (leave-one-fault-out attributor)', '', uns_df.to_markdown(index=False, floatfmt='.3f'), '',
+      '## Closed loop per fault and policy (held-out split)', '', loop_df.to_markdown(index=False, floatfmt='.3f'), '']
+open(os.path.join(OUT, 'REPORT.md'), 'w').write('\n'.join(md))
+log('done. outputs in', OUT); print('\n'.join(md[-12:]))

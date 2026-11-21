@@ -1,0 +1,379 @@
+{
+ "detectors_pass": 28,
+ "repairs_pass": 27,
+ "solved_both": 27,
+ "of": 28,
+ "new_faults": {
+  "R25": {
+   "detector": "PASS",
+   "repair": "PASS"
+  },
+  "R26": {
+   "detector": "THIN",
+   "repair": "THIN"
+  },
+  "K11": {
+   "detector": "PASS",
+   "repair": "PASS"
+  }
+ },
+ "family_repairs": [
+  {
+   "fault": "Q01",
+   "family": "QLEX",
+   "n": 50,
+   "rescued": 34,
+   "rate": 0.68,
+   "ci_lo": 0.5418944286372392
+  },
+  {
+   "fault": "Q03",
+   "family": "QLEX",
+   "n": 50,
+   "rescued": 26,
+   "rate": 0.52,
+   "ci_lo": 0.38511512258808434
+  },
+  {
+   "fault": "Q04",
+   "family": "QLEX",
+   "n": 50,
+   "rescued": 35,
+   "rate": 0.7,
+   "ci_lo": 0.562493877226366
+  },
+  {
+   "fault": "Q05",
+   "family": "QLEX",
+   "n": 50,
+   "rescued": 42,
+   "rate": 0.84,
+   "ci_lo": 0.7148551903823401
+  },
+  {
+   "fault": "K04",
+   "family": "STALE",
+   "n": 50,
+   "rescued": 47,
+   "rate": 0.94,
+   "ci_lo": 0.8378265662912299
+  },
+  {
+   "fault": "R03",
+   "family": "ENC",
+   "n": 50,
+   "rescued": 50,
+   "rate": 1.0,
+   "ci_lo": 0.9286499658256813
+  },
+  {
+   "fault": "R07",
+   "family": "STALE",
+   "n": 50,
+   "rescued": 50,
+   "rate": 1.0,
+   "ci_lo": 0.9286499658256813
+  },
+  {
+   "fault": "R10",
+   "family": "ENC",
+   "n": 50,
+   "rescued": 50,
+   "rate": 1.0,
+   "ci_lo": 0.9286499658256813
+  },
+  {
+   "fault": "R11",
+   "family": "ENC",
+   "n": 50,
+   "rescued": 50,
+   "rate": 1.0,
+   "ci_lo": 0.9286499658256813
+  }
+ ],
+ "loop_gates": {
+  "L1": "FAIL",
+  "L2": "PASS"
+ },
+ "verdict": "ADOPTED",
+ "clean_net_hit_change": -0.009022556390977444,
+ "guarantee": {
+  "alpha": 0.005,
+  "lam": 0.00040804650590808844,
+  "calibration_n": 811,
+  "heldout_clean_loss": 0.012781954887218045,
+  "resplit_mean": 0.0030002242647437206,
+  "resplit_p95": 0.007300160227879651,
+  "L1": "FAIL",
+  "L2": "PASS",
+  "mean_closure": 0.8706666666666668
+ },
+ "policies": [
+  {
+   "policy": "tau_none_5pct_fpr",
+   "threshold": 0.46444903013648775,
+   "mean_closure": 0.8280000000000001,
+   "mean_closure_v1_28": 0.8171428571428573,
+   "mean_family_attribution": 0.8013333333333333,
+   "clean_dispatch_rate": 0.04586466165413534,
+   "clean_loss": 0.006015037593984963,
+   "clean_net_hit_change": -0.0037593984962406013
+  },
+  {
+   "policy": "crc_alpha_0.0025",
+   "threshold": 0.008642191529207532,
+   "mean_closure": 0.8693333333333334,
+   "mean_closure_v1_28": 0.8614285714285714,
+   "mean_family_attribution": 0.832,
+   "clean_dispatch_rate": 0.36917293233082704,
+   "clean_loss": 0.009774436090225564,
+   "clean_net_hit_change": -0.006015037593984963
+  },
+  {
+   "policy": "crc_alpha_0.005",
+   "threshold": 0.00040804650590808844,
+   "mean_closure": 0.8706666666666668,
+   "mean_closure_v1_28": 0.862857142857143,
+   "mean_family_attribution": 0.8346666666666667,
+   "clean_dispatch_rate": 0.9954887218045113,
+   "clean_loss": 0.012781954887218045,
+   "clean_net_hit_change": -0.009022556390977444
+  },
+  {
+   "policy": "crc_alpha_0.01",
+   "threshold": 0.00040804650590808844,
+   "mean_closure": 0.8706666666666668,
+   "mean_closure_v1_28": 0.862857142857143,
+   "mean_family_attribution": 0.8346666666666667,
+   "clean_dispatch_rate": 0.9954887218045113,
+   "clean_loss": 0.012781954887218045,
+   "clean_net_hit_change": -0.009022556390977444
+  },
+  {
+   "policy": "crc_alpha_0.02",
+   "threshold": 0.00040804650590808844,
+   "mean_closure": 0.8706666666666668,
+   "mean_closure_v1_28": 0.862857142857143,
+   "mean_family_attribution": 0.8346666666666667,
+   "clean_dispatch_rate": 0.9954887218045113,
+   "clean_loss": 0.012781954887218045,
+   "clean_net_hit_change": -0.009022556390977444
+  }
+ ],
+ "natural": [
+  {
+   "arm": "NA1",
+   "what": "natural misspelling (rule q_correctable)",
+   "n_selected": 155,
+   "hit_before": 0.5612903225806452,
+   "hit_after": 0.49032258064516127,
+   "delta": -0.07096774193548387,
+   "ci_lo": -0.14193548387096774,
+   "ci_hi": 0.0,
+   "fixed": 11,
+   "broken": 22,
+   "verdict": "INCONCLUSIVE"
+  },
+  {
+   "arm": "NA1b",
+   "what": "NA1 where the corrected query was typed by another ESCI user",
+   "n_selected": 6,
+   "hit_before": 0.3333333333333333,
+   "hit_after": 0.3333333333333333,
+   "delta": 0.0,
+   "ci_lo": -0.6666666666666666,
+   "ci_hi": 0.6666666666666666,
+   "fixed": 2,
+   "broken": 2,
+   "verdict": "INCONCLUSIVE"
+  },
+  {
+   "arm": "NA2",
+   "what": "natural missing space (rule q_segmentable)",
+   "n_selected": 53,
+   "hit_before": 0.5094339622641509,
+   "hit_after": 0.5283018867924528,
+   "delta": 0.018867924528301886,
+   "ci_lo": -0.05660377358490566,
+   "ci_hi": 0.09433962264150944,
+   "fixed": 3,
+   "broken": 2,
+   "verdict": "INCONCLUSIVE"
+  },
+  {
+   "arm": "NA3",
+   "what": "natural 'nan' placeholder in top-5 (rule thin5)",
+   "n_selected": 8,
+   "hit_before": 1.0,
+   "hit_after": 0.5,
+   "delta": -0.5,
+   "ci_lo": -0.875,
+   "ci_hi": -0.125,
+   "fixed": 0,
+   "broken": 4,
+   "verdict": "HARM"
+  },
+  {
+   "arm": "NA4",
+   "what": "natural exact duplicate in top-5 (rule dup5)",
+   "n_selected": 125,
+   "hit_before": 0.384,
+   "hit_after": 0.44,
+   "delta": 0.056,
+   "ci_lo": 0.016,
+   "ci_hi": 0.104,
+   "fixed": 8,
+   "broken": 1,
+   "verdict": "PASS"
+  },
+  {
+   "arm": "NA5",
+   "what": "natural chunk crowding (rule chunk_crowd5)",
+   "n_selected": 621,
+   "hit_before": 0.5523349436392915,
+   "hit_after": 0.5974235104669887,
+   "delta": 0.04508856682769726,
+   "ci_lo": 0.027375201288244767,
+   "ci_hi": 0.06280193236714976,
+   "fixed": 32,
+   "broken": 4,
+   "verdict": "PASS"
+  },
+  {
+   "arm": "NA6",
+   "what": "closed loop v2 on all natural queries, policy tau_none_5pct_fpr",
+   "n_selected": 1500,
+   "hit_before": 0.5173333333333333,
+   "hit_after": 0.518,
+   "delta": 0.0006666666666666666,
+   "ci_lo": -0.0033333333333333335,
+   "ci_hi": 0.004666666666666667,
+   "fixed": 5,
+   "broken": 4,
+   "dispatched": 0.06,
+   "verdict": "INCONCLUSIVE"
+  },
+  {
+   "arm": "NA6",
+   "what": "closed loop v2 on all natural queries, policy crc_alpha_0.0025",
+   "n_selected": 1500,
+   "hit_before": 0.5173333333333333,
+   "hit_after": 0.5133333333333333,
+   "delta": -0.004,
+   "ci_lo": -0.012,
+   "ci_hi": 0.004,
+   "fixed": 13,
+   "broken": 19,
+   "dispatched": 0.52,
+   "verdict": "INCONCLUSIVE"
+  },
+  {
+   "arm": "NA6",
+   "what": "closed loop v2 on all natural queries, policy crc_alpha_0.005",
+   "n_selected": 1500,
+   "hit_before": 0.5173333333333333,
+   "hit_after": 0.508,
+   "delta": -0.009333333333333334,
+   "ci_lo": -0.017349999999999997,
+   "ci_hi": -0.0006666666666666666,
+   "fixed": 13,
+   "broken": 27,
+   "dispatched": 0.9933333333333333,
+   "verdict": "HARM"
+  },
+  {
+   "arm": "NA6",
+   "what": "closed loop v2 on all natural queries, policy crc_alpha_0.01",
+   "n_selected": 1500,
+   "hit_before": 0.5173333333333333,
+   "hit_after": 0.508,
+   "delta": -0.009333333333333334,
+   "ci_lo": -0.017349999999999997,
+   "ci_hi": -0.0006666666666666666,
+   "fixed": 13,
+   "broken": 27,
+   "dispatched": 0.9933333333333333,
+   "verdict": "HARM"
+  },
+  {
+   "arm": "NA6",
+   "what": "closed loop v2 on all natural queries, policy crc_alpha_0.02",
+   "n_selected": 1500,
+   "hit_before": 0.5173333333333333,
+   "hit_after": 0.508,
+   "delta": -0.009333333333333334,
+   "ci_lo": -0.017349999999999997,
+   "ci_hi": -0.0006666666666666666,
+   "fixed": 13,
+   "broken": 27,
+   "dispatched": 0.9933333333333333,
+   "verdict": "HARM"
+  }
+ ],
+ "unseen_mean_closure": 0.25333333333333335,
+ "not_solved": [
+  "Q03"
+ ],
+ "device": "cpu",
+ "reranker": "cross-encoder/ms-marco-MiniLM-L-6-v2",
+ "protocol": {
+  "created_utc": "2026-11-14 13:09:21",
+  "gates": {
+   "detector": "held-out one-vs-rest AUROC >= 0.70 (point estimate) AND >= 20 held-out positives",
+   "repair": ">= 20 hard episodes AND Wilson 95% lower bound of rescue rate >= 0.50 AND <= 10% of clean successes lost when the repair is forced on them",
+   "solved": "detector PASS and repair PASS",
+   "targets": "ADOPTED if repairs PASS >= 24/28 AND detectors PASS >= 27/28, else NOT_ADOPTED",
+   "AUROC_BAR": 0.7,
+   "MIN_TEST_POS": 20,
+   "RESCUE_BAR_LB": 0.5,
+   "MIN_REPAIR_N": 20,
+   "MAX_HARM": 0.1,
+   "REPAIR_TARGET": 24,
+   "DETECT_TARGET": 27,
+   "guarantee": "do-no-harm dispatch: threshold lambda fitted by conformal risk control on out-of-fold clean TRAIN queries so that E[Hit@5 lost on a clean query] <= ALPHA; PASS if held-out clean loss <= ALPHA; also report 200 calibration re-splits",
+   "ALPHA": 0.005,
+   "ALPHAS": [
+    0.0025,
+    0.005,
+    0.01,
+    0.02
+   ],
+   "natural": "report, not gated: (a) real misspelled ESCI queries whose corrected spelling was typed by another ESCI user, gold from ESCI labels; (b) in-corpus superseded policy versions with the validity filter off, no injected docs. Metrics: Hit@5 before, after closed loop (guarded and unguarded), after oracle repair, oracle-referenced closure",
+   "unseen": "report, not gated: leave-one-fault-out attributor; on the held-out fault test episodes report flagged rate, right-group rate and Hit after dispatch",
+   "v2_new_faults": "R25, R26, K11 judged with the same detector and repair gates; reported beside the 28, not counted in the 28-fault verdict",
+   "v2_loop": "family-level dispatch; FAMILIES QLEX={Q01,Q03,Q04,Q05}, STALE={K04,R07}, ENC={R03,R10,R11}; attribution correct if the family is right. L1 PASS if held-out clean Hit@5 loss <= ALPHA under the CRC threshold fitted on the separate calibration split. L2 PASS if mean held-out closure over the 31 faults + C2 >= 0.70 under the same threshold",
+   "L2_BAR": 0.7,
+   "v2_natural": "arms NA1-NA6 on ESCI queries outside natural_exclusions_v1.json; selection by deployed rule only, never by gold; metric paired delta Hit@5 (repair - none) with 95% bootstrap CI (N_BOOT resamples); PASS if CI lower bound > 0, HARM if CI upper bound < 0, else INCONCLUSIVE"
+  },
+  "cfg": {
+   "SEED": 44,
+   "QUERY_DATE": "2026-11-14",
+   "K_FINAL": 5,
+   "DEPTH": 25,
+   "RRF_K": 60,
+   "CAND": 100,
+   "ENCODER": "BAAI/bge-base-en-v1.5",
+   "ENCODER_V1": "BAAI/bge-base-en",
+   "QPROMPT": "Represent this sentence for searching relevant passages: ",
+   "RERANKER": "cross-encoder/ms-marco-MiniLM-L-6-v2",
+   "CE_MAXLEN": 256,
+   "N_BASE_ESCI": 2400,
+   "N_HARD": 50,
+   "MAX_ATT": 2500,
+   "TEST_FRAC": 0.5,
+   "CLEAN_FPR": 0.05,
+   "IVF_NLIST": 1024,
+   "N_PRDC": 528,
+   "PROBE_K": 8,
+   "N_HARM": 20,
+   "N_NAT": 200,
+   "TIME_BUDGET": 1440,
+   "N_NATQ": 1500,
+   "CAL_FRAC": 0.4,
+   "N_BOOT": 2000,
+   "EF_SEARCH": 40
+  },
+  "device": "cpu",
+  "code_sha256": "8e329cd26c0bd045b4aa889f90b785b9a587bfa87a5526a62f9af59a856be854"
+ }
+}

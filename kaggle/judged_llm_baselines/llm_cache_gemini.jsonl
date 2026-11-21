@@ -1,0 +1,1453 @@
+{"key": "f749be320c79e05d|diag", "text": "{\n  \"p_fail\": 0.2,\n  \"cause\": \"query\"\n}", "tokens": 719}
+{"key": "nat:80beeb5b402f|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 552}
+{"key": "nat:d1412d4756ed|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 553}
+{"key": "nat:7c507626d21f|grade", "text": "{\n  \"relevant\": [true, false, true, false, false]\n}", "tokens": 480}
+{"key": "c5f24be3977f6604|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 609}
+{"key": "d5055bcae0f9c542|diag", "text": "{\n  \"p_fail\": 0.8,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 601}
+{"key": "6d364929f0323634|diag", "text": "{\n  \"p_fail\": 0.6,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 612}
+{"key": "317810fdba8b3cc2|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 702}
+{"key": "75a9ad056d425ddd|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 656}
+{"key": "nat:60993f61b418|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 454}
+{"key": "5f129ef977889471|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 827}
+{"key": "7fbdcec0b40bf8d4|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 551}
+{"key": "nat:510f3ddab82d|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 533}
+{"key": "nat:590ae95b0798|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 521}
+{"key": "nat:6b26803e66e7|grade", "text": "{\n  \"relevant\": [true, true, false, true, false]\n}", "tokens": 544}
+{"key": "nat:4ec4b88ced66|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 589}
+{"key": "nat:c8facf834484|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 230}
+{"key": "370ace5872352ae7|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 613}
+{"key": "nat:4d7de5af1681|grade", "text": "{\n  \"relevant\": [true, false, false, false, true]\n}", "tokens": 518}
+{"key": "nat:0348f28f77b9|grade", "text": "{\n  \"relevant\": [\n    false,\n    false,\n    false,\n    false,\n    false\n  ]\n}", "tokens": 427}
+{"key": "nat:67369850acb9|grade", "text": "{\n  \"relevant\": [true, true, true, true, false]\n}", "tokens": 571}
+{"key": "131fc6695ac002da|diag", "text": "{\n  \"p_fail\": 0.2,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 604}
+{"key": "14aebeb591df3d20|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 560}
+{"key": "nat:23f0a8ad6521|grade", "text": "{\n  \"relevant\": [\n    false,\n    false,\n    true,\n    true,\n    false\n  ]\n}", "tokens": 521}
+{"key": "nat:ac09a773c113|grade", "text": "{\n  \"relevant\": [true, true, true, false, false]\n}", "tokens": 398}
+{"key": "nat:37b2b1aaa71f|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 542}
+{"key": "nat:8dca4638859e|grade", "text": "{\"relevant\": [true, true, true, true, true]}", "tokens": 539}
+{"key": "a03fcd982088c7cc|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"query\"\n}", "tokens": 607}
+{"key": "9dcab930686afaab|diag", "text": "{\n  \"p_fail\": 0.2,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 561}
+{"key": "nat:fb11ca359cd2|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 476}
+{"key": "nat:c9e03bc49028|grade", "text": "{\n  \"relevant\": [true, true, true, true, false]\n}", "tokens": 514}
+{"key": "nat:7018783dbfc5|grade", "text": "{\n  \"relevant\": [\n    true,\n    true,\n    true,\n    true,\n    true\n  ]\n}", "tokens": 479}
+{"key": "nat:49017d7b2c48|grade", "text": "{\n  \"relevant\": [\n    false,\n    true,\n    true,\n    false,\n    false\n  ]\n}", "tokens": 518}
+{"key": "5772cac9c009b926|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 556}
+{"key": "8e4b034d8458b51f|diag", "text": "{\n  \"p_fail\": 0.2,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 640}
+{"key": "nat:4815a52528b5|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 800}
+{"key": "ed7840ce1b51e555|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 574}
+{"key": "nat:253fcf90b444|grade", "text": "{\n  \"relevant\": [true, true, false, false, false]\n}", "tokens": 565}
+{"key": "4716041ec51dc941|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 432}
+{"key": "nat:489fe2be66a5|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 586}
+{"key": "4d695a89234ea924|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 617}
+{"key": "nat:7d888f9fdff7|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 483}
+{"key": "f2ab9de659b2736f|diag", "text": "{\n  \"p_fail\": 0.2,\n  \"cause\": \"none\"\n}", "tokens": 548}
+{"key": "nat:ef989f89e957|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 534}
+{"key": "0d34eb55cc943f43|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 622}
+{"key": "b15a4a5143019943|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 591}
+{"key": "nat:d9b4f37cb8d1|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 434}
+{"key": "nat:d42ddf44c60a|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 495}
+{"key": "3da4b55496c267bd|diag", "text": "{\n  \"p_fail\": 0.2,\n  \"cause\": \"none\"\n}", "tokens": 559}
+{"key": "c2b7d22d6771de76|diag", "text": "{\n  \"p_fail\": 0.2,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 591}
+{"key": "nat:9189b7f5fd8f|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 523}
+{"key": "nat:5f5b4aa4efa7|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 491}
+{"key": "nat:3e61c4ed8a5c|grade", "text": "{\n  \"relevant\": [true, true, true, false, true]\n}", "tokens": 511}
+{"key": "f3768ab6429ca366|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 563}
+{"key": "nat:628ad254b824|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 620}
+{"key": "nat:0ee6ad0bd3cc|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 469}
+{"key": "nat:d533414c78f3|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 482}
+{"key": "nat:7c6cdce778b0|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 483}
+{"key": "882c4e1c5e2249da|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"query\"\n}", "tokens": 644}
+{"key": "nat:c0c214c6e57c|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 518}
+{"key": "nat:628e65a4ba98|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 537}
+{"key": "nat:9ae7f67a89eb|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 493}
+{"key": "888c19800fabf60c|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"knowledge_base\"\n}", "tokens": 504}
+{"key": "nat:569185a83196|grade", "text": "{\n  \"relevant\": [true, true, true, true, false]\n}", "tokens": 533}
+{"key": "16bacae1163f2234|diag", "text": "{\n  \"p_fail\": 0.2,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 605}
+{"key": "c4803b225dbed51b|diag", "text": "{\n  \"p_fail\": 0.5,\n  \"cause\": \"knowledge_base\"\n}", "tokens": 475}
+{"key": "d36b3f08699e7bf9|diag", "text": "{\n  \"p_fail\": 0.8,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 566}
+{"key": "a4796e81ce6c27f3|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 592}
+{"key": "4ddbdbcce875d1f3|diag", "text": "{\n  \"p_fail\": 0.4,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 654}
+{"key": "87b531dbf0d98c33|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 555}
+{"key": "nat:912513750e5b|grade", "text": "{\n  \"relevant\": [true, true, false, false, false]\n}", "tokens": 554}
+{"key": "nat:8db8332694ac|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 455}
+{"key": "c69702e73807767d|diag", "text": "{\n  \"p_fail\": 0.2,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 538}
+{"key": "44f6d30895238593|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 628}
+{"key": "nat:8272d74d2311|grade", "text": "{\n  \"relevant\": [true, false, true, false, false]\n}", "tokens": 536}
+{"key": "nat:bfc94872c3a5|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 503}
+{"key": "nat:92561a43ddd4|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 525}
+{"key": "41463284d6c550f2|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 603}
+{"key": "d55a592f6b78cdc2|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 574}
+{"key": "nat:c7b7f6ccedcf|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 508}
+{"key": "nat:6780c713cbaf|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 563}
+{"key": "45c148b6755938a7|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 537}
+{"key": "2127c853cb68a847|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 530}
+{"key": "cdba6b8484c19e33|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 593}
+{"key": "cfa5fd2bf9eda286|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 674}
+{"key": "4b26fb71544ae3a4|diag", "text": "{\n  \"p_fail\": 0.2,\n  \"cause\": \"none\"\n}", "tokens": 627}
+{"key": "nat:8f2760752645|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 571}
+{"key": "1f893e23e3f77c0e|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"knowledge_base\"\n}", "tokens": 271}
+{"key": "nat:a16a8081fcc2|grade", "text": "{\n  \"relevant\": [false, true, false, false, false]\n}", "tokens": 578}
+{"key": "nat:826b6bf187a8|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 497}
+{"key": "nat:c41cf8575697|grade", "text": "{\n  \"relevant\": [\n    false,\n    true,\n    true,\n    true,\n    true\n  ]\n}", "tokens": 514}
+{"key": "32fb9b9e61321dac|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 467}
+{"key": "fd3ac125cb4684ee|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 433}
+{"key": "abfe79a567facac7|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 725}
+{"key": "8e92dd35323f35b4|diag", "text": "{\n  \"p_fail\": 0.8,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 664}
+{"key": "nat:ca9adaca24ce|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 381}
+{"key": "4102fd839b6dec4f|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 550}
+{"key": "fab5fd2df0a6fe82|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 586}
+{"key": "ffad5d2af5c3ee1b|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 676}
+{"key": "nat:ab23f0920155|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 425}
+{"key": "ff18fc5992bdd6ac|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 579}
+{"key": "a2b1c17868287765|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 554}
+{"key": "nat:9dac6340c2f7|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 445}
+{"key": "nat:68a7a406866f|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 644}
+{"key": "nat:bbfb60bd773b|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 517}
+{"key": "nat:2427d671ffff|grade", "text": "{\n  \"relevant\": [true, true, true, false, true]\n}", "tokens": 373}
+{"key": "nat:9844c743d89e|grade", "text": "{\n  \"relevant\": [true, true, false, false, false]\n}", "tokens": 662}
+{"key": "8aa7704339b0d2b4|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 517}
+{"key": "nat:279a47f43ea0|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 527}
+{"key": "e1be6f4ddeec95cf|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 430}
+{"key": "nat:6dde4436fbba|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 485}
+{"key": "c1d116616e4a7bb6|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 595}
+{"key": "01e110d5685ff211|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 550}
+{"key": "nat:60e4fe9ee748|grade", "text": "{\n  \"relevant\": [false, false, false, false, true]\n}", "tokens": 454}
+{"key": "7f220331d80f76ad|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 670}
+{"key": "8a69c3fa5a03d37f|diag", "text": "{\n  \"p_fail\": 0.8,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 787}
+{"key": "nat:c550076d0681|grade", "text": "{\n  \"relevant\": [false, true, true, false, false]\n}", "tokens": 505}
+{"key": "nat:2bd14f67fe8a|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 488}
+{"key": "nat:0be43d0b349c|grade", "text": "{\n  \"relevant\": [true, false, true, true, false]\n}", "tokens": 581}
+{"key": "nat:a8d0259c0679|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 245}
+{"key": "8014dc868c48d181|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 645}
+{"key": "ccf2cf46808fed19|diag", "text": "{\n  \"p_fail\": 0.4,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 571}
+{"key": "5ea5e66bae631dc0|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 577}
+{"key": "nat:2ac7eb91547c|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 474}
+{"key": "nat:ebc715a8a5d8|grade", "text": "{\n  \"relevant\": [true, false, true, false, true]\n}", "tokens": 471}
+{"key": "nat:b9478d62e28b|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 532}
+{"key": "nat:3ccbcb8848bc|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 498}
+{"key": "nat:2fa0ea21b406|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 411}
+{"key": "77b67cdfe455875c|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"query\"\n}", "tokens": 650}
+{"key": "nat:fd278cf79f28|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 471}
+{"key": "nat:1ff608570a37|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 533}
+{"key": "nat:2050ba183dbd|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 469}
+{"key": "5edb80717bda85d4|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 594}
+{"key": "91f778f5bbcb726f|diag", "text": "{\n  \"p_fail\": 0.4,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 638}
+{"key": "nat:cc9121af0354|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 570}
+{"key": "b77b3ae10c26c3d0|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 584}
+{"key": "nat:7afa7e61cefd|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 522}
+{"key": "nat:c20c2d4784a1|grade", "text": "{\n  \"relevant\": [false, false, false, true, false]\n}", "tokens": 468}
+{"key": "84c65f9534a8989b|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 569}
+{"key": "4cb08866ed1ce281|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 531}
+{"key": "218c9fe953d32bbc|diag", "text": "{\n  \"p_fail\": 0.2,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 644}
+{"key": "8449d84af933d3b4|diag", "text": "{\n  \"p_fail\": 0.4,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 631}
+{"key": "efd4e4bfb009ffe5|diag", "text": "{\n  \"p_fail\": 0.2,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 657}
+{"key": "99a39f16e2ed2fc7|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 579}
+{"key": "nat:4761cb843809|grade", "text": "{\n  \"relevant\": [false, false, false, true, false]\n}", "tokens": 538}
+{"key": "5fc43310e7561070|diag", "text": "{\n  \"p_fail\": 0.2,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 608}
+{"key": "ed6a9c4e0b07dd95|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"query\"\n}", "tokens": 614}
+{"key": "648034b705b20a44|diag", "text": "{\n  \"p_fail\": 0.2,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 539}
+{"key": "a77177e0675a19cd|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 565}
+{"key": "4e2d2db4e1c9d8fa|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 613}
+{"key": "c14521595a6e2cb2|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 695}
+{"key": "7f94fd93a6eeb320|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 653}
+{"key": "nat:826f325fda59|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 560}
+{"key": "nat:d680c433e3a4|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 418}
+{"key": "nat:94474192f43f|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 636}
+{"key": "3d6b5fa7a9421cac|diag", "text": "{\n  \"p_fail\": 0.8,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 633}
+{"key": "nat:1b579039d3d5|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 497}
+{"key": "a5cd455416889e65|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"knowledge_base\"\n}", "tokens": 662}
+{"key": "71353e3d181e1fdc|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 476}
+{"key": "ea298d206a7e4fea|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 584}
+{"key": "0c3626f334d89d59|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 542}
+{"key": "1daee4f9872c206a|diag", "text": "{\n  \"p_fail\": 0.2,\n  \"cause\": \"none\"\n}", "tokens": 786}
+{"key": "nat:ccbb5b4b12e9|grade", "text": "{\n  \"relevant\": [true, true, true, true, false]\n}", "tokens": 524}
+{"key": "03fe0246acd0719a|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 606}
+{"key": "nat:da67dd078e56|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 545}
+{"key": "nat:3138309f8bdc|grade", "text": "{\n  \"relevant\": [true, true, true, false, false]\n}", "tokens": 595}
+{"key": "064d8951c1332749|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 590}
+{"key": "0548e00cf2d03780|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 539}
+{"key": "339b7b1f2daa37bc|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 570}
+{"key": "nat:2f6e79ddf167|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 570}
+{"key": "nat:72dcd02aee75|grade", "text": "{\n  \"relevant\": [true, true, false, false, false]\n}", "tokens": 585}
+{"key": "nat:40252964ab0d|grade", "text": "{\n  \"relevant\": [false, false, false, true, false]\n}", "tokens": 464}
+{"key": "0b855f54c3be60d9|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 689}
+{"key": "edb034934b15311c|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 251}
+{"key": "nat:93632a8cb126|grade", "text": "{\n  \"relevant\": [true, false, true, true, false]\n}", "tokens": 505}
+{"key": "485e39feab635070|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 627}
+{"key": "56a5724bd8f6132d|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 611}
+{"key": "5c0b97d81e226e22|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 586}
+{"key": "62695e69a2b063c9|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"query\"\n}", "tokens": 664}
+{"key": "1c8dff136d00871f|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 787}
+{"key": "nat:0d88259c690e|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 620}
+{"key": "nat:3f4fca123696|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 495}
+{"key": "nat:7cc1a89ebba4|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 528}
+{"key": "nat:ae930289c798|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 530}
+{"key": "cd0f3fedd5772709|diag", "text": "{\n  \"p_fail\": 0.2,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 578}
+{"key": "ee0cd2521956bf23|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 656}
+{"key": "aaa0a86c02866f96|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"knowledge_base\"\n}", "tokens": 619}
+{"key": "nat:3b8b44a6c395|grade", "text": "{\n  \"relevant\": [false, false, true, true, false]\n}", "tokens": 577}
+{"key": "nat:d80d1b6661ab|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 519}
+{"key": "nat:d98f2baad33a|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 665}
+{"key": "0a21831fb3539a52|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 548}
+{"key": "3410c1be8f20fb45|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 676}
+{"key": "nat:f65162abd7b9|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 513}
+{"key": "6e60bd68b757c92a|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 501}
+{"key": "38d6c4f3766919fe|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 551}
+{"key": "fe93f0fe114b55a6|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"knowledge_base\"\n}", "tokens": 314}
+{"key": "1315727543babe6f|diag", "text": "{\n  \"p_fail\": 0.4,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 546}
+{"key": "nat:916d4fa0d98e|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 500}
+{"key": "3ac2150cf37ebe82|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 561}
+{"key": "295913e47ce5fa2c|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"knowledge_base\"\n}", "tokens": 460}
+{"key": "nat:dc9263ca1ec7|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 582}
+{"key": "nat:29ae5a78a0d5|grade", "text": "{\n  \"relevant\": [true, true, true, true, false]\n}", "tokens": 585}
+{"key": "03553e918c4364da|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 656}
+{"key": "nat:44acbdd9efd4|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 560}
+{"key": "nat:2bb2107b162b|grade", "text": "{\n  \"relevant\": [\n    false,\n    false,\n    false,\n    false,\n    false\n  ]\n}", "tokens": 528}
+{"key": "nat:f7a0e2802233|grade", "text": "{\n  \"relevant\": [false, true, false, false, false]\n}", "tokens": 557}
+{"key": "nat:d22284ef4f65|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 587}
+{"key": "1ae6c0ce4da81c12|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 605}
+{"key": "nat:a654d05e750d|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 448}
+{"key": "2faaf41346da3b22|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 497}
+{"key": "10efb0b83d7f4c11|diag", "text": "{\n  \"p_fail\": 0.2,\n  \"cause\": \"knowledge_base\"\n}", "tokens": 330}
+{"key": "d35dbff680cbdcc5|diag", "text": "{\n  \"p_fail\": 0.2,\n  \"cause\": \"none\"\n}", "tokens": 553}
+{"key": "f7b39f174a73fe76|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 589}
+{"key": "19e23207156ce418|diag", "text": "{\n  \"p_fail\": 0.4,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 597}
+{"key": "cc22410bf32bb471|diag", "text": "{\n  \"p_fail\": 0.2,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 667}
+{"key": "41bccb321732a296|diag", "text": "{\n  \"p_fail\": 0.8,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 627}
+{"key": "nat:935d28a126db|grade", "text": "{\n  \"relevant\": [true, true, true, true, false]\n}", "tokens": 534}
+{"key": "16193a36bcbfc3c3|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 597}
+{"key": "nat:132e4e296f19|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 477}
+{"key": "nat:40e0a03f1ccf|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 470}
+{"key": "433a0b8486f2b5b6|diag", "text": "{\n  \"p_fail\": 0.4,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 702}
+{"key": "nat:746dd044061a|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 488}
+{"key": "nat:7e807280388b|grade", "text": "{\n  \"relevant\": [false, true, false, false, false]\n}", "tokens": 579}
+{"key": "nat:107d8103ec11|grade", "text": "{\n  \"relevant\": [true, true, false, false, false]\n}", "tokens": 470}
+{"key": "4421010d7b3d99db|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 504}
+{"key": "38a27250030d6996|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 507}
+{"key": "3ea9620e91e6e1d2|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 573}
+{"key": "e8c7856b2aaa9109|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 627}
+{"key": "nat:6dd64918762f|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 446}
+{"key": "d9b66edeba332b50|diag", "text": "{\n  \"p_fail\": 0.2,\n  \"cause\": \"knowledge_base\"\n}", "tokens": 487}
+{"key": "8168004fb5442920|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 722}
+{"key": "834c086324f097ec|diag", "text": "{\n  \"p_fail\": 0.2,\n  \"cause\": \"none\"\n}", "tokens": 535}
+{"key": "nat:b73eb75a60aa|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 482}
+{"key": "9d07b32df025385f|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"knowledge_base\"\n}", "tokens": 287}
+{"key": "bcb885e9e96d8e94|diag", "text": "{\n  \"p_fail\": 0.2,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 543}
+{"key": "840260ad60e811e2|diag", "text": "{\n  \"p_fail\": 0.8,\n  \"cause\": \"knowledge_base\"\n}", "tokens": 616}
+{"key": "nat:ba753e9e37f3|grade", "text": "{\n  \"relevant\": [true, true, false, false, false]\n}", "tokens": 425}
+{"key": "6ed26ec125e8a680|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 630}
+{"key": "nat:7566f46f1b72|grade", "text": "{\n  \"relevant\": [\n    false,\n    false,\n    false,\n    true,\n    true\n  ]\n}", "tokens": 504}
+{"key": "nat:a330ad988b33|grade", "text": "{\n  \"relevant\": [false, false, true, false, false]\n}", "tokens": 468}
+{"key": "442951a218a82cfd|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 260}
+{"key": "nat:ed50c0b429ed|grade", "text": "{\n  \"relevant\": [false, false, false, false, true]\n}", "tokens": 464}
+{"key": "nat:f627b8c9e88f|grade", "text": "{\n  \"relevant\": [true, true, true, true, false]\n}", "tokens": 520}
+{"key": "nat:9a2659b9494f|grade", "text": "{\n  \"relevant\": [false, true, true, true, false]\n}", "tokens": 691}
+{"key": "nat:e9f4bf1c7d56|grade", "text": "{\n  \"relevant\": [true, true, true, false, true]\n}", "tokens": 655}
+{"key": "nat:72a2cacfdc05|grade", "text": "{\n  \"relevant\": [true, true, true, false, true]\n}", "tokens": 488}
+{"key": "83eef6814360fb21|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 612}
+{"key": "4f4412cc8d88ddfb|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 629}
+{"key": "7f08cf459f3575f1|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 541}
+{"key": "nat:2749c67a998c|grade", "text": "{\n  \"relevant\": [true, true, true, false, false]\n}", "tokens": 549}
+{"key": "ac93d7cd21f5e3c6|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 634}
+{"key": "e8c84574a7089b5d|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 348}
+{"key": "e5bf9e0ece744289|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 649}
+{"key": "8a572c4efe194efa|diag", "text": "{\n  \"p_fail\": 0.2,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 591}
+{"key": "nat:fe51a009e67c|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 348}
+{"key": "nat:2a3e3e293ea8|grade", "text": "{\n  \"relevant\": [\n    false,\n    true,\n    false,\n    false,\n    false\n  ]\n}", "tokens": 415}
+{"key": "4b22d1b0e61bbcb4|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"knowledge_base\"\n}", "tokens": 467}
+{"key": "40e79c4304cd8db2|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"knowledge_base\"\n}", "tokens": 742}
+{"key": "nat:c8dacd5180c5|grade", "text": "{\n  \"relevant\": [true, false, false, false, true]\n}", "tokens": 538}
+{"key": "nat:7e062bcbe625|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 505}
+{"key": "2c2356dbd2e003aa|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 586}
+{"key": "d4ef83bbc456acb6|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 599}
+{"key": "3cc0ea1ba80ad2bb|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 631}
+{"key": "7cde03d06a6704b9|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 615}
+{"key": "ba6197c27d352f90|diag", "text": "{\n  \"p_fail\": 0.4,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 622}
+{"key": "nat:a9ab1994831e|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 544}
+{"key": "nat:c434e4b0a487|grade", "text": "{\n  \"relevant\": [\n    true,\n    true,\n    false,\n    true,\n    true\n  ]\n}", "tokens": 622}
+{"key": "nat:9100365b30ed|grade", "text": "{\n  \"relevant\": [true, false, true, true, true]\n}", "tokens": 494}
+{"key": "b81a51b11aaf3fc6|diag", "text": "{\n  \"p_fail\": 0.8,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 723}
+{"key": "d5a9ff1a646ada88|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 519}
+{"key": "0078b0e8e7e5e2bd|diag", "text": "{\n  \"p_fail\": 0.2,\n  \"cause\": \"none\"\n}", "tokens": 611}
+{"key": "nat:7850df29608c|grade", "text": "{\n  \"relevant\": [true, false, true, true, false]\n}", "tokens": 515}
+{"key": "nat:2d2f14246c20|grade", "text": "{\n  \"relevant\": [true, true, true, false, false]\n}", "tokens": 461}
+{"key": "d2f2bc6e54c89c05|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 614}
+{"key": "nat:db6370645f95|grade", "text": "{\n  \"relevant\": [true, true, false, false, false]\n}", "tokens": 535}
+{"key": "nat:7d4b6a7e3c9b|grade", "text": "{\n  \"relevant\": [true, true, true, true, false]\n}", "tokens": 535}
+{"key": "21f8b6b7ba6bb8e3|diag", "text": "{\n  \"p_fail\": 0.2,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 510}
+{"key": "9b6f2cc3cd6a4ba4|diag", "text": "{\n  \"p_fail\": 0.8,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 638}
+{"key": "nat:76006821079e|grade", "text": "{\n  \"relevant\": [true, true, true, true, false]\n}", "tokens": 457}
+{"key": "nat:e66bebeb1028|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 556}
+{"key": "73370c7a10d05d8d|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 647}
+{"key": "nat:accce41ca9d3|grade", "text": "{\n  \"relevant\": [true, false, true, false, false]\n}", "tokens": 462}
+{"key": "nat:7f2b83faece9|grade", "text": "{\n  \"relevant\": [\n    true,\n    true,\n    true,\n    true,\n    true\n  ]\n}", "tokens": 501}
+{"key": "nat:b0af6f4ed462|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 512}
+{"key": "b36c070c4e6838e3|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 527}
+{"key": "1ef0faa8d16def9d|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 576}
+{"key": "e5f445a500106e25|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 594}
+{"key": "cecb81bacaf02e44|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 566}
+{"key": "28d4b0b5e17efddf|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 504}
+{"key": "nat:f85f2eff6c17|grade", "text": "{\n  \"relevant\": [true, true, true, true, false]\n}", "tokens": 491}
+{"key": "aba31e4cae5cbb54|diag", "text": "{\n  \"p_fail\": 0.2,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 565}
+{"key": "nat:ef26e9ad5315|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 552}
+{"key": "nat:b62b79b43e84|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 541}
+{"key": "nat:d5a13d27cf29|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 609}
+{"key": "nat:da5a361c6019|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 574}
+{"key": "nat:f404a2f6d047|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 484}
+{"key": "a44f451e1d274bae|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 266}
+{"key": "nat:43b2d1bdea65|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 501}
+{"key": "nat:519a7e95dba9|grade", "text": "{\n  \"relevant\": [true, false, true, false, false]\n}", "tokens": 533}
+{"key": "51439206800e12db|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 473}
+{"key": "c29735ab18dff60d|diag", "text": "{\n  \"p_fail\": 0.8,\n  \"cause\": \"query\"\n}", "tokens": 550}
+{"key": "764ac247dabb6a85|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"knowledge_base\"\n}", "tokens": 846}
+{"key": "05a70ca8cb4b5b9d|diag", "text": "{\n  \"p_fail\": 0.4,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 633}
+{"key": "nat:56975b83de84|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 523}
+{"key": "nat:b515512c3863|grade", "text": "{\n  \"relevant\": [true, true, false, false, false]\n}", "tokens": 562}
+{"key": "nat:492e6640145b|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 442}
+{"key": "5b9c275906f0354f|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 528}
+{"key": "nat:aa617640857e|grade", "text": "{\n  \"relevant\": [\n    false,\n    false,\n    true,\n    false,\n    true\n  ]\n}", "tokens": 628}
+{"key": "7eb54735bfc93bab|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 645}
+{"key": "nat:20f7732304e1|grade", "text": "{\n  \"relevant\": [true, true, true, true, false]\n}", "tokens": 459}
+{"key": "nat:9022c4c375a4|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 469}
+{"key": "1b4aea68640133cf|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 659}
+{"key": "58c99aed175d45ac|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 657}
+{"key": "1c9136ffc26696f2|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 572}
+{"key": "ddb548b1565a51c3|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 584}
+{"key": "nat:f7b44cfafd5c|grade", "text": "{\n  \"relevant\": [\n    false,\n    true,\n    true,\n    true,\n    true\n  ]\n}", "tokens": 571}
+{"key": "nat:acffda6bda4d|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 551}
+{"key": "nat:c237e2e06202|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 447}
+{"key": "850a1d132a6c4ce2|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 657}
+{"key": "nat:61eafb0b930d|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 483}
+{"key": "nat:5453999a40cc|grade", "text": "{\n  \"relevant\": [true, true, true, false, false]\n}", "tokens": 492}
+{"key": "e72048479e09732d|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 578}
+{"key": "d1e4ecd03f00c0ba|diag", "text": "{\n  \"p_fail\": 0.4,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 663}
+{"key": "d666e5cc406a2f9e|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 601}
+{"key": "nat:b289567ada05|grade", "text": "{\n  \"relevant\": [true, true, true, true, false]\n}", "tokens": 417}
+{"key": "nat:a964f13c6b9d|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 406}
+{"key": "aeac78e48c2fdd47|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 609}
+{"key": "nat:9b0881922071|grade", "text": "{\n  \"relevant\": [true, true, false, false, true]\n}", "tokens": 568}
+{"key": "nat:c2cf703d6541|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 485}
+{"key": "98fa5d55b16a23d9|diag", "text": "{\n  \"p_fail\": 0.4,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 611}
+{"key": "a53df25ff2a00d85|diag", "text": "{\n  \"p_fail\": 0.8,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 569}
+{"key": "nat:c0750a1c0a77|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 561}
+{"key": "nat:5feda565f9b0|grade", "text": "{\n  \"relevant\": [false, false, false, true, false]\n}", "tokens": 483}
+{"key": "nat:491c95891f04|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 531}
+{"key": "nat:fc16c9574282|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 440}
+{"key": "nat:3b6fa1d11190|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 507}
+{"key": "60da4a48efa1f5ce|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 645}
+{"key": "nat:2790ae71d2de|grade", "text": "{\n  \"relevant\": [true, true, true, true, false]\n}", "tokens": 457}
+{"key": "nat:0f739c385449|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 487}
+{"key": "nat:fad1b4b1fb07|grade", "text": "{\n  \"relevant\": [true, true, false, false, false]\n}", "tokens": 546}
+{"key": "nat:b7a842b122a2|grade", "text": "{\n  \"relevant\": [true, true, false, false, false]\n}", "tokens": 467}
+{"key": "nat:3aca035d2494|grade", "text": "{\n  \"relevant\": [true, true, true, false, false]\n}", "tokens": 437}
+{"key": "nat:b809acad578a|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 472}
+{"key": "592078c0374cdbdd|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 597}
+{"key": "nat:79bedbcb7221|grade", "text": "{\n  \"relevant\": [\n    false,\n    false,\n    true,\n    true,\n    false\n  ]\n}", "tokens": 427}
+{"key": "nat:a5d642d6e0ee|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 215}
+{"key": "5c827a6e3ca299c9|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 656}
+{"key": "25dee51e081f73ab|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 564}
+{"key": "nat:23351eb5d8ae|grade", "text": "{\n  \"relevant\": [false, false, true, true, true]\n}", "tokens": 511}
+{"key": "0fd2a77f2e662710|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 625}
+{"key": "146f65a5cd6ef2a4|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 631}
+{"key": "5dbfa00bbb273970|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 674}
+{"key": "aca9b5edd6cadf76|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 614}
+{"key": "4eeafc20929c812c|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 576}
+{"key": "nat:49157967cb7f|grade", "text": "{\n  \"relevant\": [false, true, false, false, false]\n}", "tokens": 458}
+{"key": "nat:1ae86cb63a0b|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 538}
+{"key": "0baebc822ea9eb5e|diag", "text": "{\n  \"p_fail\": 0.2,\n  \"cause\": \"none\"\n}", "tokens": 559}
+{"key": "c0b47b5e0069804d|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 631}
+{"key": "d255ac86721c23bf|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 434}
+{"key": "nat:4618f32a072f|grade", "text": "{\n  \"relevant\": [true, false, false, false, true]\n}", "tokens": 539}
+{"key": "67ec7abeaa8b2ddd|diag", "text": "{\n  \"p_fail\": 0.4,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 442}
+{"key": "e1c21a4b792d6282|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 578}
+{"key": "nat:e399a99a710b|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 494}
+{"key": "nat:99040e0e1771|grade", "text": "{\n  \"relevant\": [\n    false,\n    false,\n    false,\n    false,\n    false\n  ]\n}", "tokens": 521}
+{"key": "dcf79e6ba19b1d92|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 577}
+{"key": "nat:eadf32db8bd9|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 486}
+{"key": "nat:7a63d4da10df|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 437}
+{"key": "06fbc23cdaf2af5b|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 610}
+{"key": "nat:24b4b388e8fb|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 528}
+{"key": "6691ad084fce3b2e|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 556}
+{"key": "nat:a77a4a67ef9f|grade", "text": "{\n  \"relevant\": [true, true, false, false, false]\n}", "tokens": 362}
+{"key": "5e031b4b7ef480b2|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 623}
+{"key": "61af6808836fd3b6|diag", "text": "{\n  \"p_fail\": 0.2,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 638}
+{"key": "nat:910b3f7e4f09|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 475}
+{"key": "nat:fdc35e69338d|grade", "text": "{\n  \"relevant\": [true, true, false, false, false]\n}", "tokens": 434}
+{"key": "806ef060a471289e|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 472}
+{"key": "307b1307b5026979|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 574}
+{"key": "nat:1b0da331833b|grade", "text": "{\n  \"relevant\": [true, true, false, true, true]\n}", "tokens": 612}
+{"key": "nat:daa3f1b736f8|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 326}
+{"key": "nat:ab139ed8845e|grade", "text": "{\n  \"relevant\": [true, true, true, false, false]\n}", "tokens": 512}
+{"key": "nat:1c8a34b5d897|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 505}
+{"key": "nat:4af5a14377b4|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 425}
+{"key": "nat:f3c7450dff1c|grade", "text": "{\n  \"relevant\": [true, true, false, false, false]\n}", "tokens": 512}
+{"key": "nat:5dc51b8d9ce2|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 508}
+{"key": "nat:bbff057e23d5|grade", "text": "{\n  \"relevant\": [true, false, true, true, false]\n}", "tokens": 508}
+{"key": "ceece6160550dcf0|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 659}
+{"key": "d4371f373b3c2414|diag", "text": "{\n  \"p_fail\": 0.8,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 635}
+{"key": "c4e58eb2b193cb65|diag", "text": "{\n  \"p_fail\": 0.8,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 557}
+{"key": "acbca725eb086793|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"knowledge_base\"\n}", "tokens": 319}
+{"key": "9c4721cde964bfe5|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 576}
+{"key": "nat:157d63ef9052|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 633}
+{"key": "da5415dd4a1cfd96|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 591}
+{"key": "debdae676b981b8d|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 517}
+{"key": "937d38a109cede20|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"knowledge_base\"\n}", "tokens": 510}
+{"key": "nat:c7cbf7509616|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 262}
+{"key": "nat:48e6a63cbe83|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 502}
+{"key": "nat:7cbeb7b92e2c|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 537}
+{"key": "nat:bfe9d7305868|grade", "text": "{\n  \"relevant\": [true, true, false, true, false]\n}", "tokens": 545}
+{"key": "639ee77d99d61f2a|diag", "text": "{\n  \"p_fail\": 0.2,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 466}
+{"key": "nat:d7ad795193e7|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 538}
+{"key": "c344cc821e3eafd1|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 581}
+{"key": "nat:c6125c435c1f|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 553}
+{"key": "4e83fb27e661dba4|diag", "text": "{\n  \"p_fail\": 0.6,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 550}
+{"key": "nat:b644420b2f23|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 467}
+{"key": "nat:9d6635533383|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 526}
+{"key": "b1b745e776e5db47|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 676}
+{"key": "1c26fa9d41161bbc|diag", "text": "{\n  \"p_fail\": 0.8,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 540}
+{"key": "nat:b16285aa4339|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 510}
+{"key": "nat:145dee00f81f|grade", "text": "{\n  \"relevant\": [true, true, true, false, true]\n}", "tokens": 521}
+{"key": "3947e46cfa07a6d0|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 556}
+{"key": "nat:753dfba5b363|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 501}
+{"key": "nat:254ebd78b4a3|grade", "text": "{\n  \"relevant\": [\n    false,\n    false,\n    false,\n    false,\n    false\n  ]\n}", "tokens": 534}
+{"key": "cbf0d2b62859011a|diag", "text": "{\n  \"p_fail\": 0.2,\n  \"cause\": \"none\"\n}", "tokens": 553}
+{"key": "127abab710fc62ca|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 591}
+{"key": "nat:751781fd0e73|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 615}
+{"key": "nat:bfbf1e83814b|grade", "text": "{\n  \"relevant\": [true, true, true, false, false]\n}", "tokens": 530}
+{"key": "nat:5aec816fcbeb|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 454}
+{"key": "7806fcff31588013|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 410}
+{"key": "nat:2c89feeb5cc1|grade", "text": "{\n  \"relevant\": [true, true, true, false, false]\n}", "tokens": 509}
+{"key": "nat:e492215fdc88|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 501}
+{"key": "64700863e457756e|diag", "text": "{\n  \"p_fail\": 0.2,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 614}
+{"key": "nat:c43957415d5a|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 516}
+{"key": "73d816ed420f481d|diag", "text": "{\n  \"p_fail\": 0.2,\n  \"cause\": \"none\"\n}", "tokens": 627}
+{"key": "nat:5143baf3e9ae|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 479}
+{"key": "nat:a0714147d105|grade", "text": "{\n  \"relevant\": [true, false, true, true, true]\n}", "tokens": 527}
+{"key": "nat:83d3d2478dcf|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 533}
+{"key": "f59a8ec9674dc901|diag", "text": "{\n  \"p_fail\": 0.8,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 581}
+{"key": "1366e4e8d7db8b31|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 561}
+{"key": "nat:c13472ad6d03|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 514}
+{"key": "ddec003a329fed13|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 575}
+{"key": "7c474798993dee8c|diag", "text": "{\n  \"p_fail\": 0.2,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 633}
+{"key": "nat:12079565acdf|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 483}
+{"key": "nat:8b863a3626f4|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 515}
+{"key": "nat:004663e13dc3|grade", "text": "{\n  \"relevant\": [true, true, false, false, true]\n}", "tokens": 457}
+{"key": "b7fa741df39a2e14|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 570}
+{"key": "51983954e43f80f2|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 627}
+{"key": "nat:d5ffa3de7deb|grade", "text": "{\n  \"relevant\": [true, true, true, false, false]\n}", "tokens": 454}
+{"key": "79baca518f05461e|diag", "text": "{\n  \"p_fail\": 0.2,\n  \"cause\": \"none\"\n}", "tokens": 611}
+{"key": "nat:fbb0d5ac1ba0|grade", "text": "{\n  \"relevant\": [true, true, false, false, false]\n}", "tokens": 639}
+{"key": "nat:cdcf40468969|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 494}
+{"key": "0598b5903ec959b6|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 592}
+{"key": "nat:3a39d96c7a70|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 570}
+{"key": "nat:704524e2d0f9|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 487}
+{"key": "nat:a68ca0f1e0b2|grade", "text": "{\n  \"relevant\": [false, true, false, false, false]\n}", "tokens": 466}
+{"key": "nat:8f8775c73c67|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 339}
+{"key": "78da2ca1fc95c30e|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 689}
+{"key": "nat:80d47e4f18ed|grade", "text": "{\n  \"relevant\": [true, true, false, true, true]\n}", "tokens": 507}
+{"key": "c94c5252d39614ac|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 687}
+{"key": "28bb8168c9485735|diag", "text": "{\n  \"p_fail\": 0.2,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 609}
+{"key": "7cee8b3d5831ef58|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 623}
+{"key": "712330caff60ff09|diag", "text": "{\n  \"p_fail\": 0.2,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 728}
+{"key": "nat:b8573e6e625a|grade", "text": "{\n  \"relevant\": [false, false, false, true, true]\n}", "tokens": 593}
+{"key": "fa27ea889ed390e8|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 268}
+{"key": "dbbc85132ae4d936|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 589}
+{"key": "6c6c0796c499622a|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 573}
+{"key": "bfa45aa79df7b6d8|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 599}
+{"key": "32d96d56437f6d6c|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 523}
+{"key": "c79f52b77aff7409|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 609}
+{"key": "002f9ea1322deb88|diag", "text": "{\n  \"p_fail\": 0.2,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 642}
+{"key": "ebba9ccf54540169|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 702}
+{"key": "nat:e3be3a3a586c|grade", "text": "{\n  \"relevant\": [\n    false,\n    true,\n    true,\n    true,\n    true\n  ]\n}", "tokens": 517}
+{"key": "6e37201f11ab211c|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 567}
+{"key": "nat:ca1af7a886ea|grade", "text": "{\n  \"relevant\": [true, false, true, true, false]\n}", "tokens": 418}
+{"key": "34e79237258a47f9|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 565}
+{"key": "nat:41953565cbcc|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 497}
+{"key": "21454a33d581c437|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 646}
+{"key": "nat:24a378e2b9f8|grade", "text": "{\n  \"relevant\": [true, true, true, true, false]\n}", "tokens": 521}
+{"key": "nat:fcf7f7b84852|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 513}
+{"key": "c8af5eb9ed06d544|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 535}
+{"key": "d09371fab3673b21|diag", "text": "{\n  \"p_fail\": 0.2,\n  \"cause\": \"none\"\n}", "tokens": 416}
+{"key": "62aa41fbde67de53|diag", "text": "{\n  \"p_fail\": 0.2,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 564}
+{"key": "e35f55cb480e4e1f|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 454}
+{"key": "01a8576832808fe1|diag", "text": "{\n  \"p_fail\": 0.2,\n  \"cause\": \"none\"\n}", "tokens": 543}
+{"key": "nat:93b72fb1f9b2|grade", "text": "{\n  \"relevant\": [false, false, true, true, true]\n}", "tokens": 497}
+{"key": "nat:fa7d18a1a3c5|grade", "text": "{\n  \"relevant\": [true, true, true, false, true]\n}", "tokens": 500}
+{"key": "nat:716ca4c4baea|grade", "text": "{\n  \"relevant\": [true, true, true, false, false]\n}", "tokens": 442}
+{"key": "nat:b76cb3d7671f|grade", "text": "{\n  \"relevant\": [true, true, true, false, false]\n}", "tokens": 570}
+{"key": "b3131b6e1cc53936|diag", "text": "{\n  \"p_fail\": 0.6,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 582}
+{"key": "nat:5b2564b7f811|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 540}
+{"key": "81e0576b4768743d|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 623}
+{"key": "nat:d3ef712b1701|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 624}
+{"key": "d5cf36a82c85049f|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 508}
+{"key": "nat:9622d0e78e18|grade", "text": "{\n  \"relevant\": [false, false, false, true, true]\n}", "tokens": 509}
+{"key": "729faccd70054f3c|diag", "text": "{\n  \"p_fail\": 0.2,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 721}
+{"key": "nat:9ca9418bff99|grade", "text": "{\n  \"relevant\": [true, false, true, true, true]\n}", "tokens": 533}
+{"key": "nat:b4f389a39efa|grade", "text": "{\n  \"relevant\": [true, true, true, false, false]\n}", "tokens": 549}
+{"key": "77a782177532a935|diag", "text": "{\n  \"p_fail\": 0.5,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 659}
+{"key": "nat:ac755c43663c|grade", "text": "{\n  \"relevant\": [\n    false,\n    true,\n    true,\n    true,\n    true\n  ]\n}", "tokens": 503}
+{"key": "e469a2f2d0f83b03|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 567}
+{"key": "c1d609b43515b501|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 675}
+{"key": "fe03cece5fd79091|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 597}
+{"key": "0489b1b049bb4aee|diag", "text": "{\n  \"p_fail\": 0.8,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 557}
+{"key": "b1178949ecdfff60|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 629}
+{"key": "b95237da92627aac|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 555}
+{"key": "5d4153c55485619e|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"query\"\n}", "tokens": 447}
+{"key": "3c3afa2df20b194f|diag", "text": "{\n  \"p_fail\": 0.4,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 577}
+{"key": "3599b81bbd71a067|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 646}
+{"key": "nat:6bdd261d5d7c|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 532}
+{"key": "nat:c992b3f9e018|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 485}
+{"key": "2c964cd993a9d7b1|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 629}
+{"key": "nat:1614de3ab0f2|grade", "text": "{\n  \"relevant\": [true, true, true, false, true]\n}", "tokens": 557}
+{"key": "bb01cedcb9d58dec|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 577}
+{"key": "1bcc4fd6350846c4|diag", "text": "{\n  \"p_fail\": 0.2,\n  \"cause\": \"none\"\n}", "tokens": 498}
+{"key": "e62b1cb982840fb6|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 633}
+{"key": "nat:a175f14bed55|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 428}
+{"key": "nat:f017644a82bb|grade", "text": "{\n  \"relevant\": [true, false, true, true, true]\n}", "tokens": 548}
+{"key": "3e740e7e055ba0ce|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 529}
+{"key": "c3c3f94bf46f78aa|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 595}
+{"key": "66b44de9570d919f|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 642}
+{"key": "3481e0bdf040d1b1|diag", "text": "{\n  \"p_fail\": 0.2,\n  \"cause\": \"none\"\n}", "tokens": 558}
+{"key": "666d468021d48c32|diag", "text": "{\n  \"p_fail\": 0.2,\n  \"cause\": \"none\"\n}", "tokens": 554}
+{"key": "nat:fc9f65387fa9|grade", "text": "{\n  \"relevant\": [true, true, true, false, true]\n}", "tokens": 581}
+{"key": "nat:55072932207d|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 511}
+{"key": "e52620985bfac9a1|diag", "text": "{\n  \"p_fail\": 0.2,\n  \"cause\": \"none\"\n}", "tokens": 553}
+{"key": "nat:2ab1ac2c99b4|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 470}
+{"key": "nat:6f8f17655174|grade", "text": "{\n  \"relevant\": [true, false, true, true, true]\n}", "tokens": 517}
+{"key": "e320e6f0fc047b1c|diag", "text": "{\n  \"p_fail\": 0.4,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 537}
+{"key": "21713733c6449d21|diag", "text": "{\n  \"p_fail\": 0.8,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 557}
+{"key": "nat:1ec10c63ad7f|grade", "text": "{\n  \"relevant\": [false, true, false, false, false]\n}", "tokens": 454}
+{"key": "ef4d6c4a8b46bc69|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 657}
+{"key": "f2d44cb77c9bddfe|diag", "text": "{\n  \"p_fail\": 0.8,\n  \"cause\": \"knowledge_base\"\n}", "tokens": 625}
+{"key": "nat:102ae198663f|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 461}
+{"key": "d5d36b889cc968a9|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 565}
+{"key": "nat:4c9f829063bc|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 481}
+{"key": "nat:9c72ded8aa17|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 592}
+{"key": "3534a27df6eac688|diag", "text": "{\n  \"p_fail\": 0.2,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 609}
+{"key": "nat:c62e1e094a9f|grade", "text": "{\n  \"relevant\": [false, false, false, false, true]\n}", "tokens": 506}
+{"key": "nat:0ac634b89e2f|grade", "text": "{\n  \"relevant\": [\n    false,\n    false,\n    false,\n    true,\n    false\n  ]\n}", "tokens": 523}
+{"key": "nat:880cd4e82f4d|grade", "text": "{\n  \"relevant\": [true, true, true, true, false]\n}", "tokens": 450}
+{"key": "ea30fec7a83675f9|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 637}
+{"key": "nat:8cbeac91be14|grade", "text": "{\n  \"relevant\": [\n    true,\n    true,\n    true,\n    true,\n    true\n  ]\n}", "tokens": 550}
+{"key": "7d61a9cd6c8ea975|diag", "text": "{\n  \"p_fail\": 0.2,\n  \"cause\": \"query\"\n}", "tokens": 667}
+{"key": "5ae1194727fe4ad6|diag", "text": "{\n  \"p_fail\": 0.6,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 613}
+{"key": "nat:1f9feb9aaf10|grade", "text": "{\n  \"relevant\": [true, true, true, false, false]\n}", "tokens": 542}
+{"key": "24127f2edaa12be0|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"knowledge_base\"\n}", "tokens": 523}
+{"key": "e233596a7673ed8e|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 288}
+{"key": "55fd9526d7021839|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 611}
+{"key": "nat:ae79545ad6c8|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 621}
+{"key": "nat:f5bcc1a94d14|grade", "text": "{\n  \"relevant\": [\n    false,\n    false,\n    false,\n    false,\n    false\n  ]\n}", "tokens": 452}
+{"key": "nat:7bcdbf7e0ee8|grade", "text": "{\n  \"relevant\": [true, true, true, true, false]\n}", "tokens": 496}
+{"key": "f48e5561f9e4131d|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 584}
+{"key": "44e8677afb84659a|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 621}
+{"key": "c1a8779f251bf872|diag", "text": "{\n  \"p_fail\": 0.6,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 594}
+{"key": "nat:446225befb87|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 430}
+{"key": "2bcca6e90eb18d4d|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"knowledge_base\"\n}", "tokens": 519}
+{"key": "nat:eca4cecbad6e|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 451}
+{"key": "nat:7593916dc46e|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 415}
+{"key": "127cfa608794ca59|diag", "text": "{\n  \"p_fail\": 0.2,\n  \"cause\": \"none\"\n}", "tokens": 660}
+{"key": "nat:43de541ad57c|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 380}
+{"key": "8f32e70df09a4c9d|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 591}
+{"key": "nat:3e44705bccbc|grade", "text": "{\n  \"relevant\": [true, false, false, true, false]\n}", "tokens": 489}
+{"key": "nat:bff06658d462|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 424}
+{"key": "eb7120a595212791|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 614}
+{"key": "nat:30a495ee00f2|grade", "text": "{\n  \"relevant\": [true, true, true, false, true]\n}", "tokens": 506}
+{"key": "025273a1fd8f2c69|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 929}
+{"key": "nat:54577d3d5aea|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 569}
+{"key": "nat:fa143a85ed10|grade", "text": "{\n  \"relevant\": [true, false, true, true, false]\n}", "tokens": 466}
+{"key": "a035b3eff256f5dd|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"knowledge_base\"\n}", "tokens": 375}
+{"key": "nat:179839a34536|grade", "text": "{\n  \"relevant\": [true, true, true, true, false]\n}", "tokens": 491}
+{"key": "nat:17c877f662cc|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 539}
+{"key": "nat:fa699641e5ef|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 475}
+{"key": "a4240f0bc2aaf8ca|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 593}
+{"key": "6334b5551aa41fc7|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 601}
+{"key": "b8bd558104333cf7|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 731}
+{"key": "140d5c29dc5c2e07|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 605}
+{"key": "c8849f4c27131724|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 589}
+{"key": "90b3fd342b392cbc|diag", "text": "{\n  \"p_fail\": 0.8,\n  \"cause\": \"knowledge_base\"\n}", "tokens": 275}
+{"key": "nat:7768e42e2551|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 628}
+{"key": "nat:85f495956ecd|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 450}
+{"key": "d9f9b4878da46264|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 603}
+{"key": "nat:c8e2624c3123|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 481}
+{"key": "f2440a2e6e344f89|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 526}
+{"key": "12870bb72014ef36|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 661}
+{"key": "nat:029946d56fc0|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 524}
+{"key": "nat:91059ddd6489|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 537}
+{"key": "4bbaf52441f8f69c|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 793}
+{"key": "feca0479e1b28d94|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 617}
+{"key": "nat:4103a3f24cc1|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 527}
+{"key": "fb1e60a58560f16a|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 596}
+{"key": "aae6bbd4af599e87|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 486}
+{"key": "nat:012ea0afcb8d|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 516}
+{"key": "059e30d49fdbb7c0|diag", "text": "{\n  \"p_fail\": 0.8,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 601}
+{"key": "nat:fbf74803d527|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 533}
+{"key": "df5a90d68f819031|diag", "text": "{\n  \"p_fail\": 0.2,\n  \"cause\": \"none\"\n}", "tokens": 788}
+{"key": "nat:607123bde37f|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 492}
+{"key": "69242ef5dacc10e7|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 579}
+{"key": "acca96fe8c438db9|diag", "text": "{\n  \"p_fail\": 0.8,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 649}
+{"key": "9abe9a2de762ab20|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 642}
+{"key": "dd15bda3e9787244|diag", "text": "{\n  \"p_fail\": 0.2,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 785}
+{"key": "nat:c3ecda55a95c|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 584}
+{"key": "nat:2d17c452afa3|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 461}
+{"key": "nat:8bc8579ef4ca|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 523}
+{"key": "a90dcc83358155a1|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 705}
+{"key": "nat:43d5e1a5c93a|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 509}
+{"key": "nat:244f334499ca|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 511}
+{"key": "95a1a809910193dd|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 631}
+{"key": "e8498e5d83379912|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 530}
+{"key": "c5469ce3a5a6fa37|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 687}
+{"key": "nat:e5cc40033c80|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 433}
+{"key": "2c4f8a5a4c1ab47c|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 512}
+{"key": "nat:85464fab7c37|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 463}
+{"key": "90fcce83ae8bafbf|diag", "text": "{\n  \"p_fail\": 0.2,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 779}
+{"key": "nat:52d18bb033df|grade", "text": "{\n  \"relevant\": [\n    false,\n    false,\n    false,\n    false,\n    false\n  ]\n}", "tokens": 601}
+{"key": "nat:5129509776ec|grade", "text": "{\n  \"relevant\": [true, false, false, false, true]\n}", "tokens": 543}
+{"key": "nat:c92968a2d976|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 352}
+{"key": "c2d84563f71986e1|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 668}
+{"key": "nat:d9a74f112942|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 587}
+{"key": "9c1cecd7d19965d5|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 609}
+{"key": "nat:2c32b3cd11dd|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 417}
+{"key": "5f96284a11a72da7|diag", "text": "{\n  \"p_fail\": 0.8,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 590}
+{"key": "4b0fd904c452cd8a|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 621}
+{"key": "nat:c0308923bd13|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 539}
+{"key": "nat:cec0d0b7df8b|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 602}
+{"key": "nat:fddbadfc9b7f|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 483}
+{"key": "a6bd91e060c28053|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 698}
+{"key": "5ec9d6410139d04c|diag", "text": "{\n  \"p_fail\": 0,\n  \"cause\": \"none\"\n}", "tokens": 622}
+{"key": "915956f868c6dfe0|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 574}
+{"key": "nat:dba862ae8948|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 490}
+{"key": "nat:29aaae804184|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 616}
+{"key": "nat:0ee6ad0bd3cc|rewrite", "text": "{\"query\": \"Skechers women's leather work boots\"}", "tokens": 70}
+{"key": "31e4fcde39894ef1|diag", "text": "{\n  \"p_fail\": 1,\n  \"cause\": \"retrieval_stack\"\n}", "tokens": 501}
+{"key": "nat:157d63ef9052|rewrite", "text": "{\n  \"query\": \"20x20 linen napkins\"\n}", "tokens": 75}
+{"key": "nat:2bb2107b162b|rewrite", "text": "{\"query\": \"1.25 inch drain pop-up no overflow\"}", "tokens": 76}
+{"key": "nat:1ae86cb63a0b|rewrite", "text": "{\"query\": \"5 gallon gas can\"}", "tokens": 66}
+{"key": "nat:c13472ad6d03|rewrite", "text": "{\"query\": \"orchid stress ball\"}", "tokens": 62}
+{"key": "nat:9c72ded8aa17|rewrite", "text": "{\"query\": \"Miller Multimatic 220 AC/DC\"}", "tokens": 76}
+{"key": "nat:ef989f89e957|rewrite", "text": "{\"query\": \"Spanx women's yoga pants\"}", "tokens": 68}
+{"key": "nat:8f8775c73c67|rewrite", "text": "{\n  \"query\": \"Skylanders Star Cast\"\n}", "tokens": 70}
+{"key": "nat:254ebd78b4a3|rewrite", "text": "{\"query\": \"0.5 gallon trash can no lid\"}", "tokens": 72}
+{"key": "nat:ae79545ad6c8|rewrite", "text": "{\"query\": \"anime jibbitz\"}", "tokens": 63}
+{"key": "nat:9ae7f67a89eb|rewrite", "text": "{\"query\": \"not an answer\"}", "tokens": 63}
+{"key": "nat:c0308923bd13|rewrite", "text": "{\"query\": \"derma roller 0.5mm\"}", "tokens": 71}
+{"key": "nat:daa3f1b736f8|rewrite", "text": "{\"query\": \"$10 Visa gift card\"}", "tokens": 66}
+{"key": "nat:0d88259c690e|rewrite", "text": "{\"query\": \"derma roller 1mm\"}", "tokens": 68}
+{"key": "nat:b644420b2f23|rewrite", "text": "{\"query\": \"blink outdoor 5 camera system\"}", "tokens": 69}
+{"key": "nat:85464fab7c37|rewrite", "text": "{\"query\": \"Sauder Edgewater collection\"}", "tokens": 65}
+{"key": "nat:52d18bb033df|rewrite", "text": "{\"query\": \"120x96 blackout curtains\"}", "tokens": 72}
+{"key": "nat:83d3d2478dcf|rewrite", "text": "{\"query\": \"non-wifi home security system\"}", "tokens": 65}
+{"key": "nat:012ea0afcb8d|rewrite", "text": "{\"query\": \"cleaner\"}", "tokens": 61}
+{"key": "nat:5f5b4aa4efa7|rewrite", "text": "{\"query\": \"Fire HD 10\"}", "tokens": 66}
+{"key": "nat:279a47f43ea0|rewrite", "text": "{\"query\": \"Aesop Parsley Seed Facial Treatment 100ml\"}", "tokens": 77}
+{"key": "nat:0348f28f77b9|rewrite", "text": "{\"query\": \"pink women's converse\"}", "tokens": 63}
+{"key": "nat:b809acad578a|rewrite", "text": "{\"query\": \"Hydro Flask 28 oz\"}", "tokens": 67}
+{"key": "nat:132e4e296f19|rewrite", "text": "{\"query\": \"viking bracelet men\"}", "tokens": 63}
+{"key": "nat:c43957415d5a|rewrite", "text": "{\"query\": \"fossil women's watch\"}", "tokens": 66}
+{"key": "nat:f5bcc1a94d14|rewrite", "text": "{\"query\": \"Hoppes No. 9 lubricating oil\"}", "tokens": 67}
+{"key": "nat:9dac6340c2f7|rewrite", "text": "{\"query\": \"lifeline hunter safety system\"}", "tokens": 64}
+{"key": "nat:c7cbf7509616|rewrite", "text": "{\"query\": \"Xbox gift card 15\"}", "tokens": 67}
+{"key": "nat:3a39d96c7a70|rewrite", "text": "{\"query\": \"12x20 throw pillow covers set of 2\"}", "tokens": 80}
+{"key": "nat:2ab1ac2c99b4|rewrite", "text": "{\"query\": \"Texas A&M black jersey\"}", "tokens": 67}
+{"key": "nat:ae930289c798|rewrite", "text": "{\"query\": \"0.5mm black ballpoint pen\"}", "tokens": 74}
+{"key": "nat:a175f14bed55|rewrite", "text": "{\"query\": \"prime furniture\"}", "tokens": 59}
+{"key": "nat:7e062bcbe625|rewrite", "text": "{\"query\": \"e-boy aesthetic\"}", "tokens": 62}
+{"key": "nat:bff06658d462|rewrite", "text": "{\"query\": \"deep trunk\"}", "tokens": 59}
+{"key": "nat:99040e0e1771|rewrite", "text": "{\"query\": \"women's elastic-free underwear\"}", "tokens": 66}
+{"key": "nat:1ff608570a37|rewrite", "text": "{\"query\": \"baseball wall decal\"}", "tokens": 64}
+{"key": "nat:c2cf703d6541|rewrite", "text": "{\"query\": \"Buzzed card game\"}", "tokens": 64}
+{"key": "nat:9189b7f5fd8f|rewrite", "text": "{\"query\": \"bungee resistance trainer\"}", "tokens": 63}
+{"key": "nat:55072932207d|rewrite", "text": "{\"query\": \"1st nation design we are not descended t-shirt\"}", "tokens": 76}
+{"key": "nat:40e0a03f1ccf|rewrite", "text": "{\"query\": \"custom matching couple sweatshirts\"}", "tokens": 66}
+{"key": "nat:628e65a4ba98|rewrite", "text": "{\"query\": \"queen mattress and box spring set\"}", "tokens": 68}
+{"key": "nat:17c877f662cc|rewrite", "text": "{\"query\": \"Moroccanoil hair mask\"}", "tokens": 65}
+{"key": "nat:8db8332694ac|rewrite", "text": "{\"query\": \"wooden spoon\"}", "tokens": 60}
+{"key": "nat:c8e2624c3123|rewrite", "text": "{\"query\": \"fendi women's handbags\"}", "tokens": 66}
+{"key": "nat:015f28b9df1b|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 500}
+{"key": "nat:aef21d038c71|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 367}
+{"key": "nat:6b0655532e5f|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 654}
+{"key": "nat:3dbb7c6c936c|grade", "text": "{\n  \"relevant\": [true, true, true, false, false]\n}", "tokens": 495}
+{"key": "nat:cfe1fff09eb4|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 452}
+{"key": "nat:03205b2b7933|grade", "text": "{\n  \"relevant\": [false, false, false, true, true]\n}", "tokens": 645}
+{"key": "nat:65a0cf22acb7|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 624}
+{"key": "nat:c9d61c20c423|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 451}
+{"key": "nat:e53d6abfc522|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 572}
+{"key": "nat:2e9d776a596a|grade", "text": "{\n  \"relevant\": [false, true, true, true, true]\n}", "tokens": 595}
+{"key": "nat:c6f0966ee667|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 464}
+{"key": "nat:15288788f150|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 479}
+{"key": "nat:a44fec7fe655|grade", "text": "{\n  \"relevant\": [false, false, false, true, false]\n}", "tokens": 481}
+{"key": "nat:e376139437b5|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 449}
+{"key": "nat:1d53fe59a9de|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 538}
+{"key": "nat:12a63cc92d58|grade", "text": "{\n  \"relevant\": [true, true, true, false, true]\n}", "tokens": 475}
+{"key": "nat:01babe7e01e9|grade", "text": "{\n  \"relevant\": [true, true, false, true, false]\n}", "tokens": 452}
+{"key": "nat:68c6b7dcbfb7|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 542}
+{"key": "nat:198ff75e95a8|grade", "text": "{\n  \"relevant\": [false, true, false, false, false]\n}", "tokens": 702}
+{"key": "nat:50730b1f3df6|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 573}
+{"key": "nat:fe77adfb2bb7|grade", "text": "{\n  \"relevant\": [true, true, false, false, true]\n}", "tokens": 392}
+{"key": "nat:6ca34879e9c0|grade", "text": "{\n  \"relevant\": [true, true, true, false, false]\n}", "tokens": 459}
+{"key": "nat:1af5786aca93|grade", "text": "{\n  \"relevant\": [true, true, true, true, false]\n}", "tokens": 537}
+{"key": "nat:ae26e2c5ea3e|grade", "text": "{\n  \"relevant\": [false, true, true, true, false]\n}", "tokens": 496}
+{"key": "nat:4fe634a58a11|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 537}
+{"key": "nat:a5444c47e0bf|grade", "text": "{\n  \"relevant\": [true, true, false, false, false]\n}", "tokens": 563}
+{"key": "nat:340dc2099104|grade", "text": "{\n  \"relevant\": [\n    false,\n    false,\n    false,\n    true,\n    false\n  ]\n}", "tokens": 817}
+{"key": "nat:271cc35a22f6|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 498}
+{"key": "nat:b84eca4bbe1c|grade", "text": "{\n  \"relevant\": [false, false, false, true, false]\n}", "tokens": 501}
+{"key": "nat:32c0d0e4fdb4|grade", "text": "{\n  \"relevant\": [true, true, false, true, true]\n}", "tokens": 498}
+{"key": "nat:d4e4386deb4c|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 514}
+{"key": "nat:21e68ce914a4|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 555}
+{"key": "nat:29794b515ccb|grade", "text": "{\n  \"relevant\": [true, true, false, false, false]\n}", "tokens": 555}
+{"key": "nat:32d0039ef3be|grade", "text": "{\n  \"relevant\": [true, true, true, true, false]\n}", "tokens": 517}
+{"key": "nat:d5d001928d3a|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 479}
+{"key": "nat:913073e3bec1|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 504}
+{"key": "nat:42f631fe6173|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 487}
+{"key": "nat:76441d591e7f|grade", "text": "{\n  \"relevant\": [true, false, true, true, true]\n}", "tokens": 433}
+{"key": "nat:8098fec6a5b9|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 521}
+{"key": "nat:bd92d6b9415a|grade", "text": "{\n  \"relevant\": [true, false, false, true, true]\n}", "tokens": 465}
+{"key": "nat:9d1c56df8c5c|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 520}
+{"key": "nat:e1e174dc9e2b|grade", "text": "{\n  \"relevant\": [true, true, false, false, false]\n}", "tokens": 264}
+{"key": "nat:7a55198a7740|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 504}
+{"key": "nat:58c8a84adea1|grade", "text": "{\n  \"relevant\": [true, false, true, false, true]\n}", "tokens": 533}
+{"key": "nat:31c9bfff8e39|grade", "text": "{\n  \"relevant\": [true, false, true, true, true]\n}", "tokens": 364}
+{"key": "nat:f95ff69025f2|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 658}
+{"key": "nat:6ac9507f3de4|grade", "text": "{\n  \"relevant\": [true, false, false, true, true]\n}", "tokens": 649}
+{"key": "nat:9afddf815529|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 497}
+{"key": "nat:ae7481cc1e7c|grade", "text": "{\n  \"relevant\": [false, false, true, false, false]\n}", "tokens": 477}
+{"key": "nat:e2d8ef78e957|grade", "text": "{\n  \"relevant\": [true, true, true, false, false]\n}", "tokens": 431}
+{"key": "nat:a2cb014b4ad4|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 486}
+{"key": "nat:ae58e67072d0|grade", "text": "{\n  \"relevant\": [\n    false,\n    true,\n    true,\n    false,\n    false\n  ]\n}", "tokens": 442}
+{"key": "nat:fb72fe98107e|grade", "text": "{\n  \"relevant\": [true, true, true, false, false]\n}", "tokens": 547}
+{"key": "nat:8adfda855292|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 506}
+{"key": "nat:3d961959e565|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 498}
+{"key": "nat:4c56b038e6b2|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 495}
+{"key": "nat:c83babdb627e|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 583}
+{"key": "nat:ee24860c466d|grade", "text": "{\n  \"relevant\": [false, false, true, false, false]\n}", "tokens": 422}
+{"key": "nat:eecb7726e680|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 510}
+{"key": "nat:581d5588f8f7|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 492}
+{"key": "nat:b99c87c948d5|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 571}
+{"key": "nat:4d0bcdbaccd9|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 528}
+{"key": "nat:ba0f7d072de3|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 576}
+{"key": "nat:51c8627dd79c|grade", "text": "{\n  \"relevant\": [true, true, true, false, false]\n}", "tokens": 539}
+{"key": "nat:64c439fbce55|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 493}
+{"key": "nat:38a804bcaa30|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 481}
+{"key": "nat:f1b2f31eaf38|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 483}
+{"key": "nat:553a9789171d|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 342}
+{"key": "nat:850d616866ac|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 491}
+{"key": "nat:f80ba5e1c757|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 425}
+{"key": "nat:a5f7e242cf92|grade", "text": "{\n  \"relevant\": [true, true, false, true, true]\n}", "tokens": 570}
+{"key": "nat:765a6dfe138b|grade", "text": "{\n  \"relevant\": [true, true, true, false, false]\n}", "tokens": 589}
+{"key": "nat:914a6c46f238|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 532}
+{"key": "nat:a141d33c6d5a|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 504}
+{"key": "nat:58f39603e306|grade", "text": "{\n  \"relevant\": [\n    false,\n    true,\n    true,\n    true,\n    true\n  ]\n}", "tokens": 409}
+{"key": "nat:15657fe0290d|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 629}
+{"key": "nat:73f98f658b3c|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 364}
+{"key": "nat:5bcd51927c6b|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 399}
+{"key": "nat:31d03c0417cf|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 481}
+{"key": "nat:c7f11155e1f4|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 479}
+{"key": "nat:4a3a1415eead|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 552}
+{"key": "nat:432fcbed288a|grade", "text": "{\n  \"relevant\": [\n    false,\n    false,\n    true,\n    true,\n    true\n  ]\n}", "tokens": 407}
+{"key": "nat:62d9a0417248|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 389}
+{"key": "nat:60b8e7049162|grade", "text": "{\n  \"relevant\": [\n    true,\n    true,\n    true,\n    false,\n    true\n  ]\n}", "tokens": 458}
+{"key": "nat:5d0fda5b244f|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 499}
+{"key": "nat:5aba2289b08c|grade", "text": "{\n  \"relevant\": [false, true, true, false, true]\n}", "tokens": 613}
+{"key": "nat:b260e6eda387|grade", "text": "{\n  \"relevant\": [true, true, false, false, true]\n}", "tokens": 403}
+{"key": "nat:98fb5306e1ae|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 736}
+{"key": "nat:08b158576526|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 421}
+{"key": "nat:ff0bb0373e4b|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 407}
+{"key": "nat:8214e8a0feb5|grade", "text": "{\n  \"relevant\": [true, false, false, false, true]\n}", "tokens": 452}
+{"key": "nat:dae84856e744|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 503}
+{"key": "nat:a9059e20de7d|grade", "text": "{\n  \"relevant\": [true, true, false, true, false]\n}", "tokens": 638}
+{"key": "nat:6d136a603b20|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 528}
+{"key": "nat:a0fd579bc4cb|grade", "text": "{\n  \"relevant\": [true, true, true, false, true]\n}", "tokens": 491}
+{"key": "nat:28e54fa883c3|grade", "text": "{\n  \"relevant\": [true, true, true, true, false]\n}", "tokens": 562}
+{"key": "nat:050b61e309c9|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 556}
+{"key": "nat:edcba73a71dc|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 557}
+{"key": "nat:9418f8380c73|grade", "text": "{\n  \"relevant\": [true, true, true, true, false]\n}", "tokens": 521}
+{"key": "nat:cb412f2699df|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 513}
+{"key": "nat:093bf9e3b499|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 504}
+{"key": "nat:48d93edf468a|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 595}
+{"key": "nat:89c31c217ea3|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 414}
+{"key": "nat:26fefae319f3|grade", "text": "{\n  \"relevant\": [true, true, true, false, true]\n}", "tokens": 501}
+{"key": "nat:0325315440b7|grade", "text": "{\n  \"relevant\": [true, true, false, false, false]\n}", "tokens": 608}
+{"key": "nat:d5f9b7dd6f59|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 525}
+{"key": "nat:cdaa44c0a931|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 469}
+{"key": "nat:7a5d3cad258c|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 560}
+{"key": "nat:578814d387d6|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 606}
+{"key": "nat:f8e98171a19b|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 480}
+{"key": "nat:3c41771b1296|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 609}
+{"key": "nat:950e8d755b09|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 525}
+{"key": "nat:1628c8827f67|grade", "text": "{\n  \"relevant\": [\n    false,\n    true,\n    true,\n    false,\n    false\n  ]\n}", "tokens": 503}
+{"key": "nat:141a5377d8c2|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 545}
+{"key": "nat:0b3db610d583|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 556}
+{"key": "nat:234b9c1be0fe|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 532}
+{"key": "nat:018f3464b78a|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 487}
+{"key": "nat:ec3270d769ce|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 485}
+{"key": "nat:8c5f6990e3c0|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 615}
+{"key": "nat:2fb8b5bd66a6|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 552}
+{"key": "nat:93061dc99e69|grade", "text": "{\n  \"relevant\": [false, false, true, true, false]\n}", "tokens": 486}
+{"key": "nat:37c07c1ecaa6|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 520}
+{"key": "nat:db28dd1416b8|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 388}
+{"key": "nat:a5e37d223c3a|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 636}
+{"key": "nat:81d86f9e2165|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 560}
+{"key": "nat:c318216e06e7|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 521}
+{"key": "nat:c23dc0b3329d|grade", "text": "{\n  \"relevant\": [true, true, false, true, false]\n}", "tokens": 506}
+{"key": "nat:2fb56b02a9c9|grade", "text": "{\n  \"relevant\": [true, true, true, false, true]\n}", "tokens": 489}
+{"key": "nat:a0527dab98cb|grade", "text": "{\n  \"relevant\": [true, true, true, false, false]\n}", "tokens": 506}
+{"key": "nat:648e3bc67f09|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 597}
+{"key": "nat:bf53553bdbd5|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 444}
+{"key": "nat:32c829781f61|grade", "text": "{\n  \"relevant\": [true, true, true, true, false]\n}", "tokens": 561}
+{"key": "nat:2577065b2814|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 463}
+{"key": "nat:1dd908fb0eca|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 416}
+{"key": "nat:ad35b11b1741|grade", "text": "{\n  \"relevant\": [true, true, true, true, false]\n}", "tokens": 629}
+{"key": "nat:1687df8097bd|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 467}
+{"key": "nat:f754643174b5|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 541}
+{"key": "nat:eb2085ba1c85|grade", "text": "{\n  \"relevant\": [true, true, true, true, false]\n}", "tokens": 587}
+{"key": "nat:807be4be084f|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 560}
+{"key": "nat:a14d48196a8c|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 515}
+{"key": "nat:558d7b669567|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 487}
+{"key": "nat:3b4c781f86b1|grade", "text": "{\n  \"relevant\": [\n    false,\n    true,\n    true,\n    false,\n    true\n  ]\n}", "tokens": 571}
+{"key": "nat:f76a6a6c73ee|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 428}
+{"key": "nat:b2badc5f9801|grade", "text": "{\n  \"relevant\": [false, false, false, false, true]\n}", "tokens": 456}
+{"key": "nat:2f8d7edcd587|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 456}
+{"key": "nat:8f4646991064|grade", "text": "{\n  \"relevant\": [true, true, false, false, true]\n}", "tokens": 490}
+{"key": "nat:6b10ddf993c2|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 396}
+{"key": "nat:8f7e67c06f8d|grade", "text": "{\n  \"relevant\": [true, false, true, false, false]\n}", "tokens": 423}
+{"key": "nat:b5137d7ad14b|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 506}
+{"key": "nat:f9222186c4e6|grade", "text": "{\n  \"relevant\": [true, true, false, false, false]\n}", "tokens": 435}
+{"key": "nat:a2e1889a35cd|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 511}
+{"key": "nat:fc6c09d95195|grade", "text": "{\n  \"relevant\": [true, false, true, false, false]\n}", "tokens": 462}
+{"key": "nat:d121291a3406|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 445}
+{"key": "nat:3649cc33be1e|grade", "text": "{\n  \"relevant\": [\n    false,\n    true,\n    true,\n    true,\n    true\n  ]\n}", "tokens": 469}
+{"key": "nat:9d53a82f30d4|grade", "text": "{\n  \"relevant\": [false, true, true, false, false]\n}", "tokens": 458}
+{"key": "nat:c60a687e6aa2|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 532}
+{"key": "nat:b98ae9383167|grade", "text": "{\n  \"relevant\": [true, true, true, true, false]\n}", "tokens": 499}
+{"key": "nat:1a4765f8225c|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 398}
+{"key": "nat:3eab0636c1b9|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 340}
+{"key": "nat:960788cd1a15|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 585}
+{"key": "nat:c51af9c1ffb3|grade", "text": "{\n  \"relevant\": [\n    false,\n    false,\n    false,\n    false,\n    false\n  ]\n}", "tokens": 518}
+{"key": "nat:838c78a782fb|grade", "text": "{\n  \"relevant\": [false, true, false, false, false]\n}", "tokens": 522}
+{"key": "nat:3c2f4fb1e8b8|grade", "text": "{\n  \"relevant\": [false, true, false, false, false]\n}", "tokens": 483}
+{"key": "nat:1fc87f450623|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 390}
+{"key": "nat:04a14af6c980|grade", "text": "{\n  \"relevant\": [true, true, true, false, false]\n}", "tokens": 530}
+{"key": "nat:b44cafc37046|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 489}
+{"key": "nat:7186a7a1ff93|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 484}
+{"key": "nat:df15dbca968e|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 463}
+{"key": "nat:37926aa15222|grade", "text": "{\n  \"relevant\": [true, true, false, true, true]\n}", "tokens": 528}
+{"key": "nat:c5ab7ff6a63f|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 478}
+{"key": "nat:1f6702880f37|grade", "text": "{\n  \"relevant\": [\n    false,\n    true,\n    false,\n    true,\n    true\n  ]\n}", "tokens": 542}
+{"key": "nat:2122f400c269|grade", "text": "{\n  \"relevant\": [true, true, true, true, false]\n}", "tokens": 534}
+{"key": "nat:1c5595a80838|grade", "text": "{\n  \"relevant\": [true, true, true, false, true]\n}", "tokens": 441}
+{"key": "nat:f5ebe92fab21|grade", "text": "{\n  \"relevant\": [\n    true,\n    false,\n    false,\n    false,\n    false\n  ]\n}", "tokens": 546}
+{"key": "nat:ae86db9380e7|grade", "text": "{\n  \"relevant\": [true, false, false, true, true]\n}", "tokens": 504}
+{"key": "nat:0d772bc1ce97|grade", "text": "{\n  \"relevant\": [true, true, false, false, false]\n}", "tokens": 458}
+{"key": "nat:3e39e718b9f6|grade", "text": "{\n  \"relevant\": [true, true, false, false, false]\n}", "tokens": 467}
+{"key": "nat:554e9ac24920|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 728}
+{"key": "nat:e1ebe13a48e4|grade", "text": "{\n  \"relevant\": [false, true, false, false, false]\n}", "tokens": 445}
+{"key": "nat:abd61a2b6549|grade", "text": "{\n  \"relevant\": [true, true, false, false, false]\n}", "tokens": 300}
+{"key": "nat:0411d605b7be|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 399}
+{"key": "nat:d792c4643785|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 509}
+{"key": "nat:520f33a099cc|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 492}
+{"key": "nat:094e637c60d6|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 463}
+{"key": "nat:17cd5f5789e8|grade", "text": "{\n  \"relevant\": [true, true, true, true, false]\n}", "tokens": 490}
+{"key": "nat:a9d84a105161|grade", "text": "{\n  \"relevant\": [true, true, true, true, false]\n}", "tokens": 532}
+{"key": "nat:f5f9b110c918|grade", "text": "{\n  \"relevant\": [true, true, true, true, false]\n}", "tokens": 514}
+{"key": "nat:52297339d528|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 497}
+{"key": "nat:cce3a21a21d1|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 552}
+{"key": "nat:721a26f60c9a|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 558}
+{"key": "nat:250be44a15bf|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 434}
+{"key": "nat:72a949f31a60|grade", "text": "{\n  \"relevant\": [true, false, true, true, true]\n}", "tokens": 579}
+{"key": "nat:50731d1cb9d8|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 464}
+{"key": "nat:cf9ee5bcb36b|grade", "text": "{\n  \"relevant\": [true, true, true, false, false]\n}", "tokens": 534}
+{"key": "nat:c10b1d2d8a72|grade", "text": "{\n  \"relevant\": [true, true, false, false, false]\n}", "tokens": 480}
+{"key": "nat:717a57d5b32a|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 542}
+{"key": "nat:452e50d3312d|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 496}
+{"key": "nat:73f01d4a0904|grade", "text": "{\n  \"relevant\": [true, true, false, false, false]\n}", "tokens": 489}
+{"key": "nat:2eab23ffc440|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 427}
+{"key": "nat:94cba7fdb586|grade", "text": "{\n  \"relevant\": [\n    true,\n    true,\n    true,\n    true,\n    true\n  ]\n}", "tokens": 554}
+{"key": "nat:bd9fb915bccf|grade", "text": "{\n  \"relevant\": [true, true, true, false, true]\n}", "tokens": 522}
+{"key": "nat:4d39107adee0|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 524}
+{"key": "nat:a956c4c79e84|grade", "text": "{\n  \"relevant\": [false, false, false, true, true]\n}", "tokens": 457}
+{"key": "nat:ffe4348c3a8b|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 581}
+{"key": "nat:fb9038c93f01|grade", "text": "{\n  \"relevant\": [true, true, false, false, false]\n}", "tokens": 519}
+{"key": "nat:07c9eb9729ad|grade", "text": "{\n  \"relevant\": [true, true, false, false, false]\n}", "tokens": 497}
+{"key": "nat:a0854112d2c8|grade", "text": "{\n  \"relevant\": [\n    false,\n    false,\n    false,\n    false,\n    false\n  ]\n}", "tokens": 281}
+{"key": "nat:ca42d80e3b4e|grade", "text": "{\n  \"relevant\": [true, true, false, false, false]\n}", "tokens": 514}
+{"key": "nat:ac53816b4398|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 520}
+{"key": "nat:b4e371e50d23|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 453}
+{"key": "nat:0707a5f8c1ec|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 509}
+{"key": "nat:a46ecdf8e7d2|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 533}
+{"key": "nat:7bc3441f50f5|grade", "text": "{\n  \"relevant\": [true, true, false, true, true]\n}", "tokens": 635}
+{"key": "nat:fd10e1249301|grade", "text": "{\n  \"relevant\": [\n    true,\n    true,\n    true,\n    false,\n    false\n  ]\n}", "tokens": 444}
+{"key": "nat:14d5e068b43b|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 505}
+{"key": "nat:4f0975722342|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 483}
+{"key": "nat:84f225548bd6|grade", "text": "{\n  \"relevant\": [false, true, false, false, false]\n}", "tokens": 518}
+{"key": "nat:9392d3a51442|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 474}
+{"key": "nat:7909c27e0a5a|grade", "text": "{\n  \"relevant\": [\n    false,\n    false,\n    false,\n    false,\n    false\n  ]\n}", "tokens": 461}
+{"key": "nat:c823c4ac3433|grade", "text": "{\n  \"relevant\": [true, false, false, true, false]\n}", "tokens": 547}
+{"key": "nat:fff3805ad612|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 519}
+{"key": "nat:19088201e8ff|grade", "text": "{\n  \"relevant\": [true, true, false, false, false]\n}", "tokens": 456}
+{"key": "nat:5111c3b77b44|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 575}
+{"key": "nat:bcee143e5790|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 462}
+{"key": "nat:fcb2d2a95fd7|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 533}
+{"key": "nat:61fb1fa875de|grade", "text": "{\n  \"relevant\": [true, false, true, false, false]\n}", "tokens": 477}
+{"key": "nat:c84d1725b6c1|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 512}
+{"key": "nat:524709b7deab|grade", "text": "{\n  \"relevant\": [true, true, true, true, false]\n}", "tokens": 407}
+{"key": "nat:ff2feaeb5ee6|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 561}
+{"key": "nat:d2059f8aba25|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 549}
+{"key": "nat:9514214d861a|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 542}
+{"key": "nat:58997246ee98|grade", "text": "{\n  \"relevant\": [\n    false,\n    true,\n    false,\n    false,\n    false\n  ]\n}", "tokens": 558}
+{"key": "nat:a96d35b7ede3|grade", "text": "{\n  \"relevant\": [true, true, true, false, true]\n}", "tokens": 548}
+{"key": "nat:cf2605984017|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 477}
+{"key": "nat:f3ccc3f806cd|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 478}
+{"key": "nat:4d0cd026e457|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 518}
+{"key": "nat:f4ab7b8483f7|grade", "text": "{\n  \"relevant\": [true, false, true, false, false]\n}", "tokens": 436}
+{"key": "nat:6500b1bb2122|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 491}
+{"key": "nat:d70e4269c256|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 638}
+{"key": "nat:cb942231e865|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 443}
+{"key": "nat:38dbb37f8f80|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 498}
+{"key": "nat:8dc474f0f80c|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 585}
+{"key": "nat:0b2840003577|grade", "text": "{\n  \"relevant\": [false, true, false, false, false]\n}", "tokens": 697}
+{"key": "nat:312fff7a70f4|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 476}
+{"key": "nat:daeb857a4d46|grade", "text": "{\n  \"relevant\": [true, true, false, true, true]\n}", "tokens": 637}
+{"key": "nat:8eae1328a957|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 665}
+{"key": "nat:c5ea19891d94|grade", "text": "{\n  \"relevant\": [false, true, false, true, false]\n}", "tokens": 481}
+{"key": "nat:4631f5141623|grade", "text": "{\n  \"relevant\": [false, true, true, false, true]\n}", "tokens": 502}
+{"key": "nat:45fda54ded51|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 467}
+{"key": "nat:a2567482646e|grade", "text": "{\n  \"relevant\": [true, true, false, true, true]\n}", "tokens": 515}
+{"key": "nat:dd656aaaadf3|grade", "text": "{\n  \"relevant\": [true, false, false, true, true]\n}", "tokens": 506}
+{"key": "nat:59a14a5786fe|grade", "text": "{\n  \"relevant\": [\n    true,\n    true,\n    true,\n    true,\n    true\n  ]\n}", "tokens": 315}
+{"key": "nat:be7e2c2a2f8f|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 522}
+{"key": "nat:551c611ece18|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 405}
+{"key": "nat:20dba43bf653|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 539}
+{"key": "nat:a07376aebabb|grade", "text": "{\n  \"relevant\": [false, true, false, true, true]\n}", "tokens": 465}
+{"key": "nat:9bb9458f1b00|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 425}
+{"key": "nat:d1ba52705352|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 477}
+{"key": "nat:561deb5e904b|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 472}
+{"key": "nat:e18add149fdc|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 514}
+{"key": "nat:d5f5b48879c6|grade", "text": "{\n  \"relevant\": [true, false, false, false, true]\n}", "tokens": 515}
+{"key": "nat:859e97c7251e|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 423}
+{"key": "nat:9a855cb4835b|grade", "text": "{\n  \"relevant\": [false, false, true, true, true]\n}", "tokens": 460}
+{"key": "nat:16fe2f46c48a|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 546}
+{"key": "nat:2c82e2caa620|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 464}
+{"key": "nat:592dcaf93887|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 469}
+{"key": "nat:e58c5a96fa8b|grade", "text": "{\n  \"relevant\": [true, true, true, true, false]\n}", "tokens": 497}
+{"key": "nat:0aeb38e1413f|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 569}
+{"key": "nat:39afd7c23307|grade", "text": "{\n  \"relevant\": [false, false, false, true, false]\n}", "tokens": 528}
+{"key": "nat:2fa207088d57|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 485}
+{"key": "nat:6a6b9b0d480f|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 497}
+{"key": "nat:8d6fbd2eaf9b|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 427}
+{"key": "nat:425491badc52|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 381}
+{"key": "nat:0dcd707c63ce|grade", "text": "{\n  \"relevant\": [true, true, true, false, false]\n}", "tokens": 566}
+{"key": "nat:4a05a0cfb051|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 437}
+{"key": "nat:6350f1002fa6|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 603}
+{"key": "nat:db4a9897e227|grade", "text": "{\n  \"relevant\": [false, false, true, true, true]\n}", "tokens": 545}
+{"key": "nat:0290b8557833|grade", "text": "{\n  \"relevant\": [true, true, true, true, false]\n}", "tokens": 493}
+{"key": "nat:d81b448dbf36|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 474}
+{"key": "nat:f0e5bf13134f|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 492}
+{"key": "nat:ee2a23af409b|grade", "text": "{\n  \"relevant\": [true, true, true, false, true]\n}", "tokens": 634}
+{"key": "nat:96e28b98f6a2|grade", "text": "{\n  \"relevant\": [true, true, false, true, true]\n}", "tokens": 471}
+{"key": "nat:d23feaf0a475|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 514}
+{"key": "nat:942bbfc55e2e|grade", "text": "{\n  \"relevant\": [true, true, false, false, false]\n}", "tokens": 516}
+{"key": "nat:0b0a60db7719|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 534}
+{"key": "nat:514e19ef5ecb|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 617}
+{"key": "nat:ddc79decd4b8|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 543}
+{"key": "nat:ee0eec43f568|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 480}
+{"key": "nat:d246970121ac|grade", "text": "{\n  \"relevant\": [true, true, true, false, true]\n}", "tokens": 545}
+{"key": "nat:9173f7d7444d|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 499}
+{"key": "nat:346e915545bb|grade", "text": "{\n  \"relevant\": [true, false, false, true, false]\n}", "tokens": 470}
+{"key": "nat:91f2b7dfd8fc|grade", "text": "{\n  \"relevant\": [true, true, true, true, false]\n}", "tokens": 215}
+{"key": "nat:fb072ed44ef2|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 534}
+{"key": "nat:09228dac1556|grade", "text": "{\n  \"relevant\": [true, false, false, false, true]\n}", "tokens": 421}
+{"key": "nat:7e2fb716c16d|grade", "text": "{\n  \"relevant\": [true, true, false, false, false]\n}", "tokens": 474}
+{"key": "nat:0dbb983b9335|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 597}
+{"key": "nat:1a8c96e1cfde|grade", "text": "{\n  \"relevant\": [true, true, false, true, true]\n}", "tokens": 455}
+{"key": "nat:4760529331b7|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 445}
+{"key": "nat:6c3669c19176|grade", "text": "{\n  \"relevant\": [true, true, false, true, false]\n}", "tokens": 539}
+{"key": "nat:94e9ee0eeb77|grade", "text": "{\n  \"relevant\": [true, true, true, true, false]\n}", "tokens": 605}
+{"key": "nat:17209ae6320d|grade", "text": "{\n  \"relevant\": [false, false, false, true, false]\n}", "tokens": 511}
+{"key": "nat:ecac82252813|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 479}
+{"key": "nat:18bdbc7229a5|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 510}
+{"key": "nat:6dfc6fe47762|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 472}
+{"key": "nat:b3a5f1448151|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 530}
+{"key": "nat:ef0d203841ec|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 549}
+{"key": "nat:f435f6def820|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 507}
+{"key": "nat:1eaafa87ccf8|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 725}
+{"key": "nat:227cf704da6d|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 531}
+{"key": "nat:4630610c2bfb|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 514}
+{"key": "nat:2969cac27de3|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 578}
+{"key": "nat:ec8ad07dc113|grade", "text": "{\n  \"relevant\": [true, true, true, false, false]\n}", "tokens": 575}
+{"key": "nat:c799790defb7|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 467}
+{"key": "nat:c28d5e50f660|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 448}
+{"key": "nat:a224cf31180a|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 588}
+{"key": "nat:6e32089e0e1e|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 498}
+{"key": "nat:6ca8232eb2f1|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 494}
+{"key": "nat:e3d18e6af381|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 517}
+{"key": "nat:94178a90eea6|grade", "text": "{\n  \"relevant\": [true, false, true, true, false]\n}", "tokens": 526}
+{"key": "nat:3f87ad2717c4|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 445}
+{"key": "nat:587ad463bc4e|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 607}
+{"key": "nat:7cd8643e8d74|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 505}
+{"key": "nat:e5ec4d74ffbc|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 549}
+{"key": "nat:9535ae5c2a20|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 474}
+{"key": "nat:83bb7980da8e|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 498}
+{"key": "nat:968b10074c4f|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 354}
+{"key": "nat:dc6e9143e087|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 552}
+{"key": "nat:0508d2b60701|grade", "text": "{\n  \"relevant\": [false, true, true, true, false]\n}", "tokens": 509}
+{"key": "nat:a30dc0b3934e|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 536}
+{"key": "nat:5208e1efbcb4|grade", "text": "{\n  \"relevant\": [true, false, false, true, false]\n}", "tokens": 542}
+{"key": "nat:74a4a4c203ef|grade", "text": "{\n  \"relevant\": [false, false, true, true, false]\n}", "tokens": 562}
+{"key": "nat:66d09d247205|grade", "text": "{\n  \"relevant\": [true, false, true, true, true]\n}", "tokens": 505}
+{"key": "nat:2903a3062680|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 580}
+{"key": "nat:fd75b14d24bf|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 462}
+{"key": "nat:912378a61880|grade", "text": "{\n  \"relevant\": [\n    false,\n    false,\n    true,\n    true,\n    true\n  ]\n}", "tokens": 553}
+{"key": "nat:43f343ad3ef6|grade", "text": "{\n  \"relevant\": [true, true, false, false, true]\n}", "tokens": 462}
+{"key": "nat:fcdd2926a248|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 539}
+{"key": "nat:5948cba18fa5|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 506}
+{"key": "nat:b8c6fc1112c8|grade", "text": "{\n  \"relevant\": [true, true, true, false, true]\n}", "tokens": 478}
+{"key": "nat:861ae82e0e7b|grade", "text": "{\n  \"relevant\": [true, true, true, true, false]\n}", "tokens": 474}
+{"key": "nat:6d2fcb2687a0|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 513}
+{"key": "nat:6a3bf6cd5ec8|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 600}
+{"key": "nat:754e85377232|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 457}
+{"key": "nat:5dde33b28af9|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 529}
+{"key": "nat:acbd95ccc0bb|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 476}
+{"key": "nat:bb0eaae47e3b|grade", "text": "{\n  \"relevant\": [true, false, false, true, true]\n}", "tokens": 415}
+{"key": "nat:ef3860107328|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 615}
+{"key": "nat:6163b0e63134|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 574}
+{"key": "nat:6848d756da66|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 490}
+{"key": "nat:8eb0b3aa7407|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 416}
+{"key": "nat:4136a932eb77|grade", "text": "{\n  \"relevant\": [\n    true,\n    true,\n    true,\n    true,\n    true\n  ]\n}", "tokens": 457}
+{"key": "nat:e24ebb0b5495|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 500}
+{"key": "nat:41e2c4b4eacb|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 422}
+{"key": "nat:221efdffa7ca|grade", "text": "{\n  \"relevant\": [true, true, false, false, true]\n}", "tokens": 508}
+{"key": "nat:fa49c9411e03|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 299}
+{"key": "nat:2c2982acd460|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 532}
+{"key": "nat:37a92d3addcc|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 484}
+{"key": "nat:9243d69ddeac|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 544}
+{"key": "nat:f45763070c96|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 548}
+{"key": "nat:4e31095859fd|grade", "text": "{\n  \"relevant\": [true, false, true, false, true]\n}", "tokens": 417}
+{"key": "nat:3a92ae733a0d|grade", "text": "{\n  \"relevant\": [true, true, true, false, false]\n}", "tokens": 618}
+{"key": "nat:6cd4268f837f|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 456}
+{"key": "nat:e7eb82ca5075|grade", "text": "{\n  \"relevant\": [true, false, true, false, true]\n}", "tokens": 571}
+{"key": "nat:bee57d256ea1|grade", "text": "{\n  \"relevant\": [false, true, false, false, false]\n}", "tokens": 531}
+{"key": "nat:0f747190076d|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 501}
+{"key": "nat:22d0bcabd0ab|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 602}
+{"key": "nat:221c140d1221|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 526}
+{"key": "nat:42c18ee79269|grade", "text": "{\n  \"relevant\": [true, true, false, false, false]\n}", "tokens": 571}
+{"key": "nat:1946f93dbf5f|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 494}
+{"key": "nat:4937df0a2369|grade", "text": "{\n  \"relevant\": [false, false, true, false, false]\n}", "tokens": 466}
+{"key": "nat:ba36a5a20b8d|grade", "text": "{\n  \"relevant\": [true, true, true, true, false]\n}", "tokens": 430}
+{"key": "nat:899a57842364|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 548}
+{"key": "nat:84bc0bc3166a|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 529}
+{"key": "nat:29fc811770ce|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 599}
+{"key": "nat:48a9919b2c90|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 452}
+{"key": "nat:a5849841b351|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 506}
+{"key": "nat:a94a0a076d93|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 513}
+{"key": "nat:37406160fec4|grade", "text": "{\n  \"relevant\": [false, false, false, true, false]\n}", "tokens": 510}
+{"key": "nat:1653d5147039|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 446}
+{"key": "nat:2c9486d89286|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 448}
+{"key": "nat:e607663a876a|grade", "text": "{\n  \"relevant\": [false, false, true, false, false]\n}", "tokens": 464}
+{"key": "nat:719b2f10bea3|grade", "text": "{\n  \"relevant\": [true, true, false, false, false]\n}", "tokens": 357}
+{"key": "nat:43c7a5b4ddbe|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 517}
+{"key": "nat:7c2ef16e15cb|grade", "text": "{\n  \"relevant\": [\n    false,\n    true,\n    true,\n    false,\n    true\n  ]\n}", "tokens": 573}
+{"key": "nat:5d1da3087cd3|grade", "text": "{\n  \"relevant\": [true, true, false, false, false]\n}", "tokens": 421}
+{"key": "nat:a5fd3b63f8ad|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 517}
+{"key": "nat:0401f95a0961|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 537}
+{"key": "nat:248d6bf75fc4|grade", "text": "{\n  \"relevant\": [true, true, false, true, false]\n}", "tokens": 507}
+{"key": "nat:e42c00cf66f8|grade", "text": "{\n  \"relevant\": [\n    false,\n    false,\n    true,\n    false,\n    false\n  ]\n}", "tokens": 515}
+{"key": "nat:3582927c6f12|grade", "text": "{\n  \"relevant\": [false, false, false, false, true]\n}", "tokens": 512}
+{"key": "nat:4f7827f034a4|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 521}
+{"key": "nat:8e6f97518d7c|grade", "text": "{\n  \"relevant\": [true, true, true, false, false]\n}", "tokens": 497}
+{"key": "nat:11400e5a5f98|grade", "text": "{\n  \"relevant\": [true, true, true, false, true]\n}", "tokens": 486}
+{"key": "nat:63a650f42871|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 423}
+{"key": "nat:b7c053320e87|grade", "text": "{\n  \"relevant\": [true, false, false, true, true]\n}", "tokens": 705}
+{"key": "nat:f794c1bb5e5f|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 509}
+{"key": "nat:1866aef74601|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 504}
+{"key": "nat:d2a7636104ab|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 498}
+{"key": "nat:e058255e39d7|grade", "text": "{\n  \"relevant\": [true, true, false, false, false]\n}", "tokens": 386}
+{"key": "nat:5d79b03ff85e|grade", "text": "{\n  \"relevant\": [\n    true,\n    true,\n    true,\n    true,\n    true\n  ]\n}", "tokens": 519}
+{"key": "nat:f501d4d87aa4|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 549}
+{"key": "nat:ad6b2800b78d|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 505}
+{"key": "nat:f2216f52b786|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 516}
+{"key": "nat:1ea326e722ab|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 468}
+{"key": "nat:482c303d45ea|grade", "text": "{\n  \"relevant\": [true, false, true, true, true]\n}", "tokens": 578}
+{"key": "nat:bcb8350de80c|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 534}
+{"key": "nat:314e9d96286f|grade", "text": "{\n  \"relevant\": [true, true, false, false, false]\n}", "tokens": 491}
+{"key": "nat:e8008f64cb8d|grade", "text": "{\n  \"relevant\": [false, false, true, true, true]\n}", "tokens": 505}
+{"key": "nat:db32accd4013|grade", "text": "{\n  \"relevant\": [true, false, true, true, true]\n}", "tokens": 654}
+{"key": "nat:105a0be84585|grade", "text": "{\n  \"relevant\": [true, true, false, false, false]\n}", "tokens": 552}
+{"key": "nat:f2abf4824ef2|grade", "text": "{\n  \"relevant\": [true, false, true, false, false]\n}", "tokens": 512}
+{"key": "nat:fc32e08fbb9d|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 544}
+{"key": "nat:adc5bc5b72db|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 527}
+{"key": "nat:3b6999b58f3e|grade", "text": "{\n  \"relevant\": [false, false, false, true, false]\n}", "tokens": 442}
+{"key": "nat:8d1b5c7618db|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 492}
+{"key": "nat:c3de7d350ee9|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 522}
+{"key": "nat:ebcecff09b02|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 575}
+{"key": "nat:952847aba778|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 468}
+{"key": "nat:67b6aff036fc|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 539}
+{"key": "nat:e8b4e44f4d14|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 577}
+{"key": "nat:08aaa321caae|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 559}
+{"key": "nat:1cf708419102|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 594}
+{"key": "nat:7edb2a2d2e06|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 545}
+{"key": "nat:f3422f43acdf|grade", "text": "{\n  \"relevant\": [true, true, false, true, true]\n}", "tokens": 486}
+{"key": "nat:161f9388743c|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 513}
+{"key": "nat:48b8a0d44b96|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 469}
+{"key": "nat:d7c2c8870828|grade", "text": "{\n  \"relevant\": [true, true, false, true, true]\n}", "tokens": 535}
+{"key": "nat:deca5d1dc6e1|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 583}
+{"key": "nat:2fc12f3099a5|grade", "text": "{\n  \"relevant\": [true, true, false, false, false]\n}", "tokens": 426}
+{"key": "nat:98da6c41e1e3|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 498}
+{"key": "nat:bb66db1875af|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 529}
+{"key": "nat:3e9b88a8754c|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 505}
+{"key": "nat:11604f8492bf|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 430}
+{"key": "nat:176a4c6c3ffd|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 297}
+{"key": "nat:a140fbd689c2|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 503}
+{"key": "nat:11a012f0c1e2|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 543}
+{"key": "nat:a4facfd6a3b4|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 593}
+{"key": "nat:128350857a17|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 564}
+{"key": "nat:3889b87ec3d3|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 520}
+{"key": "nat:7c1c098db71c|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 464}
+{"key": "nat:b8fca8c0160c|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 483}
+{"key": "nat:d114c76fccb6|grade", "text": "{\n  \"relevant\": [\n    false,\n    false,\n    true,\n    false,\n    false\n  ]\n}", "tokens": 551}
+{"key": "nat:22ac2acbdbf2|grade", "text": "{\n  \"relevant\": [false, false, false, true, false]\n}", "tokens": 513}
+{"key": "nat:792953d2438c|grade", "text": "{\n  \"relevant\": [true, false, true, false, false]\n}", "tokens": 525}
+{"key": "nat:184324f65f1f|grade", "text": "{\n  \"relevant\": [false, true, false, false, false]\n}", "tokens": 523}
+{"key": "nat:ddbb8acb1ebc|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 519}
+{"key": "nat:0ef38df43912|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 463}
+{"key": "nat:65e91c41e595|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 530}
+{"key": "nat:089565edd500|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 544}
+{"key": "nat:a94a7b44cb4d|grade", "text": "{\n  \"relevant\": [true, true, false, false, false]\n}", "tokens": 528}
+{"key": "nat:ab369843d7f1|grade", "text": "{\n  \"relevant\": [\n    true,\n    false,\n    true,\n    true,\n    false\n  ]\n}", "tokens": 360}
+{"key": "nat:f2e02d925d7a|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 433}
+{"key": "nat:d2bd1833e178|grade", "text": "{\n  \"relevant\": [true, true, true, true, false]\n}", "tokens": 543}
+{"key": "nat:150ba2d2d149|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 520}
+{"key": "nat:fb6b4b1d2fc3|grade", "text": "{\n  \"relevant\": [true, true, true, true, false]\n}", "tokens": 462}
+{"key": "nat:23c371083d40|grade", "text": "{\n  \"relevant\": [true, true, true, true, false]\n}", "tokens": 514}
+{"key": "nat:e4d238ced123|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 694}
+{"key": "nat:c9aea56a792b|grade", "text": "{\n  \"relevant\": [true, true, true, false, false]\n}", "tokens": 481}
+{"key": "nat:d5cbd5ed412c|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 529}
+{"key": "nat:af8bcd51f025|grade", "text": "{\n  \"relevant\": [true, true, true, false, false]\n}", "tokens": 443}
+{"key": "nat:9e3f669ee469|grade", "text": "{\n  \"relevant\": [true, false, true, true, false]\n}", "tokens": 483}
+{"key": "nat:9ef2bd290ef7|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 515}
+{"key": "nat:c8dc61f81955|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 464}
+{"key": "nat:eee6c125dbe8|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 478}
+{"key": "nat:87786f82a21d|grade", "text": "{\n  \"relevant\": [\n    false,\n    true,\n    true,\n    true,\n    true\n  ]\n}", "tokens": 535}
+{"key": "nat:55f112cc95af|grade", "text": "{\n  \"relevant\": [true, false, true, false, false]\n}", "tokens": 460}
+{"key": "nat:702199467205|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 625}
+{"key": "nat:d64812fbe17d|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 494}
+{"key": "nat:d51c4eae17d4|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 482}
+{"key": "nat:500add07e8e6|grade", "text": "{\n  \"relevant\": [false, false, false, false, true]\n}", "tokens": 535}
+{"key": "nat:51af6cf53988|grade", "text": "{\n  \"relevant\": [true, false, true, false, false]\n}", "tokens": 530}
+{"key": "nat:8d5155271d04|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 498}
+{"key": "nat:2fcc4681e30b|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 489}
+{"key": "nat:24a17926983f|grade", "text": "{\n  \"relevant\": [true, true, false, true, false]\n}", "tokens": 452}
+{"key": "nat:d31409a47bf7|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 537}
+{"key": "nat:dcfa8c74e1ef|grade", "text": "{\n  \"relevant\": [\n    false,\n    false,\n    false,\n    true,\n    false\n  ]\n}", "tokens": 593}
+{"key": "nat:a783b4d05af5|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 512}
+{"key": "nat:33ef82f3ec09|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 488}
+{"key": "nat:c0eed192dc41|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 731}
+{"key": "nat:f6ef73d584f4|grade", "text": "{\n  \"relevant\": [true, true, false, false, false]\n}", "tokens": 538}
+{"key": "nat:2844c3977b83|grade", "text": "{\n  \"relevant\": [false, false, true, false, true]\n}", "tokens": 447}
+{"key": "nat:f910c5b2d2ac|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 508}
+{"key": "nat:7b45cd434800|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 497}
+{"key": "nat:001147dfc1a8|grade", "text": "{\n  \"relevant\": [true, true, true, false, false]\n}", "tokens": 526}
+{"key": "nat:e8addf38a60f|grade", "text": "{\n  \"relevant\": [\n    false,\n    true,\n    true,\n    false,\n    false\n  ]\n}", "tokens": 521}
+{"key": "nat:518edfb83271|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 454}
+{"key": "nat:84ef95d9f478|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 502}
+{"key": "nat:c18c81318d17|grade", "text": "{\n  \"relevant\": [\n    true,\n    true,\n    true,\n    true,\n    true\n  ]\n}", "tokens": 456}
+{"key": "nat:c79dc9265a05|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 552}
+{"key": "nat:a3dbe89e8ee3|grade", "text": "{\n  \"relevant\": [false, false, true, false, false]\n}", "tokens": 471}
+{"key": "nat:d4d752f57c8e|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 556}
+{"key": "nat:71569fd29b1f|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 412}
+{"key": "nat:6ef82600a730|grade", "text": "{\n  \"relevant\": [true, false, false, false, true]\n}", "tokens": 478}
+{"key": "nat:23b8f795800d|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 534}
+{"key": "nat:6f12843a6977|grade", "text": "{\n  \"relevant\": [true, true, true, false, false]\n}", "tokens": 457}
+{"key": "nat:c93defa017c4|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 499}
+{"key": "nat:a77f2285871c|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 444}
+{"key": "nat:e6e5f692afb4|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 648}
+{"key": "nat:83dd9ed42209|grade", "text": "{\n  \"relevant\": [false, true, false, false, false]\n}", "tokens": 488}
+{"key": "nat:eb4fd8322ed5|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 518}
+{"key": "nat:1a9b4ec183dc|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 493}
+{"key": "nat:e0000bf79b0a|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 603}
+{"key": "nat:d1d89c7cdbef|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 501}
+{"key": "nat:d173d68fa404|grade", "text": "{\n  \"relevant\": [true, false, false, true, false]\n}", "tokens": 549}
+{"key": "nat:9b25f3379c07|grade", "text": "{\n  \"relevant\": [true, true, true, true, false]\n}", "tokens": 535}
+{"key": "nat:1211d8055b24|grade", "text": "{\n  \"relevant\": [true, true, false, false, false]\n}", "tokens": 484}
+{"key": "nat:018583afc335|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 467}
+{"key": "nat:cf61fbd07e5b|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 581}
+{"key": "nat:0c814ff7e283|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 702}
+{"key": "nat:3e3172a4fcac|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 533}
+{"key": "nat:ba39d7eeb2fe|grade", "text": "{\n  \"relevant\": [true, true, true, false, false]\n}", "tokens": 414}
+{"key": "nat:1e58b88b6b32|grade", "text": "{\n  \"relevant\": [false, false, false, true, false]\n}", "tokens": 426}
+{"key": "nat:2a0a7cd28af4|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 513}
+{"key": "nat:254b26c5ee5c|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 504}
+{"key": "nat:049251b183e5|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 511}
+{"key": "nat:2f4f94e90bdb|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 544}
+{"key": "nat:ac4e2ce85db2|grade", "text": "{\n  \"relevant\": [false, false, false, false, true]\n}", "tokens": 508}
+{"key": "nat:99df53fec08c|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 446}
+{"key": "nat:c6d7321e5de0|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 418}
+{"key": "nat:ea1533edc5d9|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 516}
+{"key": "nat:621eafd280ad|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 592}
+{"key": "nat:37e78376736d|grade", "text": "{\n  \"relevant\": [true, true, false, false, false]\n}", "tokens": 525}
+{"key": "nat:d71b57215521|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 556}
+{"key": "nat:52960e7705be|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 484}
+{"key": "nat:cbb11ed87dc8|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 438}
+{"key": "nat:b9573f4743fb|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 472}
+{"key": "nat:fb6a8f4ae3cc|grade", "text": "{\n  \"relevant\": [true, false, false, false, true]\n}", "tokens": 514}
+{"key": "nat:add935b3b856|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 515}
+{"key": "nat:0db273ddcad9|grade", "text": "{\n  \"relevant\": [\n    false,\n    false,\n    false,\n    false,\n    false\n  ]\n}", "tokens": 541}
+{"key": "nat:c5dd1885442d|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 562}
+{"key": "nat:df271f1d6579|grade", "text": "{\n  \"relevant\": [true, true, true, false, true]\n}", "tokens": 556}
+{"key": "nat:7b2a12eed940|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 417}
+{"key": "nat:db0235114cec|grade", "text": "{\n  \"relevant\": [false, false, true, false, false]\n}", "tokens": 576}
+{"key": "nat:429211bbc79e|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 541}
+{"key": "nat:65f7203d704d|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 516}
+{"key": "nat:1eaa6490b24f|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 495}
+{"key": "nat:f7a54da8fa7e|grade", "text": "{\n  \"relevant\": [true, true, false, false, false]\n}", "tokens": 299}
+{"key": "nat:6399a2d4bdb5|grade", "text": "{\n  \"relevant\": [true, true, true, false, false]\n}", "tokens": 480}
+{"key": "nat:716ddb914ce6|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 632}
+{"key": "nat:254379abff04|grade", "text": "{\n  \"relevant\": [true, true, false, false, false]\n}", "tokens": 575}
+{"key": "nat:1930920ec31c|grade", "text": "{\n  \"relevant\": [true, true, true, false, false]\n}", "tokens": 562}
+{"key": "nat:b69604bd56ed|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 380}
+{"key": "nat:03f00e8e9d0d|grade", "text": "{\n  \"relevant\": [true, true, true, true, false]\n}", "tokens": 557}
+{"key": "nat:27ddb9adecf4|grade", "text": "{\n  \"relevant\": [true, true, true, true, false]\n}", "tokens": 508}
+{"key": "nat:112a2b4bea8c|grade", "text": "{\n  \"relevant\": [\n    false,\n    false,\n    true,\n    true,\n    true\n  ]\n}", "tokens": 595}
+{"key": "nat:a98bc1ad80f7|grade", "text": "{\n  \"relevant\": [\n    false,\n    false,\n    true,\n    false,\n    false\n  ]\n}", "tokens": 683}
+{"key": "nat:0089658dc199|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 437}
+{"key": "nat:385373e5ef72|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 539}
+{"key": "nat:da3b4461994d|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 566}
+{"key": "nat:6a398ddc7489|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 545}
+{"key": "nat:8cae60ee2fa0|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 477}
+{"key": "nat:f3165b1c1a9a|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 403}
+{"key": "nat:481f4ccbd58a|grade", "text": "{\n  \"relevant\": [true, false, true, true, true]\n}", "tokens": 554}
+{"key": "nat:f23584c740a0|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 518}
+{"key": "nat:71405c36e2f4|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 557}
+{"key": "nat:5da21a3ecff2|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 436}
+{"key": "nat:e0b79758fb3e|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 608}
+{"key": "nat:8cbd652c1a34|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 405}
+{"key": "nat:f753f9d81909|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 597}
+{"key": "nat:317fc3c12006|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 501}
+{"key": "nat:ac7b8853faad|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 552}
+{"key": "nat:cab3a66a466d|grade", "text": "{\n  \"relevant\": [false, false, false, true, false]\n}", "tokens": 475}
+{"key": "nat:862f3d1c2e50|grade", "text": "{\n  \"relevant\": [true, true, true, true, false]\n}", "tokens": 507}
+{"key": "nat:3353f7fa351e|grade", "text": "{\n  \"relevant\": [true, true, true, false, false]\n}", "tokens": 552}
+{"key": "nat:a618d7c21efe|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 369}
+{"key": "nat:e0550cd0cadc|grade", "text": "{\n  \"relevant\": [false, true, false, false, true]\n}", "tokens": 508}
+{"key": "nat:7a23e9edd965|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 511}
+{"key": "nat:6b50b7df2891|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 560}
+{"key": "nat:b9e5da9a4ba4|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 468}
+{"key": "nat:51a1e71536cc|grade", "text": "{\n  \"relevant\": [true, false, true, false, false]\n}", "tokens": 442}
+{"key": "nat:f83299b505f9|grade", "text": "{\n  \"relevant\": [true, true, true, false, false]\n}", "tokens": 450}
+{"key": "nat:29f0d8169e3a|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 480}
+{"key": "nat:41594d7548a5|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 513}
+{"key": "nat:ff797ca930c0|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 511}
+{"key": "nat:51d208b0a018|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 545}
+{"key": "nat:e8b40abf044e|grade", "text": "{\n  \"relevant\": [false, false, false, false, true]\n}", "tokens": 542}
+{"key": "nat:55abebfe67fc|grade", "text": "{\n  \"relevant\": [true, true, false, false, false]\n}", "tokens": 438}
+{"key": "nat:739fd1fa4239|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 227}
+{"key": "nat:4a4e4a1d722e|grade", "text": "{\n  \"relevant\": [true, true, true, false, false]\n}", "tokens": 487}
+{"key": "nat:26fe80cd3976|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 474}
+{"key": "nat:8364d55333cf|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 480}
+{"key": "nat:d801386b632f|grade", "text": "{\n  \"relevant\": [\n    false,\n    true,\n    false,\n    true,\n    false\n  ]\n}", "tokens": 527}
+{"key": "nat:54dda64b4257|grade", "text": "{\n  \"relevant\": [true, true, true, true, false]\n}", "tokens": 463}
+{"key": "nat:68a1dfa65e45|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 533}
+{"key": "nat:3a8097d73319|grade", "text": "{\n  \"relevant\": [\n    false,\n    true,\n    false,\n    false,\n    false\n  ]\n}", "tokens": 594}
+{"key": "nat:d23c12edf4fd|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 535}
+{"key": "nat:40acc4689242|grade", "text": "{\n  \"relevant\": [true, true, false, false, false]\n}", "tokens": 504}
+{"key": "nat:ae50b5ddec76|grade", "text": "{\n  \"relevant\": [true, true, true, true, false]\n}", "tokens": 493}
+{"key": "nat:5993c0733702|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 443}
+{"key": "nat:b36eb6a54154|grade", "text": "{\n  \"relevant\": [true, true, false, true, true]\n}", "tokens": 536}
+{"key": "nat:c1484437f39e|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 501}
+{"key": "nat:f2c99b9128be|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 538}
+{"key": "nat:d194e894e583|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 511}
+{"key": "nat:fbc8df06da4d|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 538}
+{"key": "nat:896e95dd5c5a|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 445}
+{"key": "nat:df53f6638114|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 372}
+{"key": "nat:59cfa26c741d|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 530}
+{"key": "nat:0736b7590d4a|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 599}
+{"key": "nat:d70a8b8c4bea|grade", "text": "{\n  \"relevant\": [true, true, false, true, false]\n}", "tokens": 428}
+{"key": "nat:bb18951a5ffa|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 505}
+{"key": "nat:e462b94773c5|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 494}
+{"key": "nat:fdac5b5c2e25|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 546}
+{"key": "nat:5095ce44288a|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 591}
+{"key": "nat:2bd23fe5b653|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 468}
+{"key": "nat:332c01cf10de|grade", "text": "{\n  \"relevant\": [true, true, true, false, true]\n}", "tokens": 592}
+{"key": "nat:8ad3f3963bd1|grade", "text": "{\n  \"relevant\": [\n    true,\n    true,\n    true,\n    true,\n    true\n  ]\n}", "tokens": 511}
+{"key": "nat:db7c11799be8|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 440}
+{"key": "nat:da9f3f40f340|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 513}
+{"key": "nat:c34c44f886b8|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 636}
+{"key": "nat:bb55746fa9d8|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 388}
+{"key": "nat:509a838d2e4e|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 493}
+{"key": "nat:e5ef0a0b3e8b|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 488}
+{"key": "nat:1a138fc947e4|grade", "text": "{\n  \"relevant\": [true, true, false, false, false]\n}", "tokens": 587}
+{"key": "nat:b6a8f575c9a1|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 579}
+{"key": "nat:cee968c36ece|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 555}
+{"key": "nat:4d12afdacc6d|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 498}
+{"key": "nat:ce01713f622b|grade", "text": "{\n  \"relevant\": [true, true, true, true, false]\n}", "tokens": 498}
+{"key": "nat:a05f1c6942cc|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 519}
+{"key": "nat:820f0a1684b2|grade", "text": "{\n  \"relevant\": [false, false, false, false, true]\n}", "tokens": 580}
+{"key": "nat:0278aef86c0a|grade", "text": "{\n  \"relevant\": [false, true, false, false, true]\n}", "tokens": 563}
+{"key": "nat:86df597dab75|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 316}
+{"key": "nat:e0a3d820d7b9|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 391}
+{"key": "nat:30400c8064c5|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 530}
+{"key": "nat:54dac40b5862|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 519}
+{"key": "nat:c339520546e3|grade", "text": "{\n  \"relevant\": [true, true, true, true, false]\n}", "tokens": 506}
+{"key": "nat:aeb9601eae9d|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 508}
+{"key": "nat:f3cd93eb74de|grade", "text": "{\n  \"relevant\": [\n    true,\n    true,\n    true,\n    true,\n    true\n  ]\n}", "tokens": 494}
+{"key": "nat:80a7ac765ce3|grade", "text": "{\n  \"relevant\": [true, true, false, false, false]\n}", "tokens": 472}
+{"key": "nat:d8467f89f240|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 507}
+{"key": "nat:d01fc3d80fe2|grade", "text": "{\n  \"relevant\": [true, true, false, false, true]\n}", "tokens": 596}
+{"key": "nat:aafd94fe3a59|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 471}
+{"key": "nat:2bbfcee0749f|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 532}
+{"key": "nat:093a908ebb91|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 697}
+{"key": "nat:7d3bdf4b4f20|grade", "text": "{\n  \"relevant\": [true, true, false, false, false]\n}", "tokens": 540}
+{"key": "nat:8fe24637e44d|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 516}
+{"key": "nat:c4adffdc9c7b|grade", "text": "{\n  \"relevant\": [true, true, true, true, false]\n}", "tokens": 500}
+{"key": "nat:d5248bdf47cb|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 487}
+{"key": "nat:ea9d1d7a9c6d|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 527}
+{"key": "nat:7f089baa6445|grade", "text": "{\n  \"relevant\": [true, true, true, true, false]\n}", "tokens": 381}
+{"key": "nat:bbbe4db26a3c|grade", "text": "{\n  \"relevant\": [true, true, true, true, false]\n}", "tokens": 572}
+{"key": "nat:4b2d2ef5bc69|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 515}
+{"key": "nat:d4ced8bd9daa|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 618}
+{"key": "nat:4b1b6cc088b3|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 541}
+{"key": "nat:23cfe57c62ed|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 512}
+{"key": "nat:91c56b307705|grade", "text": "{\n  \"relevant\": [false, false, false, false, true]\n}", "tokens": 463}
+{"key": "nat:012c0e6a74d8|grade", "text": "{\n  \"relevant\": [true, true, false, false, true]\n}", "tokens": 527}
+{"key": "nat:4320e8152c05|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 455}
+{"key": "nat:80e322636f8a|grade", "text": "{\n  \"relevant\": [true, true, true, true, false]\n}", "tokens": 520}
+{"key": "nat:2d390415e6dd|grade", "text": "{\n  \"relevant\": [false, true, true, true, false]\n}", "tokens": 549}
+{"key": "nat:1b0da1affa46|grade", "text": "{\n  \"relevant\": [true, true, false, true, true]\n}", "tokens": 476}
+{"key": "nat:f2263a7d57fd|grade", "text": "{\n  \"relevant\": [true, true, true, false, false]\n}", "tokens": 554}
+{"key": "nat:25f999b76891|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 539}
+{"key": "nat:fb90d26e7982|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 528}
+{"key": "nat:a5a71510e9d1|grade", "text": "{\n  \"relevant\": [\n    false,\n    false,\n    false,\n    true,\n    false\n  ]\n}", "tokens": 505}
+{"key": "nat:a0b2a6aad841|grade", "text": "{\n  \"relevant\": [true, true, false, true, false]\n}", "tokens": 350}
+{"key": "nat:16ad21351b85|grade", "text": "{\n  \"relevant\": [true, true, false, false, false]\n}", "tokens": 536}
+{"key": "nat:fe541bb374f7|grade", "text": "{\n  \"relevant\": [true, true, true, false, false]\n}", "tokens": 460}
+{"key": "nat:273d0456beb3|grade", "text": "{\n  \"relevant\": [true, true, false, false, false]\n}", "tokens": 514}
+{"key": "nat:a0958b051709|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 522}
+{"key": "nat:bb4e6fbfafcc|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 454}
+{"key": "nat:60d1640c41f2|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 478}
+{"key": "nat:9cdfb439c787|grade", "text": "{\n  \"relevant\": [true, true, false, false, false]\n}", "tokens": 505}
+{"key": "nat:582f4d710d75|grade", "text": "{\n  \"relevant\": [true, false, false, true, false]\n}", "tokens": 508}
+{"key": "nat:d82b40e0138d|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 612}
+{"key": "nat:65333a9a5974|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 426}
+{"key": "nat:03f1a9f6f756|grade", "text": "{\n  \"relevant\": [false, true, false, false, false]\n}", "tokens": 495}
+{"key": "nat:07cc6476db01|grade", "text": "{\n  \"relevant\": [false, false, false, true, false]\n}", "tokens": 507}
+{"key": "nat:ca2b6d7b63a7|grade", "text": "{\n  \"relevant\": [true, true, true, true, false]\n}", "tokens": 522}
+{"key": "nat:38fcde26f8f8|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 510}
+{"key": "nat:2a3e6626c9eb|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 532}
+{"key": "nat:11c37317be4b|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 538}
+{"key": "nat:470b6a888472|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 721}
+{"key": "nat:8d3b0e382ddc|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 546}
+{"key": "nat:52363f027a7a|grade", "text": "{\n  \"relevant\": [true, false, true, false, true]\n}", "tokens": 440}
+{"key": "nat:c32ba96cf967|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 549}
+{"key": "nat:4c0e00d35ec4|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 497}
+{"key": "nat:51af637aed60|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 561}
+{"key": "nat:0819c71513fd|grade", "text": "{\n  \"relevant\": [false, true, false, false, false]\n}", "tokens": 484}
+{"key": "nat:df69fd26a279|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 501}
+{"key": "nat:33d3bf3d816a|grade", "text": "{\n  \"relevant\": [false, true, false, true, false]\n}", "tokens": 341}
+{"key": "nat:2805ba35a46f|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 506}
+{"key": "nat:d29ffce2a13c|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 515}
+{"key": "nat:bb1b8e32a77d|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 546}
+{"key": "nat:2b4f054d8393|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 538}
+{"key": "nat:c101caad03ae|grade", "text": "{\n  \"relevant\": [true, true, false, true, true]\n}", "tokens": 501}
+{"key": "nat:20654379062a|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 484}
+{"key": "nat:90bf53962c56|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 551}
+{"key": "nat:557d306aeb51|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 567}
+{"key": "nat:63afd9f73d05|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 547}
+{"key": "nat:752e0963b4d6|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 691}
+{"key": "nat:bdd97921aaf0|grade", "text": "{\n  \"relevant\": [\n    false,\n    false,\n    true,\n    false,\n    false\n  ]\n}", "tokens": 500}
+{"key": "nat:3012f1c1e8a7|grade", "text": "{\n  \"relevant\": [true, false, false, false, false]\n}", "tokens": 593}
+{"key": "nat:d5a5b3dd1ccb|grade", "text": "{\n  \"relevant\": [true, false, false, false, true]\n}", "tokens": 726}
+{"key": "nat:71e7dbed29cf|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 399}
+{"key": "nat:8b2ba35acd88|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 483}
+{"key": "nat:28e6b4c51043|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 371}
+{"key": "nat:d08276efbdda|grade", "text": "{\n  \"relevant\": [true, true, true, false, true]\n}", "tokens": 510}
+{"key": "nat:91a6060f7396|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 536}
+{"key": "nat:85653297b585|grade", "text": "{\n  \"relevant\": [true, true, true, true, true]\n}", "tokens": 447}
+{"key": "nat:f932fd7d0ac9|grade", "text": "{\n  \"relevant\": [false, false, false, false, false]\n}", "tokens": 457}
+{"key": "nat:df15dbca968e|rewrite", "text": "{\"query\": \"halloween serving dishes\"}", "tokens": 61}
+{"key": "nat:e0000bf79b0a|rewrite", "text": "{\"query\": \"1:12 scale off-road vehicle\"}", "tokens": 75}
+{"key": "nat:11604f8492bf|rewrite", "text": "{\"query\": \"LEGO pirate ship\"}", "tokens": 61}
+{"key": "nat:6a6b9b0d480f|rewrite", "text": "{\"query\": \"fire stick\"}", "tokens": 65}
+{"key": "nat:0db273ddcad9|rewrite", "text": "{\"query\": \"heavy duty stay hinges\"}", "tokens": 65}
+{"key": "nat:b5137d7ad14b|rewrite", "text": "{\"query\": \"shaker floor cabinets\"}", "tokens": 65}
+{"key": "nat:cdaa44c0a931|rewrite", "text": "{\"query\": \"art supply trolley\"}", "tokens": 61}
+{"key": "nat:73f98f658b3c|rewrite", "text": "{\"query\": \"Janet Oakley\"}", "tokens": 61}
+{"key": "nat:48b8a0d44b96|rewrite", "text": "{\"query\": \"Nemo Croc charms\"}", "tokens": 63}
+{"key": "nat:1d53fe59a9de|rewrite", "text": "{\"query\": \"elevated dog bowl stand no bowls\"}", "tokens": 67}
+{"key": "nat:50730b1f3df6|rewrite", "text": "{\"query\": \"toys for 2 year old girls\"}", "tokens": 69}
+{"key": "nat:cb412f2699df|rewrite", "text": "{\"query\": \"wireless earphones\"}", "tokens": 62}
+{"key": "nat:a0854112d2c8|rewrite", "text": "{\n  \"query\": \"xbox 30 gift card\"\n}", "tokens": 75}
+{"key": "nat:0b3db610d583|rewrite", "text": "{\"query\": \"DeWalt metal cutting saw\"}", "tokens": 65}
+{"key": "nat:d2a7636104ab|rewrite", "text": "{\"query\": \"apetamin weight gain syrup\"}", "tokens": 70}
+{"key": "nat:c83babdb627e|rewrite", "text": "{\"query\": \"manubrio bicicleta ruta\"}", "tokens": 67}
+{"key": "nat:52297339d528|rewrite", "text": "{\"query\": \"3-in-1 toddler car seat rear facing\"}", "tokens": 74}
+{"key": "nat:702199467205|rewrite", "text": "{\"query\": \"fish oil vegetarian\"}", "tokens": 62}
+{"key": "nat:6b50b7df2891|rewrite", "text": "{\"query\": \"hidradenitis suppurativa\"}", "tokens": 69}
+{"key": "nat:4b2d2ef5bc69|rewrite", "text": "{\"query\": \"Seiko Flieger\"}", "tokens": 63}
+{"key": "nat:65a0cf22acb7|rewrite", "text": "{\"query\": \"FTX Outlaw 1/10 Ultra-4 brushed buggy\"}", "tokens": 82}
+{"key": "nat:6163b0e63134|rewrite", "text": "{\"query\": \"radio pantalla sony carro\"}", "tokens": 65}
+{"key": "nat:65f7203d704d|rewrite", "text": "{\"query\": \"autoest\u00e9reo pantalla\"}", "tokens": 64}
+{"key": "nat:6350f1002fa6|rewrite", "text": "{\"query\": \"Casio men's watch replacement band\"}", "tokens": 69}
+{"key": "nat:bcb8350de80c|rewrite", "text": "{\"query\": \"elevated dog bowl stand\"}", "tokens": 66}
+{"key": "nat:29fc811770ce|rewrite", "text": "{\"query\": \"nesting wedding band\"}", "tokens": 62}
+{"key": "nat:312fff7a70f4|rewrite", "text": "{\"query\": \"firm twin spring mattress\"}", "tokens": 63}
+{"key": "nat:eee6c125dbe8|rewrite", "text": "{\"query\": \"Huk men's fishing shirt\"}", "tokens": 67}
+{"key": "nat:a5e37d223c3a|rewrite", "text": "{\"query\": \"corner TV wall mount\"}", "tokens": 63}
+{"key": "nat:2c2982acd460|rewrite", "text": "{\"query\": \"SCCY 9mm accessories\"}", "tokens": 68}
+{"key": "nat:5948cba18fa5|rewrite", "text": "{\"query\": \"remote machine\"}", "tokens": 59}
+{"key": "nat:e24ebb0b5495|rewrite", "text": "{\"query\": \"dot to dot\"}", "tokens": 61}
+{"key": "nat:a224cf31180a|rewrite", "text": "{\"query\": \"32 inch bathroom vanity\"}", "tokens": 67}
+{"key": "nat:385373e5ef72|rewrite", "text": "{\"query\": \"roman chair\"}", "tokens": 59}
+{"key": "nat:094e637c60d6|rewrite", "text": "{\n  \"query\": \"Quattro Air full face headgear large\"\n}", "tokens": 75}
+{"key": "nat:d70e4269c256|rewrite", "text": "{\n  \"query\": \"Nook Tablet 7 case\"\n}", "tokens": 73}
+{"key": "nat:1ea326e722ab|rewrite", "text": "{\"query\": \"single player games\"}", "tokens": 62}
+{"key": "nat:64c439fbce55|rewrite", "text": "{\"query\": \"social skills\"}", "tokens": 63}
+{"key": "nat:c3de7d350ee9|rewrite", "text": "{\"query\": \"My Life Without Me DVD\"}", "tokens": 65}
+{"key": "nat:6d2fcb2687a0|rewrite", "text": "{\"query\": \"protein chips\"}", "tokens": 60}
+{"key": "nat:093bf9e3b499|rewrite", "text": "{\"query\": \"Makita garden tools\"}", "tokens": 63}
+{"key": "nat:018583afc335|rewrite", "text": "{\"query\": \"men gucci\"}", "tokens": 60}
+{"key": "nat:18bdbc7229a5|rewrite", "text": "{\"query\": \"fauci ouchie shirt\"}", "tokens": 70}
+{"key": "nat:1a9b4ec183dc|rewrite", "text": "{\"query\": \"Peppa Pig Jibbitz\"}", "tokens": 68}
+{"key": "nat:5993c0733702|rewrite", "text": "{\"query\": \"half moon window mirror\"}", "tokens": 65}
+{"key": "nat:7cd8643e8d74|rewrite", "text": "{\"query\": \"switchblade\"}", "tokens": 59}
+{"key": "nat:c1484437f39e|rewrite", "text": "{\"query\": \"blue wifi\"}", "tokens": 60}
+{"key": "nat:d71b57215521|rewrite", "text": "{\"query\": \"Mestar Iron Pro 2-in-1\"}", "tokens": 74}
+{"key": "nat:ddc79decd4b8|rewrite", "text": "{\"query\": \"video doorbell\"}", "tokens": 59}
+{"key": "nat:45fda54ded51|rewrite", "text": "{\"query\": \"Allegiant Air ornament\"}", "tokens": 63}
+{"key": "nat:c51af9c1ffb3|rewrite", "text": "{\"query\": \"Sparkletts water\"}", "tokens": 61}
+{"key": "nat:e5ec4d74ffbc|rewrite", "text": "{\"query\": \"Brookstone Off-Road Rover\"}", "tokens": 66}
+{"key": "nat:da3b4461994d|rewrite", "text": "{\n  \"query\": \"radar speed sign\"\n}", "tokens": 66}
+{"key": "nat:896e95dd5c5a|rewrite", "text": "{\"query\": \"Castle Panic Big Box\"}", "tokens": 63}
+{"key": "nat:7b45cd434800|rewrite", "text": "{\"query\": \"220v hair tools\"}", "tokens": 77}
+{"key": "nat:2a0a7cd28af4|rewrite", "text": "{\"query\": \"button tufted convertible sofa\"}", "tokens": 64}
+{"key": "nat:e18add149fdc|rewrite", "text": "{\"query\": \"pharma packs\"}", "tokens": 61}
+{"key": "nat:3889b87ec3d3|rewrite", "text": "{\"query\": \"realistic metal toy guns\"}", "tokens": 63}
+{"key": "nat:9514214d861a|rewrite", "text": "{\"query\": \"cobalt blue charger\"}", "tokens": 62}
+{"key": "nat:b6a8f575c9a1|rewrite", "text": "{\"query\": \"Longvida curcumin\"}", "tokens": 61}
+{"key": "nat:11a012f0c1e2|rewrite", "text": "{\"query\": \"Lite-Brite\"}", "tokens": 61}
+{"key": "nat:9ef2bd290ef7|rewrite", "text": "{\"query\": \"Fruit of the Loom premium t-shirt 2XL\"}", "tokens": 77}
+{"key": "nat:38a804bcaa30|rewrite", "text": "{\"query\": \"fake tattoo\"}", "tokens": 60}
+{"key": "nat:429211bbc79e|rewrite", "text": "{\"query\": \"makeup kits\"}", "tokens": 60}
+{"key": "nat:c60a687e6aa2|rewrite", "text": "{\"query\": \"HDMI to DisplayPort bidirectional cable\"}", "tokens": 69}
+{"key": "nat:7b2a12eed940|rewrite", "text": "{\"query\": \"dust boot\"}", "tokens": 59}
+{"key": "nat:e462b94773c5|rewrite", "text": "{\"query\": \"boys toga\"}", "tokens": 60}
+{"key": "nat:7909c27e0a5a|rewrite", "text": "{\"query\": \"unicorn backpack girls\"}", "tokens": 62}
+{"key": "nat:08b158576526|rewrite", "text": "{\"query\": \"non-spring BB gun under 15 dollars\"}", "tokens": 75}
+{"key": "nat:c5dd1885442d|rewrite", "text": "{\"query\": \"girls size 7 christmas outfit\"}", "tokens": 68}
+{"key": "nat:43c7a5b4ddbe|rewrite", "text": "{\"query\": \"youth BB gun\"}", "tokens": 62}
+{"key": "nat:29f0d8169e3a|rewrite", "text": "{\"query\": \"got your six shirt\"}", "tokens": 71}
+{"key": "nat:2fcc4681e30b|rewrite", "text": "{\"query\": \"couples sex dice\"}", "tokens": 63}
+{"key": "nat:15657fe0290d|rewrite", "text": "{\"query\": \"sulfur pellets\"}", "tokens": 61}
+{"key": "nat:da9f3f40f340|rewrite", "text": "{\"query\": \"watercolor scrubber brush\"}", "tokens": 61}
+{"key": "nat:093a908ebb91|rewrite", "text": "{\"query\": \"12x24x1 reusable air filter\"}", "tokens": 78}
+{"key": "nat:3e9b88a8754c|rewrite", "text": "{\"query\": \"Peppa Pig Gucci\"}", "tokens": 63}
+{"key": "nat:52960e7705be|rewrite", "text": "{\"query\": \"soda gun dispenser system\"}", "tokens": 65}
+{"key": "nat:48a9919b2c90|rewrite", "text": "{\"query\": \"Ensure Original Vanilla 24 pack\"}", "tokens": 69}
+{"key": "nat:db28dd1416b8|rewrite", "text": "{\"query\": \"Adidas\"}", "tokens": 58}
+{"key": "nat:4b1b6cc088b3|rewrite", "text": "{\"query\": \"star charm hoops\"}", "tokens": 61}
+{"key": "nat:592dcaf93887|rewrite", "text": "{\"query\": \"do not give into the war within shirt\"}", "tokens": 71}
+{"key": "nat:f754643174b5|rewrite", "text": "{\"query\": \"null\"}", "tokens": 65}
+{"key": "nat:c5ab7ff6a63f|rewrite", "text": "{\"query\": \"Google Home\"}", "tokens": 59}
+{"key": "nat:20654379062a|rewrite", "text": "{\"query\": \"wedding cards\"}", "tokens": 61}
+{"key": "nat:bb1b8e32a77d|rewrite", "text": "{\"query\": \"Black and Decker multi-tool\"}", "tokens": 69}
+{"key": "nat:28e6b4c51043|rewrite", "text": "{\"query\": \"gymnastics pins\"}", "tokens": 61}
+{"key": "nat:8d3b0e382ddc|rewrite", "text": "{\"query\": \"youtube\"}", "tokens": 60}
+{"key": "nat:f932fd7d0ac9|rewrite", "text": "{\"query\": \"thyroid cancer free shirt\"}", "tokens": 68}

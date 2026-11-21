@@ -1,0 +1,3544 @@
+{
+ "seed": 51,
+ "protocol": "docs/evidence/v7_composed_protocol.md",
+ "n_train_kept": 155,
+ "n_test_kept": 155,
+ "kept_by_split_stratum": {
+  "train|WITHIN_FAMILY": 20,
+  "train|QQ": 20,
+  "train|KK": 20,
+  "train|RR": 20,
+  "train|QK": 20,
+  "train|QR": 20,
+  "train|KR": 20,
+  "train|TRIPLE": 15,
+  "test|WITHIN_FAMILY": 20,
+  "test|QQ": 20,
+  "test|KK": 20,
+  "test|RR": 20,
+  "test|QK": 20,
+  "test|QR": 20,
+  "test|KR": 20,
+  "test|TRIPLE": 15
+ },
+ "quota_per_split_stratum": {
+  "WITHIN_FAMILY": 20,
+  "QQ": 20,
+  "KK": 20,
+  "RR": 20,
+  "QK": 20,
+  "QR": 20,
+  "KR": 20,
+  "TRIPLE": 15
+ },
+ "empty_or_short_strata": {},
+ "overall": {
+  "n": 155,
+  "both_causes_family_new": {
+   "k": 62,
+   "n": 155,
+   "rate": 0.4,
+   "ci": [
+    0.3261933617957926,
+    0.4786436582291882
+   ]
+  },
+  "any_cause_family_new": {
+   "k": 149,
+   "n": 155,
+   "rate": 0.9612903225806452,
+   "ci": [
+    0.9181273811193313,
+    0.9821405587654344
+   ]
+  },
+  "both_causes_group_new": {
+   "k": 124,
+   "n": 155,
+   "rate": 0.8,
+   "ci": [
+    0.7301165310206369,
+    0.8553724089044206
+   ]
+  },
+  "set_f1_family_new": 0.7698924731182797,
+  "set_recall_family_new": 0.6967741935483871,
+  "set_precision_family_new": 0.9225806451612903,
+  "set_f1_group_new": 0.9258064516129032,
+  "both_causes_family_old": {
+   "k": 47,
+   "n": 155,
+   "rate": 0.3032258064516129,
+   "ci": [
+    0.23634352265430877,
+    0.379626097394847
+   ]
+  },
+  "any_cause_family_old": {
+   "k": 149,
+   "n": 155,
+   "rate": 0.9612903225806452,
+   "ci": [
+    0.9181273811193313,
+    0.9821405587654344
+   ]
+  },
+  "both_causes_group_old": {
+   "k": 107,
+   "n": 155,
+   "rate": 0.6903225806451613,
+   "ci": [
+    0.6136681484097909,
+    0.7577710715426649
+   ]
+  },
+  "set_f1_family_old": 0.7133333333333333,
+  "set_recall_family_old": 0.6440860215053763,
+  "set_precision_family_old": 0.8870967741935484,
+  "set_f1_group_old": 0.8531182795698926,
+  "sequential_closure": {
+   "k": 113,
+   "n": 155,
+   "rate": 0.7290322580645161,
+   "ci": [
+    0.6541511168366239,
+    0.7928350631061618
+   ]
+  },
+  "mean_rounds_applied": 2.07741935483871,
+  "dispatched_first_round": {
+   "k": 143,
+   "n": 155,
+   "rate": 0.9225806451612903,
+   "ci": [
+    0.8695599429902625,
+    0.9551610369041732
+   ]
+  },
+  "oracle_forward_closure": {
+   "k": 130,
+   "n": 155,
+   "rate": 0.8387096774193549,
+   "ci": [
+    0.7727359279786586,
+    0.8882999719367288
+   ]
+  },
+  "oracle_reverse_closure": {
+   "k": 130,
+   "n": 155,
+   "rate": 0.8387096774193549,
+   "ci": [
+    0.7727359279786586,
+    0.8882999719367288
+   ]
+  },
+  "reverse_subsample_n": 32,
+  "reverse_subsample_applicable_n": 24,
+  "reverse_default_closure_same_episodes": {
+   "k": 25,
+   "n": 32,
+   "rate": 0.78125,
+   "ci": [
+    0.6124466920955516,
+    0.8897630306846814
+   ]
+  },
+  "reverse_forced_closure": {
+   "k": 25,
+   "n": 32,
+   "rate": 0.78125,
+   "ci": [
+    0.6124466920955516,
+    0.8897630306846814
+   ]
+  },
+  "reverse_default_closure_applicable_only": {
+   "k": 18,
+   "n": 24,
+   "rate": 0.75,
+   "ci": [
+    0.5510017468789357,
+    0.8800079652065768
+   ]
+  },
+  "reverse_forced_closure_applicable_only": {
+   "k": 18,
+   "n": 24,
+   "rate": 0.75,
+   "ci": [
+    0.5510017468789357,
+    0.8800079652065768
+   ]
+  },
+  "alone_all_fail": {
+   "k": 29,
+   "n": 155,
+   "rate": 0.1870967741935484,
+   "ci": [
+    0.13354466465333883,
+    0.25578407542482706
+   ]
+  },
+  "alone_none_fail": {
+   "k": 40,
+   "n": 155,
+   "rate": 0.25806451612903225,
+   "ci": [
+    0.19561574370323004,
+    0.33221575635720746
+   ]
+  },
+  "alone_some_fail_not_all": {
+   "k": 85,
+   "n": 155,
+   "rate": 0.5483870967741935,
+   "ci": [
+    0.4698151725925736,
+    0.6246185273953387
+   ]
+  },
+  "alone_unknown": {
+   "k": 1,
+   "n": 155,
+   "rate": 0.0064516129032258064,
+   "ci": [
+    0.0011397480503407427,
+    0.0356365120729519
+   ]
+  }
+ },
+ "by_stratum": {
+  "WITHIN_FAMILY": {
+   "n": 20,
+   "both_causes_family_new": {
+    "k": 20,
+    "n": 20,
+    "rate": 1.0,
+    "ci": [
+     0.8388698745050667,
+     0.9999999999999998
+    ]
+   },
+   "any_cause_family_new": {
+    "k": 20,
+    "n": 20,
+    "rate": 1.0,
+    "ci": [
+     0.8388698745050667,
+     0.9999999999999998
+    ]
+   },
+   "both_causes_group_new": {
+    "k": 20,
+    "n": 20,
+    "rate": 1.0,
+    "ci": [
+     0.8388698745050667,
+     0.9999999999999998
+    ]
+   },
+   "set_f1_family_new": 0.9333333333333332,
+   "set_recall_family_new": 1.0,
+   "set_precision_family_new": 0.9,
+   "set_f1_group_new": 0.9333333333333332,
+   "both_causes_family_old": {
+    "k": 20,
+    "n": 20,
+    "rate": 1.0,
+    "ci": [
+     0.8388698745050667,
+     0.9999999999999998
+    ]
+   },
+   "any_cause_family_old": {
+    "k": 20,
+    "n": 20,
+    "rate": 1.0,
+    "ci": [
+     0.8388698745050667,
+     0.9999999999999998
+    ]
+   },
+   "both_causes_group_old": {
+    "k": 20,
+    "n": 20,
+    "rate": 1.0,
+    "ci": [
+     0.8388698745050667,
+     0.9999999999999998
+    ]
+   },
+   "set_f1_family_old": 0.7999999999999999,
+   "set_recall_family_old": 1.0,
+   "set_precision_family_old": 0.7,
+   "set_f1_group_old": 0.7999999999999999,
+   "sequential_closure": {
+    "k": 3,
+    "n": 20,
+    "rate": 0.15,
+    "ci": [
+     0.05236779195949582,
+     0.36042329588695743
+    ]
+   },
+   "mean_rounds_applied": 0.6,
+   "dispatched_first_round": {
+    "k": 12,
+    "n": 20,
+    "rate": 0.6,
+    "ci": [
+     0.38657794231520604,
+     0.7811960325858073
+    ]
+   },
+   "oracle_forward_closure": {
+    "k": 7,
+    "n": 20,
+    "rate": 0.35,
+    "ci": [
+     0.1811895478679446,
+     0.5671494897805353
+    ]
+   },
+   "oracle_reverse_closure": {
+    "k": 7,
+    "n": 20,
+    "rate": 0.35,
+    "ci": [
+     0.1811895478679446,
+     0.5671494897805353
+    ]
+   },
+   "reverse_subsample_n": 6,
+   "reverse_subsample_applicable_n": 5,
+   "reverse_default_closure_same_episodes": {
+    "k": 1,
+    "n": 6,
+    "rate": 0.16666666666666666,
+    "ci": [
+     0.030052585871730285,
+     0.563509436563646
+    ]
+   },
+   "reverse_forced_closure": {
+    "k": 1,
+    "n": 6,
+    "rate": 0.16666666666666666,
+    "ci": [
+     0.030052585871730285,
+     0.563509436563646
+    ]
+   },
+   "reverse_default_closure_applicable_only": {
+    "k": 1,
+    "n": 5,
+    "rate": 0.2,
+    "ci": [
+     0.036223160969787456,
+     0.6244717358814612
+    ]
+   },
+   "reverse_forced_closure_applicable_only": {
+    "k": 1,
+    "n": 5,
+    "rate": 0.2,
+    "ci": [
+     0.036223160969787456,
+     0.6244717358814612
+    ]
+   },
+   "alone_all_fail": {
+    "k": 3,
+    "n": 20,
+    "rate": 0.15,
+    "ci": [
+     0.05236779195949582,
+     0.36042329588695743
+    ]
+   },
+   "alone_none_fail": {
+    "k": 5,
+    "n": 20,
+    "rate": 0.25,
+    "ci": [
+     0.11186005278940306,
+     0.4687050099580635
+    ]
+   },
+   "alone_some_fail_not_all": {
+    "k": 12,
+    "n": 20,
+    "rate": 0.6,
+    "ci": [
+     0.38657794231520604,
+     0.7811960325858073
+    ]
+   },
+   "alone_unknown": {
+    "k": 0,
+    "n": 20,
+    "rate": 0.0,
+    "ci": [
+     -1.1641658116749259e-17,
+     0.1611301254949332
+    ]
+   }
+  },
+  "QQ": {
+   "n": 20,
+   "both_causes_family_new": {
+    "k": 0,
+    "n": 20,
+    "rate": 0.0,
+    "ci": [
+     -1.1641658116749259e-17,
+     0.1611301254949332
+    ]
+   },
+   "any_cause_family_new": {
+    "k": 15,
+    "n": 20,
+    "rate": 0.75,
+    "ci": [
+     0.5312949900419365,
+     0.888139947210597
+    ]
+   },
+   "both_causes_group_new": {
+    "k": 20,
+    "n": 20,
+    "rate": 1.0,
+    "ci": [
+     0.8388698745050667,
+     0.9999999999999998
+    ]
+   },
+   "set_f1_family_new": 0.4666666666666666,
+   "set_recall_family_new": 0.375,
+   "set_precision_family_new": 0.65,
+   "set_f1_group_new": 0.9333333333333332,
+   "both_causes_family_old": {
+    "k": 0,
+    "n": 20,
+    "rate": 0.0,
+    "ci": [
+     -1.1641658116749259e-17,
+     0.1611301254949332
+    ]
+   },
+   "any_cause_family_old": {
+    "k": 17,
+    "n": 20,
+    "rate": 0.85,
+    "ci": [
+     0.6395767041130426,
+     0.9476322080405041
+    ]
+   },
+   "both_causes_group_old": {
+    "k": 20,
+    "n": 20,
+    "rate": 1.0,
+    "ci": [
+     0.8388698745050667,
+     0.9999999999999998
+    ]
+   },
+   "set_f1_family_old": 0.4999999999999999,
+   "set_recall_family_old": 0.425,
+   "set_precision_family_old": 0.65,
+   "set_f1_group_old": 0.8166666666666667,
+   "sequential_closure": {
+    "k": 11,
+    "n": 20,
+    "rate": 0.55,
+    "ci": [
+     0.34208200830759966,
+     0.741804979142907
+    ]
+   },
+   "mean_rounds_applied": 1.4,
+   "dispatched_first_round": {
+    "k": 20,
+    "n": 20,
+    "rate": 1.0,
+    "ci": [
+     0.8388698745050667,
+     0.9999999999999998
+    ]
+   },
+   "oracle_forward_closure": {
+    "k": 18,
+    "n": 20,
+    "rate": 0.9,
+    "ci": [
+     0.6989617935882066,
+     0.9721341060158467
+    ]
+   },
+   "oracle_reverse_closure": {
+    "k": 18,
+    "n": 20,
+    "rate": 0.9,
+    "ci": [
+     0.6989617935882066,
+     0.9721341060158467
+    ]
+   },
+   "reverse_subsample_n": 3,
+   "reverse_subsample_applicable_n": 3,
+   "reverse_default_closure_same_episodes": {
+    "k": 2,
+    "n": 3,
+    "rate": 0.6666666666666666,
+    "ci": [
+     0.20765495512648788,
+     0.9385096847238393
+    ]
+   },
+   "reverse_forced_closure": {
+    "k": 2,
+    "n": 3,
+    "rate": 0.6666666666666666,
+    "ci": [
+     0.20765495512648788,
+     0.9385096847238393
+    ]
+   },
+   "reverse_default_closure_applicable_only": {
+    "k": 2,
+    "n": 3,
+    "rate": 0.6666666666666666,
+    "ci": [
+     0.20765495512648788,
+     0.9385096847238393
+    ]
+   },
+   "reverse_forced_closure_applicable_only": {
+    "k": 2,
+    "n": 3,
+    "rate": 0.6666666666666666,
+    "ci": [
+     0.20765495512648788,
+     0.9385096847238393
+    ]
+   },
+   "alone_all_fail": {
+    "k": 0,
+    "n": 20,
+    "rate": 0.0,
+    "ci": [
+     -1.1641658116749259e-17,
+     0.1611301254949332
+    ]
+   },
+   "alone_none_fail": {
+    "k": 12,
+    "n": 20,
+    "rate": 0.6,
+    "ci": [
+     0.38657794231520604,
+     0.7811960325858073
+    ]
+   },
+   "alone_some_fail_not_all": {
+    "k": 7,
+    "n": 20,
+    "rate": 0.35,
+    "ci": [
+     0.1811895478679446,
+     0.5671494897805353
+    ]
+   },
+   "alone_unknown": {
+    "k": 1,
+    "n": 20,
+    "rate": 0.05,
+    "ci": [
+     0.008881219432873143,
+     0.23613589351256678
+    ]
+   }
+  },
+  "KK": {
+   "n": 20,
+   "both_causes_family_new": {
+    "k": 0,
+    "n": 20,
+    "rate": 0.0,
+    "ci": [
+     -1.1641658116749259e-17,
+     0.1611301254949332
+    ]
+   },
+   "any_cause_family_new": {
+    "k": 19,
+    "n": 20,
+    "rate": 0.95,
+    "ci": [
+     0.7638641064874331,
+     0.9911187805671267
+    ]
+   },
+   "both_causes_group_new": {
+    "k": 20,
+    "n": 20,
+    "rate": 1.0,
+    "ci": [
+     0.8388698745050667,
+     0.9999999999999998
+    ]
+   },
+   "set_f1_family_new": 0.6333333333333332,
+   "set_recall_family_new": 0.475,
+   "set_precision_family_new": 0.95,
+   "set_f1_group_new": 1.0,
+   "both_causes_family_old": {
+    "k": 0,
+    "n": 20,
+    "rate": 0.0,
+    "ci": [
+     -1.1641658116749259e-17,
+     0.1611301254949332
+    ]
+   },
+   "any_cause_family_old": {
+    "k": 20,
+    "n": 20,
+    "rate": 1.0,
+    "ci": [
+     0.8388698745050667,
+     0.9999999999999998
+    ]
+   },
+   "both_causes_group_old": {
+    "k": 20,
+    "n": 20,
+    "rate": 1.0,
+    "ci": [
+     0.8388698745050667,
+     0.9999999999999998
+    ]
+   },
+   "set_f1_family_old": 0.6666666666666665,
+   "set_recall_family_old": 0.5,
+   "set_precision_family_old": 1.0,
+   "set_f1_group_old": 1.0,
+   "sequential_closure": {
+    "k": 20,
+    "n": 20,
+    "rate": 1.0,
+    "ci": [
+     0.8388698745050667,
+     0.9999999999999998
+    ]
+   },
+   "mean_rounds_applied": 2.95,
+   "dispatched_first_round": {
+    "k": 20,
+    "n": 20,
+    "rate": 1.0,
+    "ci": [
+     0.8388698745050667,
+     0.9999999999999998
+    ]
+   },
+   "oracle_forward_closure": {
+    "k": 20,
+    "n": 20,
+    "rate": 1.0,
+    "ci": [
+     0.8388698745050667,
+     0.9999999999999998
+    ]
+   },
+   "oracle_reverse_closure": {
+    "k": 20,
+    "n": 20,
+    "rate": 1.0,
+    "ci": [
+     0.8388698745050667,
+     0.9999999999999998
+    ]
+   },
+   "reverse_subsample_n": 4,
+   "reverse_subsample_applicable_n": 0,
+   "reverse_default_closure_same_episodes": {
+    "k": 4,
+    "n": 4,
+    "rate": 1.0,
+    "ci": [
+     0.5100999795960008,
+     1.0
+    ]
+   },
+   "reverse_forced_closure": {
+    "k": 4,
+    "n": 4,
+    "rate": 1.0,
+    "ci": [
+     0.5100999795960008,
+     1.0
+    ]
+   },
+   "reverse_default_closure_applicable_only": {
+    "k": 0,
+    "n": 0,
+    "rate": null,
+    "ci": null
+   },
+   "reverse_forced_closure_applicable_only": {
+    "k": 0,
+    "n": 0,
+    "rate": null,
+    "ci": null
+   },
+   "alone_all_fail": {
+    "k": 9,
+    "n": 20,
+    "rate": 0.45,
+    "ci": [
+     0.25819502085709295,
+     0.6579179916924003
+    ]
+   },
+   "alone_none_fail": {
+    "k": 0,
+    "n": 20,
+    "rate": 0.0,
+    "ci": [
+     -1.1641658116749259e-17,
+     0.1611301254949332
+    ]
+   },
+   "alone_some_fail_not_all": {
+    "k": 11,
+    "n": 20,
+    "rate": 0.55,
+    "ci": [
+     0.34208200830759966,
+     0.741804979142907
+    ]
+   },
+   "alone_unknown": {
+    "k": 0,
+    "n": 20,
+    "rate": 0.0,
+    "ci": [
+     -1.1641658116749259e-17,
+     0.1611301254949332
+    ]
+   }
+  },
+  "RR": {
+   "n": 20,
+   "both_causes_family_new": {
+    "k": 0,
+    "n": 20,
+    "rate": 0.0,
+    "ci": [
+     -1.1641658116749259e-17,
+     0.1611301254949332
+    ]
+   },
+   "any_cause_family_new": {
+    "k": 20,
+    "n": 20,
+    "rate": 1.0,
+    "ci": [
+     0.8388698745050667,
+     0.9999999999999998
+    ]
+   },
+   "both_causes_group_new": {
+    "k": 20,
+    "n": 20,
+    "rate": 1.0,
+    "ci": [
+     0.8388698745050667,
+     0.9999999999999998
+    ]
+   },
+   "set_f1_family_new": 0.6583333333333332,
+   "set_recall_family_new": 0.5,
+   "set_precision_family_new": 0.975,
+   "set_f1_group_new": 0.9833333333333334,
+   "both_causes_family_old": {
+    "k": 0,
+    "n": 20,
+    "rate": 0.0,
+    "ci": [
+     -1.1641658116749259e-17,
+     0.1611301254949332
+    ]
+   },
+   "any_cause_family_old": {
+    "k": 17,
+    "n": 20,
+    "rate": 0.85,
+    "ci": [
+     0.6395767041130426,
+     0.9476322080405041
+    ]
+   },
+   "both_causes_group_old": {
+    "k": 20,
+    "n": 20,
+    "rate": 1.0,
+    "ci": [
+     0.8388698745050667,
+     0.9999999999999998
+    ]
+   },
+   "set_f1_family_old": 0.5666666666666665,
+   "set_recall_family_old": 0.425,
+   "set_precision_family_old": 0.85,
+   "set_f1_group_old": 1.0,
+   "sequential_closure": {
+    "k": 19,
+    "n": 20,
+    "rate": 0.95,
+    "ci": [
+     0.7638641064874331,
+     0.9911187805671267
+    ]
+   },
+   "mean_rounds_applied": 2.8,
+   "dispatched_first_round": {
+    "k": 20,
+    "n": 20,
+    "rate": 1.0,
+    "ci": [
+     0.8388698745050667,
+     0.9999999999999998
+    ]
+   },
+   "oracle_forward_closure": {
+    "k": 19,
+    "n": 20,
+    "rate": 0.95,
+    "ci": [
+     0.7638641064874331,
+     0.9911187805671267
+    ]
+   },
+   "oracle_reverse_closure": {
+    "k": 19,
+    "n": 20,
+    "rate": 0.95,
+    "ci": [
+     0.7638641064874331,
+     0.9911187805671267
+    ]
+   },
+   "reverse_subsample_n": 5,
+   "reverse_subsample_applicable_n": 3,
+   "reverse_default_closure_same_episodes": {
+    "k": 5,
+    "n": 5,
+    "rate": 1.0,
+    "ci": [
+     0.565508505247919,
+     1.0000000000000002
+    ]
+   },
+   "reverse_forced_closure": {
+    "k": 5,
+    "n": 5,
+    "rate": 1.0,
+    "ci": [
+     0.565508505247919,
+     1.0000000000000002
+    ]
+   },
+   "reverse_default_closure_applicable_only": {
+    "k": 3,
+    "n": 3,
+    "rate": 1.0,
+    "ci": [
+     0.4384939195509822,
+     1.0
+    ]
+   },
+   "reverse_forced_closure_applicable_only": {
+    "k": 3,
+    "n": 3,
+    "rate": 1.0,
+    "ci": [
+     0.4384939195509822,
+     1.0
+    ]
+   },
+   "alone_all_fail": {
+    "k": 2,
+    "n": 20,
+    "rate": 0.1,
+    "ci": [
+     0.027865893984153196,
+     0.30103820641179335
+    ]
+   },
+   "alone_none_fail": {
+    "k": 8,
+    "n": 20,
+    "rate": 0.4,
+    "ci": [
+     0.21880396741419272,
+     0.613422057684794
+    ]
+   },
+   "alone_some_fail_not_all": {
+    "k": 10,
+    "n": 20,
+    "rate": 0.5,
+    "ci": [
+     0.2992949144298199,
+     0.70070508557018
+    ]
+   },
+   "alone_unknown": {
+    "k": 0,
+    "n": 20,
+    "rate": 0.0,
+    "ci": [
+     -1.1641658116749259e-17,
+     0.1611301254949332
+    ]
+   }
+  },
+  "QK": {
+   "n": 20,
+   "both_causes_family_new": {
+    "k": 9,
+    "n": 20,
+    "rate": 0.45,
+    "ci": [
+     0.25819502085709295,
+     0.6579179916924003
+    ]
+   },
+   "any_cause_family_new": {
+    "k": 20,
+    "n": 20,
+    "rate": 1.0,
+    "ci": [
+     0.8388698745050667,
+     0.9999999999999998
+    ]
+   },
+   "both_causes_group_new": {
+    "k": 11,
+    "n": 20,
+    "rate": 0.55,
+    "ci": [
+     0.34208200830759966,
+     0.741804979142907
+    ]
+   },
+   "set_f1_family_new": 0.7916666666666665,
+   "set_recall_family_new": 0.725,
+   "set_precision_family_new": 0.925,
+   "set_f1_group_new": 0.8416666666666666,
+   "both_causes_family_old": {
+    "k": 2,
+    "n": 20,
+    "rate": 0.1,
+    "ci": [
+     0.027865893984153196,
+     0.30103820641179335
+    ]
+   },
+   "any_cause_family_old": {
+    "k": 20,
+    "n": 20,
+    "rate": 1.0,
+    "ci": [
+     0.8388698745050667,
+     0.9999999999999998
+    ]
+   },
+   "both_causes_group_old": {
+    "k": 2,
+    "n": 20,
+    "rate": 0.1,
+    "ci": [
+     0.027865893984153196,
+     0.30103820641179335
+    ]
+   },
+   "set_f1_family_old": 0.6749999999999998,
+   "set_recall_family_old": 0.55,
+   "set_precision_family_old": 0.925,
+   "set_f1_group_old": 0.6749999999999998,
+   "sequential_closure": {
+    "k": 12,
+    "n": 20,
+    "rate": 0.6,
+    "ci": [
+     0.38657794231520604,
+     0.7811960325858073
+    ]
+   },
+   "mean_rounds_applied": 1.7,
+   "dispatched_first_round": {
+    "k": 17,
+    "n": 20,
+    "rate": 0.85,
+    "ci": [
+     0.6395767041130426,
+     0.9476322080405041
+    ]
+   },
+   "oracle_forward_closure": {
+    "k": 15,
+    "n": 20,
+    "rate": 0.75,
+    "ci": [
+     0.5312949900419365,
+     0.888139947210597
+    ]
+   },
+   "oracle_reverse_closure": {
+    "k": 15,
+    "n": 20,
+    "rate": 0.75,
+    "ci": [
+     0.5312949900419365,
+     0.888139947210597
+    ]
+   },
+   "reverse_subsample_n": 2,
+   "reverse_subsample_applicable_n": 2,
+   "reverse_default_closure_same_episodes": {
+    "k": 2,
+    "n": 2,
+    "rate": 1.0,
+    "ci": [
+     0.3423719528896193,
+     1.0
+    ]
+   },
+   "reverse_forced_closure": {
+    "k": 2,
+    "n": 2,
+    "rate": 1.0,
+    "ci": [
+     0.3423719528896193,
+     1.0
+    ]
+   },
+   "reverse_default_closure_applicable_only": {
+    "k": 2,
+    "n": 2,
+    "rate": 1.0,
+    "ci": [
+     0.3423719528896193,
+     1.0
+    ]
+   },
+   "reverse_forced_closure_applicable_only": {
+    "k": 2,
+    "n": 2,
+    "rate": 1.0,
+    "ci": [
+     0.3423719528896193,
+     1.0
+    ]
+   },
+   "alone_all_fail": {
+    "k": 6,
+    "n": 20,
+    "rate": 0.3,
+    "ci": [
+     0.14547527396899385,
+     0.5189767762289793
+    ]
+   },
+   "alone_none_fail": {
+    "k": 2,
+    "n": 20,
+    "rate": 0.1,
+    "ci": [
+     0.027865893984153196,
+     0.30103820641179335
+    ]
+   },
+   "alone_some_fail_not_all": {
+    "k": 12,
+    "n": 20,
+    "rate": 0.6,
+    "ci": [
+     0.38657794231520604,
+     0.7811960325858073
+    ]
+   },
+   "alone_unknown": {
+    "k": 0,
+    "n": 20,
+    "rate": 0.0,
+    "ci": [
+     -1.1641658116749259e-17,
+     0.1611301254949332
+    ]
+   }
+  },
+  "QR": {
+   "n": 20,
+   "both_causes_family_new": {
+    "k": 17,
+    "n": 20,
+    "rate": 0.85,
+    "ci": [
+     0.6395767041130426,
+     0.9476322080405041
+    ]
+   },
+   "any_cause_family_new": {
+    "k": 20,
+    "n": 20,
+    "rate": 1.0,
+    "ci": [
+     0.8388698745050667,
+     0.9999999999999998
+    ]
+   },
+   "both_causes_group_new": {
+    "k": 17,
+    "n": 20,
+    "rate": 0.85,
+    "ci": [
+     0.6395767041130426,
+     0.9476322080405041
+    ]
+   },
+   "set_f1_family_new": 0.95,
+   "set_recall_family_new": 0.925,
+   "set_precision_family_new": 1.0,
+   "set_f1_group_new": 0.95,
+   "both_causes_family_old": {
+    "k": 12,
+    "n": 20,
+    "rate": 0.6,
+    "ci": [
+     0.38657794231520604,
+     0.7811960325858073
+    ]
+   },
+   "any_cause_family_old": {
+    "k": 20,
+    "n": 20,
+    "rate": 1.0,
+    "ci": [
+     0.8388698745050667,
+     0.9999999999999998
+    ]
+   },
+   "both_causes_group_old": {
+    "k": 12,
+    "n": 20,
+    "rate": 0.6,
+    "ci": [
+     0.38657794231520604,
+     0.7811960325858073
+    ]
+   },
+   "set_f1_family_old": 0.8666666666666666,
+   "set_recall_family_old": 0.8,
+   "set_precision_family_old": 1.0,
+   "set_f1_group_old": 0.8666666666666666,
+   "sequential_closure": {
+    "k": 14,
+    "n": 20,
+    "rate": 0.7,
+    "ci": [
+     0.4810232237710205,
+     0.8545247260310062
+    ]
+   },
+   "mean_rounds_applied": 1.65,
+   "dispatched_first_round": {
+    "k": 19,
+    "n": 20,
+    "rate": 0.95,
+    "ci": [
+     0.7638641064874331,
+     0.9911187805671267
+    ]
+   },
+   "oracle_forward_closure": {
+    "k": 16,
+    "n": 20,
+    "rate": 0.8,
+    "ci": [
+     0.5839782779742402,
+     0.9193436467288001
+    ]
+   },
+   "oracle_reverse_closure": {
+    "k": 16,
+    "n": 20,
+    "rate": 0.8,
+    "ci": [
+     0.5839782779742402,
+     0.9193436467288001
+    ]
+   },
+   "reverse_subsample_n": 5,
+   "reverse_subsample_applicable_n": 4,
+   "reverse_default_closure_same_episodes": {
+    "k": 4,
+    "n": 5,
+    "rate": 0.8,
+    "ci": [
+     0.37552826411853885,
+     0.9637768390302125
+    ]
+   },
+   "reverse_forced_closure": {
+    "k": 4,
+    "n": 5,
+    "rate": 0.8,
+    "ci": [
+     0.37552826411853885,
+     0.9637768390302125
+    ]
+   },
+   "reverse_default_closure_applicable_only": {
+    "k": 3,
+    "n": 4,
+    "rate": 0.75,
+    "ci": [
+     0.30063605244263664,
+     0.9544139373553638
+    ]
+   },
+   "reverse_forced_closure_applicable_only": {
+    "k": 3,
+    "n": 4,
+    "rate": 0.75,
+    "ci": [
+     0.30063605244263664,
+     0.9544139373553638
+    ]
+   },
+   "alone_all_fail": {
+    "k": 1,
+    "n": 20,
+    "rate": 0.05,
+    "ci": [
+     0.008881219432873143,
+     0.23613589351256678
+    ]
+   },
+   "alone_none_fail": {
+    "k": 7,
+    "n": 20,
+    "rate": 0.35,
+    "ci": [
+     0.1811895478679446,
+     0.5671494897805353
+    ]
+   },
+   "alone_some_fail_not_all": {
+    "k": 12,
+    "n": 20,
+    "rate": 0.6,
+    "ci": [
+     0.38657794231520604,
+     0.7811960325858073
+    ]
+   },
+   "alone_unknown": {
+    "k": 0,
+    "n": 20,
+    "rate": 0.0,
+    "ci": [
+     -1.1641658116749259e-17,
+     0.1611301254949332
+    ]
+   }
+  },
+  "KR": {
+   "n": 20,
+   "both_causes_family_new": {
+    "k": 16,
+    "n": 20,
+    "rate": 0.8,
+    "ci": [
+     0.5839782779742402,
+     0.9193436467288001
+    ]
+   },
+   "any_cause_family_new": {
+    "k": 20,
+    "n": 20,
+    "rate": 1.0,
+    "ci": [
+     0.8388698745050667,
+     0.9999999999999998
+    ]
+   },
+   "both_causes_group_new": {
+    "k": 16,
+    "n": 20,
+    "rate": 0.8,
+    "ci": [
+     0.5839782779742402,
+     0.9193436467288001
+    ]
+   },
+   "set_f1_family_new": 0.9333333333333332,
+   "set_recall_family_new": 0.9,
+   "set_precision_family_new": 1.0,
+   "set_f1_group_new": 0.9333333333333332,
+   "both_causes_family_old": {
+    "k": 13,
+    "n": 20,
+    "rate": 0.65,
+    "ci": [
+     0.43285051021946475,
+     0.8188104521320554
+    ]
+   },
+   "any_cause_family_old": {
+    "k": 20,
+    "n": 20,
+    "rate": 1.0,
+    "ci": [
+     0.8388698745050667,
+     0.9999999999999998
+    ]
+   },
+   "both_causes_group_old": {
+    "k": 13,
+    "n": 20,
+    "rate": 0.65,
+    "ci": [
+     0.43285051021946475,
+     0.8188104521320554
+    ]
+   },
+   "set_f1_family_old": 0.8833333333333332,
+   "set_recall_family_old": 0.825,
+   "set_precision_family_old": 1.0,
+   "set_f1_group_old": 0.8833333333333332,
+   "sequential_closure": {
+    "k": 20,
+    "n": 20,
+    "rate": 1.0,
+    "ci": [
+     0.8388698745050667,
+     0.9999999999999998
+    ]
+   },
+   "mean_rounds_applied": 2.75,
+   "dispatched_first_round": {
+    "k": 20,
+    "n": 20,
+    "rate": 1.0,
+    "ci": [
+     0.8388698745050667,
+     0.9999999999999998
+    ]
+   },
+   "oracle_forward_closure": {
+    "k": 20,
+    "n": 20,
+    "rate": 1.0,
+    "ci": [
+     0.8388698745050667,
+     0.9999999999999998
+    ]
+   },
+   "oracle_reverse_closure": {
+    "k": 20,
+    "n": 20,
+    "rate": 1.0,
+    "ci": [
+     0.8388698745050667,
+     0.9999999999999998
+    ]
+   },
+   "reverse_subsample_n": 3,
+   "reverse_subsample_applicable_n": 3,
+   "reverse_default_closure_same_episodes": {
+    "k": 3,
+    "n": 3,
+    "rate": 1.0,
+    "ci": [
+     0.4384939195509822,
+     1.0
+    ]
+   },
+   "reverse_forced_closure": {
+    "k": 3,
+    "n": 3,
+    "rate": 1.0,
+    "ci": [
+     0.4384939195509822,
+     1.0
+    ]
+   },
+   "reverse_default_closure_applicable_only": {
+    "k": 3,
+    "n": 3,
+    "rate": 1.0,
+    "ci": [
+     0.4384939195509822,
+     1.0
+    ]
+   },
+   "reverse_forced_closure_applicable_only": {
+    "k": 3,
+    "n": 3,
+    "rate": 1.0,
+    "ci": [
+     0.4384939195509822,
+     1.0
+    ]
+   },
+   "alone_all_fail": {
+    "k": 7,
+    "n": 20,
+    "rate": 0.35,
+    "ci": [
+     0.1811895478679446,
+     0.5671494897805353
+    ]
+   },
+   "alone_none_fail": {
+    "k": 2,
+    "n": 20,
+    "rate": 0.1,
+    "ci": [
+     0.027865893984153196,
+     0.30103820641179335
+    ]
+   },
+   "alone_some_fail_not_all": {
+    "k": 11,
+    "n": 20,
+    "rate": 0.55,
+    "ci": [
+     0.34208200830759966,
+     0.741804979142907
+    ]
+   },
+   "alone_unknown": {
+    "k": 0,
+    "n": 20,
+    "rate": 0.0,
+    "ci": [
+     -1.1641658116749259e-17,
+     0.1611301254949332
+    ]
+   }
+  },
+  "TRIPLE": {
+   "n": 15,
+   "both_causes_family_new": {
+    "k": 0,
+    "n": 15,
+    "rate": 0.0,
+    "ci": [
+     -2.2096511667503485e-17,
+     0.20388926630434784
+    ]
+   },
+   "any_cause_family_new": {
+    "k": 15,
+    "n": 15,
+    "rate": 1.0,
+    "ci": [
+     0.7961107336956521,
+     1.0
+    ]
+   },
+   "both_causes_group_new": {
+    "k": 0,
+    "n": 15,
+    "rate": 0.0,
+    "ci": [
+     -2.2096511667503485e-17,
+     0.20388926630434784
+    ]
+   },
+   "set_f1_family_new": 0.8000000000000003,
+   "set_recall_family_new": 0.6666666666666665,
+   "set_precision_family_new": 1.0,
+   "set_f1_group_new": 0.8000000000000003,
+   "both_causes_family_old": {
+    "k": 0,
+    "n": 15,
+    "rate": 0.0,
+    "ci": [
+     -2.2096511667503485e-17,
+     0.20388926630434784
+    ]
+   },
+   "any_cause_family_old": {
+    "k": 15,
+    "n": 15,
+    "rate": 1.0,
+    "ci": [
+     0.7961107336956521,
+     1.0
+    ]
+   },
+   "both_causes_group_old": {
+    "k": 0,
+    "n": 15,
+    "rate": 0.0,
+    "ci": [
+     -2.2096511667503485e-17,
+     0.20388926630434784
+    ]
+   },
+   "set_f1_family_old": 0.7600000000000001,
+   "set_recall_family_old": 0.6222222222222222,
+   "set_precision_family_old": 1.0,
+   "set_f1_group_old": 0.7600000000000001,
+   "sequential_closure": {
+    "k": 14,
+    "n": 15,
+    "rate": 0.9333333333333333,
+    "ci": [
+     0.70182922447576,
+     0.9881334113938052
+    ]
+   },
+   "mean_rounds_applied": 3.0,
+   "dispatched_first_round": {
+    "k": 15,
+    "n": 15,
+    "rate": 1.0,
+    "ci": [
+     0.7961107336956521,
+     1.0
+    ]
+   },
+   "oracle_forward_closure": {
+    "k": 15,
+    "n": 15,
+    "rate": 1.0,
+    "ci": [
+     0.7961107336956521,
+     1.0
+    ]
+   },
+   "oracle_reverse_closure": {
+    "k": 15,
+    "n": 15,
+    "rate": 1.0,
+    "ci": [
+     0.7961107336956521,
+     1.0
+    ]
+   },
+   "reverse_subsample_n": 4,
+   "reverse_subsample_applicable_n": 4,
+   "reverse_default_closure_same_episodes": {
+    "k": 4,
+    "n": 4,
+    "rate": 1.0,
+    "ci": [
+     0.5100999795960008,
+     1.0
+    ]
+   },
+   "reverse_forced_closure": {
+    "k": 4,
+    "n": 4,
+    "rate": 1.0,
+    "ci": [
+     0.5100999795960008,
+     1.0
+    ]
+   },
+   "reverse_default_closure_applicable_only": {
+    "k": 4,
+    "n": 4,
+    "rate": 1.0,
+    "ci": [
+     0.5100999795960008,
+     1.0
+    ]
+   },
+   "reverse_forced_closure_applicable_only": {
+    "k": 4,
+    "n": 4,
+    "rate": 1.0,
+    "ci": [
+     0.5100999795960008,
+     1.0
+    ]
+   },
+   "alone_all_fail": {
+    "k": 1,
+    "n": 15,
+    "rate": 0.06666666666666667,
+    "ci": [
+     0.011866588606194859,
+     0.29817077552423993
+    ]
+   },
+   "alone_none_fail": {
+    "k": 4,
+    "n": 15,
+    "rate": 0.26666666666666666,
+    "ci": [
+     0.10897276103182811,
+     0.5195088965768675
+    ]
+   },
+   "alone_some_fail_not_all": {
+    "k": 10,
+    "n": 15,
+    "rate": 0.6666666666666666,
+    "ci": [
+     0.4171312515121298,
+     0.8482389930530875
+    ]
+   },
+   "alone_unknown": {
+    "k": 0,
+    "n": 15,
+    "rate": 0.0,
+    "ci": [
+     -2.2096511667503485e-17,
+     0.20388926630434784
+    ]
+   }
+  }
+ },
+ "generation_log": {
+  "seed": 51,
+  "quota": {
+   "WITHIN_FAMILY": 20,
+   "QQ": 20,
+   "KK": 20,
+   "RR": 20,
+   "QK": 20,
+   "QR": 20,
+   "KR": 20,
+   "TRIPLE": 15
+  },
+  "eligible_faults": [
+   "Q02",
+   "Q04",
+   "Q05",
+   "Q07",
+   "K04",
+   "K05",
+   "K07",
+   "K08",
+   "K09",
+   "R01",
+   "R11",
+   "R13",
+   "R15",
+   "R19",
+   "R22",
+   "R23",
+   "R24",
+   "R25",
+   "K11",
+   "K12"
+  ],
+  "excluded_faults": {
+   "Q01": "quarantine tier N or P (not grounded)",
+   "Q03": "grounded but not solved in the v6 judged runs",
+   "Q09": "quarantine tier N or P (not grounded)",
+   "K03": "quarantine tier N or P (not grounded)",
+   "K06": "quarantine tier N or P (not grounded)",
+   "R03": "quarantine tier N or P (not grounded)",
+   "R05": "quarantine tier N or P (not grounded)",
+   "R06": "quarantine tier N or P (not grounded)",
+   "R07": "quarantine tier N or P (not grounded)",
+   "R10": "quarantine tier N or P (not grounded)",
+   "R26": "grounded but not solved in the v6 judged runs",
+   "C2": "a composed fault itself (the single-fault arm of the original suite), not a component"
+  },
+  "empty_strata": {},
+  "combinations_per_stratum": {
+   "WITHIN_FAMILY": [
+    [
+     "Q04",
+     "Q05"
+    ]
+   ],
+   "QQ": [
+    [
+     "Q02",
+     "Q04"
+    ],
+    [
+     "Q02",
+     "Q05"
+    ],
+    [
+     "Q02",
+     "Q07"
+    ],
+    [
+     "Q04",
+     "Q07"
+    ],
+    [
+     "Q05",
+     "Q07"
+    ]
+   ],
+   "KK": [
+    [
+     "K04",
+     "K05"
+    ],
+    [
+     "K04",
+     "K08"
+    ],
+    [
+     "K04",
+     "K11"
+    ],
+    [
+     "K04",
+     "K12"
+    ],
+    [
+     "K05",
+     "K08"
+    ],
+    [
+     "K05",
+     "K11"
+    ],
+    [
+     "K05",
+     "K12"
+    ],
+    [
+     "K07",
+     "K09"
+    ],
+    [
+     "K08",
+     "K11"
+    ],
+    [
+     "K08",
+     "K12"
+    ],
+    [
+     "K11",
+     "K12"
+    ]
+   ],
+   "RR": [
+    [
+     "R01",
+     "R11"
+    ],
+    [
+     "R01",
+     "R13"
+    ],
+    [
+     "R01",
+     "R15"
+    ],
+    [
+     "R01",
+     "R19"
+    ],
+    [
+     "R01",
+     "R22"
+    ],
+    [
+     "R01",
+     "R23"
+    ],
+    [
+     "R01",
+     "R24"
+    ],
+    [
+     "R01",
+     "R25"
+    ],
+    [
+     "R11",
+     "R13"
+    ],
+    [
+     "R11",
+     "R15"
+    ],
+    [
+     "R11",
+     "R19"
+    ],
+    [
+     "R11",
+     "R22"
+    ],
+    [
+     "R11",
+     "R23"
+    ],
+    [
+     "R11",
+     "R24"
+    ],
+    [
+     "R11",
+     "R25"
+    ],
+    [
+     "R13",
+     "R15"
+    ],
+    [
+     "R13",
+     "R19"
+    ],
+    [
+     "R13",
+     "R22"
+    ],
+    [
+     "R13",
+     "R23"
+    ],
+    [
+     "R13",
+     "R24"
+    ],
+    [
+     "R13",
+     "R25"
+    ],
+    [
+     "R15",
+     "R19"
+    ],
+    [
+     "R15",
+     "R22"
+    ],
+    [
+     "R15",
+     "R23"
+    ],
+    [
+     "R15",
+     "R24"
+    ],
+    [
+     "R15",
+     "R25"
+    ],
+    [
+     "R19",
+     "R22"
+    ],
+    [
+     "R19",
+     "R23"
+    ],
+    [
+     "R19",
+     "R24"
+    ],
+    [
+     "R19",
+     "R25"
+    ],
+    [
+     "R22",
+     "R23"
+    ],
+    [
+     "R22",
+     "R24"
+    ],
+    [
+     "R22",
+     "R25"
+    ],
+    [
+     "R23",
+     "R24"
+    ],
+    [
+     "R23",
+     "R25"
+    ],
+    [
+     "R24",
+     "R25"
+    ]
+   ],
+   "QK": [
+    [
+     "Q02",
+     "K04"
+    ],
+    [
+     "Q02",
+     "K05"
+    ],
+    [
+     "Q02",
+     "K08"
+    ],
+    [
+     "Q02",
+     "K11"
+    ],
+    [
+     "Q02",
+     "K12"
+    ],
+    [
+     "Q04",
+     "K04"
+    ],
+    [
+     "Q04",
+     "K05"
+    ],
+    [
+     "Q04",
+     "K08"
+    ],
+    [
+     "Q04",
+     "K11"
+    ],
+    [
+     "Q04",
+     "K12"
+    ],
+    [
+     "Q05",
+     "K04"
+    ],
+    [
+     "Q05",
+     "K05"
+    ],
+    [
+     "Q05",
+     "K08"
+    ],
+    [
+     "Q05",
+     "K11"
+    ],
+    [
+     "Q05",
+     "K12"
+    ],
+    [
+     "Q07",
+     "K04"
+    ],
+    [
+     "Q07",
+     "K05"
+    ],
+    [
+     "Q07",
+     "K08"
+    ],
+    [
+     "Q07",
+     "K11"
+    ],
+    [
+     "Q07",
+     "K12"
+    ]
+   ],
+   "QR": [
+    [
+     "Q02",
+     "R01"
+    ],
+    [
+     "Q02",
+     "R11"
+    ],
+    [
+     "Q02",
+     "R13"
+    ],
+    [
+     "Q02",
+     "R15"
+    ],
+    [
+     "Q02",
+     "R19"
+    ],
+    [
+     "Q02",
+     "R22"
+    ],
+    [
+     "Q02",
+     "R23"
+    ],
+    [
+     "Q02",
+     "R24"
+    ],
+    [
+     "Q02",
+     "R25"
+    ],
+    [
+     "Q04",
+     "R01"
+    ],
+    [
+     "Q04",
+     "R11"
+    ],
+    [
+     "Q04",
+     "R13"
+    ],
+    [
+     "Q04",
+     "R15"
+    ],
+    [
+     "Q04",
+     "R19"
+    ],
+    [
+     "Q04",
+     "R22"
+    ],
+    [
+     "Q04",
+     "R23"
+    ],
+    [
+     "Q04",
+     "R24"
+    ],
+    [
+     "Q04",
+     "R25"
+    ],
+    [
+     "Q05",
+     "R01"
+    ],
+    [
+     "Q05",
+     "R11"
+    ],
+    [
+     "Q05",
+     "R13"
+    ],
+    [
+     "Q05",
+     "R15"
+    ],
+    [
+     "Q05",
+     "R19"
+    ],
+    [
+     "Q05",
+     "R22"
+    ],
+    [
+     "Q05",
+     "R23"
+    ],
+    [
+     "Q05",
+     "R24"
+    ],
+    [
+     "Q05",
+     "R25"
+    ],
+    [
+     "Q07",
+     "R01"
+    ],
+    [
+     "Q07",
+     "R11"
+    ],
+    [
+     "Q07",
+     "R13"
+    ],
+    [
+     "Q07",
+     "R15"
+    ],
+    [
+     "Q07",
+     "R19"
+    ],
+    [
+     "Q07",
+     "R22"
+    ],
+    [
+     "Q07",
+     "R23"
+    ],
+    [
+     "Q07",
+     "R24"
+    ],
+    [
+     "Q07",
+     "R25"
+    ]
+   ],
+   "KR": [
+    [
+     "K04",
+     "R01"
+    ],
+    [
+     "K04",
+     "R11"
+    ],
+    [
+     "K04",
+     "R13"
+    ],
+    [
+     "K04",
+     "R15"
+    ],
+    [
+     "K04",
+     "R19"
+    ],
+    [
+     "K04",
+     "R22"
+    ],
+    [
+     "K04",
+     "R23"
+    ],
+    [
+     "K04",
+     "R24"
+    ],
+    [
+     "K04",
+     "R25"
+    ],
+    [
+     "K05",
+     "R01"
+    ],
+    [
+     "K05",
+     "R11"
+    ],
+    [
+     "K05",
+     "R13"
+    ],
+    [
+     "K05",
+     "R15"
+    ],
+    [
+     "K05",
+     "R19"
+    ],
+    [
+     "K05",
+     "R22"
+    ],
+    [
+     "K05",
+     "R23"
+    ],
+    [
+     "K05",
+     "R24"
+    ],
+    [
+     "K05",
+     "R25"
+    ],
+    [
+     "K08",
+     "R01"
+    ],
+    [
+     "K08",
+     "R11"
+    ],
+    [
+     "K08",
+     "R13"
+    ],
+    [
+     "K08",
+     "R15"
+    ],
+    [
+     "K08",
+     "R19"
+    ],
+    [
+     "K08",
+     "R22"
+    ],
+    [
+     "K08",
+     "R23"
+    ],
+    [
+     "K08",
+     "R24"
+    ],
+    [
+     "K08",
+     "R25"
+    ],
+    [
+     "R01",
+     "K11"
+    ],
+    [
+     "R01",
+     "K12"
+    ],
+    [
+     "R11",
+     "K11"
+    ],
+    [
+     "R11",
+     "K12"
+    ],
+    [
+     "R13",
+     "K11"
+    ],
+    [
+     "R13",
+     "K12"
+    ],
+    [
+     "R15",
+     "K11"
+    ],
+    [
+     "R15",
+     "K12"
+    ],
+    [
+     "R19",
+     "K11"
+    ],
+    [
+     "R19",
+     "K12"
+    ],
+    [
+     "R22",
+     "K11"
+    ],
+    [
+     "R22",
+     "K12"
+    ],
+    [
+     "R23",
+     "K11"
+    ],
+    [
+     "R23",
+     "K12"
+    ],
+    [
+     "R24",
+     "K11"
+    ],
+    [
+     "R24",
+     "K12"
+    ],
+    [
+     "R25",
+     "K11"
+    ],
+    [
+     "R25",
+     "K12"
+    ]
+   ],
+   "TRIPLE": 180
+  },
+  "combinations_excluded_pool": [
+   {
+    "comps": [
+     "Q02",
+     "K07"
+    ],
+    "stratum": "QK",
+    "reason": "no common base-query source (('esci',) against ('faq',))"
+   },
+   {
+    "comps": [
+     "Q02",
+     "K09"
+    ],
+    "stratum": "QK",
+    "reason": "no common base-query source (('esci',) against ('inp', 'faq'))"
+   },
+   {
+    "comps": [
+     "Q04",
+     "K07"
+    ],
+    "stratum": "QK",
+    "reason": "no common base-query source (('esci',) against ('faq',))"
+   },
+   {
+    "comps": [
+     "Q04",
+     "K09"
+    ],
+    "stratum": "QK",
+    "reason": "no common base-query source (('esci',) against ('inp', 'faq'))"
+   },
+   {
+    "comps": [
+     "Q05",
+     "K07"
+    ],
+    "stratum": "QK",
+    "reason": "no common base-query source (('esci',) against ('faq',))"
+   },
+   {
+    "comps": [
+     "Q05",
+     "K09"
+    ],
+    "stratum": "QK",
+    "reason": "no common base-query source (('esci',) against ('inp', 'faq'))"
+   },
+   {
+    "comps": [
+     "Q07",
+     "K07"
+    ],
+    "stratum": "QK",
+    "reason": "no common base-query source (('esci', 'prdc') against ('faq',))"
+   },
+   {
+    "comps": [
+     "Q07",
+     "K09"
+    ],
+    "stratum": "QK",
+    "reason": "no common base-query source (('esci', 'prdc') against ('inp', 'faq'))"
+   },
+   {
+    "comps": [
+     "K04",
+     "K07"
+    ],
+    "stratum": "KK",
+    "reason": "no common base-query source (('esci',) against ('faq',))"
+   },
+   {
+    "comps": [
+     "K04",
+     "K09"
+    ],
+    "stratum": "KK",
+    "reason": "no common base-query source (('esci',) against ('inp', 'faq'))"
+   },
+   {
+    "comps": [
+     "K05",
+     "K07"
+    ],
+    "stratum": "KK",
+    "reason": "no common base-query source (('esci',) against ('faq',))"
+   },
+   {
+    "comps": [
+     "K05",
+     "K09"
+    ],
+    "stratum": "KK",
+    "reason": "no common base-query source (('esci',) against ('inp', 'faq'))"
+   },
+   {
+    "comps": [
+     "K07",
+     "K08"
+    ],
+    "stratum": "KK",
+    "reason": "no common base-query source (('faq',) against ('esci',))"
+   },
+   {
+    "comps": [
+     "K07",
+     "R01"
+    ],
+    "stratum": "KR",
+    "reason": "no common base-query source (('faq',) against ('esci',))"
+   },
+   {
+    "comps": [
+     "K07",
+     "R11"
+    ],
+    "stratum": "KR",
+    "reason": "no common base-query source (('faq',) against ('esci',))"
+   },
+   {
+    "comps": [
+     "K07",
+     "R13"
+    ],
+    "stratum": "KR",
+    "reason": "no common base-query source (('faq',) against ('esci',))"
+   },
+   {
+    "comps": [
+     "K07",
+     "R15"
+    ],
+    "stratum": "KR",
+    "reason": "no common base-query source (('faq',) against ('esci',))"
+   },
+   {
+    "comps": [
+     "K07",
+     "R19"
+    ],
+    "stratum": "KR",
+    "reason": "no common base-query source (('faq',) against ('esci',))"
+   },
+   {
+    "comps": [
+     "K07",
+     "R22"
+    ],
+    "stratum": "KR",
+    "reason": "no common base-query source (('faq',) against ('esci',))"
+   },
+   {
+    "comps": [
+     "K07",
+     "R23"
+    ],
+    "stratum": "KR",
+    "reason": "no common base-query source (('faq',) against ('esci',))"
+   },
+   {
+    "comps": [
+     "K07",
+     "R24"
+    ],
+    "stratum": "KR",
+    "reason": "no common base-query source (('faq',) against ('esci',))"
+   },
+   {
+    "comps": [
+     "K07",
+     "R25"
+    ],
+    "stratum": "KR",
+    "reason": "no common base-query source (('faq',) against ('esci',))"
+   },
+   {
+    "comps": [
+     "K07",
+     "K11"
+    ],
+    "stratum": "KK",
+    "reason": "no common base-query source (('faq',) against ('esci',))"
+   },
+   {
+    "comps": [
+     "K07",
+     "K12"
+    ],
+    "stratum": "KK",
+    "reason": "no common base-query source (('faq',) against ('esci',))"
+   },
+   {
+    "comps": [
+     "K08",
+     "K09"
+    ],
+    "stratum": "KK",
+    "reason": "no common base-query source (('esci',) against ('inp', 'faq'))"
+   },
+   {
+    "comps": [
+     "K09",
+     "R01"
+    ],
+    "stratum": "KR",
+    "reason": "no common base-query source (('inp', 'faq') against ('esci',))"
+   },
+   {
+    "comps": [
+     "K09",
+     "R11"
+    ],
+    "stratum": "KR",
+    "reason": "no common base-query source (('inp', 'faq') against ('esci',))"
+   },
+   {
+    "comps": [
+     "K09",
+     "R13"
+    ],
+    "stratum": "KR",
+    "reason": "no common base-query source (('inp', 'faq') against ('esci',))"
+   },
+   {
+    "comps": [
+     "K09",
+     "R15"
+    ],
+    "stratum": "KR",
+    "reason": "no common base-query source (('inp', 'faq') against ('esci',))"
+   },
+   {
+    "comps": [
+     "K09",
+     "R19"
+    ],
+    "stratum": "KR",
+    "reason": "no common base-query source (('inp', 'faq') against ('esci',))"
+   },
+   {
+    "comps": [
+     "K09",
+     "R22"
+    ],
+    "stratum": "KR",
+    "reason": "no common base-query source (('inp', 'faq') against ('esci',))"
+   },
+   {
+    "comps": [
+     "K09",
+     "R23"
+    ],
+    "stratum": "KR",
+    "reason": "no common base-query source (('inp', 'faq') against ('esci',))"
+   },
+   {
+    "comps": [
+     "K09",
+     "R24"
+    ],
+    "stratum": "KR",
+    "reason": "no common base-query source (('inp', 'faq') against ('esci',))"
+   },
+   {
+    "comps": [
+     "K09",
+     "R25"
+    ],
+    "stratum": "KR",
+    "reason": "no common base-query source (('inp', 'faq') against ('esci',))"
+   },
+   {
+    "comps": [
+     "K09",
+     "K11"
+    ],
+    "stratum": "KK",
+    "reason": "no common base-query source (('inp', 'faq') against ('esci',))"
+   },
+   {
+    "comps": [
+     "K09",
+     "K12"
+    ],
+    "stratum": "KK",
+    "reason": "no common base-query source (('inp', 'faq') against ('esci',))"
+   },
+   {
+    "comps": [
+     "Q02",
+     "K07",
+     "R01"
+    ],
+    "stratum": "TRIPLE",
+    "reason": "no common base-query source"
+   },
+   {
+    "comps": [
+     "Q02",
+     "K07",
+     "R11"
+    ],
+    "stratum": "TRIPLE",
+    "reason": "no common base-query source"
+   },
+   {
+    "comps": [
+     "Q02",
+     "K07",
+     "R13"
+    ],
+    "stratum": "TRIPLE",
+    "reason": "no common base-query source"
+   },
+   {
+    "comps": [
+     "Q02",
+     "K07",
+     "R15"
+    ],
+    "stratum": "TRIPLE",
+    "reason": "no common base-query source"
+   },
+   {
+    "comps": [
+     "Q02",
+     "K07",
+     "R19"
+    ],
+    "stratum": "TRIPLE",
+    "reason": "no common base-query source"
+   },
+   {
+    "comps": [
+     "Q02",
+     "K07",
+     "R22"
+    ],
+    "stratum": "TRIPLE",
+    "reason": "no common base-query source"
+   },
+   {
+    "comps": [
+     "Q02",
+     "K07",
+     "R23"
+    ],
+    "stratum": "TRIPLE",
+    "reason": "no common base-query source"
+   },
+   {
+    "comps": [
+     "Q02",
+     "K07",
+     "R24"
+    ],
+    "stratum": "TRIPLE",
+    "reason": "no common base-query source"
+   },
+   {
+    "comps": [
+     "Q02",
+     "K07",
+     "R25"
+    ],
+    "stratum": "TRIPLE",
+    "reason": "no common base-query source"
+   },
+   {
+    "comps": [
+     "Q02",
+     "K09",
+     "R01"
+    ],
+    "stratum": "TRIPLE",
+    "reason": "no common base-query source"
+   },
+   {
+    "comps": [
+     "Q02",
+     "K09",
+     "R11"
+    ],
+    "stratum": "TRIPLE",
+    "reason": "no common base-query source"
+   },
+   {
+    "comps": [
+     "Q02",
+     "K09",
+     "R13"
+    ],
+    "stratum": "TRIPLE",
+    "reason": "no common base-query source"
+   },
+   {
+    "comps": [
+     "Q02",
+     "K09",
+     "R15"
+    ],
+    "stratum": "TRIPLE",
+    "reason": "no common base-query source"
+   },
+   {
+    "comps": [
+     "Q02",
+     "K09",
+     "R19"
+    ],
+    "stratum": "TRIPLE",
+    "reason": "no common base-query source"
+   },
+   {
+    "comps": [
+     "Q02",
+     "K09",
+     "R22"
+    ],
+    "stratum": "TRIPLE",
+    "reason": "no common base-query source"
+   },
+   {
+    "comps": [
+     "Q02",
+     "K09",
+     "R23"
+    ],
+    "stratum": "TRIPLE",
+    "reason": "no common base-query source"
+   },
+   {
+    "comps": [
+     "Q02",
+     "K09",
+     "R24"
+    ],
+    "stratum": "TRIPLE",
+    "reason": "no common base-query source"
+   },
+   {
+    "comps": [
+     "Q02",
+     "K09",
+     "R25"
+    ],
+    "stratum": "TRIPLE",
+    "reason": "no common base-query source"
+   },
+   {
+    "comps": [
+     "Q04",
+     "K07",
+     "R01"
+    ],
+    "stratum": "TRIPLE",
+    "reason": "no common base-query source"
+   },
+   {
+    "comps": [
+     "Q04",
+     "K07",
+     "R11"
+    ],
+    "stratum": "TRIPLE",
+    "reason": "no common base-query source"
+   },
+   {
+    "comps": [
+     "Q04",
+     "K07",
+     "R13"
+    ],
+    "stratum": "TRIPLE",
+    "reason": "no common base-query source"
+   },
+   {
+    "comps": [
+     "Q04",
+     "K07",
+     "R15"
+    ],
+    "stratum": "TRIPLE",
+    "reason": "no common base-query source"
+   },
+   {
+    "comps": [
+     "Q04",
+     "K07",
+     "R19"
+    ],
+    "stratum": "TRIPLE",
+    "reason": "no common base-query source"
+   },
+   {
+    "comps": [
+     "Q04",
+     "K07",
+     "R22"
+    ],
+    "stratum": "TRIPLE",
+    "reason": "no common base-query source"
+   },
+   {
+    "comps": [
+     "Q04",
+     "K07",
+     "R23"
+    ],
+    "stratum": "TRIPLE",
+    "reason": "no common base-query source"
+   },
+   {
+    "comps": [
+     "Q04",
+     "K07",
+     "R24"
+    ],
+    "stratum": "TRIPLE",
+    "reason": "no common base-query source"
+   },
+   {
+    "comps": [
+     "Q04",
+     "K07",
+     "R25"
+    ],
+    "stratum": "TRIPLE",
+    "reason": "no common base-query source"
+   },
+   {
+    "comps": [
+     "Q04",
+     "K09",
+     "R01"
+    ],
+    "stratum": "TRIPLE",
+    "reason": "no common base-query source"
+   },
+   {
+    "comps": [
+     "Q04",
+     "K09",
+     "R11"
+    ],
+    "stratum": "TRIPLE",
+    "reason": "no common base-query source"
+   },
+   {
+    "comps": [
+     "Q04",
+     "K09",
+     "R13"
+    ],
+    "stratum": "TRIPLE",
+    "reason": "no common base-query source"
+   },
+   {
+    "comps": [
+     "Q04",
+     "K09",
+     "R15"
+    ],
+    "stratum": "TRIPLE",
+    "reason": "no common base-query source"
+   },
+   {
+    "comps": [
+     "Q04",
+     "K09",
+     "R19"
+    ],
+    "stratum": "TRIPLE",
+    "reason": "no common base-query source"
+   },
+   {
+    "comps": [
+     "Q04",
+     "K09",
+     "R22"
+    ],
+    "stratum": "TRIPLE",
+    "reason": "no common base-query source"
+   },
+   {
+    "comps": [
+     "Q04",
+     "K09",
+     "R23"
+    ],
+    "stratum": "TRIPLE",
+    "reason": "no common base-query source"
+   },
+   {
+    "comps": [
+     "Q04",
+     "K09",
+     "R24"
+    ],
+    "stratum": "TRIPLE",
+    "reason": "no common base-query source"
+   },
+   {
+    "comps": [
+     "Q04",
+     "K09",
+     "R25"
+    ],
+    "stratum": "TRIPLE",
+    "reason": "no common base-query source"
+   },
+   {
+    "comps": [
+     "Q05",
+     "K07",
+     "R01"
+    ],
+    "stratum": "TRIPLE",
+    "reason": "no common base-query source"
+   },
+   {
+    "comps": [
+     "Q05",
+     "K07",
+     "R11"
+    ],
+    "stratum": "TRIPLE",
+    "reason": "no common base-query source"
+   },
+   {
+    "comps": [
+     "Q05",
+     "K07",
+     "R13"
+    ],
+    "stratum": "TRIPLE",
+    "reason": "no common base-query source"
+   },
+   {
+    "comps": [
+     "Q05",
+     "K07",
+     "R15"
+    ],
+    "stratum": "TRIPLE",
+    "reason": "no common base-query source"
+   },
+   {
+    "comps": [
+     "Q05",
+     "K07",
+     "R19"
+    ],
+    "stratum": "TRIPLE",
+    "reason": "no common base-query source"
+   },
+   {
+    "comps": [
+     "Q05",
+     "K07",
+     "R22"
+    ],
+    "stratum": "TRIPLE",
+    "reason": "no common base-query source"
+   },
+   {
+    "comps": [
+     "Q05",
+     "K07",
+     "R23"
+    ],
+    "stratum": "TRIPLE",
+    "reason": "no common base-query source"
+   },
+   {
+    "comps": [
+     "Q05",
+     "K07",
+     "R24"
+    ],
+    "stratum": "TRIPLE",
+    "reason": "no common base-query source"
+   },
+   {
+    "comps": [
+     "Q05",
+     "K07",
+     "R25"
+    ],
+    "stratum": "TRIPLE",
+    "reason": "no common base-query source"
+   },
+   {
+    "comps": [
+     "Q05",
+     "K09",
+     "R01"
+    ],
+    "stratum": "TRIPLE",
+    "reason": "no common base-query source"
+   },
+   {
+    "comps": [
+     "Q05",
+     "K09",
+     "R11"
+    ],
+    "stratum": "TRIPLE",
+    "reason": "no common base-query source"
+   },
+   {
+    "comps": [
+     "Q05",
+     "K09",
+     "R13"
+    ],
+    "stratum": "TRIPLE",
+    "reason": "no common base-query source"
+   },
+   {
+    "comps": [
+     "Q05",
+     "K09",
+     "R15"
+    ],
+    "stratum": "TRIPLE",
+    "reason": "no common base-query source"
+   },
+   {
+    "comps": [
+     "Q05",
+     "K09",
+     "R19"
+    ],
+    "stratum": "TRIPLE",
+    "reason": "no common base-query source"
+   },
+   {
+    "comps": [
+     "Q05",
+     "K09",
+     "R22"
+    ],
+    "stratum": "TRIPLE",
+    "reason": "no common base-query source"
+   },
+   {
+    "comps": [
+     "Q05",
+     "K09",
+     "R23"
+    ],
+    "stratum": "TRIPLE",
+    "reason": "no common base-query source"
+   },
+   {
+    "comps": [
+     "Q05",
+     "K09",
+     "R24"
+    ],
+    "stratum": "TRIPLE",
+    "reason": "no common base-query source"
+   },
+   {
+    "comps": [
+     "Q05",
+     "K09",
+     "R25"
+    ],
+    "stratum": "TRIPLE",
+    "reason": "no common base-query source"
+   },
+   {
+    "comps": [
+     "Q07",
+     "K07",
+     "R01"
+    ],
+    "stratum": "TRIPLE",
+    "reason": "no common base-query source"
+   },
+   {
+    "comps": [
+     "Q07",
+     "K07",
+     "R11"
+    ],
+    "stratum": "TRIPLE",
+    "reason": "no common base-query source"
+   },
+   {
+    "comps": [
+     "Q07",
+     "K07",
+     "R13"
+    ],
+    "stratum": "TRIPLE",
+    "reason": "no common base-query source"
+   },
+   {
+    "comps": [
+     "Q07",
+     "K07",
+     "R15"
+    ],
+    "stratum": "TRIPLE",
+    "reason": "no common base-query source"
+   },
+   {
+    "comps": [
+     "Q07",
+     "K07",
+     "R19"
+    ],
+    "stratum": "TRIPLE",
+    "reason": "no common base-query source"
+   },
+   {
+    "comps": [
+     "Q07",
+     "K07",
+     "R22"
+    ],
+    "stratum": "TRIPLE",
+    "reason": "no common base-query source"
+   },
+   {
+    "comps": [
+     "Q07",
+     "K07",
+     "R23"
+    ],
+    "stratum": "TRIPLE",
+    "reason": "no common base-query source"
+   },
+   {
+    "comps": [
+     "Q07",
+     "K07",
+     "R24"
+    ],
+    "stratum": "TRIPLE",
+    "reason": "no common base-query source"
+   },
+   {
+    "comps": [
+     "Q07",
+     "K07",
+     "R25"
+    ],
+    "stratum": "TRIPLE",
+    "reason": "no common base-query source"
+   },
+   {
+    "comps": [
+     "Q07",
+     "K09",
+     "R01"
+    ],
+    "stratum": "TRIPLE",
+    "reason": "no common base-query source"
+   },
+   {
+    "comps": [
+     "Q07",
+     "K09",
+     "R11"
+    ],
+    "stratum": "TRIPLE",
+    "reason": "no common base-query source"
+   },
+   {
+    "comps": [
+     "Q07",
+     "K09",
+     "R13"
+    ],
+    "stratum": "TRIPLE",
+    "reason": "no common base-query source"
+   },
+   {
+    "comps": [
+     "Q07",
+     "K09",
+     "R15"
+    ],
+    "stratum": "TRIPLE",
+    "reason": "no common base-query source"
+   },
+   {
+    "comps": [
+     "Q07",
+     "K09",
+     "R19"
+    ],
+    "stratum": "TRIPLE",
+    "reason": "no common base-query source"
+   },
+   {
+    "comps": [
+     "Q07",
+     "K09",
+     "R22"
+    ],
+    "stratum": "TRIPLE",
+    "reason": "no common base-query source"
+   },
+   {
+    "comps": [
+     "Q07",
+     "K09",
+     "R23"
+    ],
+    "stratum": "TRIPLE",
+    "reason": "no common base-query source"
+   },
+   {
+    "comps": [
+     "Q07",
+     "K09",
+     "R24"
+    ],
+    "stratum": "TRIPLE",
+    "reason": "no common base-query source"
+   },
+   {
+    "comps": [
+     "Q07",
+     "K09",
+     "R25"
+    ],
+    "stratum": "TRIPLE",
+    "reason": "no common base-query source"
+   }
+  ],
+  "base_queries_overlapping_single_fault_arms": {
+   "train": 1008,
+   "test": 876
+  },
+  "base_queries_clean_fails": {
+   "train": 1710,
+   "test": 840
+  },
+  "attempts": {
+   "train|WITHIN_FAMILY": 41,
+   "train|QQ": 120,
+   "train|KK": 20,
+   "train|RR": 54,
+   "train|QK": 46,
+   "train|QR": 50,
+   "train|KR": 33,
+   "train|TRIPLE": 28,
+   "test|WITHIN_FAMILY": 35,
+   "test|QQ": 87,
+   "test|KK": 21,
+   "test|RR": 100,
+   "test|QK": 55,
+   "test|QR": 54,
+   "test|KR": 35,
+   "test|TRIPLE": 31
+  },
+  "kept": {
+   "train|WITHIN_FAMILY": 20,
+   "train|QQ": 20,
+   "train|KK": 20,
+   "train|RR": 20,
+   "train|QK": 20,
+   "train|QR": 20,
+   "train|KR": 20,
+   "train|TRIPLE": 15,
+   "test|WITHIN_FAMILY": 20,
+   "test|QQ": 20,
+   "test|KK": 20,
+   "test|RR": 20,
+   "test|QK": 20,
+   "test|QR": 20,
+   "test|KR": 20,
+   "test|TRIPLE": 15
+  },
+  "exclusion_reasons": {
+   "train": {
+    "excluded [WITHIN_FAMILY]: composed state does not fail (easy)": 14,
+    "excluded [QQ]: composed state does not fail (easy)": 64,
+    "excluded [QQ]: injector not applicable: Q07": 36,
+    "skipped base query: no open stratum has a combination for source prdc and its clean outcome": 93,
+    "excluded [RR]: composed state does not fail (easy)": 34,
+    "excluded [KR]: composed state does not fail (easy)": 13,
+    "excluded [WITHIN_FAMILY]: injector not applicable: Q05": 6,
+    "excluded [QK]: composed state does not fail (easy)": 6,
+    "excluded [QR]: composed state does not fail (easy)": 21,
+    "excluded [TRIPLE]: composed state does not fail (easy)": 13,
+    "skipped base query: no open stratum has a combination for source inp and its clean outcome": 9,
+    "skipped base query: no open stratum has a combination for source prd and its clean outcome": 14,
+    "excluded [WITHIN_FAMILY]: injector not applicable: Q04": 1,
+    "skipped base query: no open stratum has a combination for source faq and its clean outcome": 4,
+    "excluded [QR]: injector not applicable: Q07": 9,
+    "excluded [QK]: injector not applicable: Q07": 19,
+    "excluded [QK]: injector not applicable: Q05": 1
+   },
+   "test": {
+    "skipped base query: no open stratum has a combination for source prdc and its clean outcome": 220,
+    "excluded [RR]: composed state does not fail (easy)": 80,
+    "excluded [QK]: composed state does not fail (easy)": 13,
+    "excluded [QR]: composed state does not fail (easy)": 23,
+    "excluded [TRIPLE]: composed state does not fail (easy)": 16,
+    "skipped base query: no open stratum has a combination for source prd and its clean outcome": 24,
+    "excluded [WITHIN_FAMILY]: composed state does not fail (easy)": 12,
+    "excluded [QQ]: composed state does not fail (easy)": 31,
+    "excluded [QQ]: injector not applicable: Q07": 36,
+    "excluded [KR]: composed state does not fail (easy)": 15,
+    "excluded [WITHIN_FAMILY]: injector not applicable: Q04": 1,
+    "excluded [WITHIN_FAMILY]: injector not applicable: Q05": 2,
+    "skipped base query: no open stratum has a combination for source inp and its clean outcome": 8,
+    "excluded [KK]: composed state does not fail (easy)": 1,
+    "excluded [QK]: injector not applicable: Q07": 22,
+    "skipped base query: no open stratum has a combination for source faq and its clean outcome": 23,
+    "excluded [QR]: injector not applicable: Q07": 11
+   }
+  },
+  "kept_per_combination": {
+   "train|Q04+Q05": 20,
+   "train|Q02+Q04": 10,
+   "train|K04+K05": 1,
+   "train|R01+R13": 1,
+   "train|Q02+K04": 2,
+   "train|K07+K09": 15,
+   "train|Q02+R01": 1,
+   "train|K04+R13": 1,
+   "train|Q02+K04+R01": 1,
+   "train|Q02+Q05": 10,
+   "train|R01+R19": 1,
+   "train|Q02+K11": 1,
+   "train|Q02+R22": 1,
+   "train|K04+R19": 1,
+   "train|Q02+K04+R13": 1,
+   "train|R01+R23": 1,
+   "train|Q02+K12": 1,
+   "train|Q02+R23": 1,
+   "train|K04+R23": 1,
+   "train|Q02+K04+R19": 1,
+   "train|K04+K08": 1,
+   "train|R01+R24": 1,
+   "train|Q04+K04": 2,
+   "train|Q02+R24": 1,
+   "train|K04+R24": 1,
+   "train|R01+R25": 1,
+   "train|Q04+K05": 2,
+   "train|Q02+R25": 1,
+   "train|K04+R25": 1,
+   "train|Q02+K04+R23": 1,
+   "train|K04+K12": 1,
+   "train|R13+R15": 1,
+   "train|Q04+K08": 2,
+   "train|Q04+R01": 1,
+   "train|K05+R01": 1,
+   "train|Q02+K05+R01": 1,
+   "train|K04+K11": 1,
+   "train|R13+R22": 1,
+   "train|Q04+K11": 1,
+   "train|Q04+R11": 1,
+   "train|K05+R15": 1,
+   "train|Q02+K05+R22": 1,
+   "train|R13+R23": 1,
+   "train|Q04+K12": 1,
+   "train|Q04+R19": 1,
+   "train|K05+R25": 1,
+   "train|R13+R24": 1,
+   "train|Q05+K08": 1,
+   "train|Q04+R23": 1,
+   "train|K08+R01": 1,
+   "train|Q02+K05+R23": 1,
+   "train|R13+R25": 1,
+   "train|Q05+K12": 1,
+   "train|Q04+R24": 1,
+   "train|K08+R11": 1,
+   "train|Q02+K05+R24": 1,
+   "train|R15+R19": 1,
+   "train|Q02+K05": 1,
+   "train|Q05+R01": 1,
+   "train|K08+R13": 1,
+   "train|Q02+K08+R01": 1,
+   "train|R15+R24": 1,
+   "train|Q02+K08": 1,
+   "train|Q05+R11": 1,
+   "train|K08+R15": 1,
+   "train|K05+K08": 1,
+   "train|R23+R25": 1,
+   "train|Q05+K11": 1,
+   "train|Q05+R22": 1,
+   "train|K08+R19": 1,
+   "train|Q02+K08+R15": 1,
+   "train|R01+R11": 1,
+   "train|Q05+K04": 1,
+   "train|Q02+R11": 1,
+   "train|K08+R23": 1,
+   "train|Q02+K08+R19": 1,
+   "train|R11+R19": 1,
+   "train|Q07+K11": 1,
+   "train|Q04+R13": 1,
+   "train|K08+R24": 1,
+   "train|Q02+K08+R23": 1,
+   "train|R11+R23": 1,
+   "train|Q05+K05": 1,
+   "train|Q04+R15": 1,
+   "train|R01+K11": 1,
+   "train|R11+R24": 1,
+   "train|Q04+R22": 1,
+   "train|R01+K12": 1,
+   "train|Q02+K08+R24": 1,
+   "train|R15+R23": 1,
+   "train|Q05+R13": 1,
+   "train|R11+K12": 1,
+   "train|Q02+K08+R25": 1,
+   "train|R15+R25": 1,
+   "train|Q05+R23": 1,
+   "train|R13+K11": 1,
+   "train|Q02+K11+R01": 1,
+   "train|R19+R25": 1,
+   "train|Q05+R25": 1,
+   "train|R13+K12": 1,
+   "test|Q04+Q05": 20,
+   "test|Q02+Q04": 10,
+   "test|K04+K05": 1,
+   "test|R01+R13": 1,
+   "test|Q02+K08": 2,
+   "test|K07+K09": 19,
+   "test|Q02+R25": 1,
+   "test|K04+R01": 1,
+   "test|Q02+K04+R13": 1,
+   "test|Q02+Q05": 10,
+   "test|R01+R19": 1,
+   "test|Q02+K11": 1,
+   "test|Q04+R01": 1,
+   "test|K04+R13": 1,
+   "test|Q02+K04+R19": 1,
+   "test|R01+R23": 1,
+   "test|Q04+K04": 2,
+   "test|Q04+R11": 1,
+   "test|K04+R19": 1,
+   "test|Q02+K04+R23": 1,
+   "test|R13+R15": 1,
+   "test|Q04+K05": 2,
+   "test|Q04+R13": 1,
+   "test|K04+R23": 1,
+   "test|R13+R24": 1,
+   "test|Q04+K08": 1,
+   "test|Q04+R15": 1,
+   "test|K05+R25": 1,
+   "test|Q02+K05+R01": 1,
+   "test|R13+R25": 1,
+   "test|Q04+K11": 1,
+   "test|Q04+R19": 1,
+   "test|K08+R01": 1,
+   "test|Q02+K05+R11": 1,
+   "test|R19+R23": 1,
+   "test|Q05+K04": 1,
+   "test|Q04+R22": 1,
+   "test|K08+R11": 1,
+   "test|Q02+K05+R13": 1,
+   "test|R22+R25": 1,
+   "test|Q05+K12": 1,
+   "test|Q04+R23": 1,
+   "test|K08+R13": 1,
+   "test|R23+R25": 1,
+   "test|Q02+K04": 1,
+   "test|Q04+R24": 1,
+   "test|K08+R19": 1,
+   "test|Q02+K05+R22": 1,
+   "test|R24+R25": 1,
+   "test|Q04+K12": 1,
+   "test|Q04+R25": 1,
+   "test|K08+R22": 1,
+   "test|Q02+K05+R24": 1,
+   "test|R01+R25": 1,
+   "test|Q05+K11": 1,
+   "test|Q05+R01": 1,
+   "test|K08+R23": 1,
+   "test|Q02+K05+R25": 1,
+   "test|R11+R23": 1,
+   "test|Q02+K12": 1,
+   "test|Q05+R11": 1,
+   "test|K08+R24": 1,
+   "test|R11+R24": 1,
+   "test|Q05+K05": 1,
+   "test|Q05+R22": 1,
+   "test|K08+R25": 1,
+   "test|Q02+K08+R01": 1,
+   "test|R15+R24": 1,
+   "test|Q05+K08": 1,
+   "test|Q05+R23": 1,
+   "test|R01+K11": 1,
+   "test|Q02+K08+R13": 1,
+   "test|R01+R24": 1,
+   "test|Q02+K05": 1,
+   "test|Q05+R25": 1,
+   "test|R01+K12": 1,
+   "test|Q02+K08+R15": 1,
+   "test|R11+R13": 1,
+   "test|Q07+K12": 1,
+   "test|Q02+R01": 1,
+   "test|R11+K11": 1,
+   "test|R15+R23": 1,
+   "test|Q02+R19": 1,
+   "test|R13+K12": 1,
+   "test|Q02+K08+R24": 1,
+   "test|R19+R25": 1,
+   "test|Q07+K05": 1,
+   "test|Q02+R23": 1,
+   "test|R13+K11": 1,
+   "test|Q02+K08+R25": 1,
+   "test|R19+R22": 1,
+   "test|Q02+R11": 1,
+   "test|R15+K12": 1,
+   "test|Q02+K11+R13": 1,
+   "test|R22+R23": 1,
+   "test|Q02+R15": 1,
+   "test|R19+K12": 1
+  }
+ },
+ "clean_loss": {
+  "single_round_L1_heldout": 0.001594896331738437,
+  "single_round_policy": "mondrian_crc_0.005, all held-out clean episodes",
+  "sequential_loop_subsample": {
+   "k": 1,
+   "n": 300,
+   "rate": 0.0033333333333333335,
+   "ci": [
+    0.0005886425761407378,
+    0.018637164554943353
+   ]
+  },
+  "sequential_loop_dispatched": {
+   "k": 252,
+   "n": 300,
+   "rate": 0.84,
+   "ci": [
+    0.7942554091313135,
+    0.8771470584702261
+   ]
+  },
+  "sequential_loop_mean_rounds": 0.8733333333333333,
+  "bar": 0.005
+ },
+ "headline": "On 155 held-out composed episodes (seed 51; strata short of quota: 0), the retrained attributor named every cause at the family level in 40.0% [32.6, 47.9] (62/155) (the single-fault-trained attributor: 30.3% [23.6, 38.0] (47/155)), with mean set-F1 0.770 (old 0.713); sequential repair closed 72.9% [65.4, 79.3] (113/155) against 83.9% [77.3, 88.8] (130/155) for oracle-forward repairs; in the forced reverse-order subsample (n = 32) closure was 78.1% [61.2, 89.0] (25/32) against 78.1% [61.2, 89.0] (25/32) for the default order on the same episodes. Held-out clean loss was 0.16% under the single-round policy and 0.3% [0.1, 1.9] (1/300) under the sequential loop on a fixed clean subsample (bar 0.5%)."
+}

@@ -1,0 +1,157 @@
+{
+ "ML main: HistGB, 63 features": {
+  "auroc": 0.9783575417697121,
+  "ci": [
+   0.9736389614762628,
+   0.9828382983965772
+  ],
+  "composed_vs_clean": {
+   "auroc": 0.9953773730513968,
+   "n_composed": 155
+  },
+  "composed_by_stratum": {
+   "KK": 1.0,
+   "KR": 0.9998405103668262,
+   "QK": 0.9956738437001594,
+   "QQ": 0.9996610845295056,
+   "QR": 0.9992025518341309,
+   "RR": 1.0,
+   "TRIPLE": 1.0,
+   "WITHIN_FAMILY": 0.9697966507177034
+  }
+ },
+ "ML 6-d: logistic regression": {
+  "auroc": 0.7268539482392281,
+  "ci": [
+   0.7073154206601606,
+   0.7443868407242608
+  ],
+  "composed_vs_clean": {
+   "auroc": 0.8638267222307968,
+   "n_composed": 155
+  },
+  "composed_by_stratum": {
+   "KK": 0.9375199362041466,
+   "KR": 0.6713118022328548,
+   "QK": 0.9331738437001594,
+   "QQ": 0.9950956937799043,
+   "QR": 0.850139553429027,
+   "RR": 0.6239035087719298,
+   "TRIPLE": 0.920361509835194,
+   "WITHIN_FAMILY": 0.9932416267942584
+  }
+ },
+ "ML 6-d: SVM, RBF kernel": {
+  "auroc": 0.9165001578007951,
+  "ci": [
+   0.9074374885778548,
+   0.9256907651107217
+  ],
+  "composed_vs_clean": {
+   "auroc": 0.9794258373205742,
+   "n_composed": 155
+  },
+  "composed_by_stratum": {
+   "KK": 0.9999800637958532,
+   "KR": 0.9707336523125998,
+   "QK": 0.9862639553429027,
+   "QQ": 0.9697966507177034,
+   "QR": 0.9889553429027113,
+   "RR": 0.9637958532695374,
+   "TRIPLE": 0.9957469431153642,
+   "WITHIN_FAMILY": 0.9642145135566188
+  }
+ },
+ "ML 6-d: HistGB": {
+  "auroc": 0.9210627909946938,
+  "ci": [
+   0.9120841886411075,
+   0.9305659116808789
+  ],
+  "composed_vs_clean": {
+   "auroc": 0.9882852292020374,
+   "n_composed": 155
+  },
+  "composed_by_stratum": {
+   "KK": 1.0,
+   "KR": 0.9968301435406699,
+   "QK": 0.9877791068580543,
+   "QQ": 0.9969098883572569,
+   "QR": 0.9883771929824562,
+   "RR": 0.9800438596491229,
+   "TRIPLE": 0.996863370547581,
+   "WITHIN_FAMILY": 0.9616228070175439
+  }
+ },
+ "QML: quantum-kernel SVM (6 qubits)": {
+  "auroc": 0.8917900837769173,
+  "ci": [
+   0.8806732364193132,
+   0.902784324620131
+  ],
+  "composed_vs_clean": {
+   "auroc": 0.9417734218243554,
+   "n_composed": 155
+  },
+  "composed_by_stratum": {
+   "KK": 0.9273724082934609,
+   "KR": 0.9519537480063796,
+   "QK": 0.9621810207336523,
+   "QQ": 0.9493620414673046,
+   "QR": 0.9686802232854864,
+   "RR": 0.9004984051036682,
+   "TRIPLE": 0.9572301967038809,
+   "WITHIN_FAMILY": 0.9207735247208931
+  },
+  "kernel_gram_diag_mean": 0.9999990949030289,
+  "kernel_offdiag_mean": 0.05455153435536465
+ },
+ "QML: variational classifier (6 qubits, 5 seeds)": {
+  "auroc": 0.8826209076026206,
+  "auroc_per_seed": [
+   0.8833759764913758,
+   0.8812430269464648,
+   0.8733213214734687,
+   0.8895740117395348,
+   0.8855902013622587
+  ],
+  "auroc_sd": 0.005405799642470791,
+  "ci": [
+   0.8783969669321045,
+   0.9001959981638599
+  ],
+  "note": "AUROC of each seed; the ci is for the seed-averaged score",
+  "composed_vs_clean": {
+   "auroc": 0.9647455883109533
+  }
+ },
+ "_meta": {
+  "episodes_sha256": "87a19a4a27db5e4c3b29c12b9de0783ab28db6f64651312aa24b9d947d36e200",
+  "n_train": 5416,
+  "n_test": 4019,
+  "n_test_faulted": 1511,
+  "n_test_clean": 2508,
+  "n_qubits": 6,
+  "feature_map_reps": 2,
+  "vqc": {
+   "layers": 3,
+   "epochs": 80,
+   "lr": 0.05,
+   "batch": 256,
+   "train_subsample": 2000,
+   "seeds": [
+    0,
+    1,
+    2,
+    3,
+    4
+   ]
+  },
+  "pca_explained_variance": 0.4080802204965338,
+  "seconds": 106.70599818229675,
+  "simulated": true,
+  "noiseless": true,
+  "hardware": false,
+  "claim": "no claim of quantum advantage; score comparison only"
+ }
+}

@@ -1,0 +1,41 @@
+{
+ "trial": false,
+ "role": "heldout",
+ "dataset": "fiqa",
+ "seed": 60,
+ "code_sha256": "916c3864282b1d9c168cce6943340b52d8728334c3c960d33fcb0d2d4224294f",
+ "P": {
+  "POOL": 300,
+  "A": 80,
+  "B": 20,
+  "NDICT": 2,
+  "NDICT_RANDOM": 3,
+  "T": 3,
+  "EPS": 0.002,
+  "KAPPA": 3.0,
+  "NI": 2,
+  "NPAIR": 30,
+  "TRAFFIC": 50,
+  "PAIR_TRAFFIC": 25
+ },
+ "TAU": 0.11616138747830651,
+ "battery": {
+  "size": 81,
+  "random_part": 80,
+  "diagnostic_part": 1,
+  "undetected_faults": [
+   "K04"
+  ]
+ },
+ "summary": {
+  "singles": 28,
+  "harmful_singles": 27,
+  "detected": 1.0,
+  "family": 0.9629629629629629,
+  "verified": 1.0,
+  "effective_pairs": 27,
+  "pairs_both_family": 0.7777777777777778,
+  "pairs_verified": 1.0,
+  "agg_both": 0.4074074074074074
+ }
+}

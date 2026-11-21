@@ -1,0 +1,22 @@
+{
+ "source_stage": "lofo_done",
+ "removed_CAL": 1974,
+ "removed_NAT3": 1648,
+ "removed_LOFO": 25,
+ "removed_BASEL_det": true,
+ "removed_episode_loop3": 4069,
+ "kept_episode_signature_sha256": "a9c93f518338c6be50a1bf5efa0e5f84c0286ca99d617b2857119c35a9e01a2d",
+ "n_episodes": 9535,
+ "kept_keys": [
+  "BASEL",
+  "CENS",
+  "CLEAN",
+  "EPIS",
+  "FAMR",
+  "GEN",
+  "GSTATE",
+  "HARM",
+  "SEEN",
+  "stage"
+ ]
+}

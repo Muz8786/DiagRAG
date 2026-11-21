@@ -1,0 +1,231 @@
+{
+ "protocol": "docs/evidence/v10_multilabel_protocol.md",
+ "tau_grid": [
+  0.05,
+  0.1,
+  0.15,
+  0.2,
+  0.25,
+  0.3,
+  0.4
+ ],
+ "cv_mean_set_f1": {
+  "0.05": 0.8675576036866359,
+  "0.1": 0.8391397849462365,
+  "0.15": 0.8150537634408602,
+  "0.2": 0.783225806451613,
+  "0.25": 0.7623655913978494,
+  "0.3": 0.7475268817204301,
+  "0.4": 0.72
+ },
+ "tau": 0.05,
+ "metric_validation": {
+  "reproduced": {
+   "both": 62,
+   "f1": 0.7806451612903226,
+   "rec": 0.6967741935483871,
+   "prec": 0.9451612903225807
+  },
+  "stored": {
+   "both": 62,
+   "f1": 0.77,
+   "rec": 0.697,
+   "prec": 0.923
+  },
+  "abs_diff": {
+   "f1": 0.010645161290322558,
+   "rec": 0.0002258064516128533,
+   "prec": 0.02216129032258063
+  }
+ },
+ "stored_v7_dispatcher": {
+  "both_named": 62,
+  "n": 155,
+  "rate": 0.4
+ },
+ "heldout": {
+  "multilabel": {
+   "both_named": {
+    "k": 117,
+    "n": 155,
+    "rate": 0.7548387096774194,
+    "wilson95": [
+     0.6814919748872534,
+     0.8158588450490858
+    ]
+   },
+   "at_least_one": 1.0,
+   "set_f1": 0.9178494623655913,
+   "precision": 0.99247311827957,
+   "recall": 0.8817204301075269,
+   "mean_labels_per_episode": 1.8516129032258064,
+   "by_stratum": {
+    "KK": {
+     "n": 20,
+     "both": 20
+    },
+    "KR": {
+     "n": 20,
+     "both": 15
+    },
+    "QK": {
+     "n": 20,
+     "both": 8
+    },
+    "QQ": {
+     "n": 20,
+     "both": 18
+    },
+    "QR": {
+     "n": 20,
+     "both": 13
+    },
+    "RR": {
+     "n": 20,
+     "both": 14
+    },
+    "TRIPLE": {
+     "n": 15,
+     "both": 9
+    },
+    "WITHIN_FAMILY": {
+     "n": 20,
+     "both": 20
+    }
+   }
+  },
+  "top2_always": {
+   "both_named": {
+    "k": 123,
+    "n": 155,
+    "rate": 0.7935483870967742,
+    "wilson95": [
+     0.7231035510815004,
+     0.8497942288451688
+    ]
+   },
+   "at_least_one": 1.0,
+   "set_f1": 0.9290322580645162,
+   "precision": 0.9612903225806452,
+   "recall": 0.9129032258064517,
+   "mean_labels_per_episode": 2.0,
+   "by_stratum": {
+    "KK": {
+     "n": 20,
+     "both": 20
+    },
+    "KR": {
+     "n": 20,
+     "both": 18
+    },
+    "QK": {
+     "n": 20,
+     "both": 12
+    },
+    "QQ": {
+     "n": 20,
+     "both": 19
+    },
+    "QR": {
+     "n": 20,
+     "both": 18
+    },
+    "RR": {
+     "n": 20,
+     "both": 16
+    },
+    "TRIPLE": {
+     "n": 15,
+     "both": 0
+    },
+    "WITHIN_FAMILY": {
+     "n": 20,
+     "both": 20
+    }
+   }
+  },
+  "single_label_argmax": {
+   "both_named": {
+    "k": 18,
+    "n": 155,
+    "rate": 0.11612903225806452,
+    "wilson95": [
+     0.07473138547397101,
+     0.17609459462192323
+    ]
+   },
+   "at_least_one": 0.9806451612903225,
+   "set_f1": 0.6763440860215053,
+   "precision": 0.9806451612903225,
+   "recall": 0.532258064516129,
+   "mean_labels_per_episode": 0.9806451612903225,
+   "by_stratum": {
+    "KK": {
+     "n": 20,
+     "both": 0
+    },
+    "KR": {
+     "n": 20,
+     "both": 0
+    },
+    "QK": {
+     "n": 20,
+     "both": 0
+    },
+    "QQ": {
+     "n": 20,
+     "both": 0
+    },
+    "QR": {
+     "n": 20,
+     "both": 0
+    },
+    "RR": {
+     "n": 20,
+     "both": 0
+    },
+    "TRIPLE": {
+     "n": 15,
+     "both": 0
+    },
+    "WITHIN_FAMILY": {
+     "n": 20,
+     "both": 18
+    }
+   }
+  }
+ },
+ "heldout_clean_false_labels": {
+  "n_clean_test": 2508,
+  "multilabel_nonempty": 0.145933014354067,
+  "single_label_argmax_not_none": 0.04704944178628389,
+  "top2_always_nonempty": 1.0
+ },
+ "posthoc": {
+  "note": "post-hoc, not pre-registered; single-fault held-out episodes (C2 excluded)",
+  "multilabel": {
+   "n": 1511,
+   "cause_family_named": 0.9450694904037061,
+   "mean_labels_per_episode": 1.0066181336863005,
+   "precision": 0.9300683873814252,
+   "share_with_a_wrong_label": 0.042356055592322965
+  },
+  "single_label_argmax": {
+   "n": 1511,
+   "cause_family_named": 0.913302448709464,
+   "mean_labels_per_episode": 0.9219060225016545,
+   "precision": 0.913302448709464,
+   "share_with_a_wrong_label": 0.008603573792190603
+  },
+  "v7_stored_labels_rescored_with_this_metric": {
+   "both": 62,
+   "f1": 0.7806451612903226,
+   "precision": 0.9451612903225807,
+   "recall": 0.6967741935483871,
+   "mean_labels": 1.3612903225806452
+  }
+ },
+ "n_train_composed": 155,
+ "n_test_composed": 155,
+ "sklearn_note": "1.6.1 expected"
+}

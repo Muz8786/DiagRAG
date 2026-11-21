@@ -1,0 +1,17 @@
+{
+ "pgvector_filter_fewer": "repo:pgvector/pgvector hnsw where filter fewer results",
+ "pgvector_ivf_recall": "repo:pgvector/pgvector ivfflat recall probes",
+ "faiss_recall_nprobe": "repo:facebookresearch/faiss recall nprobe low",
+ "faiss_wrong_ids": "repo:facebookresearch/faiss wrong ids remove_ids",
+ "faiss_hnsw_recall": "repo:facebookresearch/faiss hnsw recall efSearch",
+ "qdrant_inconsistent": "repo:qdrant/qdrant inconsistent search results",
+ "qdrant_missing_points": "repo:qdrant/qdrant points missing after",
+ "qdrant_filter": "repo:qdrant/qdrant filter search returns wrong",
+ "milvus_deleted": "repo:milvus-io/milvus search returns deleted",
+ "milvus_inconsistent": "repo:milvus-io/milvus search results inconsistent",
+ "milvus_recall": "repo:milvus-io/milvus recall low hnsw",
+ "chroma_dimension": "repo:chroma-core/chroma embedding dimension mismatch",
+ "chroma_duplicates": "repo:chroma-core/chroma duplicate results query",
+ "chroma_embedding_function": "repo:chroma-core/chroma embedding function changed",
+ "chroma_wrong_results": "repo:chroma-core/chroma query returns wrong results"
+}

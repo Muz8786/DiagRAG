@@ -1,0 +1,275 @@
+{
+ "units": 27,
+ "harmful_units": 21,
+ "distinct_harmful": [
+  "B3",
+  "B4",
+  "B5",
+  "B6",
+  "B7",
+  "B8",
+  "B9"
+ ],
+ "detected": 0.9523809523809523,
+ "localized": 1.0,
+ "verified": 1.0,
+ "telemetry": 0.38095238095238093,
+ "broken": 1461,
+ "restored": 1454,
+ "harm_after": 7,
+ "working": 7077,
+ "loop_fixed": 300,
+ "universal_fixed": 339,
+ "per_bug": {
+  "B1": {
+   "broken": [
+    0,
+    0,
+    0
+   ],
+   "detected": [
+    false,
+    false,
+    false
+   ],
+   "stage": [
+    "NONE",
+    "NONE",
+    "NONE"
+   ],
+   "tel": [
+    false,
+    false,
+    false
+   ],
+   "gain": [
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "B2": {
+   "broken": [
+    0,
+    0,
+    0
+   ],
+   "detected": [
+    false,
+    false,
+    false
+   ],
+   "stage": [
+    "BM25",
+    "BM25",
+    "BM25"
+   ],
+   "tel": [
+    false,
+    false,
+    false
+   ],
+   "gain": [
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "B3": {
+   "broken": [
+    7,
+    7,
+    7
+   ],
+   "detected": [
+    true,
+    true,
+    false
+   ],
+   "stage": [
+    "FUSION",
+    "FUSION",
+    "FUSION"
+   ],
+   "tel": [
+    false,
+    false,
+    false
+   ],
+   "gain": [
+    -1.67,
+    -1.67,
+    0.0
+   ]
+  },
+  "B4": {
+   "broken": [
+    13,
+    13,
+    13
+   ],
+   "detected": [
+    true,
+    true,
+    true
+   ],
+   "stage": [
+    "RERANK",
+    "RERANK",
+    "RERANK"
+   ],
+   "tel": [
+    false,
+    false,
+    false
+   ],
+   "gain": [
+    1.83,
+    1.83,
+    1.83
+   ]
+  },
+  "B5": {
+   "broken": [
+    316,
+    316,
+    316
+   ],
+   "detected": [
+    true,
+    true,
+    true
+   ],
+   "stage": [
+    "RERANK",
+    "RERANK",
+    "RERANK"
+   ],
+   "tel": [
+    false,
+    false,
+    false
+   ],
+   "gain": [
+    48.67,
+    48.67,
+    48.67
+   ]
+  },
+  "B6": {
+   "broken": [
+    46,
+    46,
+    46
+   ],
+   "detected": [
+    true,
+    true,
+    true
+   ],
+   "stage": [
+    "RERANK",
+    "RERANK",
+    "RERANK"
+   ],
+   "tel": [
+    false,
+    false,
+    false
+   ],
+   "gain": [
+    1.17,
+    1.17,
+    1.17
+   ]
+  },
+  "B7": {
+   "broken": [
+    43,
+    43,
+    43
+   ],
+   "detected": [
+    true,
+    true,
+    true
+   ],
+   "stage": [
+    "DENSE",
+    "DENSE",
+    "DENSE"
+   ],
+   "tel": [
+    true,
+    false,
+    true
+   ],
+   "gain": [
+    3.33,
+    3.33,
+    3.33
+   ]
+  },
+  "B8": {
+   "broken": [
+    42,
+    42,
+    42
+   ],
+   "detected": [
+    true,
+    true,
+    true
+   ],
+   "stage": [
+    "DENSE",
+    "DENSE",
+    "DENSE"
+   ],
+   "tel": [
+    true,
+    true,
+    true
+   ],
+   "gain": [
+    3.0,
+    3.0,
+    3.0
+   ]
+  },
+  "B9": {
+   "broken": [
+    20,
+    20,
+    20
+   ],
+   "detected": [
+    true,
+    true,
+    true
+   ],
+   "stage": [
+    "FUSION",
+    "FUSION",
+    "FUSION"
+   ],
+   "tel": [
+    true,
+    true,
+    true
+   ],
+   "gain": [
+    1.67,
+    1.67,
+    1.67
+   ]
+  }
+ },
+ "rule": {
+  "B-0 >=5 distinct harmful": true,
+  "B-1 detection>=0.90": true,
+  "B-2 localization>=0.80": true,
+  "B-3 verified>=0.90, restored>=95%, harm<=0.5%": true
+ },
+ "outcome": "PASS"
+}
