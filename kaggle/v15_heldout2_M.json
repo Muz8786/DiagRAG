@@ -1,0 +1,75 @@
+{
+ "M_by_code_base": {
+  "main": {
+   "evaluated": 644,
+   "harmful": 19,
+   "distinct_harmful": 8,
+   "localized": 1.0,
+   "detected_selftest": 1.0,
+   "detected_telemetry": 0.8421052631578947
+  },
+  "port5_fiqa": {
+   "evaluated": 105,
+   "harmful": 13,
+   "distinct_harmful": 13,
+   "localized": 1.0,
+   "detected_selftest": 1.0,
+   "detected_telemetry": 0.8461538461538461
+  }
+ },
+ "M": {
+  "evaluated": 749,
+  "harmful": 32,
+  "distinct_harmful": 21,
+  "distinct_scored": 17,
+  "status": {
+   "crash": 70,
+   "harmful": 32,
+   "harmless": 570,
+   "subtle": 77
+  },
+  "detected_selftest": 1.0,
+  "detected_telemetry": 0.84375,
+  "detected_either": 1.0,
+  "detected_ce_drop_baseline": 0.34375,
+  "M2": {
+   "localization": 1.0,
+   "decoder": 0.47368421052631576,
+   "majority": 0.4642857142857143,
+   "loc_minus_decoder": {
+    "mean": 0.5263157894736843,
+    "ci": [
+     0.18181818181818177,
+     0.8888888888888888
+    ],
+    "n": 19
+   },
+   "loc_minus_majority": {
+    "mean": 0.5357142857142857,
+    "ci": [
+     0.2692307692307693,
+     0.6875
+    ]
+   }
+  },
+  "subtle": {
+   "n": 77,
+   "detected_selftest": 0.8961038961038961,
+   "detected_telemetry": 0.42857142857142855,
+   "localized": 0.918918918918919
+  },
+  "selftest_minus_telemetry": {
+   "mean": 0.15625,
+   "ci": [
+    0.03125,
+    0.28125
+   ]
+  },
+  "rule": {
+   "M-0 >= 8 distinct scored harmful mutants": true,
+   "M-1 self-test detection >= 0.95": true,
+   "M-2 localization >= 0.80 and above decoder and majority (95% LB > 0)": true
+  },
+  "outcome": "PASS"
+ }
+}
