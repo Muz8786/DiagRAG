@@ -1,0 +1,121 @@
+{
+ "trial": false,
+ "role": "heldout",
+ "run_parts": [
+  "M"
+ ],
+ "seed": "75",
+ "params": {
+  "POOL": 600,
+  "A": 100,
+  "B": 40,
+  "NDICT": 2,
+  "NDICT_RANDOM": 4,
+  "MAXH": 150,
+  "T": 3,
+  "EPS": 0.002,
+  "KAPPA": 3.0,
+  "TRAFFIC": 100,
+  "PAIR_TRAFFIC": 40,
+  "SCREEN": 40,
+  "HARM_FRAC": 0.1,
+  "ALARM_P": 0.01,
+  "MAXM": 400,
+  "TIMEOUT": 90
+ },
+ "note": "frozen v6 executed on a judged checkpoint; measurements only",
+ "battery": {
+  "size": 102,
+  "random_part": 100,
+  "diagnostic_part": 2,
+  "undetected_faults": [
+   "R07"
+  ],
+  "indistinct_pairs": []
+ },
+ "M_points": {
+  "total": 486,
+  "covered": 239,
+  "by_half": {
+   "dev": 240,
+   "heldout": 246
+  },
+  "covered_by_half": {
+   "dev": 116,
+   "heldout": 123
+  },
+  "by_fn": {
+   "q_terms": 7,
+   "bm25_scores": 9,
+   "enc_q": 10,
+   "dense_all": 2,
+   "ce_scores": 11,
+   "topn": 14,
+   "run": 186
+  }
+ },
+ "M_clean_stage_changes": {
+  "D": 0,
+  "S": 0,
+  "F": 0,
+  "O": 0,
+  "V": 0
+ },
+ "M_hom": {
+  "candidates": 46,
+  "pairs_available": 126
+ },
+ "M_by_order": {
+  "1": {
+   "harmless": 59,
+   "crash": 19,
+   "subtle": 10,
+   "harmful": 4
+  },
+  "2": {
+   "harmless": 99,
+   "subtle": 27
+  }
+ },
+ "M": {
+  "evaluated": 218,
+  "status": {
+   "harmless": 158,
+   "crash": 19,
+   "subtle": 37,
+   "harmful": 4
+  },
+  "harmful": 4,
+  "subtle": 37,
+  "detected_selftest": 1.0,
+  "detected_telemetry": 1.0,
+  "detected_either": 1.0,
+  "detected_ce_drop_baseline": 0.75,
+  "component_ok": 1.0,
+  "component_ok_decode": 0.5,
+  "component_majority_baseline": 0.5,
+  "n_component_scored": 4,
+  "subtle_detected_selftest": 0.8378378378378378,
+  "subtle_detected_telemetry": 0.4864864864864865,
+  "subtle_component_ok": 1.0,
+  "by_component": {
+   "FILTERS": {
+    "n": 1,
+    "localized": 1.0,
+    "telemetry": 1.0
+   },
+   "FUSION": {
+    "n": 2,
+    "localized": 1.0,
+    "telemetry": 1.0
+   },
+   "RERANK": {
+    "n": 1,
+    "localized": 1.0,
+    "telemetry": 1.0
+   }
+  },
+  "median_probe_fail": 0.9509803921568627,
+  "acceptance_sampling_bound": "a fault breaking a share h of working queries is missed by all 100 random probes with probability (1-h)^100"
+ }
+}

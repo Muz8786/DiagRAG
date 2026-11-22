@@ -1,0 +1,162 @@
+{
+ "Q01": {
+  "family": "QLEX",
+  "group": "Q",
+  "evidence_tier": "N"
+ },
+ "Q02": {
+  "family": "Q02",
+  "group": "Q",
+  "evidence_tier": "M"
+ },
+ "Q03": {
+  "family": "QLEX",
+  "group": "Q",
+  "evidence_tier": "M"
+ },
+ "Q04": {
+  "family": "QLEX",
+  "group": "Q",
+  "evidence_tier": "S"
+ },
+ "Q05": {
+  "family": "QLEX",
+  "group": "Q",
+  "evidence_tier": "M"
+ },
+ "Q07": {
+  "family": "Q07",
+  "group": "Q",
+  "evidence_tier": "M"
+ },
+ "Q09": {
+  "family": "Q09",
+  "group": "Q",
+  "evidence_tier": "P"
+ },
+ "K03": {
+  "family": "K03",
+  "group": "K",
+  "evidence_tier": "N"
+ },
+ "K04": {
+  "family": "STALE",
+  "group": "K",
+  "evidence_tier": "M"
+ },
+ "K05": {
+  "family": "K05",
+  "group": "K",
+  "evidence_tier": "S"
+ },
+ "K06": {
+  "family": "K06",
+  "group": "K",
+  "evidence_tier": "N"
+ },
+ "K07": {
+  "family": "K07",
+  "group": "K",
+  "evidence_tier": "S"
+ },
+ "K08": {
+  "family": "K08",
+  "group": "K",
+  "evidence_tier": "M"
+ },
+ "K09": {
+  "family": "K09",
+  "group": "K",
+  "evidence_tier": "M"
+ },
+ "K11": {
+  "family": "K11",
+  "group": "K",
+  "evidence_tier": "S"
+ },
+ "K12": {
+  "family": "K12",
+  "group": "K",
+  "evidence_tier": "S"
+ },
+ "R01": {
+  "family": "R01",
+  "group": "R",
+  "evidence_tier": "S"
+ },
+ "R03": {
+  "family": "ENC",
+  "group": "R",
+  "evidence_tier": "N"
+ },
+ "R05": {
+  "family": "R05",
+  "group": "R",
+  "evidence_tier": "N"
+ },
+ "R06": {
+  "family": "R06",
+  "group": "R",
+  "evidence_tier": "P"
+ },
+ "R07": {
+  "family": "STALE",
+  "group": "R",
+  "evidence_tier": "P"
+ },
+ "R10": {
+  "family": "ENC",
+  "group": "R",
+  "evidence_tier": "N"
+ },
+ "R11": {
+  "family": "ENC",
+  "group": "R",
+  "evidence_tier": "S"
+ },
+ "R13": {
+  "family": "R13",
+  "group": "R",
+  "evidence_tier": "M"
+ },
+ "R15": {
+  "family": "R15",
+  "group": "R",
+  "evidence_tier": "S"
+ },
+ "R19": {
+  "family": "R19",
+  "group": "R",
+  "evidence_tier": "S"
+ },
+ "R22": {
+  "family": "R22",
+  "group": "R",
+  "evidence_tier": "S"
+ },
+ "R23": {
+  "family": "R23",
+  "group": "R",
+  "evidence_tier": "S"
+ },
+ "R24": {
+  "family": "R24",
+  "group": "R",
+  "evidence_tier": "M"
+ },
+ "R25": {
+  "family": "R25",
+  "group": "R",
+  "evidence_tier": "S"
+ },
+ "R26": {
+  "family": "R26",
+  "group": "R",
+  "evidence_tier": "S"
+ },
+ "C2": {
+  "family": "C2",
+  "group": "C",
+  "evidence_tier": "N"
+ }
+}

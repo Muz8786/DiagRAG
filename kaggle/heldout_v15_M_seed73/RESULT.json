@@ -1,0 +1,101 @@
+{
+ "trial": false,
+ "role": "heldout",
+ "run_parts": [
+  "M"
+ ],
+ "seed": "73",
+ "params": {
+  "POOL": 600,
+  "A": 100,
+  "B": 40,
+  "NDICT": 2,
+  "NDICT_RANDOM": 4,
+  "T": 3,
+  "EPS": 0.002,
+  "KAPPA": 3.0,
+  "TRAFFIC": 100,
+  "PAIR_TRAFFIC": 40,
+  "SCREEN": 40,
+  "HARM_FRAC": 0.1,
+  "ALARM_P": 0.01,
+  "MAXM": 400,
+  "TIMEOUT": 90
+ },
+ "note": "frozen v6 executed on a judged checkpoint; measurements only",
+ "battery": {
+  "size": 102,
+  "random_part": 100,
+  "diagnostic_part": 2,
+  "undetected_faults": [],
+  "indistinct_pairs": []
+ },
+ "M_points": {
+  "total": 381,
+  "covered": 193,
+  "by_half": {
+   "dev": 187,
+   "heldout": 194
+  },
+  "covered_by_half": {
+   "dev": 89,
+   "heldout": 104
+  },
+  "by_fn": {
+   "q_terms": 3,
+   "bm25_scores": 8,
+   "enc_q": 8,
+   "ce_scores": 10,
+   "topn": 12,
+   "run": 152
+  }
+ },
+ "M_clean_stage_changes": {
+  "D": 0,
+  "S": 0,
+  "F": 0,
+  "O": 0,
+  "V": 0
+ },
+ "M": {
+  "evaluated": 73,
+  "status": {
+   "harmless": 46,
+   "crash": 16,
+   "harmful": 4,
+   "subtle": 7
+  },
+  "harmful": 4,
+  "subtle": 7,
+  "detected_selftest": 1.0,
+  "detected_telemetry": 0.75,
+  "detected_either": 1.0,
+  "detected_ce_drop_baseline": 0.5,
+  "component_ok": 1.0,
+  "component_ok_decode": 0.5,
+  "component_majority_baseline": 0.5,
+  "n_component_scored": 4,
+  "subtle_detected_selftest": 0.7142857142857143,
+  "subtle_detected_telemetry": 0.14285714285714285,
+  "subtle_component_ok": 1.0,
+  "by_component": {
+   "FILTERS": {
+    "n": 1,
+    "localized": 1.0,
+    "telemetry": 1.0
+   },
+   "FUSION": {
+    "n": 1,
+    "localized": 1.0,
+    "telemetry": 1.0
+   },
+   "RERANK": {
+    "n": 2,
+    "localized": 1.0,
+    "telemetry": 0.5
+   }
+  },
+  "median_probe_fail": 0.7941176470588236,
+  "acceptance_sampling_bound": "a fault breaking a share h of working queries is missed by all 100 random probes with probability (1-h)^100"
+ }
+}

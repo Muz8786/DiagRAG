@@ -1,0 +1,278 @@
+{
+ "folder": "../_v8out/diagrag_out",
+ "n_combinations": 81,
+ "grid": [
+  0.25,
+  0.5,
+  1,
+  2,
+  3,
+  5,
+  8,
+  12,
+  20
+ ],
+ "weights_note": "wQ = 1 fixed; wK and wR free; universal repair = one Q + one K + one R repair per query (cost wQ + wK + wR)",
+ "reproduction": [
+  {
+   "policy": "global_crc_0.005",
+   "clean_dispatch_rec": 0.6929824561403509,
+   "clean_dispatch_stored": 0.6929824561403509,
+   "clean_cost_rec": 3.503987240829346,
+   "clean_cost_stored": 3.503987240829346,
+   "faulted_cost_rec": 5.444375,
+   "faulted_cost_stored": 5.444374999999999
+  },
+  {
+   "policy": "mondrian_crc_0.0025",
+   "clean_dispatch_rec": 0.666267942583732,
+   "clean_dispatch_stored": 0.666267942583732,
+   "clean_cost_rec": 3.1383572567783093,
+   "clean_cost_stored": 3.1383572567783093,
+   "faulted_cost_rec": 4.049375,
+   "faulted_cost_stored": 4.0493749999999995
+  },
+  {
+   "policy": "mondrian_crc_0.005",
+   "clean_dispatch_rec": 0.9059011164274322,
+   "clean_dispatch_stored": 0.9059011164274322,
+   "clean_cost_rec": 4.111244019138756,
+   "clean_cost_stored": 4.111244019138756,
+   "faulted_cost_rec": 5.406874999999999,
+   "faulted_cost_stored": 5.406875
+  },
+  {
+   "policy": "mondrian_crc_0.01",
+   "clean_dispatch_rec": 0.9086921850079744,
+   "clean_dispatch_stored": 0.9086921850079744,
+   "clean_cost_rec": 4.134768740031898,
+   "clean_cost_stored": 4.134768740031898,
+   "faulted_cost_rec": 5.4125,
+   "faulted_cost_stored": 5.4125
+  },
+  {
+   "policy": "mondrian_crc_0.02",
+   "clean_dispatch_rec": 0.9318181818181818,
+   "clean_dispatch_stored": 0.9318181818181818,
+   "clean_cost_rec": 4.268740031897926,
+   "clean_cost_stored": 4.268740031897926,
+   "faulted_cost_rec": 5.44,
+   "faulted_cost_stored": 5.4399999999999995
+  },
+  {
+   "policy": "capped_crc_0.005",
+   "clean_dispatch_rec": 0.1547049441786284,
+   "clean_dispatch_stored": 0.1547049441786284,
+   "clean_cost_rec": 1.012360446570973,
+   "clean_cost_stored": 1.0123604465709728,
+   "faulted_cost_rec": 5.09375,
+   "faulted_cost_stored": 5.09375
+  },
+  {
+   "policy": "two_stage_0.005",
+   "clean_dispatch_rec": 0.47089314194577353,
+   "clean_dispatch_stored": 0.47089314194577353,
+   "clean_cost_rec": 2.178628389154705,
+   "clean_cost_stored": 2.178628389154705,
+   "faulted_cost_rec": 6.475625,
+   "faulted_cost_stored": 6.475625
+  }
+ ],
+ "policies": {
+  "global_crc_0.005": {
+   "clean_cost_ratio_to_universal": {
+    "min": 0.09785158082371705,
+    "median": 0.26116427432216904,
+    "max": 0.38350611376927163,
+    "share_below_1": 1.0,
+    "share_below_0_25": 0.4691358024691358,
+    "share_le_0_125": 0.08641975308641975
+   },
+   "faulted_cost_ratio_to_universal": {
+    "min": 0.3023161764705881,
+    "median": 0.38737499999999997,
+    "max": 0.518985294117647,
+    "share_below_1": 1.0
+   },
+   "mean_repairs_per_clean_query_QKR": [
+    0.46850079744816586,
+    0.07615629984051037,
+    0.3508771929824561
+   ],
+   "mean_repairs_per_faulted_query_QKR": [
+    0.26562499999999994,
+    0.3012499999999999,
+    0.534375
+   ],
+   "clean_dispatch": 0.6929824561403509
+  },
+  "mondrian_crc_0.0025": {
+   "clean_cost_ratio_to_universal": {
+    "min": 0.09420208274697439,
+    "median": 0.23482000455684665,
+    "max": 0.35280435938330673,
+    "share_below_1": 1.0,
+    "share_below_0_25": 0.5432098765432098,
+    "share_le_0_125": 0.12345679012345678
+   },
+   "faulted_cost_ratio_to_universal": {
+    "min": 0.16541666666666668,
+    "median": 0.2694196428571428,
+    "max": 0.4026102941176471,
+    "share_below_1": 1.0
+   },
+   "mean_repairs_per_clean_query_QKR": [
+    0.43301435406698563,
+    0.07456140350877193,
+    0.310207336523126
+   ],
+   "mean_repairs_per_faulted_query_QKR": [
+    0.09375000000000001,
+    0.19687499999999997,
+    0.420625
+   ],
+   "clean_dispatch": 0.666267942583732
+  },
+  "mondrian_crc_0.005": {
+   "clean_cost_ratio_to_universal": {
+    "min": 0.11958438877943524,
+    "median": 0.30687514240145813,
+    "max": 0.47614300903774587,
+    "share_below_1": 1.0,
+    "share_below_0_25": 0.3333333333333333,
+    "share_le_0_125": 0.024691358024691357
+   },
+   "faulted_cost_ratio_to_universal": {
+    "min": 0.3009191176470588,
+    "median": 0.3846249999999999,
+    "max": 0.5152647058823528,
+    "share_below_1": 1.0
+   },
+   "mean_repairs_per_clean_query_QKR": [
+    0.5897129186602871,
+    0.09250398724082935,
+    0.4055023923444976
+   ],
+   "mean_repairs_per_faulted_query_QKR": [
+    0.2618749999999999,
+    0.29999999999999993,
+    0.5306249999999999
+   ],
+   "clean_dispatch": 0.9059011164274322
+  },
+  "mondrian_crc_0.01": {
+   "clean_cost_ratio_to_universal": {
+    "min": 0.12045689089032742,
+    "median": 0.3086694007746639,
+    "max": 0.4780037214247741,
+    "share_below_1": 1.0,
+    "share_below_0_25": 0.3333333333333333,
+    "share_le_0_125": 0.024691358024691357
+   },
+   "faulted_cost_ratio_to_universal": {
+    "min": 0.30095588235294113,
+    "median": 0.38499999999999995,
+    "max": 0.5158823529411765,
+    "share_below_1": 1.0
+   },
+   "mean_repairs_per_clean_query_QKR": [
+    0.5917065390749602,
+    0.09330143540669857,
+    0.40789473684210525
+   ],
+   "mean_repairs_per_faulted_query_QKR": [
+    0.26249999999999996,
+    0.29999999999999993,
+    0.53125
+   ],
+   "clean_dispatch": 0.9086921850079744
+  },
+  "mondrian_crc_0.02": {
+   "clean_cost_ratio_to_universal": {
+    "min": 0.12230978515808236,
+    "median": 0.3183526999316473,
+    "max": 0.4937533227006911,
+    "share_below_1": 1.0,
+    "share_below_0_25": 0.3333333333333333,
+    "share_le_0_125": 0.012345679012345678
+   },
+   "faulted_cost_ratio_to_universal": {
+    "min": 0.3023382352941176,
+    "median": 0.38725,
+    "max": 0.5184264705882353,
+    "share_below_1": 1.0
+   },
+   "mean_repairs_per_clean_query_QKR": [
+    0.6116427432216905,
+    0.09409888357256778,
+    0.4218500797448166
+   ],
+   "mean_repairs_per_faulted_query_QKR": [
+    0.26625,
+    0.3012499999999999,
+    0.5337500000000001
+   ],
+   "clean_dispatch": 0.9318181818181818
+  },
+  "capped_crc_0.005": {
+   "clean_cost_ratio_to_universal": {
+    "min": 0.030392156862745094,
+    "median": 0.07395382395382397,
+    "max": 0.10265503330518812,
+    "share_below_1": 1.0,
+    "share_below_0_25": 1.0,
+    "share_le_0_125": 1.0
+   },
+   "faulted_cost_ratio_to_universal": {
+    "min": 0.2822916666666666,
+    "median": 0.36303571428571424,
+    "max": 0.48230882352941173,
+    "share_below_1": 1.0
+   },
+   "mean_repairs_per_clean_query_QKR": [
+    0.10964912280701754,
+    0.025518341307814992,
+    0.1032695374800638
+   ],
+   "mean_repairs_per_faulted_query_QKR": [
+    0.22499999999999995,
+    0.2962499999999999,
+    0.4975
+   ],
+   "clean_dispatch": 0.1547049441786284
+  },
+  "two_stage_0.005": {
+   "clean_cost_ratio_to_universal": {
+    "min": 0.10722863308002627,
+    "median": 0.22894736842105265,
+    "max": 0.39628013884979835,
+    "share_below_1": 1.0,
+    "share_below_0_25": 0.5555555555555556,
+    "share_le_0_125": 0.1111111111111111
+   },
+   "faulted_cost_ratio_to_universal": {
+    "min": 0.3590625,
+    "median": 0.5596551724137931,
+    "max": 0.7287941176470589,
+    "share_below_1": 1.0
+   },
+   "mean_repairs_per_clean_query_QKR": [
+    0.10964912280701754,
+    0.414274322169059,
+    0.1032695374800638
+   ],
+   "mean_repairs_per_faulted_query_QKR": [
+    0.22499999999999995,
+    0.7568750000000001,
+    0.4975
+   ],
+   "clean_dispatch": 0.47089314194577353
+  }
+ },
+ "universal_counts_QKR": [
+  1,
+  1,
+  1
+ ],
+ "excluded_policy": "tau_none_5pct_fpr (threshold not reconstructable)"
+}

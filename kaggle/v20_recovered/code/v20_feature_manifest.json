@@ -1,0 +1,400 @@
+{
+ "source": "features() in kaggle/diagrag_v6.py (frozen 44176b9a...e28a)",
+ "n": 63,
+ "families": {
+  "QUERY": [
+   "q_code",
+   "q_code_oov",
+   "q_code_rare",
+   "q_conj",
+   "q_correctable",
+   "q_digit",
+   "q_filler",
+   "q_idf_max",
+   "q_idf_mean",
+   "q_len",
+   "q_lowdf",
+   "q_oov",
+   "q_oov_long",
+   "q_prefix",
+   "q_segmentable",
+   "q_synlow"
+  ],
+  "SCORE": [
+   "ce1",
+   "ce_gap",
+   "ce_mean",
+   "ce_std",
+   "d1",
+   "d_gap",
+   "d_m5",
+   "d_n",
+   "d_std20",
+   "n_depth",
+   "n_final",
+   "s1",
+   "s_gap",
+   "s_n"
+  ],
+  "AGREEMENT": [
+   "ce_dense_rho",
+   "ce_rrf_rho",
+   "d_lex5",
+   "dep_dense",
+   "dep_sparse",
+   "ov_ds10",
+   "s_lex5",
+   "sparse_absent_dense"
+  ],
+  "INTEGRITY": [
+   "attr_gain",
+   "attr_n",
+   "attr_title_body_gap",
+   "attrcov1",
+   "chunk_crowd5",
+   "cov",
+   "deleted5",
+   "dup5",
+   "expired5",
+   "filter_survival",
+   "ident5",
+   "nonfinite",
+   "part_ent",
+   "part_top",
+   "red_cos5",
+   "tenant_mis5",
+   "thin5",
+   "unver5",
+   "versioned5"
+  ],
+  "PROBE": [
+   "align_probe",
+   "ann_probe",
+   "d_null10",
+   "q_probe_cos",
+   "stale_min",
+   "stale_sparse20"
+  ]
+ },
+ "columns": {
+  "align_probe": {
+   "family": "PROBE",
+   "description": "cosine of re-encoded top document vs served vector",
+   "extra_cost": "1 document re-encode"
+  },
+  "ann_probe": {
+   "family": "PROBE",
+   "description": "ANN top-10 vs exact top-10 overlap",
+   "extra_cost": "1 exact dense search"
+  },
+  "attr_gain": {
+   "family": "INTEGRITY",
+   "description": "best attribute coverage in depth minus top-1",
+   "extra_cost": "none beyond the retrieval trace"
+  },
+  "attr_n": {
+   "family": "INTEGRITY",
+   "description": "attribute tokens in the query",
+   "extra_cost": "none beyond the retrieval trace"
+  },
+  "attr_title_body_gap": {
+   "family": "INTEGRITY",
+   "description": "title claims an attribute the body lacks",
+   "extra_cost": "none beyond the retrieval trace"
+  },
+  "attrcov1": {
+   "family": "INTEGRITY",
+   "description": "attribute coverage of the top document",
+   "extra_cost": "none beyond the retrieval trace"
+  },
+  "ce1": {
+   "family": "SCORE",
+   "description": "top reranker score",
+   "extra_cost": "none beyond the retrieval trace"
+  },
+  "ce_dense_rho": {
+   "family": "AGREEMENT",
+   "description": "Spearman of reranker vs dense scores",
+   "extra_cost": "none beyond the retrieval trace"
+  },
+  "ce_gap": {
+   "family": "SCORE",
+   "description": "reranker score gap 1-2",
+   "extra_cost": "none beyond the retrieval trace"
+  },
+  "ce_mean": {
+   "family": "SCORE",
+   "description": "mean reranker score",
+   "extra_cost": "none beyond the retrieval trace"
+  },
+  "ce_rrf_rho": {
+   "family": "AGREEMENT",
+   "description": "Spearman of reranker vs fused order",
+   "extra_cost": "none beyond the retrieval trace"
+  },
+  "ce_std": {
+   "family": "SCORE",
+   "description": "std of reranker scores",
+   "extra_cost": "none beyond the retrieval trace"
+  },
+  "chunk_crowd5": {
+   "family": "INTEGRITY",
+   "description": "extra chunks of one parent in top-5",
+   "extra_cost": "none beyond the retrieval trace"
+  },
+  "cov": {
+   "family": "INTEGRITY",
+   "description": "share of the index that is searchable (coverage counter)",
+   "extra_cost": "index counter"
+  },
+  "d1": {
+   "family": "SCORE",
+   "description": "top dense score",
+   "extra_cost": "none beyond the retrieval trace"
+  },
+  "d_gap": {
+   "family": "SCORE",
+   "description": "dense score gap 1-2",
+   "extra_cost": "none beyond the retrieval trace"
+  },
+  "d_lex5": {
+   "family": "AGREEMENT",
+   "description": "query-term overlap of dense top-5",
+   "extra_cost": "document text of top-5"
+  },
+  "d_m5": {
+   "family": "SCORE",
+   "description": "mean dense score top-5",
+   "extra_cost": "none beyond the retrieval trace"
+  },
+  "d_n": {
+   "family": "SCORE",
+   "description": "dense candidate count",
+   "extra_cost": "none beyond the retrieval trace"
+  },
+  "d_null10": {
+   "family": "PROBE",
+   "description": "overlap of dense top-10 with the empty-query top-10",
+   "extra_cost": "1 empty-query search per process"
+  },
+  "d_std20": {
+   "family": "SCORE",
+   "description": "std of dense scores top-20",
+   "extra_cost": "none beyond the retrieval trace"
+  },
+  "deleted5": {
+   "family": "INTEGRITY",
+   "description": "served ids missing from the source of truth",
+   "extra_cost": "id registry"
+  },
+  "dep_dense": {
+   "family": "AGREEMENT",
+   "description": "share of rerank depth from the dense list",
+   "extra_cost": "none beyond the retrieval trace"
+  },
+  "dep_sparse": {
+   "family": "AGREEMENT",
+   "description": "share of rerank depth from the BM25 list",
+   "extra_cost": "none beyond the retrieval trace"
+  },
+  "dup5": {
+   "family": "INTEGRITY",
+   "description": "near-duplicate pairs in top-5",
+   "extra_cost": "shingles of top-5"
+  },
+  "expired5": {
+   "family": "INTEGRITY",
+   "description": "expired documents in top-5",
+   "extra_cost": "none beyond the retrieval trace"
+  },
+  "filter_survival": {
+   "family": "INTEGRITY",
+   "description": "share of candidates surviving a metadata filter",
+   "extra_cost": "none beyond the retrieval trace"
+  },
+  "ident5": {
+   "family": "INTEGRITY",
+   "description": "same-title pairs in top-5",
+   "extra_cost": "none beyond the retrieval trace"
+  },
+  "n_depth": {
+   "family": "SCORE",
+   "description": "candidates sent to the reranker",
+   "extra_cost": "none beyond the retrieval trace"
+  },
+  "n_final": {
+   "family": "SCORE",
+   "description": "documents served",
+   "extra_cost": "none beyond the retrieval trace"
+  },
+  "nonfinite": {
+   "family": "INTEGRITY",
+   "description": "non-finite vectors in the index (counter)",
+   "extra_cost": "index counter"
+  },
+  "ov_ds10": {
+   "family": "AGREEMENT",
+   "description": "overlap of dense and BM25 top-10",
+   "extra_cost": "none beyond the retrieval trace"
+  },
+  "part_ent": {
+   "family": "INTEGRITY",
+   "description": "entropy of corpus partitions in depth",
+   "extra_cost": "none beyond the retrieval trace"
+  },
+  "part_top": {
+   "family": "INTEGRITY",
+   "description": "share of the largest partition in depth",
+   "extra_cost": "none beyond the retrieval trace"
+  },
+  "q_code": {
+   "family": "QUERY",
+   "description": "letter+digit code tokens",
+   "extra_cost": "none beyond the retrieval trace"
+  },
+  "q_code_oov": {
+   "family": "QUERY",
+   "description": "code tokens absent from the corpus",
+   "extra_cost": "none beyond the retrieval trace"
+  },
+  "q_code_rare": {
+   "family": "QUERY",
+   "description": "code tokens with df < 3",
+   "extra_cost": "none beyond the retrieval trace"
+  },
+  "q_conj": {
+   "family": "QUERY",
+   "description": "conjunction / multi-intent markers",
+   "extra_cost": "none beyond the retrieval trace"
+  },
+  "q_correctable": {
+   "family": "QUERY",
+   "description": "rare tokens with a corpus spelling candidate",
+   "extra_cost": "corpus spelling index"
+  },
+  "q_digit": {
+   "family": "QUERY",
+   "description": "share of tokens containing a digit",
+   "extra_cost": "none beyond the retrieval trace"
+  },
+  "q_filler": {
+   "family": "QUERY",
+   "description": "share of filler words",
+   "extra_cost": "none beyond the retrieval trace"
+  },
+  "q_idf_max": {
+   "family": "QUERY",
+   "description": "max IDF of in-vocabulary tokens",
+   "extra_cost": "none beyond the retrieval trace"
+  },
+  "q_idf_mean": {
+   "family": "QUERY",
+   "description": "mean IDF of in-vocabulary tokens",
+   "extra_cost": "none beyond the retrieval trace"
+  },
+  "q_len": {
+   "family": "QUERY",
+   "description": "number of query tokens",
+   "extra_cost": "none beyond the retrieval trace"
+  },
+  "q_lowdf": {
+   "family": "QUERY",
+   "description": "share of tokens with document frequency < 3",
+   "extra_cost": "none beyond the retrieval trace"
+  },
+  "q_oov": {
+   "family": "QUERY",
+   "description": "share of query tokens not in the corpus vocabulary",
+   "extra_cost": "none beyond the retrieval trace"
+  },
+  "q_oov_long": {
+   "family": "QUERY",
+   "description": "out-of-vocabulary tokens of length >= 9",
+   "extra_cost": "none beyond the retrieval trace"
+  },
+  "q_prefix": {
+   "family": "QUERY",
+   "description": "last token is a completable prefix",
+   "extra_cost": "corpus prefix list"
+  },
+  "q_probe_cos": {
+   "family": "PROBE",
+   "description": "served query vector vs pinned re-encode",
+   "extra_cost": "1 query re-encode"
+  },
+  "q_segmentable": {
+   "family": "QUERY",
+   "description": "OOV tokens segmentable into corpus words",
+   "extra_cost": "corpus segmenter"
+  },
+  "q_synlow": {
+   "family": "QUERY",
+   "description": "rare tokens with a frequent WordNet synonym",
+   "extra_cost": "WordNet"
+  },
+  "red_cos5": {
+   "family": "INTEGRITY",
+   "description": "mean pairwise cosine of served documents",
+   "extra_cost": "served vectors"
+  },
+  "s1": {
+   "family": "SCORE",
+   "description": "top BM25 score",
+   "extra_cost": "none beyond the retrieval trace"
+  },
+  "s_gap": {
+   "family": "SCORE",
+   "description": "BM25 score gap 1-2",
+   "extra_cost": "none beyond the retrieval trace"
+  },
+  "s_lex5": {
+   "family": "AGREEMENT",
+   "description": "query-term overlap of BM25 top-5",
+   "extra_cost": "document text of top-5"
+  },
+  "s_n": {
+   "family": "SCORE",
+   "description": "BM25 candidate count",
+   "extra_cost": "none beyond the retrieval trace"
+  },
+  "sparse_absent_dense": {
+   "family": "AGREEMENT",
+   "description": "share of BM25 top-k absent from the dense list",
+   "extra_cost": "uses the PROBE_K list"
+  },
+  "stale_min": {
+   "family": "PROBE",
+   "description": "minimum cosine of that check",
+   "extra_cost": "same as stale_sparse20"
+  },
+  "stale_sparse20": {
+   "family": "PROBE",
+   "description": "BM25 top-k whose dense vector is stale (< 0.98 cosine)",
+   "extra_cost": "PROBE_K = 20 document re-encodes"
+  },
+  "tenant_mis5": {
+   "family": "INTEGRITY",
+   "description": "other-tenant documents in top-5",
+   "extra_cost": "none beyond the retrieval trace"
+  },
+  "thin5": {
+   "family": "INTEGRITY",
+   "description": "placeholder documents in top-5",
+   "extra_cost": "none beyond the retrieval trace"
+  },
+  "unver5": {
+   "family": "INTEGRITY",
+   "description": "unverified-source documents in top-5",
+   "extra_cost": "none beyond the retrieval trace"
+  },
+  "versioned5": {
+   "family": "INTEGRITY",
+   "description": "versioned documents in top-5",
+   "extra_cost": "none beyond the retrieval trace"
+  }
+ },
+ "extra_cost_per_query_main_stack": {
+  "PROBE": "1 exact dense search + 1 query re-encode + 21 document re-encodes (PROBE_K=20, plus top-1) + 1 empty-query search per process",
+  "other_families": "none beyond the retrieval trace; AGREEMENT and INTEGRITY read texts or vectors of at most the top-5 / top-k already retrieved"
+ }
+}

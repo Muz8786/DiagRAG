@@ -1,0 +1,293 @@
+{
+ "source": "kaggle/judged_cpu_run_v7_seed50/composed_episodes.jsonl",
+ "reproduces_committed_totals": {
+  "both_named_new": 62,
+  "both_named_old": 47,
+  "sequential": 113,
+  "oracle_forward": 130
+ },
+ "all": {
+  "n": 155,
+  "both_named_new": {
+   "k": 62,
+   "n": 155,
+   "rate": 0.4,
+   "wilson95": [
+    0.3261933617957926,
+    0.4786436582291882
+   ]
+  },
+  "both_named_old": {
+   "k": 47,
+   "n": 155,
+   "rate": 0.3032258064516129,
+   "wilson95": [
+    0.23634352265430877,
+    0.379626097394847
+   ]
+  },
+  "at_least_one_named_new": {
+   "k": 149,
+   "n": 155,
+   "rate": 0.9612903225806452,
+   "wilson95": [
+    0.9181273811193313,
+    0.9821405587654344
+   ]
+  },
+  "sequential_closure": {
+   "k": 113,
+   "n": 155,
+   "rate": 0.7290322580645161,
+   "wilson95": [
+    0.6541511168366239,
+    0.7928350631061618
+   ]
+  },
+  "oracle_forward_closure": {
+   "k": 130,
+   "n": 155,
+   "rate": 0.8387096774193549,
+   "wilson95": [
+    0.7727359279786586,
+    0.8882999719367288
+   ]
+  }
+ },
+ "by_alone_category": {
+  "ALL_FAIL_ALONE": {
+   "n": 29,
+   "both_named_new": {
+    "k": 12,
+    "n": 29,
+    "rate": 0.41379310344827586,
+    "wilson95": [
+     0.2551293527964552,
+     0.5926247152148476
+    ]
+   },
+   "both_named_old": {
+    "k": 9,
+    "n": 29,
+    "rate": 0.3103448275862069,
+    "wilson95": [
+     0.17275424489768068,
+     0.49230470472718546
+    ]
+   },
+   "at_least_one_named_new": {
+    "k": 29,
+    "n": 29,
+    "rate": 1.0,
+    "wilson95": [
+     0.8830264055344442,
+     1.0000000000000002
+    ]
+   },
+   "sequential_closure": {
+    "k": 21,
+    "n": 29,
+    "rate": 0.7241379310344828,
+    "wilson95": [
+     0.5428252365556403,
+     0.8530141866149726
+    ]
+   },
+   "oracle_forward_closure": {
+    "k": 25,
+    "n": 29,
+    "rate": 0.8620689655172413,
+    "wilson95": [
+     0.6944064228730067,
+     0.9450264914795217
+    ]
+   }
+  },
+  "NONE_FAIL_ALONE": {
+   "n": 40,
+   "both_named_new": {
+    "k": 15,
+    "n": 40,
+    "rate": 0.375,
+    "wilson95": [
+     0.24222773535791722,
+     0.529678399454681
+    ]
+   },
+   "both_named_old": {
+    "k": 13,
+    "n": 40,
+    "rate": 0.325,
+    "wilson95": [
+     0.20084316962661727,
+     0.4798254191110202
+    ]
+   },
+   "at_least_one_named_new": {
+    "k": 37,
+    "n": 40,
+    "rate": 0.925,
+    "wilson95": [
+     0.8013546984090248,
+     0.9741644432281419
+    ]
+   },
+   "sequential_closure": {
+    "k": 27,
+    "n": 40,
+    "rate": 0.675,
+    "wilson95": [
+     0.52017458088898,
+     0.7991568303733828
+    ]
+   },
+   "oracle_forward_closure": {
+    "k": 33,
+    "n": 40,
+    "rate": 0.825,
+    "wilson95": [
+     0.6804970794560756,
+     0.9125469700311694
+    ]
+   }
+  },
+  "SOME_FAIL_ALONE": {
+   "n": 85,
+   "both_named_new": {
+    "k": 35,
+    "n": 85,
+    "rate": 0.4117647058823529,
+    "wilson95": [
+     0.3131683862386879,
+     0.51799179097559
+    ]
+   },
+   "both_named_old": {
+    "k": 25,
+    "n": 85,
+    "rate": 0.29411764705882354,
+    "wilson95": [
+     0.20785389608177998,
+     0.3981865174182021
+    ]
+   },
+   "at_least_one_named_new": {
+    "k": 82,
+    "n": 85,
+    "rate": 0.9647058823529412,
+    "wilson95": [
+     0.9012978896926875,
+     0.9879251769787816
+    ]
+   },
+   "sequential_closure": {
+    "k": 64,
+    "n": 85,
+    "rate": 0.7529411764705882,
+    "wilson95": [
+     0.651652476458812,
+     0.8323550155269245
+    ]
+   },
+   "oracle_forward_closure": {
+    "k": 71,
+    "n": 85,
+    "rate": 0.8352941176470589,
+    "wilson95": [
+     0.7423150301896173,
+     0.8992762963961264
+    ]
+   }
+  },
+  "UNKNOWN": {
+   "n": 1,
+   "both_named_new": {
+    "k": 0,
+    "n": 1,
+    "rate": 0.0,
+    "wilson95": [
+     0.0,
+     0.7934567085261071
+    ]
+   },
+   "both_named_old": {
+    "k": 0,
+    "n": 1,
+    "rate": 0.0,
+    "wilson95": [
+     0.0,
+     0.7934567085261071
+    ]
+   },
+   "at_least_one_named_new": {
+    "k": 1,
+    "n": 1,
+    "rate": 1.0,
+    "wilson95": [
+     0.20654329147389294,
+     1.0
+    ]
+   },
+   "sequential_closure": {
+    "k": 1,
+    "n": 1,
+    "rate": 1.0,
+    "wilson95": [
+     0.20654329147389294,
+     1.0
+    ]
+   },
+   "oracle_forward_closure": {
+    "k": 1,
+    "n": 1,
+    "rate": 1.0,
+    "wilson95": [
+     0.20654329147389294,
+     1.0
+    ]
+   }
+  }
+ },
+ "by_stratum_and_category": {
+  "KK": {
+   "SOME_FAIL_ALONE": 11,
+   "ALL_FAIL_ALONE": 9
+  },
+  "KR": {
+   "ALL_FAIL_ALONE": 7,
+   "SOME_FAIL_ALONE": 11,
+   "NONE_FAIL_ALONE": 2
+  },
+  "QK": {
+   "SOME_FAIL_ALONE": 12,
+   "NONE_FAIL_ALONE": 2,
+   "ALL_FAIL_ALONE": 6
+  },
+  "QQ": {
+   "NONE_FAIL_ALONE": 12,
+   "SOME_FAIL_ALONE": 7,
+   "UNKNOWN": 1
+  },
+  "QR": {
+   "SOME_FAIL_ALONE": 12,
+   "ALL_FAIL_ALONE": 1,
+   "NONE_FAIL_ALONE": 7
+  },
+  "RR": {
+   "SOME_FAIL_ALONE": 10,
+   "ALL_FAIL_ALONE": 2,
+   "NONE_FAIL_ALONE": 8
+  },
+  "TRIPLE": {
+   "NONE_FAIL_ALONE": 4,
+   "SOME_FAIL_ALONE": 10,
+   "ALL_FAIL_ALONE": 1
+  },
+  "WITHIN_FAMILY": {
+   "SOME_FAIL_ALONE": 12,
+   "ALL_FAIL_ALONE": 3,
+   "NONE_FAIL_ALONE": 5
+  }
+ },
+ "caveat": "post-hoc, descriptive; 155 episodes from one seed and one CPU stack; small cells have wide intervals; no gate attached"
+}

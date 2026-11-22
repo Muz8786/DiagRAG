@@ -1,0 +1,1478 @@
+# %% [markdown]
+# # DiagRAG core-28 v2 — evidence-grounded judged run
+# v2 keeps the 28 judged v1 faults unchanged and adds:
+# - 3 field-evidenced faults (R25 non-finite vectors, R26 post-filtered ANN, K11 deleted docs served)
+#   and one natural fault (K12 chunk crowding);
+# - family-level attribution (QLEX, STALE, ENC), with a conformal do-no-harm threshold fitted on a
+#   SEPARATE calibration split scored by the same model;
+# - natural-validation arms NA1-NA6 on ESCI queries that no earlier run examined.
+# Evidence and plan: docs/EVIDENCE_AND_NOVELTY_REPORT.md
+# Settings: GPU T4 (or P100), Internet ON. Outputs go to /kaggle/working/diagrag_out.
+
+# %%
+import os, sys, subprocess, json, gzip, re, time, math, random, hashlib, zipfile, csv, collections, shutil
+ON_KAGGLE = os.path.exists('/kaggle')
+WORK = '/kaggle/working' if ON_KAGGLE else os.environ.get('DIAGRAG_WORK', os.getcwd())
+DATA = '/tmp/diagrag_data' if ON_KAGGLE else os.path.join(WORK, 'diagrag_data')   # data kept out of the saved output
+OUT = os.path.join(WORK, 'diagrag_out')
+os.makedirs(DATA, exist_ok=True); os.makedirs(OUT, exist_ok=True)
+
+def pip(*pk):
+    subprocess.run([sys.executable, '-m', 'pip', 'install', '-q', *pk], check=False)
+for mod, pk in [('gdown', 'gdown'), ('sentence_transformers', 'sentence-transformers'), ('pyarrow', 'pyarrow'), ('nltk', 'nltk'), ('tabulate', 'tabulate')]:
+    try: __import__(mod)
+    except ImportError: pip(pk)
+
+import numpy as np, pandas as pd, torch
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.ensemble import HistGradientBoostingClassifier
+from sklearn.metrics import roc_auc_score
+from sentence_transformers import SentenceTransformer, CrossEncoder
+DEV = 'cuda' if torch.cuda.is_available() else 'cpu'
+GPU = DEV == 'cuda'
+print('device', DEV, 'kaggle', ON_KAGGLE)
+
+CFG = dict(
+    SEED=int(os.environ.get('SEED', 42)), QUERY_DATE='2026-11-14', K_FINAL=5, DEPTH=25, RRF_K=60, CAND=100,
+    ENCODER='BAAI/bge-base-en-v1.5', ENCODER_V1='BAAI/bge-base-en',
+    QPROMPT='Represent this sentence for searching relevant passages: ',
+    RERANKER=os.environ.get('RERANKER', 'BAAI/bge-reranker-large' if GPU else 'BAAI/bge-reranker-base'),
+    CE_MAXLEN=int(os.environ.get('CE_MAXLEN', 512 if GPU else 320)),
+    N_BASE_ESCI=int(os.environ.get('N_BASE_ESCI', 4000 if GPU else 320)),
+    N_HARD=int(os.environ.get('N_HARD', 80 if GPU else 10)),       # hard episodes per fault, split 50/50 train/test by quota
+    MAX_ATT=int(os.environ.get('MAX_ATT', 2500 if GPU else 70)),   # injection attempts per fault
+    TEST_FRAC=0.5, CLEAN_FPR=0.05, IVF_NLIST=1024,
+    N_PRDC=int(os.environ.get('N_PRDC', 528 if GPU else 120)), PROBE_K=20 if GPU else 8,
+    N_HARM=int(os.environ.get('N_HARM', 60 if GPU else 8)), N_NAT=int(os.environ.get('N_NAT', 400 if GPU else 200)),
+    TIME_BUDGET=int(os.environ.get('TIME_BUDGET', 0)),               # seconds per invocation; 0 = no limit (Kaggle Run All)
+    N_NATQ=int(os.environ.get('N_NATQ', 100000 if GPU else 1500)), CAL_FRAC=0.4, N_BOOT=2000, EF_SEARCH=40,
+)
+# Judged-run gates, fixed BEFORE any result exists (written to JUDGED_PROTOCOL.json on first start).
+GATES = dict(
+    detector='held-out one-vs-rest AUROC >= 0.70 (point estimate) AND >= 20 held-out positives',
+    repair='>= 20 hard episodes AND Wilson 95% lower bound of rescue rate >= 0.50 AND <= 10% of clean successes lost when the repair is forced on them',
+    solved='detector PASS and repair PASS',
+    targets='ADOPTED if repairs PASS >= 24/28 AND detectors PASS >= 27/28, else NOT_ADOPTED',
+    AUROC_BAR=0.70, MIN_TEST_POS=20, RESCUE_BAR_LB=0.50, MIN_REPAIR_N=20, MAX_HARM=0.10, REPAIR_TARGET=24, DETECT_TARGET=27,
+    guarantee=('do-no-harm dispatch: threshold lambda fitted by conformal risk control on out-of-fold clean TRAIN queries so that '
+               'E[Hit@5 lost on a clean query] <= ALPHA; PASS if held-out clean loss <= ALPHA; also report 200 calibration re-splits'),
+    ALPHA=0.005, ALPHAS=[0.0025, 0.005, 0.01, 0.02],
+    natural=('report, not gated: (a) real misspelled ESCI queries whose corrected spelling was typed by another ESCI user, '
+             'gold from ESCI labels; (b) in-corpus superseded policy versions with the validity filter off, no injected docs. '
+             'Metrics: Hit@5 before, after closed loop (guarded and unguarded), after oracle repair, oracle-referenced closure'),
+    unseen=('report, not gated: leave-one-fault-out attributor; on the held-out fault test episodes report flagged rate, '
+            'right-group rate and Hit after dispatch'),
+    v2_new_faults='R25, R26, K11 judged with the same detector and repair gates; reported beside the 28, not counted in the 28-fault verdict',
+    v2_loop=('family-level dispatch; FAMILIES QLEX={Q01,Q03,Q04,Q05}, STALE={K04,R07}, ENC={R03,R10,R11}; attribution correct if the family '
+             'is right. L1 PASS if held-out clean Hit@5 loss <= ALPHA under the CRC threshold fitted on the separate calibration split. '
+             'L2 PASS if mean held-out closure over the 31 faults + C2 >= 0.70 under the same threshold'),
+    L2_BAR=0.70,
+    v2_natural=('arms NA1-NA6 on ESCI queries outside natural_exclusions_v1.json; selection by deployed rule only, never by gold; '
+                'metric paired delta Hit@5 (repair - none) with 95% bootstrap CI (N_BOOT resamples); '
+                'PASS if CI lower bound > 0, HARM if CI upper bound < 0, else INCONCLUSIVE'))
+random.seed(CFG['SEED']); np.random.seed(CFG['SEED']); torch.manual_seed(CFG['SEED'])
+if not GPU: torch.set_num_threads(int(os.environ.get('TORCH_THREADS', os.cpu_count() or 4)))
+T0 = time.time()
+def log(*a): print(f'[{time.time()-T0:7.0f}s]', *a, flush=True)
+
+# Resumable run: state is checkpointed so an interrupted session (or a TIME_BUDGET stop) continues where it left off.
+import pickle
+CKPT = os.path.join(OUT, 'checkpoint.pkl')
+RES = pickle.load(open(CKPT, 'rb')) if os.path.exists(CKPT) else {}
+if RES: print('resuming from checkpoint, stage:', RES.get('stage'))
+def over_budget(): return CFG['TIME_BUDGET'] > 0 and time.time() - T0 > CFG['TIME_BUDGET']
+def save_ckpt(stage):
+    keep = {k: globals()[k] for k in ('CLEAN', 'EPIS', 'GEN', 'GSTATE', 'SEEN', 'HARM', 'CAL', 'NATR', 'LOFO', 'FAMR', 'NAT2') if k in globals()}
+    keep.update(stage=stage, caches=dict(QC=globals().get('_QC', {}), CEC=globals().get('_CEC', {}), DC=globals().get('_DC', {})))
+    with open(CKPT + '.tmp', 'wb') as fh: pickle.dump(keep, fh, protocol=4)
+    os.replace(CKPT + '.tmp', CKPT); log('checkpoint saved:', stage)
+def maybe_stop(stage):
+    if over_budget():
+        save_ckpt(stage); log('TIME_BUDGET reached - run the notebook/script again to resume'); raise SystemExit(0)
+PROTO = os.path.join(OUT, 'JUDGED_PROTOCOL.json')
+if not os.path.exists(PROTO):
+    _code_sha = hashlib.sha256(open(__file__, 'rb').read()).hexdigest() if '__file__' in globals() else 'notebook'
+    json.dump(dict(created_utc=time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime()), gates=GATES, cfg=CFG, device=DEV,
+                   code_sha256=_code_sha), open(PROTO, 'w'), indent=1)
+
+# %% [markdown]
+# ## 1. Fetch and verify data (exact bytes + SHA-256, observed 14 Nov 2026)
+
+# %%
+FILES = {
+    'corpus': dict(name='kb_tier3_186k.jsonl.gz', size=53518791, gdrive='1zksoRmKjBn3VKRweFM1pLfDDNAIpnzxm',
+                   sha='5a9f7ea6ae5b8a3e7f1e1ca6e2838dddd6158efb9384d757c6aa755dbe9bda3c'),
+    'cache': dict(name='embeddings_cache_186k.npz', size=533012659, gdrive='1xKaTyYx3qxFFzmRYQQuPmLnKEtygNx2s',
+                  sha='3b43603d9689f7c0eee0cbfebdb8b5cfddd05a2fc4e3cf192c8eed1de4a88835'),
+    'esci': dict(name='shopping_queries_dataset_examples.parquet', size=51286808,
+                 url='https://media.githubusercontent.com/media/amazon-science/esci-data/main/shopping_queries_dataset/shopping_queries_dataset_examples.parquet',
+                 sha='4a735b693b4a424a6fc67f5be6e4c811495c488bbf66d02a602d308b2744263a'),
+    'exclusions': dict(name='natural_exclusions_v1.json', size=128698,
+                       url='https://raw.githubusercontent.com/Muz8786/DiagRAG/core28-kaggle-notebook/kaggle/natural_exclusions_v1.json',
+                       sha='b249216fe1b1f0f8d427d1699c759a402909d08644e70a14bcfc88963fdcce42'),
+    'qspell': dict(name='corpus-webis-qspell-17.zip', size=2285705,
+                   url='https://zenodo.org/api/records/3570912/files/corpus-webis-qspell-17.zip/content',
+                   sha='f13bd165544ab2ac75d63de4334feb86d74d1b3dfbe48d79423133552b5054e4'),
+}
+def sha256(p, bs=1 << 22):
+    h = hashlib.sha256()
+    with open(p, 'rb') as f:
+        for b in iter(lambda: f.read(bs), b''): h.update(b)
+    return h.hexdigest()
+
+VERIFY = {}
+for key, f in FILES.items():
+    p = os.path.join(DATA, f['name']); f['path'] = p
+    _local = os.path.join(os.path.dirname(os.path.abspath(__file__)) if '__file__' in globals() else '.', f['name'])
+    if key == 'exclusions' and not os.path.exists(p) and os.path.exists(_local): shutil.copy(_local, p)
+    if not (os.path.exists(p) and os.path.getsize(p) == f['size']):
+        log('fetch', f['name'])
+        if 'gdrive' in f:
+            import gdown; gdown.download(id=f['gdrive'], output=p, quiet=True)
+        else:
+            subprocess.run(['curl', '-sL', '--retry', '3', '-o', p, f['url']], check=True)
+    size = os.path.getsize(p); dig = sha256(p)
+    VERIFY[key] = dict(file=f['name'], bytes=size, size_ok=size == f['size'], sha256=dig, sha_ok=dig == f['sha'])
+    log(key, VERIFY[key])
+    assert VERIFY[key]['size_ok'] and VERIFY[key]['sha_ok'], f'{key} failed verification — stop'
+
+# %% [markdown]
+# ## 2. Load corpus + cache, purity checks, gold-equivalence map
+
+# %%
+DOCS = [json.loads(l) for l in gzip.open(FILES['corpus']['path'], 'rt', encoding='utf-8')]
+N = len(DOCS)
+z = np.load(FILES['cache']['path']); E = z['embeddings'].astype(np.float32); EIDS = z['doc_ids']; del z
+TEXT = [(d['title'] or '') + '\n' + d['content'] for d in DOCS]      # verified: cos(re-encode, cache) = 1.0
+ID2I = {d['doc_id']: i for i, d in enumerate(DOCS)}
+VALID_RE = re.compile(r'In force from (\d{4}-\d{2}-\d{2})(?: until (\d{4}-\d{2}-\d{2}))?')
+def pkey(d):
+    p = d['parent_doc_id'] or d['doc_id']
+    if p.startswith('ESCI-'): return p.split('-', 2)[2]
+    if p.startswith('ABO-'): return p[4:]
+    return p
+def chash(s): return hashlib.md5(re.sub(r'\s+', ' ', s.strip().lower()).encode()).hexdigest()
+PKEY = [pkey(d) for d in DOCS]; CH = [chash(d['content']) for d in DOCS]
+BY_PKEY = collections.defaultdict(list); BY_CH = collections.defaultdict(list)
+for i in range(N): BY_PKEY[PKEY[i]].append(i); BY_CH[CH[i]].append(i)
+
+PUR = {}
+PUR['docs'] = N; PUR['schemas'] = len({tuple(sorted(d)) for d in DOCS}); PUR['unique_ids'] = len(ID2I)
+PUR['empty_content'] = sum(not d['content'].strip() for d in DOCS)
+grp = [g for g in BY_CH.values() if len(g) > 1]
+PUR['exact_dup_rows_beyond_first'] = sum(len(g) - 1 for g in grp); PUR['exact_dup_groups'] = len(grp)
+PUR['dup_groups_with_2plus_unflagged'] = sum(sum(not DOCS[i]['duplicate_text'] for i in g) > 1 for g in grp)
+PUR['flagged_dup_without_exact_twin'] = sum(DOCS[i]['duplicate_text'] and len(BY_CH[CH[i]]) == 1 for i in range(N))
+PUR['chunk_span_mismatch'] = sum((d['char_end'] - d['char_start']) != len(d['content']) for d in DOCS)
+PUR['replacement_char_rows'] = sum('\ufffd' in d['content'] for d in DOCS)
+NANDOC = np.array([('Brand: nan' in d['content']) or ('Description: nan' in d['content']) for d in DOCS])
+PUR['nan_placeholder_docs'] = int(NANDOC.sum())
+PUR['license_status'] = dict(collections.Counter(f"{d['source_partition']}|{d['license_status']}" for d in DOCS))
+PUR['asin_in_both_esci_and_abo'] = sum(1 for k, g in BY_PKEY.items() if {DOCS[i]['source_partition'] for i in g} >= {'real_world_apache_esci', 'real_world_cc_by_4_0_abo'})
+nrm = np.linalg.norm(E, axis=1)
+PUR['emb'] = dict(shape=list(E.shape), nan=int(np.isnan(E).sum()), zero_rows=int((nrm == 0).sum()),
+                  norm_min=float(nrm.min()), norm_max=float(nrm.max()), ids_in_order=bool((EIDS == np.array([d['doc_id'] for d in DOCS])).all()),
+                  identical_rows_beyond_first=int(N - len({hashlib.md5(E[i].tobytes()).hexdigest() for i in range(N)})))
+assert PUR['emb']['ids_in_order'] and PUR['emb']['nan'] == 0 and PUR['emb']['zero_rows'] == 0
+log('purity', json.dumps(PUR, indent=1)[:3000])
+
+def gold_set(idxs):
+    """Purity fix: gold = the labelled doc + its chunks + same-ASIN twins (ESCI<->ABO) + exact-content twins."""
+    g = set()
+    for i in idxs:
+        g.update(BY_PKEY[PKEY[i]])
+    for i in list(g): g.update(BY_CH[CH[i]])
+    return g
+
+# %% [markdown]
+# ## 3. Document metadata + BM25 sparse index
+
+# %%
+PARTS = sorted({d['source_partition'] for d in DOCS}); PART = np.array([PARTS.index(d['source_partition']) for d in DOCS])
+SCOPE = [d['access_scope'] for d in DOCS]
+VERIFIED = np.array([d['license_status'] == 'verified' for d in DOCS])
+CLEN = np.array([len(d['content']) for d in DOCS])
+def validity(text):
+    m = VALID_RE.search(text); return (m.group(1), m.group(2) or '') if m else ('', '')
+VAL = [validity(d['content']) for d in DOCS]
+def valid_on(v, day): return (not v[0] or v[0] <= day) and (not v[1] or v[1] >= day)
+VALID_NOW = np.array([valid_on(v, CFG['QUERY_DATE']) for v in VAL])
+TENANTS = ['ALL', 'T1', 'T2', 'T3', 'T4']
+def scope_ok(scope, t): return scope == 'all_tenants' or scope == f'tenant:{t}'
+SCOPE_OK = {t: np.array([scope_ok(s, t) for s in SCOPE]) for t in TENANTS}
+TOKRE = re.compile(r'[a-z0-9]+')
+def tok(s): return TOKRE.findall(s.lower())
+
+log('building BM25')
+CV = CountVectorizer(token_pattern=r'[a-z0-9]+', lowercase=True, dtype=np.float32)
+TF = CV.fit_transform(TEXT).tocsr()
+VOC = CV.vocabulary_; IVOC = np.empty(len(VOC), dtype=object)
+for w, j in VOC.items(): IVOC[j] = w
+V = len(VOC); DF = np.bincount(TF.indices, minlength=V).astype(np.int64)
+IDF = np.log(1 + (N - DF + 0.5) / (DF + 0.5)).astype(np.float32)
+DL = np.asarray(TF.sum(1)).ravel(); AVGDL = DL.mean(); K1, B = 0.9, 0.4
+def bm25_weight(tf_csr, dl):
+    tf_csr = tf_csr.tocsr(copy=True); rows = np.repeat(np.arange(tf_csr.shape[0]), np.diff(tf_csr.indptr))
+    t = tf_csr.data; tf_csr.data = IDF[tf_csr.indices] * t * (K1 + 1) / (t + K1 * (1 - B + B * dl[rows] / AVGDL))
+    return tf_csr
+BM = bm25_weight(TF, DL).tocsc(); del TF
+log('BM25 vocab', V)
+
+def q_terms(q, shift=0):
+    ids = [VOC[t] for t in tok(q) if t in VOC]
+    return [(j + shift) % V for j in ids]
+def bm25_scores(q, shift=0, extra=None):
+    ids = q_terms(q, shift)
+    s = np.asarray(BM[:, ids].sum(1)).ravel() if ids else np.zeros(N, np.float32)
+    if extra is not None and extra.shape[0]:
+        se = np.asarray(extra[:, ids].sum(1)).ravel() if ids else np.zeros(extra.shape[0], np.float32)
+        s = np.concatenate([s, se])
+    return s.astype(np.float32)
+
+# %% [markdown]
+# ## 4. Models: bge-base-en-v1.5 encoder, bge-base-en (v1, for the real model-drift fault R11), bge reranker, IVF index
+
+# %%
+ENC = SentenceTransformer(CFG['ENCODER'], device=DEV)
+ENC_V1 = SentenceTransformer(CFG['ENCODER_V1'], device=DEV)
+ENC_SWAP = SentenceTransformer('sentence-transformers/all-mpnet-base-v2', device=DEV)
+CE = CrossEncoder(CFG['RERANKER'], max_length=CFG['CE_MAXLEN'], device=DEV)
+if GPU: ENC.half(); ENC_V1.half(); ENC_SWAP.half(); CE.model.half()
+ET = torch.from_numpy(E).to(DEV, dtype=torch.float16 if GPU else torch.float32)
+_QC = {}
+def enc_q(q, mode='v15'):
+    k = (q, mode)
+    if k not in _QC:
+        s = CFG['QPROMPT'] + q
+        if mode == 'v15': v = ENC.encode([s], normalize_embeddings=True)[0]
+        elif mode == 'v1': v = ENC_V1.encode([s], normalize_embeddings=True)[0]
+        elif mode == 'swap': v = ENC_SWAP.encode([q], normalize_embeddings=True)[0]   # R11: different 768-d model deployed
+        elif mode == 'v15_trunc':                     # R03: max_seq_length misconfig, the prompt eats the query
+            ml = ENC.max_seq_length; ENC.max_seq_length = 12
+            try: v = ENC.encode([s], normalize_embeddings=True)[0]
+            finally: ENC.max_seq_length = ml
+        _QC[k] = np.asarray(v, dtype=np.float32)
+    return _QC[k]
+def enc_docs(texts, bs=32):
+    return np.asarray(ENC.encode(list(texts), normalize_embeddings=True, batch_size=bs), dtype=np.float32)
+def dense_all(qv):
+    with torch.no_grad():
+        return (ET @ torch.from_numpy(qv).to(ET.device, ET.dtype)).float().cpu().numpy()
+_CEC = {}
+def ce_scores(q, keys, texts, trunc=None):
+    out = np.empty(len(keys), np.float32); todo = []
+    for j, (k, t) in enumerate(zip(keys, texts)):
+        ck = (q, k, trunc)
+        if ck in _CEC: out[j] = _CEC[ck]
+        else: todo.append((j, ck, t if trunc is None else t[:trunc]))
+    if todo:
+        s = CE.predict([(q, t) for _, _, t in todo], batch_size=64, show_progress_bar=False)
+        for (j, ck, _), v in zip(todo, np.atleast_1d(s)): out[j] = v; _CEC[ck] = float(v)
+    return out
+
+log('IVF k-means', CFG['IVF_NLIST'])
+g = torch.Generator().manual_seed(0)
+X = torch.from_numpy(E).to(DEV); C = X[torch.randperm(N, generator=g)[:CFG['IVF_NLIST']].to(DEV)].clone()
+samp = X[torch.randperm(N, generator=g)[:min(N, 80000)].to(DEV)]
+for _ in range(8):
+    a = (samp @ C.T).argmax(1)
+    C = torch.zeros_like(C).index_add_(0, a, samp); C = C / C.norm(dim=1, keepdim=True).clamp_min(1e-6)
+ASSIGN = torch.cat([(X[i:i + 20000] @ C.T).argmax(1) for i in range(0, N, 20000)]).cpu().numpy()
+CENT = C.cpu().numpy(); del X, samp, C
+if GPU: torch.cuda.empty_cache()
+log('IVF list sizes min/median/max', np.bincount(ASSIGN).min(), int(np.median(np.bincount(ASSIGN))), np.bincount(ASSIGN).max())
+
+# %% [markdown]
+# ## 5. Retrieval pipeline (dense + BM25 → RRF k=60 → depth 25 → cross-encoder → top-5), with fault knobs
+
+# %%
+INJ_PART = len(PARTS)          # partition code for injected (synthetic) overlay docs
+def make_overlay(docs):
+    """Per-episode injected docs (synthetic). Each doc: title, content, access_scope, license_status, part, source_name."""
+    if not docs: return None
+    texts = [(d['title'] or '') + '\n' + d['content'] for d in docs]
+    tf = CV.transform(texts).astype(np.float32)
+    return dict(docs=docs, text=texts, E=enc_docs(texts), BMX=bm25_weight(tf, np.asarray(tf.sum(1)).ravel()).tocsr(),
+                scope=[d.get('access_scope', 'all_tenants') for d in docs], part=np.array([d.get('part', INJ_PART) for d in docs]),
+                verified=np.array([d.get('license_status') == 'verified' for d in docs]),
+                val=[validity(d['content']) for d in docs], clen=np.array([len(d['content']) for d in docs]),
+                nan=np.array([('Brand: nan' in d['content']) or ('Description: nan' in d['content']) for d in docs]),
+                deleted=np.array([bool(d.get('deleted')) for d in docs]))
+def M(ov): return 0 if ov is None else len(ov['docs'])
+def dtext(i, ov): return TEXT[i] if i < N else ov['text'][i - N]
+def dcontent(i, ov): return DOCS[i]['content'] if i < N else ov['docs'][i - N]['content']   # spec/body field, not the (stuffable) title
+def dtitle(i, ov): return (DOCS[i]['title'] if i < N else ov['docs'][i - N]['title']) or ''
+def dverified(i, ov): return VERIFIED[i] if i < N else ov['verified'][i - N]
+def dthin(i, ov, q):
+    """Placeholder doc (nan fields / <60 chars of content) whose title just echoes the query."""
+    ph = (NANDOC[i] or CLEN[i] < 60) if i < N else (ov['nan'][i - N] or ov['clen'][i - N] < 60)
+    return bool(ph) and jacc(set(tok(dtitle(i, ov))), set(tok(q))) >= 0.6
+def dscope(i, ov): return SCOPE[i] if i < N else ov['scope'][i - N]
+def dval(i, ov): return VAL[i] if i < N else ov['val'][i - N]
+def dpart(i, ov): return PART[i] if i < N else ov['part'][i - N]
+def demb(i, ov): return E[i] if i < N else ov['E'][i - N]
+def ddeleted(i, ov): return False if i < N else bool(ov['deleted'][i - N])   # source-of-truth registry: overlay docs flagged deleted
+PARENT = [d['parent_doc_id'] or d['doc_id'] for d in DOCS]
+def dparent(i, ov): return PARENT[i] if i < N else f'ov{i}'
+def dkey(i, ov): return i if i < N else ('ov', hashlib.md5(ov['text'][i - N].encode()).hexdigest())
+
+DEFAULT = dict(enc='v15', q_noise=0.0, mask=None, emb_override=None, shift=None, nprobe=None, sparse_shift=0,
+               route=None, fusion='rrf', depth=CFG['DEPTH'], ce='ok', ce_trunc=None, result_cap=None,
+               tenant_filter=True, validity=True, dedup=False, attr_rerank=False, authority=False,
+               quality=False, refresh=False, parts=None,
+               nonfinite=None, pfilter=None, post_filter=False, reconcile=False, parent_collapse=False)   # v2 knobs
+def mkcfg(**kw):
+    c = dict(DEFAULT); c.update(kw); return c
+def drop_mask(spec):
+    frac, seed, forced = spec; r = np.random.default_rng(seed); m = r.random(N) < frac
+    m[list(forced)] = True; return m
+def topn(s, n):
+    n = min(n, int(np.isfinite(s).sum()))
+    if n <= 0: return np.array([], dtype=np.int64)
+    idx = np.argpartition(-s, n - 1)[:n]; return idx[np.argsort(-s[idx])]
+
+COLORS = set('black white red blue green yellow pink purple orange brown grey gray silver gold beige navy ivory cream teal maroon'.split())
+SIZES = set('xs s m l xl xxl xxxl small medium large mini twin queen king full'.split())
+def attrs(q):
+    """Discriminating attribute tokens of a query: numbers, codes, colours, sizes."""
+    return [t for t in tok(q) if any(c.isdigit() for c in t) or t in COLORS or t in SIZES]
+def attr_cov(at, text):
+    if not at: return 1.0
+    tt = set(tok(text)); return sum(a in tt for a in at) / len(at)
+def shingles(t, n=4):
+    w = tok(t); return {' '.join(w[i:i + n]) for i in range(max(1, len(w) - n + 1))}
+def jacc(a, b): return len(a & b) / max(1, len(a | b))
+def title_key(t): return ' '.join(w for w in tok(t) if not any(c.isdigit() for c in w))[:80]
+
+def served_vec(i, c, ov):
+    """The vector the (possibly faulty) dense index actually holds for doc i."""
+    if c['emb_override'] and i in c['emb_override']: return c['emb_override'][i]
+    if c['shift'] and c['shift'][0] <= i < c['shift'][1]: return E[i + c['shift'][2]]
+    return demb(i, ov)
+
+def run(st):
+    """Run the pipeline for state st = {q, tenant, cfg, ov}. Returns a trace dict (telemetry source)."""
+    c, ov, q = st['cfg'], st.get('ov'), st['q']
+    if c['parts']:                                   # Q09 repair: decomposed sub-queries, interleaved
+        subs = [run(dict(st, q=p, cfg=dict(c, parts=None))) for p in c['parts']]
+        fin, seen = [], set()
+        for r in range(CFG['K_FINAL']):
+            for t in subs:
+                if r < len(t['final']) and t['final'][r] not in seen: fin.append(t['final'][r]); seen.add(t['final'][r])
+        tr = dict(subs[0]); tr['final'] = fin[:CFG['K_FINAL']]; return tr
+    m = M(ov); NT = N + m
+    qv = enc_q(q, c['enc'])
+    if c['q_noise']:
+        r = np.random.default_rng(int(hashlib.md5(q.encode()).hexdigest()[:8], 16)); qv = qv + c['q_noise'] * r.standard_normal(qv.shape).astype(np.float32) / math.sqrt(qv.size)
+        qv = qv / np.linalg.norm(qv)
+    ds = dense_all(qv)
+    if c['emb_override']:
+        for i, v in c['emb_override'].items(): ds[i] = float(v @ qv)
+    if c['shift']:
+        a, b, s = c['shift']; ds[a:b] = ds[a + s:b + s].copy()
+    nf = 0
+    if c['nonfinite']:                               # R25: non-finite vectors in the index (qdrant#9201, faiss#5684)
+        nf_mode, nf_idx = c['nonfinite']; nf = len(nf_idx)
+        if nf_mode == 'top': ds[list(nf_idx)] = 1e9      # NaN scores ranked above every finite score
+    if m: ds = np.concatenate([ds, ov['E'] @ qv])
+    ok = np.ones(NT, bool)
+    if c['tenant_filter']:
+        ok[:N] &= SCOPE_OK[st['tenant']]
+        if m: ok[N:] &= np.array([scope_ok(s, st['tenant']) for s in ov['scope']])
+    if c['validity']:
+        ok[:N] &= VALID_NOW
+        if m: ok[N:] &= np.array([valid_on(v, CFG['QUERY_DATE']) for v in ov['val']])
+    if c['route'] is not None:
+        ok[:N] &= np.isin(PART, c['route'])
+        if m: ok[N:] &= np.isin(ov['part'], c['route'])
+    if c['pfilter'] is not None and not c['post_filter']:   # metadata filter applied BEFORE the search (correct)
+        ok[:N] &= np.isin(PART, c['pfilter'])
+        if m: ok[N:] &= np.isin(ov['part'], c['pfilter'])
+    if c['reconcile'] and m: ok[N:] &= ~ov['deleted']     # K11 repair: drop ids absent from the source of truth
+    dok = ok.copy(); cov = 1.0
+    if c['mask'] is not None:
+        mk = drop_mask(c['mask']); dok[:N] &= ~mk; cov = 1 - mk.mean()
+    if c['nonfinite'] and c['nonfinite'][0] == 'drop': dok[list(c['nonfinite'][1])] = False   # rows silently dropped
+    exact_top = topn(np.where(dok, ds, -np.inf), 10)       # exact search on the index as built (ANN probe reference)
+    if c['nprobe']:
+        lists = np.argsort(-(CENT @ qv))[:c['nprobe']]; dok[:N] &= np.isin(ASSIGN, lists)
+    dsm = np.where(dok, ds, -np.inf); dtop = topn(dsm, CFG['CAND'])
+    ss = bm25_scores(q, c['sparse_shift'], ov['BMX'] if m else None); ssm = np.where(ok, ss, -np.inf)
+    ssm[ss <= 0] = -np.inf; stop = topn(ssm, CFG['CAND'])
+    surv = 1.0
+    if c['pfilter'] is not None and c['post_filter']:
+        # R26, as documented by pgvector: "With approximate indexes, filtering is applied after the index is scanned";
+        # the dense candidate list is hnsw.ef_search (default 40). The keyword side keeps its correct WHERE pre-filter.
+        pf = np.isin(PART, c['pfilter'])
+        if m: pf = np.concatenate([pf, np.isin(ov['part'], c['pfilter'])])
+        ssm = np.where(pf, ssm, -np.inf); stop = topn(ssm, CFG['CAND'])
+        cand = topn(dsm, CFG['EF_SEARCH']); dtop = np.array([i for i in cand if pf[i]], dtype=np.int64)
+        surv = len(dtop) / max(1, len(cand))
+    n_stale = 0
+    if c['refresh']:                                 # K04 repair: re-embed full-corpus sparse candidates missing from dense list
+        dset = set(dtop.tolist()); miss = [i for i in stop[:50] if i not in dset]
+        if miss:
+            fv = enc_docs([dtext(i, ov) for i in miss])
+            for i, v in zip(miss, fv):
+                if dok[i] and float(v @ served_vec(i, c, ov)) < 0.98:
+                    dsm[i] = float(v @ qv); n_stale += 1
+            dtop = topn(dsm, CFG['CAND'])
+    if c['fusion'] == 'rrf':
+        fs = collections.defaultdict(float)
+        for lst in (dtop, stop):
+            for r_, i in enumerate(lst): fs[int(i)] += 1.0 / (CFG['RRF_K'] + r_ + 1)
+    else:                                            # R22 fault: raw-score sum (BM25 scale swamps cosine)
+        fs = collections.defaultdict(float)
+        for i in dtop: fs[int(i)] += float(dsm[i])
+        for i in stop: fs[int(i)] += float(ss[i])
+    fused = sorted(fs, key=lambda i: -fs[i])
+    if c['quality']:                                 # K08 repair: thin/placeholder docs go behind informative ones before rerank
+        fused = [i for i in fused if not dthin(i, ov, q)] + [i for i in fused if dthin(i, ov, q)]
+    if c['parent_collapse']:                         # K12 repair: one chunk per parent document, refill from depth
+        seenp, kp, rp = set(), [], []
+        for i in fused:
+            (rp if dparent(i, ov) in seenp else kp).append(i); seenp.add(dparent(i, ov))
+        fused = kp + rp
+    if c['dedup']:                                   # K05 repair: collapse near-duplicates before rerank, refill from depth
+        kept, sh, rest = [], [], []
+        for i in fused[:150]:
+            s_ = shingles(dtext(i, ov)); e_ = served_vec(i, c, ov)
+            if any(jacc(s_, s2) >= 0.8 or float(e_ @ served_vec(k, c, ov)) >= 0.985 for k, s2 in zip(kept, sh)): rest.append(i); continue
+            kept.append(i); sh.append(s_)
+        fused = kept + fused[150:] + rest
+    depth = fused[:c['depth']]
+    if c['result_cap'] is not None: depth = depth[:c['result_cap']]
+    texts = [dtext(i, ov) for i in depth]
+    if c['ce'] == 'random':                          # R05 fault: reranker plugin returns garbage
+        r = np.random.default_rng(int(hashlib.md5(q.encode()).hexdigest()[:8], 16)); ce = r.standard_normal(len(depth)).astype(np.float32)
+    else:
+        ce = ce_scores(q, [dkey(i, ov) for i in depth], texts, c['ce_trunc'])
+    order = [depth[j] for j in np.argsort(-ce, kind='stable')]
+    cmap = {i: float(s) for i, s in zip(depth, ce)}
+    if c['attr_rerank'] and order:                   # K03 repair: inside the top-1 identity cluster, rank by attribute match in the body
+        at = attrs(q); s0 = shingles(dcontent(order[0], ov))
+        pos = [r_ for r_, i in enumerate(order) if r_ == 0 or jacc(s0, shingles(dcontent(i, ov))) >= 0.5]
+        mem = sorted([order[r_] for r_ in pos], key=lambda i: (-round(attr_cov(at, dcontent(i, ov)), 3), -cmap[i]))
+        order = list(order)
+        for r_, i in zip(pos, mem): order[r_] = i
+    if c['authority']:                               # K06 repair: in conflict clusters keep verified sources first
+        grp_ = collections.defaultdict(list)
+        for i in order: grp_[title_key(dtitle(i, ov))].append(i)
+        demote = {i for g in grp_.values() if len(g) > 1 and any(dverified(j, ov) for j in g) for i in g if not dverified(i, ov)}
+        order = [i for i in order if i not in demote] + [i for i in order if i in demote]
+    if c['dedup']: order = [i for i in order if i in set(kept)] + [i for i in order if i not in set(kept)]
+    if c['quality']: order = [i for i in order if not dthin(i, ov, q)] + [i for i in order if dthin(i, ov, q)]
+    final = order[:CFG['K_FINAL']]
+    return dict(q=q, qv=qv, dtop=dtop, dsc=dsm[dtop], stop=stop, ssc=ss[stop], fused=fused, depth=depth, ce=ce,
+                cmap=cmap, order=order, final=final, cov=cov, exact_top=exact_top, n_stale=n_stale, ov=ov, st=st, nf=nf, surv=surv)
+
+# %% [markdown]
+# ## 6. Lexical tools from the corpus itself: spelling (SymSpell-style), segmentation, prefix completion, synonyms
+
+# %%
+import bisect, nltk
+nltk.download('wordnet', quiet=True); nltk.download('omw-1.4', quiet=True)
+from nltk.corpus import wordnet as wn
+FREQ = {w: int(DF[j]) for w, j in VOC.items() if DF[j] >= 3 and w.isalpha() and 3 <= len(w) <= 20}
+def deletes1(w): return {w[:i] + w[i + 1:] for i in range(len(w))}
+DEL = collections.defaultdict(list)
+for w in FREQ:
+    for d in deletes1(w): DEL[d].append(w)
+def dl_dist(a, b):
+    d = [[0] * (len(b) + 1) for _ in range(len(a) + 1)]
+    for i in range(len(a) + 1): d[i][0] = i
+    for j in range(len(b) + 1): d[0][j] = j
+    for i in range(1, len(a) + 1):
+        for j in range(1, len(b) + 1):
+            d[i][j] = min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] != b[j - 1]))
+            if i > 1 and j > 1 and a[i - 1] == b[j - 2] and a[i - 2] == b[j - 1]: d[i][j] = min(d[i][j], d[i - 2][j - 2] + 1)
+    return d[-1][-1]
+def df_of(w): return int(DF[VOC[w]]) if w in VOC else 0
+def spell(w, ratio=10):
+    """Best in-corpus correction within Damerau distance 2 that is >= ratio x more frequent; else None."""
+    if not w.isalpha() or len(w) < 3: return None
+    keys = {w} | deletes1(w); keys |= {d2 for d in list(keys) for d2 in deletes1(d)} if len(w) >= 6 else set()
+    cand = {c for k in keys for c in DEL.get(k, [])} | {k for k in keys if k in FREQ}
+    best = None; base = df_of(w); out = []
+    for c_ in cand:
+        if c_ == w: continue
+        dd = dl_dist(w, c_)
+        if dd <= (1 if len(w) < 5 else 2) and FREQ[c_] >= (3 if base == 0 else ratio * base):
+            key = (dd, -FREQ[c_])
+            if best is None or key < best[0]: best = (key, c_)
+            out.append((key, c_))
+    SPELLC[w] = [c_ for _, c_ in sorted(out)[:8]]
+    return best[1] if best else None
+SPELLC = {}
+def spell_cands(w):
+    spell(w); return SPELLC.get(w, [])
+SEGW = {w: math.log(N / FREQ[w]) for w in FREQ}
+for w in ('for', 'and', 'the', 'with', 'of', 'in', 'to', 'men', 'kit', 'set'):
+    if w in VOC: SEGW[w] = math.log(N / max(1, df_of(w)))
+def segment(w):
+    if len(w) < 7 or w in VOC and df_of(w) >= 5: return None
+    best = [(0.0, [])] + [(1e9, None)] * len(w)
+    for i in range(1, len(w) + 1):
+        for j in range(max(0, i - 20), i):
+            p = w[j:i]
+            if p in SEGW and best[j][1] is not None and best[j][0] + SEGW[p] + 2 < best[i][0]:
+                best[i] = (best[j][0] + SEGW[p] + 2, best[j][1] + [p])
+    s = best[-1][1]; return s if s and len(s) >= 2 else None
+PREF = sorted(FREQ)
+def complete(p):
+    """Most frequent corpus word that strictly extends prefix p."""
+    if len(p) < 2: return None
+    i = bisect.bisect_left(PREF, p); best = None
+    while i < len(PREF) and PREF[i].startswith(p):
+        if PREF[i] != p and (best is None or FREQ[PREF[i]] > FREQ[best]): best = PREF[i]
+        i += 1
+    return best
+def synonyms(w, first_sense=False):
+    out = set(); ss = wn.synsets(w)
+    for s in (ss[:1] if first_sense else ss):
+        for l in s.lemmas():
+            n_ = l.name().lower()
+            if n_ != w and n_.isalpha(): out.add(n_)
+    return out
+import functools
+spell = functools.lru_cache(maxsize=None)(spell); segment = functools.lru_cache(maxsize=None)(segment)
+complete = functools.lru_cache(maxsize=None)(complete); synonyms = functools.lru_cache(maxsize=None)(synonyms)
+_enc_docs_raw = enc_docs; _DC = {}
+if RES:                                              # restore caches from the checkpoint (speed only)
+    _QC.update(RES['caches']['QC']); _CEC.update(RES['caches']['CEC']); _DC.update(RES['caches']['DC'])
+def enc_docs(texts, bs=32):
+    miss = [t for t in dict.fromkeys(texts) if t not in _DC]
+    if miss:
+        for t, v in zip(miss, _enc_docs_raw(miss, bs)): _DC[t] = v
+    return np.stack([_DC[t] for t in texts]) if texts else np.zeros((0, E.shape[1]), np.float32)
+FILLER = set('hi hello please thanks thank you i im am looking for want need my wife husband sister brother friend who loves really very just some kind of something that would be great maybe could help me find buy get order'.split())
+log('lexical tools: freq words', len(FREQ), 'delete keys', len(DEL))
+
+# %% [markdown]
+# ## 7. Telemetry features (no gold, no injection markers). v2 adds identity-collision, attribute-coverage,
+# redundancy, alignment-probe and ANN-probe features.
+
+# %%
+def spearman(a, b):
+    if len(a) < 3: return 0.0
+    ra = np.argsort(np.argsort(a)); rb = np.argsort(np.argsort(b))
+    v = np.corrcoef(ra, rb)[0, 1]; return 0.0 if np.isnan(v) else float(v)
+NULL_TOP = None
+def features(tr):
+    q, st, ov = tr['q'], tr['st'], tr['ov']; qt = tok(q); f = {}
+    inv = [t for t in qt if t in VOC]; oov = [t for t in qt if t not in VOC]
+    f['q_len'] = len(qt); f['q_oov'] = len(oov) / max(1, len(qt))
+    f['q_oov_long'] = sum(len(t) >= 9 for t in oov); f['q_lowdf'] = sum(df_of(t) < 3 for t in qt) / max(1, len(qt))
+    idf = [IDF[VOC[t]] for t in inv]; f['q_idf_mean'] = float(np.mean(idf)) if idf else 0.0; f['q_idf_max'] = float(max(idf)) if idf else 0.0
+    f['q_digit'] = sum(any(c.isdigit() for c in t) for t in qt) / max(1, len(qt))
+    codes = [t for t in qt if re.search(r'[a-z]', t) and re.search(r'\d', t)]
+    f['q_code'] = len(codes); f['q_code_oov'] = sum(df_of(t) == 0 for t in codes); f['q_code_rare'] = sum(df_of(t) < 3 for t in codes)
+    f['q_conj'] = len(re.findall(r'\band\b|,|&|\bplus\b|\balso\b', q.lower()))
+    f['q_correctable'] = sum(df_of(t) < 3 and spell(t) is not None for t in qt)
+    f['q_segmentable'] = sum(segment(t) is not None for t in oov)
+    f['q_prefix'] = int(bool(qt) and df_of(qt[-1]) < 5 and complete(qt[-1]) is not None)
+    f['q_synlow'] = sum(t.isalpha() and df_of(t) < 30 and any(df_of(s) >= 300 for s in synonyms(t)) for t in qt)
+    f['q_filler'] = sum(t in FILLER for t in qt) / max(1, len(qt))
+    d, s_ = tr['dsc'], tr['ssc']
+    f['d1'] = float(d[0]) if len(d) else 0.0; f['d_gap'] = float(d[0] - d[1]) if len(d) > 1 else 0.0
+    f['d_m5'] = float(d[:5].mean()) if len(d) else 0.0; f['d_std20'] = float(d[:20].std()) if len(d) > 1 else 0.0
+    f['d_n'] = len(d)
+    f['s1'] = float(s_[0]) if len(s_) else 0.0; f['s_gap'] = float(s_[0] - s_[1]) if len(s_) > 1 else 0.0; f['s_n'] = len(s_)
+    qs = set(inv)
+    f['s_lex5'] = float(np.mean([len(qs & set(tok(dtext(i, ov)))) / max(1, len(qs)) for i in tr['stop'][:5]])) if len(tr['stop']) else 0.0
+    f['d_lex5'] = float(np.mean([len(qs & set(tok(dtext(i, ov)))) / max(1, len(qs)) for i in tr['dtop'][:5]])) if len(tr['dtop']) else 0.0
+    dt, stp = set(tr['dtop'][:10].tolist()), set(tr['stop'][:10].tolist())
+    f['ov_ds10'] = len(dt & stp) / 10; dall, sall = set(tr['dtop'].tolist()), set(tr['stop'].tolist())
+    dep = tr['depth']; f['dep_dense'] = sum(i in dall for i in dep) / max(1, len(dep)); f['dep_sparse'] = sum(i in sall for i in dep) / max(1, len(dep))
+    ce = tr['ce']; srt = np.sort(ce)[::-1] if len(ce) else ce
+    f['ce1'] = float(srt[0]) if len(ce) else 0.0; f['ce_gap'] = float(srt[0] - srt[1]) if len(ce) > 1 else 0.0
+    f['ce_std'] = float(ce.std()) if len(ce) > 1 else 0.0; f['ce_mean'] = float(ce.mean()) if len(ce) else 0.0
+    f['ce_rrf_rho'] = spearman(-np.arange(len(dep)), ce)
+    dmap = {int(i): float(v) for i, v in zip(tr['dtop'], tr['dsc'])}
+    both = [(dmap[i], tr['cmap'][i]) for i in dep if i in dmap]
+    f['ce_dense_rho'] = spearman([a for a, _ in both], [b for _, b in both]) if len(both) >= 3 else 0.0
+    f['n_depth'] = len(dep); f['n_final'] = len(tr['final'])
+    fin = tr['final']; at = attrs(q)
+    if len(fin) >= 2:
+        em = np.stack([served_vec(i, st['cfg'], ov) for i in fin]); cs = em @ em.T
+        f['red_cos5'] = float((cs.sum() - len(fin)) / (len(fin) * (len(fin) - 1)))
+        sh = [shingles(dtext(i, ov)) for i in fin]
+        f['dup5'] = sum(jacc(sh[a], sh[b]) >= 0.8 for a in range(len(fin)) for b in range(a + 1, len(fin)))
+        tk = [title_key(dtitle(i, ov)) for i in fin]
+        f['ident5'] = sum(tk[a] == tk[b] and tk[a] != '' for a in range(len(fin)) for b in range(a + 1, len(fin)))
+    else: f['red_cos5'] = f['dup5'] = f['ident5'] = 0.0
+    f['attr_n'] = len(at); f['attrcov1'] = attr_cov(at, dcontent(fin[0], ov)) if fin else 0.0
+    f['attr_gain'] = (max(attr_cov(at, dcontent(i, ov)) for i in dep) - f['attrcov1']) if dep else 0.0
+    f['attr_title_body_gap'] = (attr_cov(at, dtitle(fin[0], ov)) - f['attrcov1']) if fin else 0.0   # title claims an attribute the body lacks
+    f['thin5'] = sum(dthin(i, ov, q) for i in fin); f['unver5'] = sum(not dverified(i, ov) for i in fin)
+    f['tenant_mis5'] = sum(not scope_ok(dscope(i, ov), st['tenant']) for i in fin)
+    f['expired5'] = sum(not valid_on(dval(i, ov), CFG['QUERY_DATE']) for i in fin)
+    f['versioned5'] = sum(bool(dval(i, ov)[0]) for i in fin)
+    pc = collections.Counter(dpart(i, ov) for i in dep); p_ = np.array(list(pc.values())) / max(1, len(dep))
+    f['part_ent'] = float(-(p_ * np.log(p_)).sum()) if len(dep) else 0.0; f['part_top'] = float(p_.max()) if len(dep) else 0.0
+    f['cov'] = tr['cov']; f['ann_probe'] = len(set(tr['dtop'][:10].tolist()) & set(tr['exact_top'].tolist())) / max(1, len(tr['exact_top']))
+    if len(tr['dtop']):
+        i0 = int(tr['dtop'][0]); f['align_probe'] = float(enc_docs([dtext(i0, ov)])[0] @ served_vec(i0, st['cfg'], ov))
+    else: f['align_probe'] = 1.0
+    f['q_probe_cos'] = float(tr['qv'] @ enc_q(q, 'v15'))   # query-path probe: served vector vs pinned re-encode
+    global NULL_TOP
+    if NULL_TOP is None: NULL_TOP = set(topn(dense_all(enc_q('', 'v15')), 10).tolist())
+    f['d_null10'] = len(set(tr['dtop'][:10].tolist()) & NULL_TOP) / 10    # dense results that ignore the query text
+    sp20 = [int(i) for i in tr['stop'][:CFG['PROBE_K']]]  # index-health probe: are the sparse top-k docs' dense vectors current?
+    if sp20:
+        fv = enc_docs([dtext(i, ov) for i in sp20]); cs_ = [float(v @ served_vec(i, st['cfg'], ov)) for i, v in zip(sp20, fv)]
+        f['stale_sparse20'] = sum(c_ < 0.98 for c_ in cs_); f['stale_min'] = float(min(cs_))
+        f['sparse_absent_dense'] = sum(i not in dall for i in sp20) / len(sp20)
+    else: f['stale_sparse20'] = 0; f['stale_min'] = 1.0; f['sparse_absent_dense'] = 0.0
+    f['nonfinite'] = tr['nf']                          # v2: index health counter of non-finite vectors
+    f['filter_survival'] = tr['surv']                  # v2: share of ANN/BM25 candidates surviving the metadata filter
+    f['deleted5'] = sum(ddeleted(i, ov) for i in fin)  # v2: delivered ids missing from the source of truth
+    f['chunk_crowd5'] = (max(collections.Counter(dparent(i, ov) for i in fin).values()) - 1) if fin else 0   # v2
+    return f
+
+# %% [markdown]
+# ## 8. Base queries: real ESCI queries (us, Exact labels) + ShopNova in-corpus questions/policies. Purity filters.
+
+# %%
+def split_of(key): return 'test' if int(hashlib.md5(key.encode()).hexdigest()[:8], 16) / 2**32 < CFG['TEST_FRAC'] else 'train'
+ex = pd.read_parquet(FILES['esci']['path'], columns=['query', 'query_id', 'product_id', 'product_locale', 'esci_label'])
+ESCI_PK = {PKEY[i] for i in range(N) if DOCS[i]['doc_id'].startswith('ESCI-us-')}
+ex = ex[(ex.product_locale == 'us') & (ex.esci_label == 'E') & ex.product_id.isin(ESCI_PK)]
+ex['query'] = ex['query'].str.strip().str.lower()
+qg = ex.groupby('query').product_id.agg(lambda s: sorted(set(s))).reset_index()
+qg = qg[qg['query'].map(lambda s: len(tok(s)) >= 1 and s.isascii())]
+par_ = {}                                            # union-find: queries sharing a gold product (or ESCI/ABO twin) share a split
+def find(x):
+    while par_.setdefault(x, x) != x: par_[x] = par_[par_[x]]; x = par_[x]
+    return x
+for ps in qg.product_id:
+    for p in ps[1:]: par_[find(p)] = find(ps[0])
+qg['comp'] = qg.product_id.map(lambda ps: find(ps[0]))
+qg['split'] = qg['comp'].map(split_of)
+train_pk = {p for ps, s in zip(qg.product_id, qg.split) if s == 'train' for p in ps}
+leak = qg[(qg.split == 'test') & qg.product_id.map(lambda ps: any(p in train_pk for p in ps))]
+assert len(leak) == 0, 'gold-product leakage between splits'
+PUR['esci_queries_us_E_in_corpus'] = len(qg); PUR['esci_split_counts'] = qg.split.value_counts().to_dict()
+PUR['esci_gold_components'] = int(qg.comp.nunique()); PUR['esci_test_gold_leak'] = 0
+qg = qg.sample(frac=1.0, random_state=CFG['SEED'])
+NATX = set(json.load(open(FILES['exclusions']['path']))['queries'])      # query strings examined by v1 runs
+QG_BASE, QG_NAT = qg[qg['query'].isin(NATX)], qg[~qg['query'].isin(NATX)]
+PUR['v2_base_pool_seen'] = len(QG_BASE); PUR['v2_natural_pool_unseen'] = len(QG_NAT)
+BASE = []
+for r in QG_BASE.head(CFG['N_BASE_ESCI']).itertuples():                  # injected episodes: only already-seen queries
+    BASE.append(dict(bid=f'esci:{r.query}', q=r.query, tenant='ALL', split=r.split, src='esci',
+                     gold=gold_set([j for p in r.product_id for j in BY_PKEY[p]])))
+QRE = re.compile(r'^Question: (.*?\?)\s*Answer:', re.S)
+for i, d in enumerate(DOCS):
+    if d['source_partition'] != 'synthetic_shopnova': continue
+    t = d['tenant_id'] if d['tenant_id'] != 'ALL' else random.choice(TENANTS[1:])
+    m = QRE.match(d['content'])
+    if m: BASE.append(dict(bid=f'faq:{d["doc_id"]}', q=m.group(1).lower(), tenant=t, split=split_of(d['doc_id']), src='faq', gold=gold_set([i])))
+    elif d['doc_id'].startswith('INP') and VAL[i][0] and not VAL[i][1]:
+        core = re.sub(r'\s*v\d+\b', '', d['title']).strip().lower()
+        BASE.append(dict(bid=f'inp:{d["doc_id"]}', q=f'what is the current {core} rule?', tenant=t, split=split_of(d['doc_id']), src='inp', gold=gold_set([i])))
+    elif d['doc_id'].startswith('PRD'):
+        mm = re.search(r'(\d+) GB of RAM', d['content'])
+        if mm: BASE.append(dict(bid=f'prd:{d["doc_id"]}', q=f'{d["title"].lower()} {mm.group(1)} gb ram', tenant=t, split=split_of(d['doc_id']), src='prd', gold=gold_set([i])))
+CODE_RE = re.compile(r'\b([A-Z]\d{3})\b'); n_prdc = 0
+for i, d in enumerate(DOCS):                         # identifier-centric product queries ("<brand> <model code>") for Q07
+    m = CODE_RE.search(d['title'] or '') if d['doc_id'].startswith('PRD') else None
+    if m and n_prdc < CFG['N_PRDC']:
+        t = d['tenant_id'] if d['tenant_id'] != 'ALL' else 'T1'; n_prdc += 1
+        BASE.append(dict(bid=f'prdc:{d["doc_id"]}', q=f"{d['title'].split()[0].lower()} {m.group(1).lower()}", tenant=t,
+                         split=split_of(d['doc_id']), src='prdc', gold=gold_set([i])))
+log('base queries', collections.Counter(b['src'] for b in BASE), collections.Counter(b['split'] for b in BASE))
+# Query log for autocomplete (Q01 repair): every ESCI 'us' query EXCEPT the ones used as base queries (no leakage).
+_used = {b['q'] for b in BASE} | set(QG_NAT['query'])          # v2: natural-arm queries also kept out of the query log
+_allq = pd.read_parquet(FILES['esci']['path'], columns=['query', 'product_locale'])
+_allq = _allq[_allq.product_locale == 'us']['query'].str.strip().str.lower().drop_duplicates()
+QLOG_UNI, QLOG_CO = collections.Counter(), collections.defaultdict(collections.Counter)
+for s_ in _allq:
+    if s_ in _used: continue
+    ws_ = set(tok(s_)); QLOG_UNI.update(ws_)
+    for a_ in ws_:
+        for b2 in ws_:
+            if a_ != b2: QLOG_CO[a_][b2] += 1
+PUR['query_log_queries'] = int(sum(1 for s_ in _allq if s_ not in _used)); ALLQ = set(_allq); del _allq
+
+def succ(tr, gold, k): return any(i in gold for i in tr['final'][:k])
+def grank(tr, gold):
+    for r, i in enumerate(tr['order']):
+        if i in gold: return r + 1
+    return 999
+log('clean runs')
+CLEAN = RES.get('CLEAN', {})
+for n_, b in enumerate(BASE):
+    if b['bid'] not in CLEAN:
+        st = dict(q=b['q'], tenant=b['tenant'], cfg=mkcfg(), ov=None); tr = run(st)
+        CLEAN[b['bid']] = dict(clean_tr=tr, h5=succ(tr, b['gold'], 5), h1=succ(tr, b['gold'], 1), rank=grank(tr, b['gold']))
+        if n_ % 50 == 0: maybe_stop('clean_runs')
+    b.update(CLEAN[b['bid']])
+for s_ in ['esci', 'faq', 'inp', 'prd', 'prdc']:
+    xs = [b for b in BASE if b['src'] == s_]
+    if xs: log(f'clean {s_}: n={len(xs)} Hit@1={np.mean([b["h1"] for b in xs]):.3f} Hit@5={np.mean([b["h5"] for b in xs]):.3f}')
+
+# %% [markdown]
+# ## 9. Fault injectors — 28 core faults. Real data where it exists (ESCI queries, Webis typos, in-corpus
+# policy versions, tenant variants, real bge v1 model drift, real IVF ANN); synthetic overlay docs otherwise.
+
+# %%
+WEBIS = collections.defaultdict(list); WOPS = collections.Counter()
+with zipfile.ZipFile(FILES['qspell']['path']) as zf:
+    nm = [n for n in zf.namelist() if n.endswith('error-annotations.csv')][0]
+    rd = csv.reader(zf.read(nm).decode('utf-8', 'replace').splitlines(), delimiter=';'); hdr = next(rd)
+    for row in rd:
+        if len(row) < 9: continue
+        for k_, v_ in zip(hdr[5:9], row[5:9]):
+            if v_.isdigit(): WOPS[k_] += int(v_)
+        a, b_ = row[1].split(), row[2].split()
+        if len(a) == len(b_):
+            for x, y in zip(a, b_):
+                if x != y and x.isalpha() and y.isalpha() and len(y) >= 4 and dl_dist(x, y) <= 2: WEBIS[y].append(x)
+log('Webis real misspelling pairs', sum(map(len, WEBIS.values())), 'edit ops', dict(WOPS))
+KEYB = 'qwertyuiop asdfghjkl zxcvbnm'.split()
+def near_key(ch, rng):
+    for row in KEYB:
+        if ch in row:
+            j = row.index(ch); return rng.choice([row[k] for k in (j - 1, j + 1) if 0 <= k < len(row)])
+    return ch
+def webis_edit(w, rng):
+    """Real misspelling from Webis if the word has one, else one edit drawn from Webis' edit-type distribution."""
+    if w in WEBIS: return rng.choice(WEBIS[w]), True
+    ops, wt = zip(*WOPS.items()); op = rng.choices(ops, weights=wt)[0]; i = rng.randrange(1, len(w) - 1)
+    if op == 'Deletion': return w[:i] + w[i + 1:], False
+    if op == 'Insertion': return w[:i] + near_key(w[i], rng) + w[i:], False
+    if op == 'Substitution': return w[:i] + near_key(w[i], rng) + w[i + 1:], False
+    return w[:i] + w[i + 1] + w[i] + w[i + 2:], False
+def content_toks(q): return [t for t in q.split() if t.isalpha() and len(t) >= 4 and t not in FILLER]
+def by_idf(ts): return sorted(ts, key=lambda t: -(IDF[VOC[t]] if t in VOC else 0))
+def S(b, **kw):
+    st = dict(q=b['q'], tenant=b['tenant'], cfg=mkcfg(), ov=None, gold=b['gold'], k=5, bid=b['bid'], split=b['split'], meta={})
+    st.update(kw); return st
+def best_gold(b):
+    for i in b['clean_tr']['order']:
+        if i in b['gold'] and i < N: return i
+    return min(i for i in b['gold'] if i < N)
+def perturb_numbers(text, rng):
+    def f(m):
+        v = int(m.group(0)); return str(v + rng.choice([1, 2, 3, 5, 10, 12]) if v < 1000 else v + rng.randint(11, 400))
+    return re.sub(r'\b\d{1,6}\b', f, text)
+def swap_attr(text, a, rng):
+    if a.isdigit(): new = str(int(a) + rng.choice([1, 2, 4, 8, 16]))
+    elif a in COLORS: new = rng.choice(sorted(COLORS - {a}))
+    elif a in SIZES: new = rng.choice(sorted(SIZES - {a}))
+    else: new = re.sub(r'\d', lambda m: str((int(m.group(0)) + rng.randint(1, 9)) % 10), a)
+    return re.sub(rf'(?i)\b{re.escape(a)}\b', new, text)
+def meta_of(i): d = DOCS[i]; return dict(access_scope=d['access_scope'], license_status=d['license_status'], part=PART[i])
+
+def inj_Q01(b, rng):   # incomplete last word (user stopped typing)
+    ws = b['q'].split()
+    if not ws or not (ws[-1].isalpha() and len(ws[-1]) >= 5): return None
+    p = ws[-1][:max(3, len(ws[-1]) // 2)]
+    if df_of(p) >= 5: return None
+    return S(b, q=' '.join(ws[:-1] + [p]))
+HOBBY = 'gardening cooking hiking gaming travel yoga fishing painting reading music'.split()
+def inj_Q02(b, rng):   # verbose chatty query (filler + context clause)
+    pre = rng.choice(['hi im looking for', 'hello i need', 'can you help me find', 'i want to buy'])
+    post = rng.choice(['for my sister who loves {h}', 'for my husband who likes {h}', 'for my friend who enjoys {h} thanks', 'please thank you'])
+    return S(b, q=f"{pre} {b['q']} {post.format(h=rng.choice(HOBBY))}")
+def inj_Q03(b, rng):   # vocabulary mismatch: key terms replaced by synonyms the catalogue rarely uses
+    q = b['q']; n = 0
+    for t in by_idf(content_toks(q))[:3]:
+        if df_of(t) < 100: continue
+        sy = [s for s in synonyms(t, True) if df_of(s) < 30]          # most common sense only
+        if sy: q = re.sub(rf'\b{t}\b', rng.choice(sorted(sy)), q, count=1); n += 1
+        if n == 2: break
+    return S(b, q=q) if n else None
+def inj_Q04(b, rng):   # real typos (Webis-QSpell-17 misspellings / edit distribution)
+    q = b['q']; n = 0; real = 0
+    for t in by_idf(content_toks(q))[:2]:
+        for _ in range(5):
+            w, isreal = webis_edit(t, rng)
+            if df_of(w) < 3 and w != t: break
+        else: continue
+        q = re.sub(rf'\b{t}\b', w, q, count=1); n += 1; real += isreal
+    return S(b, q=q, meta=dict(real_typos=real)) if n else None
+def inj_Q05(b, rng):   # missing spaces: adjacent words concatenated
+    ws = b['q'].split(); idx = [i for i in range(len(ws) - 1) if ws[i].isalpha() and ws[i + 1].isalpha() and len(ws[i]) >= 3 and len(ws[i + 1]) >= 3]
+    if not idx: return None
+    i = rng.choice(idx); merged = ws[i] + ws[i + 1]
+    if df_of(merged) >= 5: return None
+    return S(b, q=' '.join(ws[:i] + [merged] + ws[i + 2:]))
+def corrupt_code(t, rng):
+    ds = [i for i, ch in enumerate(t) if ch.isdigit()]
+    if len(ds) >= 2 and rng.random() < 0.5:
+        i = rng.choice(ds[:-1]); j = i + 1
+        if t[j].isdigit() and t[i] != t[j]: return t[:i] + t[j] + t[i] + t[j + 1:]
+    i = rng.choice(ds); return t[:i] + str((int(t[i]) + rng.randint(1, 9)) % 10) + t[i + 1:]
+def is_code(t): return len(t) >= 3 and t.isalnum() and any(ch.isdigit() for ch in t) and (any(ch.isalpha() for ch in t) or len(t) >= 3)
+def inj_Q07(b, rng):   # identifier / model-number corruption: 1-2 digit edits that give a code the catalogue does not have
+    cs = [t for t in b['q'].split() if is_code(t)]
+    if not cs: return None
+    t = rng.choice(cs)
+    for _ in range(6):
+        w = corrupt_code(t, rng)
+        if rng.random() < 0.5: w = corrupt_code(w, rng)
+        if w != t and df_of(w) == 0: return S(b, q=b['q'].replace(t, w, 1), k=1)
+    return None
+ESCI_BASE = [x for x in BASE if x['src'] == 'esci']
+def inj_Q09(b, rng):   # multi-intent: two shopping needs in one query
+    o = rng.choice(ESCI_BASE)
+    if o['bid'] == b['bid']: return None
+    return S(b, q=f"{b['q']} and also {o['q']}")
+
+def nonattr(q): return ' '.join(t for t in q.split() if t not in set(attrs(q)))
+def inj_K03(b, rng):   # sibling variants share the gold's identity but differ on the asked attribute
+    g = best_gold(b); gt = set(tok(DOCS[g]['content'])); at = [a for a in attrs(b['q']) if a in gt]
+    if not at: return None
+    docs = []
+    for k in range(6):      # variant body differs on the asked attribute; seller title is keyword-stuffed with the query
+        ti, co = DOCS[g]['title'] or '', DOCS[g]['content']
+        for a in at: ti, co = swap_attr(ti, a, rng), swap_attr(co, a, rng)
+        ti = f"{ti} - {b['q']}" if k % 2 == 0 else f"{b['q']} {ti}"
+        docs.append(dict(title=ti, content=co, **meta_of(g)))
+    return S(b, ov=make_overlay(docs), k=1)
+def inj_K04(b, rng):   # stale index entry: gold's dense vector is out of sync with its text
+    ov_ = {i: E[rng.randrange(N)] for i in b['gold'] if i < N}
+    return S(b, cfg=mkcfg(emb_override=ov_))
+def inj_K05(b, rng):   # near-duplicate flood of a competing doc
+    x = next((i for i in b['clean_tr']['order'] if i not in b['gold']), None)
+    if x is None or x >= N: return None
+    docs = []
+    for k in range(7):
+        ti = (DOCS[x]['title'] or '') + ('' if k % 2 else f" | {b['q']}")
+        co = DOCS[x]['content'] + f" Ref {rng.randint(1000, 9999)}."
+        docs.append(dict(title=ti, content=co, **meta_of(x)))
+    return S(b, ov=make_overlay(docs))
+def inj_K06(b, rng):   # conflicting third-party copies of the gold (unverified source, altered values)
+    g = best_gold(b)
+    if not VERIFIED[g]: return None
+    docs = [dict(title=DOCS[g]['title'], content=perturb_numbers(DOCS[g]['content'], rng) + f" Keywords: {b['q']}.",
+                 access_scope=DOCS[g]['access_scope'], license_status='unverified', part=PART[g], source_name='third-party feed')
+            for _ in range(6)]
+    return S(b, ov=make_overlay(docs), k=1)
+def inj_K07(b, rng):   # tenant filter dropped: other tenants' versions leak in
+    g = best_gold(b); others = [t for t in TENANTS[1:] if t != b['tenant']]
+    docs = [dict(title=DOCS[g]['title'], content=perturb_numbers(DOCS[g]['content'], rng), access_scope=f'tenant:{t}',
+                 license_status=DOCS[g]['license_status'], part=PART[g]) for t in others]
+    return S(b, cfg=mkcfg(tenant_filter=False), ov=make_overlay(docs), k=1)
+def inj_K08(b, rng):   # thin placeholder docs ('Brand: nan / Description: nan', mimics 3,993 real such docs)
+    g = best_gold(b); docs = []
+    for k in range(6):
+        ti = f"{b['q'].title()} {rng.choice(['', 'New', 'Pack', 'Set', 'Pro', '2-Pack'])}".strip()
+        docs.append(dict(title=ti, content=f'Title: {ti}\nBrand: nan\nDescription: nan', **meta_of(g)))
+    return S(b, ov=make_overlay(docs))
+def inj_K09(b, rng):   # validity filter off: superseded versions served (natural V1/V2 pairs + synthetic older versions)
+    g = best_gold(b); docs = []
+    for k in range(2):
+        y = 2023 + k; base_c = VALID_RE.sub('', DOCS[g]['content']).strip()
+        docs.append(dict(title=DOCS[g]['title'], content=f"{perturb_numbers(base_c, rng)} {b['q']} In force from {y}-01-01 until {y}-12-31.",
+                         access_scope=DOCS[g]['access_scope'], license_status=DOCS[g]['license_status'], part=PART[g]))
+    return S(b, cfg=mkcfg(validity=False), ov=make_overlay(docs), k=1)
+
+def inj_R01(b, rng): return S(b, cfg=mkcfg(mask=(0.3, rng.randrange(10**6), tuple(i for i in b['gold'] if i < N))))   # dense shard loss
+def inj_R03(b, rng): return S(b, cfg=mkcfg(enc='v15_trunc'))                      # encoder max_seq_length misconfig
+def inj_R05(b, rng): return S(b, cfg=mkcfg(ce='random'))                          # reranker plugin returns garbage
+def inj_R06(b, rng):                                                              # router sends query to the wrong collection
+    gp = {PART[i] for i in b['gold'] if i < N}; opts = [[p] for p in range(len(PARTS)) if p not in gp]
+    return S(b, cfg=mkcfg(route=rng.choice(opts))) if opts else None
+def inj_R07(b, rng):                                                              # embedding rows shifted by one in a block
+    g = best_gold(b); a = max(0, g - 10000); b_ = min(N - 4, a + 20000)
+    return S(b, cfg=mkcfg(shift=(a, b_, rng.choice([1, 2, 3]))))
+def inj_R10(b, rng): return S(b, cfg=mkcfg(q_noise=rng.uniform(2.0, 3.5)))       # numeric noise on the query vector
+def inj_R11(b, rng): return S(b, cfg=mkcfg(enc=rng.choice(['v1', 'swap'])))       # real model drift: bge v1 or mpnet query encoder vs v1.5 index
+def inj_R13(b, rng): return S(b, cfg=mkcfg(sparse_shift=rng.randint(1, 5000)))    # BM25 term dictionary out of sync
+def inj_R15(b, rng): return S(b, cfg=mkcfg(nprobe=1))                             # IVF ANN recall collapse (nprobe=1/1024)
+def inj_R19(b, rng): return S(b, cfg=mkcfg(depth=5))                              # rerank depth truncated 25 -> 5
+def inj_R22(b, rng): return S(b, cfg=mkcfg(fusion='raw'))                         # raw-score fusion instead of RRF
+def inj_R23(b, rng): return S(b, cfg=mkcfg(result_cap=rng.choice([1, 2])))        # partial results after a timeout
+def inj_R24(b, rng): return S(b, cfg=mkcfg(ce_trunc=24))                          # reranker sees 24 chars per doc
+
+def merge_states(a, b2):
+    c = dict(a['cfg'])
+    for k_, v_ in b2['cfg'].items():
+        if v_ != DEFAULT[k_]: c[k_] = v_
+    docs = (a['ov']['docs'] if a['ov'] else []) + (b2['ov']['docs'] if b2['ov'] else [])
+    q = a['q'] if a['q'] != a.get('q0') else b2['q']
+    return dict(a, q=q, cfg=c, ov=make_overlay(docs), k=min(a['k'], b2['k']))
+C2_PAIRS = [('Q04', 'R10'), ('Q04', 'R19'), ('Q05', 'R24'), ('Q01', 'R13'), ('Q03', 'R05'), ('Q02', 'R22'),
+            ('K05', 'R10'), ('K08', 'R19'), ('K04', 'R24'), ('Q04', 'K05'), ('Q05', 'K08'), ('K04', 'R03')]
+def inj_C2(b, rng):    # compositional: two faults from different factor groups at once
+    fa, fb = rng.choice(C2_PAIRS); A = INJ[fa](b, rng); Bs = INJ[fb](b, rng)
+    if A is None or Bs is None: return None
+    A['q0'] = b['q']; st = merge_states(A, Bs); st['meta'] = dict(combo=[fa, fb]); return st
+
+# --- v2: field-evidenced faults (docs/EVIDENCE_AND_NOVELTY_REPORT.md section 3) ---
+ESCI_PART = PARTS.index('real_world_apache_esci')
+def inj_R25(b, rng):   # non-finite vectors: rows silently dropped (faiss#5684) or NaN ranked first (qdrant#9201)
+    if rng.random() < 0.5: return S(b, cfg=mkcfg(nonfinite=('drop', tuple(i for i in b['gold'] if i < N))))
+    return S(b, cfg=mkcfg(nonfinite=('top', tuple(rng.sample(range(N), 40)))))
+def inj_R26(b, rng):   # metadata filter applied after the ANN candidate list (pgvector#259/#263, milvus#44854)
+    if not any(PART[i] == ESCI_PART for i in b['gold'] if i < N): return None
+    st = S(b, cfg=mkcfg(pfilter=[ESCI_PART], post_filter=True)); st['clean_cfg'] = mkcfg(pfilter=[ESCI_PART], post_filter=False)
+    return st
+def inj_K11(b, rng):   # deleted listings still served (weaviate#3868, milvus#16961): tombstoned copies stay in the index
+    g = best_gold(b)
+    docs = [dict(title=f"{DOCS[g]['title']} {b['q']}", content=perturb_numbers(DOCS[g]['content'], rng), deleted=True, **meta_of(g))
+            for _ in range(5)]
+    return S(b, ov=make_overlay(docs), k=1)
+INJ = {f: globals()[f'inj_{f}'] for f in
+       ['Q01', 'Q02', 'Q03', 'Q04', 'Q05', 'Q07', 'Q09', 'K03', 'K04', 'K05', 'K06', 'K07', 'K08', 'K09',
+        'R01', 'R03', 'R05', 'R06', 'R07', 'R10', 'R11', 'R13', 'R15', 'R19', 'R22', 'R23', 'R24', 'R25', 'R26', 'K11', 'C2']}
+FAULTS = list(INJ); SINGLE = [f for f in FAULTS if f != 'C2']
+GROUP = {f: f[0] for f in FAULTS}
+POOL = {f: ('esci',) for f in FAULTS}
+POOL.update(Q07=('esci', 'prdc'), K03=('esci', 'prd'), K07=('faq',), K09=('inp', 'faq'))
+TIER0 = {'Q04', 'K07', 'R15', 'R23', 'C2', 'R25', 'R26', 'K11'}
+assert len(FAULTS) == 31
+V1_FAULTS = [f for f in FAULTS if f not in ('R25', 'R26', 'K11')]; NEW_FAULTS = ['R25', 'R26', 'K11']; assert len(V1_FAULTS) == 28
+FAMILY = {f: f for f in FAULTS}
+FAMILY.update(Q01='QLEX', Q03='QLEX', Q04='QLEX', Q05='QLEX', K04='STALE', R07='STALE', R03='ENC', R10='ENC', R11='ENC')
+
+# %% [markdown]
+# ## 10. Repairs — one concrete repair per fault. Each maps (state, trace) -> repaired state.
+# Repairs never see gold. Ladders verify with telemetry (CE floor fitted on clean train, ANN probe, alignment probe).
+
+# %%
+def with_q(st, q): return dict(st, q=q)
+def with_cfg(st, **kw): c = dict(st['cfg']); c.update(kw); return dict(st, cfg=c)
+def ce_top(st):
+    t = run(st); return float(t['ce'].max()) if len(t['ce']) else -1e9
+def best_by_ce(st, cands):
+    """Candidate ladder: keep the query rewrite the reranker is most confident about (original included)."""
+    best, bs = st, ce_top(st)
+    for s2 in cands:
+        sc = ce_top(s2)
+        if sc > bs: best, bs = s2, sc
+    return best
+def completions(p, n=5):
+    i = bisect.bisect_left(PREF, p); out = []
+    while i < len(PREF) and PREF[i].startswith(p):
+        if PREF[i] != p: out.append(PREF[i])
+        i += 1
+    return sorted(out, key=lambda w: -FREQ[w])[:n]
+def docs_with(w): return set(BM[:, VOC[w]].indices.tolist()) if w in VOC else set()
+def cooc_rank(cands, context, n):
+    """Rank candidate words by how many corpus docs contain them together with the other query words."""
+    ctx = [docs_with(t) for t in context if t in VOC and df_of(t) < 60000 and t not in FILLER]
+    joint = set.intersection(*ctx) if ctx else set()
+    def sc(w):                                       # docs with the candidate AND all context words, then pairwise, then df
+        dw = docs_with(w); return (len(dw & joint), sum(len(dw & c_) for c_ in ctx), FREQ.get(w, df_of(w)))
+    return sorted(cands, key=sc, reverse=True)[:n]
+def ctx_rank(cands, tr, context, n):
+    """Rank candidates by (occurrences in the docs already retrieved for this query, corpus co-occurrence, df)."""
+    seen = collections.Counter(t for i in (tr['depth'] if tr else [])[:25] for t in set(tok(dtext(i, tr['ov']))))
+    co = {w: r for r, w in enumerate(cooc_rank(cands, context, len(cands)))}
+    return sorted(cands, key=lambda w: (-seen[w], co[w]))[:n]
+def rep_Q01(st, tr):   # complete the unfinished last word: corpus completions ranked by co-occurrence with the query, then df
+    ws = st['q'].split()
+    if not ws or df_of(ws[-1]) >= 5: return st
+    cands = completions(ws[-1], 200)
+    if not cands: return st
+    ctx = [t for t in ws[:-1] if t not in FILLER]
+    best = max(cands, key=lambda w: (sum(QLOG_CO[t][w] for t in ctx), QLOG_UNI[w], FREQ.get(w, 0)))   # query-log autocomplete
+    return with_q(st, ' '.join(ws[:-1] + [best]))
+def rep_Q02(st, tr):
+    q = re.sub(r'\b(who|that)\s+(loves|likes|enjoys)\s+\w+', ' ', st['q'])
+    ws = [w for w in q.split() if w not in FILLER]; return with_q(st, ' '.join(ws) or st['q'])
+def rep_Q03(st, tr):   # map catalogue-rare words to the synonym real users type with this context (query log), then df
+    cur = st
+    for w in st['q'].split():
+        if not (w.isalpha() and df_of(w) < 30): continue
+        sy = [s for s in synonyms(w) if df_of(s) >= 300]
+        if not sy: continue
+        ctx = [t for t in cur['q'].split() if t != w and t not in FILLER]
+        best = max(sy, key=lambda c_: (sum(QLOG_CO[t][c_] for t in ctx), QLOG_UNI[c_], df_of(c_)))   # the word real users type here
+        cur = with_q(cur, re.sub(rf'\b{w}\b', best, cur['q'], count=1))
+    return cur
+def rep_Q04(st, tr):   # corpus spelling candidates, ranked by co-occurrence with the rest of the query, CE-verified per word
+    cur = st
+    for w in st['q'].split():
+        if df_of(w) >= 3: continue
+        cs = spell_cands(w)
+        if not cs: continue
+        d0 = dl_dist(w, cs[0]); cs = [c_ for c_ in cs if dl_dist(w, c_) == d0]      # closest candidates only
+        best = cooc_rank(cs, [t for t in cur['q'].split() if t != w], 1)[0]           # context breaks ties, then df
+        cur = with_q(cur, re.sub(rf'\b{re.escape(w)}\b', best, cur['q'], count=1))
+    return cur
+def rep_Q05(st, tr): return with_q(st, ' '.join(' '.join(segment(w)) if (w not in VOC and segment(w)) else w for w in st['q'].split()))
+def code_variants1(t):
+    out = set()
+    for i, ch in enumerate(t):
+        if ch.isdigit(): out |= {t[:i] + str(d) + t[i + 1:] for d in range(10)}
+        if i + 1 < len(t): out.add(t[:i] + t[i + 1] + t[i] + t[i + 2:])
+    out.discard(t); return out
+def code_variants(t):
+    v1 = code_variants1(t); v2 = {y for x in v1 for y in code_variants1(x)}
+    return [v for v in (v1 | v2) if v != t and df_of(v) >= 1]
+def rep_Q07(st, tr):   # in-corpus codes within 2 digit edits, ranked by co-occurrence with the rest of the query, CE-verified
+    cur = st
+    for t in [t for t in st['q'].split() if is_code(t) and df_of(t) < 3]:
+        ctx = [w for w in cur['q'].split() if w != t]
+        cs = cooc_rank(code_variants(t), ctx, 3)
+        if cs: cur = best_by_ce(with_q(cur, cur['q'].replace(t, cs[0], 1)), [with_q(cur, cur['q'].replace(t, v, 1)) for v in cs[1:]])
+    return cur
+def rep_Q09(st, tr):
+    parts = [p.strip() for p in re.split(r'\band also\b|\band\b|,|&|\bplus\b', st['q']) if len(tok(p)) >= 1]
+    return with_cfg(st, parts=parts) if len(parts) >= 2 else st
+def rep_K03(st, tr): return with_cfg(st, attr_rerank=True)
+def rep_K04(st, tr): return with_cfg(st, refresh=True)
+def rep_K05(st, tr): return with_cfg(st, dedup=True)
+def rep_K06(st, tr): return with_cfg(st, authority=True)
+def rep_K07(st, tr): return with_cfg(st, tenant_filter=True)
+def rep_K08(st, tr): return with_cfg(st, quality=True)
+def rep_K09(st, tr): return with_cfg(st, validity=True)
+def rep_R01(st, tr):   # ONE coverage check (was three 0.999 checks): rebuild the dense view from the verified cache
+    return with_cfg(st, mask=None) if tr['cov'] < 0.999 else st
+def rep_encoder_reset(st, tr):   # R03/R10/R11: re-encode the query through the pinned, verified encoder path
+    return with_cfg(st, enc='v15', q_noise=0.0)
+rep_R03 = rep_R10 = rep_R11 = rep_encoder_reset
+def rep_R05(st, tr):   # plugin swap to the fresh reranker; fall back to RRF order if it still disagrees badly
+    s2 = with_cfg(st, ce='ok'); t2 = run(s2)
+    return s2 if spearman(-np.arange(len(t2['depth'])), t2['ce']) > -0.5 else with_cfg(st, ce='ok', depth=CFG['K_FINAL'])
+def rep_R06(st, tr): return with_cfg(st, route=None)
+def rep_R07(st, tr):   # alignment probe on dense top-5: re-embed text, compare with served vectors
+    top = [int(i) for i in tr['dtop'][:5] if i < N]
+    if not top: return st
+    fv = enc_docs([TEXT[i] for i in top]); al = np.mean([float(v @ served_vec(i, st['cfg'], st['ov'])) for i, v in zip(top, fv)])
+    return with_cfg(st, shift=None, refresh=True) if al < 0.98 else with_cfg(st, refresh=True)
+def rep_R13(st, tr): return with_cfg(st, sparse_shift=0)
+def rep_R15(st, tr):   # ladder nprobe 32 -> 128 -> exact, stop when the ANN top-10 equals the exact top-10
+    for npb in (32, 128, None):
+        s2 = with_cfg(st, nprobe=npb)
+        if npb is None or features_ann(run(s2)) >= 0.999: return s2
+CE_FLOOR = [None]
+def rep_R19(st, tr):   # widen-k ladder 50 -> 100, verified against the CE floor fitted on clean train
+    for dp in (50, 100):
+        s2 = with_cfg(st, depth=dp); t2 = run(s2)
+        if len(t2['ce']) and float(t2['ce'].max()) >= CE_FLOOR[0]: return s2
+    return s2
+def rep_R22(st, tr): return with_cfg(st, fusion='rrf')
+def rep_R23(st, tr): return with_cfg(st, result_cap=None)
+def rep_R24(st, tr): return with_cfg(st, ce_trunc=None)
+def rep_R25(st, tr): return with_cfg(st, nonfinite=None, refresh=True)     # quarantine non-finite rows, re-embed from text
+def rep_R26(st, tr): return with_cfg(st, post_filter=False)                 # pre-filter (iterative scan), pgvector#678
+def rep_K11(st, tr): return with_cfg(st, reconcile=True)                    # reconcile ids with the source of truth
+def rep_K12(st, tr): return with_cfg(st, parent_collapse=True)              # natural fault: one chunk per parent
+def qlog_support(words, ctx):
+    return (sum(QLOG_CO[t][u] for t in ctx for u in words) + (QLOG_CO[words[0]][words[1]] if len(words) == 2 else 0),
+            min(QLOG_UNI[u] for u in words), min(df_of(u) for u in words))
+def rep_QLEX(st, tr):
+    """Family repair for QLEX = {Q01, Q03, Q04, Q05}. These four are confusable in telemetry, because each one leaves a
+    low-df token near frequent words. So the repair does not guess the fault: it pools the candidate rewrites of all four
+    (spelling, completion, segmentation, synonym) and keeps the one real users type with this context (query log).
+    It changes a word only if the candidate has more query-log support than the word itself."""
+    ws = st['q'].split(); out = list(ws)
+    for k, w in enumerate(ws):
+        if df_of(w) >= 5: continue
+        ctx = [t for j, t in enumerate(out) if j != k and t not in FILLER]
+        cands = [[c_] for c_ in spell_cands(w)]
+        if k == len(ws) - 1: cands += [[c_] for c_ in completions(w, 200)]
+        sg = segment(w) if w not in VOC else None
+        if sg: cands.append(list(sg))
+        if w.isalpha() and df_of(w) < 30: cands += [[s_] for s_ in synonyms(w) if df_of(s_) >= 300]
+        if not cands: continue
+        best = max(cands, key=lambda c_: qlog_support(c_, ctx))
+        if qlog_support(best, ctx) > qlog_support([w], ctx): out[k] = ' '.join(best)
+    return with_q(st, ' '.join(out))
+def features_ann(tr): return len(set(tr['dtop'][:10].tolist()) & set(tr['exact_top'].tolist())) / max(1, len(tr['exact_top']))
+REP = {f: globals()[f'rep_{f}'] for f in SINGLE}
+def rep_C2(st, tr, faults):     # compose one repair per factor group, in Q -> K -> R order
+    for f in sorted(faults, key=lambda f: 'QKR'.index(GROUP[f])):
+        st = REP[f](st, run(st))
+    return st
+REPF = {'QLEX': rep_QLEX, 'STALE': rep_R07, 'ENC': rep_encoder_reset}
+def fam_repair(f): return REPF.get(FAMILY[f], REP[f])
+assert set(REP) == set(SINGLE) and all(callable(REP[f]) for f in SINGLE)   # every fault served by this file's ladder (R05 plugin check)
+
+# %% [markdown]
+# ## 11. Hard-episode generation. An episode is kept only if the clean pipeline succeeds AND the faulted one fails,
+# so every stored episode has something to repair (fixes "episodes too easy" and "baseline already right").
+
+# %%
+K_OF = dict(Q07=1, K03=1, K06=1, K07=1, K09=1, K11=1)
+EPIS, GEN, SEEN, GSTATE = RES.get('EPIS', []), RES.get('GEN', {}), RES.get('SEEN', set()), RES.get('GSTATE', {})
+QUOTA = CFG['N_HARD'] // 2                              # hard episodes wanted in EACH split (guarantees held-out positives)
+for f in FAULTS:
+    if GSTATE.get(f, {}).get('done'): continue
+    rng = random.Random(f'{CFG["SEED"]}-{f}'); k = K_OF.get(f, 5)
+    pool = [b for b in BASE if b['src'] in POOL[f] and (b['h1'] if k == 1 else b['h5'])]
+    rng.shuffle(pool)
+    gs = GSTATE.get(f) or dict(ptr=0, per_bid=collections.Counter(), g=dict(pool=len(pool), attempts=0, not_applicable=0, easy=0,
+                                                                         hard=0, hard_train=0, hard_test=0, real_typos=0))
+    if 'rng' in gs: rng.setstate(gs['rng'])
+    g_, per_bid = gs['g'], gs['per_bid']; t0 = time.time()
+    while pool and g_['attempts'] < CFG['MAX_ATT'] and gs['ptr'] < 4 * len(pool) and \
+            (g_['hard_train'] < QUOTA or g_['hard_test'] < QUOTA):
+        b = pool[gs['ptr'] % len(pool)]; gs['ptr'] += 1
+        if g_['hard_' + b['split']] >= QUOTA or per_bid[b['bid']] >= 2: continue   # split quota full / max 2 per base query
+        g_['attempts'] += 1
+        if g_['attempts'] % 25 == 0 and over_budget():
+            gs['rng'] = rng.getstate(); GSTATE[f] = gs; maybe_stop(f'generation:{f}')
+        st = INJ[f](b, rng)
+        if st is None: g_['not_applicable'] += 1; continue
+        sig = hashlib.md5(repr((b['bid'], st['q'], sorted((k_, str(v_)) for k_, v_ in st['cfg'].items() if k_ != 'emb_override'),
+                                st['ov']['text'] if st['ov'] else None)).encode()).hexdigest()
+        if sig in SEEN: g_['not_applicable'] += 1; continue
+        SEEN.add(sig)
+        if 'clean_cfg' in st and not succ(run(dict(st, cfg=st['clean_cfg'])), st['gold'], st['k']):
+            g_['not_applicable'] += 1; continue                       # R26: needs a pre-filtered clean success
+        tr = run(st)
+        if succ(tr, st['gold'], st['k']): g_['easy'] += 1; continue
+        g_['hard'] += 1; g_['hard_' + b['split']] += 1; g_['real_typos'] += st['meta'].get('real_typos', 0); per_bid[b['bid']] += 1
+        EPIS.append(dict(fault=f, bid=b['bid'], split=b['split'], st=st, feats=features(tr), meta=st['meta']))
+    tried = g_['attempts'] - g_['not_applicable']
+    g_['hard_yield'] = round(g_['hard'] / tried, 3) if tried else 0.0; GEN[f] = g_
+    gs['done'] = True; GSTATE[f] = gs
+    log(f, g_, f'{time.time()-t0:.0f}s')
+if not GSTATE.get('_none_done'):
+    for b in BASE:
+        EPIS.append(dict(fault='NONE', bid=b['bid'], split=b['split'], st=dict(q=b['q'], tenant=b['tenant'], cfg=mkcfg(), ov=None,
+                         gold=b['gold'], k=5, bid=b['bid'], split=b['split'], meta={}), feats=features(b['clean_tr']), meta={},
+                         clean_h5=b['h5'], clean_h1=b['h1'], src=b['src']))
+    GSTATE['_none_done'] = True
+save_ckpt('generation_done')
+log('episodes', collections.Counter(e['fault'] for e in EPIS))
+
+# %% [markdown]
+# ## 12. Detectors: tier-0 rules (Q04, K07, R15, R23, C2) and per-fault HistGB heads; held-out AUROC with bootstrap CI.
+
+# %%
+from sklearn.model_selection import GroupKFold
+FEATS = sorted(EPIS[0]['feats']); 
+def mat(es): return np.array([[e['feats'][k] for k in FEATS] for e in es], dtype=np.float32)
+SING = [e for e in EPIS if e['fault'] != 'C2']; TR = [e for e in SING if e['split'] == 'train']; TE = [e for e in SING if e['split'] == 'test']
+Xtr, Xte = mat(TR), mat(TE); ytr = np.array([e['fault'] for e in TR]); yte = np.array([e['fault'] for e in TE])
+RULE = {'Q04': lambda f: f['q_correctable'], 'K07': lambda f: f['tenant_mis5'],
+        'R15': lambda f: 1 - f['ann_probe'], 'R23': lambda f: CFG['K_FINAL'] - f['n_final'],
+        'R25': lambda f: f['nonfinite'], 'R26': lambda f: 1 - f['filter_survival'], 'K11': lambda f: f['deleted5']}
+RULE_FIRE = {'Q04': lambda f: f['q_correctable'] >= 1, 'K07': lambda f: f['tenant_mis5'] >= 1,
+             'R15': lambda f: f['ann_probe'] < 0.9, 'R23': lambda f: f['n_final'] < CFG['K_FINAL'],
+             'R25': lambda f: f['nonfinite'] >= 1, 'R26': lambda f: f['filter_survival'] < 0.5, 'K11': lambda f: f['deleted5'] >= 1}
+def boot_auc(y, s, n=500, seed=0):
+    if len(set(y)) < 2: return (float('nan'),) * 3
+    r = np.random.default_rng(seed); a = roc_auc_score(y, s); bs = []
+    for _ in range(n):
+        i = r.integers(0, len(y), len(y))
+        if len(set(y[i])) == 2: bs.append(roc_auc_score(y[i], s[i]))
+    return a, float(np.percentile(bs, 2.5)), float(np.percentile(bs, 97.5))
+def hgb(): return HistGradientBoostingClassifier(max_iter=250, learning_rate=0.08, max_leaf_nodes=15, min_samples_leaf=5, l2_regularization=1.0,
+                                                 class_weight='balanced', random_state=CFG['SEED'])
+DET, HEADS = [], {}
+for f in SINGLE:
+    npos_tr, npos_te = int((ytr == f).sum()), int((yte == f).sum())
+    row = dict(fault=f, detector='tier0_rule' if f in TIER0 else 'histgb_head', n_pos_train=npos_tr, n_pos_test=npos_te, n_neg_test=int((yte != f).sum()))
+    if f in RULE:
+        s = np.array([RULE[f](e['feats']) for e in TE])
+    elif npos_tr >= 3:
+        m_ = hgb().fit(Xtr, (ytr == f).astype(int)); HEADS[f] = m_; s = m_.predict_proba(Xte)[:, 1]
+    else:
+        s = None; row['status'] = 'UNTRAINED (no training positives — routing check failed)'
+    if s is not None:
+        a, lo, hi = boot_auc((yte == f).astype(int), s); row.update(auroc=a, ci_lo=lo, ci_hi=hi)
+        cm = (yte == f) | (yte == 'NONE'); a2 = boot_auc((yte[cm] == f).astype(int), s[cm], n=1)[0]; row['auroc_vs_clean'] = a2
+        row['status'] = ('THIN' if npos_te < GATES['MIN_TEST_POS'] else 'PASS' if a >= GATES['AUROC_BAR'] else 'FAIL')
+    DET.append(row); log('detector', {k: (round(v, 4) if isinstance(v, float) else v) for k, v in row.items()})
+if CFG['N_HARD'] >= 20: assert all(r['n_pos_train'] >= 5 for r in DET if r['fault'] in V1_FAULTS), 'a fault head has <5 training positives (R06-style routing bug)'
+
+# v2: a separate calibration split of clean TRAIN queries, never used to fit the attributor, scored by the SAME model as the
+# held-out test. This restores the exchangeability that conformal risk control needs (seed-43 v1 broke it).
+CALB = {e['bid'] for e in TR if e['fault'] == 'NONE' and int(hashlib.md5(('cal|' + e['bid']).encode()).hexdigest()[:8], 16) / 2**32 < CFG['CAL_FRAC']}
+tra = np.array([not (e['fault'] == 'NONE' and e['bid'] in CALB) for e in TR]); TRA = [e for e, k_ in zip(TR, tra) if k_]
+Xtra, ytra = Xtr[tra], ytr[tra]
+ATT = hgb().fit(Xtra, ytra); CLS = list(ATT.classes_)
+oof = np.zeros((len(TRA), len(CLS)))
+for a_, b_ in GroupKFold(5).split(Xtra, ytra, [e['bid'] for e in TRA]):
+    mm = hgb().fit(Xtra[a_], ytra[a_]); p_ = mm.predict_proba(Xtra[b_])
+    for j, c_ in enumerate(mm.classes_): oof[b_, CLS.index(c_)] = p_[:, j]
+iN = CLS.index('NONE'); tn = 1 - oof[ytra == 'NONE', iN]
+TAU_NONE = float(np.quantile(tn, 1 - CFG['CLEAN_FPR'])) if len(tn) else 0.5
+def gmass(p): return {g: sum(p[j] for j, c_ in enumerate(CLS) if c_ != 'NONE' and c_[0] == g) for g in 'QKR'}
+C2tr = [e for e in EPIS if e['fault'] == 'C2' and e['split'] == 'train']
+sec = lambda p: sorted(gmass(p).values())[-2]
+s_neg = [sec(p) for p, y_ in zip(oof, ytra) if y_ != 'NONE']       # single-fault episodes, out-of-fold
+TAU_C2 = float(np.quantile(s_neg, 0.90)) if s_neg else 0.5        # <=10% of single faults get a spurious second repair
+C2te = [e for e in EPIS if e['fault'] == 'C2' and e['split'] == 'test']
+if C2te:
+    sc = np.array([sec(p) for p in ATT.predict_proba(mat(C2te + TE))]); yy = np.array([1] * len(C2te) + [0] * len(TE))
+    a, lo, hi = boot_auc(yy, sc); DET.append(dict(fault='C2', detector='tier0_rule(second factor-group mass)', n_pos_train=len(C2tr),
+        n_pos_test=len(C2te), n_neg_test=len(TE), auroc=a, ci_lo=lo, ci_hi=hi,
+        status='THIN' if len(C2te) < GATES['MIN_TEST_POS'] else 'PASS' if a >= GATES['AUROC_BAR'] else 'FAIL'))
+ok_ = [b['clean_tr']['ce'].max() for b in BASE if b['split'] == 'train' and b['h1'] and len(b['clean_tr']['ce'])]
+CE_FLOOR[0] = float(np.percentile(ok_, 10)); log('TAU_NONE', TAU_NONE, 'TAU_C2', TAU_C2, 'CE floor (fitted, was default 0.5)', CE_FLOOR[0])
+
+# %% [markdown]
+# ## 13. Repair gates (oracle-dispatched): rescue rate on hard episodes + harm when applied to clean successes.
+
+# %%
+def wilson(k, n, z=1.96):
+    if n == 0: return (float('nan'),) * 2
+    p = k / n; d = 1 + z * z / n; c = p + z * z / (2 * n); h = z * math.sqrt(p * (1 - p) / n + z * z / (4 * n * n))
+    return (c - h) / d, (c + h) / d
+def apply_repairs(st, faults):
+    if not faults: return st
+    if len(faults) == 1: return REP[faults[0]](st, run(st))
+    return rep_C2(st, None, faults)
+REPG, HARM = [], RES.get('HARM', {})
+for f in FAULTS:
+    es = [e for e in EPIS if e['fault'] == f]
+    for n_, e in enumerate(es):
+        if 'oracle_rescued' in e: continue
+        fs = e['meta']['combo'] if f == 'C2' else [f]
+        e['oracle_rescued'] = bool(succ(run(apply_repairs(e['st'], fs)), e['st']['gold'], e['st']['k']))
+        if n_ % 10 == 0: maybe_stop(f'repair:{f}')
+    ok_n = sum(e['oracle_rescued'] for e in es); k = K_OF.get(f, 5)
+    if f not in HARM:
+        cl = [b for b in BASE if b['src'] in POOL[f] and b['split'] == 'test' and (b['h1'] if k == 1 else b['h5'])][:CFG['N_HARM']]
+        lost = 0
+        if f != 'C2':
+            for b in cl:
+                st = dict(q=b['q'], tenant=b['tenant'], cfg=mkcfg(), ov=None)
+                lost += not succ(run(REP[f](st, b['clean_tr'])), b['gold'], k)
+        HARM[f] = (len(cl) if f != 'C2' else 0, lost); maybe_stop(f'harm:{f}')
+    cn, lost = HARM[f]; lo, hi = wilson(ok_n, len(es)); harm_rate = lost / cn if cn else 0.0
+    status = ('THIN' if len(es) < GATES['MIN_REPAIR_N'] else
+              'PASS' if lo >= GATES['RESCUE_BAR_LB'] and harm_rate <= GATES['MAX_HARM'] else 'FAIL')
+    row = dict(fault=f, n_hard=len(es), rescued=ok_n, rescue_rate=ok_n / len(es) if es else float('nan'), ci_lo=lo, ci_hi=hi,
+               clean_n=cn, clean_lost=lost, harm_rate=harm_rate, status=status)
+    REPG.append(row); log('repair', {k_: (round(v, 3) if isinstance(v, float) else v) for k_, v in row.items()})
+save_ckpt('repair_done')
+
+# %% [markdown]
+# ## 14. Closed loop on the held-out split: telemetry -> rules + attributor -> dispatch -> repair -> re-score.
+
+# %%
+RULE_PRIO = ['R26', 'R25', 'K11', 'R23', 'R15', 'K07']   # precise rules only. The Q04 rule is Q04's detector, not a dispatcher.
+def dispatch_full(p, fe, cls=None, inone=None):
+    """Repair set and dispatch score s before thresholding. A precise rule gives s = 1; otherwise s = P(fault) = 1 - P(NONE).
+    v2: the top fault is chosen at FAMILY level (probability mass summed over a family's members)."""
+    cls = cls or CLS; inone = iN if inone is None else inone
+    fam_p = collections.defaultdict(float); best_member = {}
+    for j, c_ in enumerate(cls):
+        if c_ == 'NONE': continue
+        fam_p[FAMILY[c_]] += p[j]
+        if FAMILY[c_] not in best_member or p[j] > p[cls.index(best_member[FAMILY[c_]])]: best_member[FAMILY[c_]] = c_
+    def gm(g): return sum(p[j] for j, c_ in enumerate(cls) if c_ != 'NONE' and c_[0] == g)
+    def top(g=None):
+        fams = [fa for fa in fam_p if g is None or best_member[fa][0] == g]
+        return best_member[max(fams, key=lambda fa: fam_p[fa])]
+    rules = [f for f in RULE_PRIO if RULE_FIRE[f](fe)]
+    if rules: out, s = [rules[0]], 1.0
+    else: out, s = [top()], float(1 - p[inone])
+    other = [f for f in rules[1:] if GROUP[f] != GROUP[out[0]]]
+    gms = {g: gm(g) for g in 'QKR'}
+    if other: out.append(other[0])
+    elif sorted(gms.values())[-2] >= TAU_C2:
+        gs = [g for g in sorted(gms, key=gms.get, reverse=True) if g != GROUP[out[0]]]
+        if gs: out.append(top(gs[0]))
+    return out, s
+def proba(fe): return ATT.predict_proba(np.array([[fe[k] for k in FEATS]], dtype=np.float32))[0]
+def apply_family(st, faults):
+    """v2 dispatch repair: one repair per FAMILY, composed in Q -> K -> R order."""
+    for f in sorted(dict.fromkeys(faults), key=lambda f: 'QKR'.index(GROUP[f])):
+        st = fam_repair(f)(st, run(st))
+    return st
+def fam_ok(fs, truth): return bool(fs) and {FAMILY[x] for x in fs} == {FAMILY[x] for x in truth}
+
+# --- family repairs, oracle-dispatched (report): does one repair per family rescue every member? ---
+FAMR = RES.get('FAMR', {})
+for f in [f for f in SINGLE if FAMILY[f] != f]:
+    if f in FAMR: continue
+    es = [e for e in EPIS if e['fault'] == f]
+    FAMR[f] = dict(family=FAMILY[f], n=len(es), rescued=int(sum(succ(run(fam_repair(f)(e['st'], run(e['st']))), e['st']['gold'], e['st']['k']) for e in es)))
+    maybe_stop(f'family_repair:{f}')
+FAMG = [dict(fault=f, **v, rate=v['rescued'] / v['n'] if v['n'] else float('nan'), ci_lo=wilson(v['rescued'], v['n'])[0]) for f, v in FAMR.items()]
+for r in FAMG: log('family repair', r)
+
+# --- do-no-harm calibration: conformal risk control on the SEPARATE calibration split, scored by ATT (same model as test) ---
+CAL = RES.get('CAL', {})
+cal_eps = [e for e in TR if e['fault'] == 'NONE' and e['bid'] in CALB]
+for n_, e in enumerate(cal_eps):
+    if e['bid'] in CAL: continue
+    fs, s = dispatch_full(proba(e['feats']), e['feats'])
+    lost = int(bool(e['clean_h5']) and not succ(run(apply_family(e['st'], fs)), e['st']['gold'], 5))
+    CAL[e['bid']] = (s, lost)
+    if n_ % 50 == 0: maybe_stop('calibration')
+cs_ = np.array([CAL[e['bid']][0] for e in cal_eps]); cl_ = np.array([CAL[e['bid']][1] for e in cal_eps])
+def crc_lambda(s_arr, l_arr, alpha):
+    """Smallest threshold lam with (n/(n+1)) * mean(1[s>=lam] * loss) + 1/(n+1) <= alpha (loss in [0,1], nonincreasing in lam)."""
+    n = len(s_arr)
+    for lam in sorted(set(s_arr.tolist())) + [float('inf')]:
+        if n / (n + 1) * np.mean((s_arr >= lam) * l_arr) + 1 / (n + 1) <= alpha: return lam
+    return float('inf')
+LAMS = {a: crc_lambda(cs_, cl_, a) for a in GATES['ALPHAS']}
+rs = np.random.default_rng(CFG['SEED']); RESPLIT = []
+for _ in range(200):
+    m_ = rs.random(len(cs_)) < 0.5; lam = crc_lambda(cs_[m_], cl_[m_], GATES['ALPHA'])
+    RESPLIT.append(float(np.mean((cs_[~m_] >= lam) * cl_[~m_])))
+log('CRC lambdas', LAMS, 'calibration n', len(cs_), 'calibration losses', int(cl_.sum()), 'resplit mean', np.mean(RESPLIT))
+save_ckpt('calibration_done')
+
+# --- closed loop on held-out episodes; outcome stored with and without repair so every threshold is scored ---
+for n_, e in enumerate([x for x in EPIS if x['split'] == 'test']):
+    if 'loop2' not in e:
+        fs, s = dispatch_full(proba(e['feats']), e['feats'])
+        ok_rep = bool(succ(run(apply_family(e['st'], fs)), e['st']['gold'], 5 if e['fault'] == 'NONE' else e['st']['k']))
+        e['loop2'] = dict(fs=fs, s=s, ok_rep=ok_rep, ok_none=bool(e['clean_h5']) if e['fault'] == 'NONE' else False)
+        if n_ % 25 == 0: maybe_stop('closed_loop')
+POLICIES = {'tau_none_5pct_fpr': TAU_NONE, **{f'crc_alpha_{a}': LAMS[a] for a in GATES['ALPHAS']}}
+CLOSED, POLICY = [], []
+for pol, thr in POLICIES.items():
+    for f in FAULTS + ['NONE']:
+        es = [e for e in EPIS if e['split'] == 'test' and e['fault'] == f]
+        if not es: continue
+        disp = [e['loop2']['s'] >= thr for e in es]
+        ok = [e['loop2']['ok_rep'] if d else e['loop2']['ok_none'] for e, d in zip(es, disp)]
+        truth = lambda e: e['meta']['combo'] if e['fault'] == 'C2' else [e['fault']]
+        att = [(not d) if f == 'NONE' else (d and fam_ok(e['loop2']['fs'], truth(e))) for e, d in zip(es, disp)]
+        row = dict(policy=pol, threshold=thr, fault=f, family=FAMILY.get(f, f), n_test=len(es), dispatch_rate=float(np.mean(disp)),
+                   family_attribution_acc=float(np.mean(att)))
+        if f == 'NONE':
+            row['clean_loss'] = float(np.mean([e['clean_h5'] and not o for e, o in zip(es, ok)]))
+            row['clean_net_hit_change'] = float(np.mean([o - e['clean_h5'] for e, o in zip(es, ok)]))
+        else: row['closure'] = float(np.mean(ok))
+        CLOSED.append(row)
+    fr = [r for r in CLOSED if r['policy'] == pol and r['fault'] != 'NONE']; nr = [r for r in CLOSED if r['policy'] == pol and r['fault'] == 'NONE'][0]
+    POLICY.append(dict(policy=pol, threshold=thr, mean_closure=float(np.mean([r['closure'] for r in fr])),
+                       mean_closure_v1_28=float(np.mean([r['closure'] for r in fr if r['fault'] in V1_FAULTS])),
+                       mean_family_attribution=float(np.mean([r['family_attribution_acc'] for r in fr])),
+                       clean_dispatch_rate=nr['dispatch_rate'], clean_loss=nr['clean_loss'], clean_net_hit_change=nr['clean_net_hit_change']))
+    log('policy', POLICY[-1])
+main_pol = POLICY[[p_['policy'] for p_ in POLICY].index(f'crc_alpha_{GATES["ALPHA"]}')]
+GUARANTEE = dict(alpha=GATES['ALPHA'], lam=LAMS[GATES['ALPHA']], calibration_n=len(cs_), heldout_clean_loss=main_pol['clean_loss'],
+                 resplit_mean=float(np.mean(RESPLIT)), resplit_p95=float(np.percentile(RESPLIT, 95)),
+                 L1='PASS' if main_pol['clean_loss'] <= GATES['ALPHA'] else 'FAIL',
+                 L2='PASS' if main_pol['mean_closure'] >= GATES['L2_BAR'] else 'FAIL', mean_closure=main_pol['mean_closure'])
+log('LOOP GATES', GUARANTEE); save_ckpt('loop_done')
+
+# %% [markdown]
+# ## 14b. Natural-validation arms NA1-NA6 (no injection) and unseen-fault generalization
+
+# %%
+def boot_ci(x, n=CFG['N_BOOT'], seed=CFG['SEED']):
+    x = np.asarray(x, float)
+    if len(x) == 0: return (float('nan'),) * 3
+    r = np.random.default_rng(seed); bs = x[r.integers(0, len(x), (n, len(x)))].mean(1)
+    return float(x.mean()), float(np.percentile(bs, 2.5)), float(np.percentile(bs, 97.5))
+NAT2 = RES.get('NAT2', {})
+natq = list(QG_NAT.head(CFG['N_NATQ']).itertuples())
+for n_, r in enumerate(natq):
+    if r.query in NAT2: continue
+    gold = gold_set([j for p in r.product_id for j in BY_PKEY[p]])
+    st = dict(q=r.query, tenant='ALL', cfg=mkcfg(), ov=None, gold=gold, k=5, meta={})
+    tr = run(st); fe = features(tr); h0 = succ(tr, gold, 5); fs, s = dispatch_full(proba(fe), fe)
+    row = dict(h0=h0, s=s, fs=fs, sel={}, h_loop=succ(run(apply_family(st, fs)), gold, 5),
+               typo_confirmed=False)
+    sel = dict(NA1=fe['q_correctable'] >= 1, NA2=fe['q_segmentable'] >= 1, NA3=fe['thin5'] >= 1, NA4=fe['dup5'] >= 1,
+               NA5=fe['chunk_crowd5'] >= 1)
+    rep = dict(NA1=rep_QLEX, NA2=rep_QLEX, NA3=rep_K08, NA4=rep_K05, NA5=rep_K12)
+    done = {}
+    for arm, on in sel.items():
+        if not on: continue
+        fn = rep[arm]
+        if fn not in done: done[fn] = (lambda s2: (s2['q'], succ(run(s2), gold, 5)))(fn(st, tr))
+        row['sel'][arm] = done[fn][1]
+        if arm == 'NA1': row['typo_confirmed'] = done[fn][0] != r.query and done[fn][0] in ALLQ   # another user typed the fix
+    NAT2[r.query] = row
+    if n_ % 25 == 0: maybe_stop('natural_arms')
+save_ckpt('natural_done')
+def verdict(lo, hi): return 'PASS' if lo > 0 else 'HARM' if hi < 0 else 'INCONCLUSIVE'
+NAT = []
+rows_ = list(NAT2.values())
+for arm, name in [('NA1', 'natural misspelling (rule q_correctable)'), ('NA2', 'natural missing space (rule q_segmentable)'),
+                  ('NA3', "natural 'nan' placeholder in top-5 (rule thin5)"), ('NA4', 'natural exact duplicate in top-5 (rule dup5)'),
+                  ('NA5', 'natural chunk crowding (rule chunk_crowd5)')]:
+    xs = [r for r in rows_ if arm in r['sel']]
+    d = [int(r['sel'][arm]) - int(r['h0']) for r in xs]; m_, lo, hi = boot_ci(d)
+    NAT.append(dict(arm=arm, what=name, n_selected=len(xs), hit_before=float(np.mean([r['h0'] for r in xs])) if xs else None,
+                    hit_after=float(np.mean([r['sel'][arm] for r in xs])) if xs else None, delta=m_, ci_lo=lo, ci_hi=hi,
+                    fixed=int(sum(x > 0 for x in d)), broken=int(sum(x < 0 for x in d)), verdict=verdict(lo, hi) if xs else 'NO DATA'))
+    if arm == 'NA1':
+        xc = [r for r in xs if r['typo_confirmed']]; dc = [int(r['sel'][arm]) - int(r['h0']) for r in xc]; m2, lo2, hi2 = boot_ci(dc)
+        NAT.append(dict(arm='NA1b', what='NA1 where the corrected query was typed by another ESCI user', n_selected=len(xc),
+                        hit_before=float(np.mean([r['h0'] for r in xc])) if xc else None, hit_after=float(np.mean([r['sel'][arm] for r in xc])) if xc else None,
+                        delta=m2, ci_lo=lo2, ci_hi=hi2, fixed=int(sum(x > 0 for x in dc)), broken=int(sum(x < 0 for x in dc)),
+                        verdict=verdict(lo2, hi2) if xc else 'NO DATA'))
+for pol, thr in POLICIES.items():
+    d = [(int(r['h_loop']) - int(r['h0'])) if r['s'] >= thr else 0 for r in rows_]; m_, lo, hi = boot_ci(d)
+    NAT.append(dict(arm='NA6', what=f'closed loop v2 on all natural queries, policy {pol}', n_selected=len(rows_),
+                    hit_before=float(np.mean([r['h0'] for r in rows_])), hit_after=float(np.mean([r['h0'] + x for r, x in zip(rows_, d)])),
+                    delta=m_, ci_lo=lo, ci_hi=hi, fixed=int(sum(x > 0 for x in d)), broken=int(sum(x < 0 for x in d)),
+                    dispatched=float(np.mean([r['s'] >= thr for r in rows_])), verdict=verdict(lo, hi)))
+for r in NAT: log('natural', {k_: (round(v_, 4) if isinstance(v_, float) else v_) for k_, v_ in r.items()})
+
+LOFO = RES.get('LOFO', {})
+for f in SINGLE:
+    if f in LOFO or f in RULE_PRIO: continue
+    keep_ = ytra != f; mf = hgb().fit(Xtra[keep_], ytra[keep_]); clf = list(mf.classes_); inf_ = clf.index('NONE')
+    thr_f = float(np.quantile(1 - mf.predict_proba(Xtra[(ytra == 'NONE')])[:, inf_], 1 - CFG['CLEAN_FPR']))
+    rows = []
+    for e in [x for x in EPIS if x['fault'] == f and x['split'] == 'test']:
+        fs, s = dispatch_full(mf.predict_proba(np.array([[e['feats'][k] for k in FEATS]], dtype=np.float32))[0], e['feats'], clf, inf_)
+        flagged = s >= thr_f
+        rows.append(dict(flagged=flagged, right_family=flagged and FAMILY[fs[0]] == FAMILY[f],
+                         ok=flagged and bool(succ(run(apply_family(e['st'], fs)), e['st']['gold'], e['st']['k']))))
+    LOFO[f] = rows; maybe_stop(f'lofo:{f}')
+save_ckpt('lofo_done')
+UNSEEN = [dict(fault=f, family=FAMILY[f], n_test=len(r), flagged=float(np.mean([x['flagged'] for x in r])),
+               right_family=float(np.mean([x['right_family'] for x in r])), closure=float(np.mean([x['ok'] for x in r]))) for f, r in LOFO.items() if r]
+for r in UNSEEN: log('unseen', r)
+
+# %% [markdown]
+# ## 15. Write results (JSON + CSV + Markdown report) to diagrag_out/
+
+# %%
+def J(x):
+    if isinstance(x, (np.integer,)): return int(x)
+    if isinstance(x, (np.floating,)): return float(x)
+    if isinstance(x, (np.bool_,)): return bool(x)
+    if isinstance(x, set): return sorted(x)
+    return str(x)
+gen_df = pd.DataFrame([dict(fault=f, **g) for f, g in GEN.items()])
+det_df, rep_df, loop_df = pd.DataFrame(DET), pd.DataFrame(REPG), pd.DataFrame(CLOSED)
+dstat = {r['fault']: r['status'] for r in DET}; rstat = {r['fault']: r['status'] for r in REPG}
+sol_df = pd.DataFrame([dict(fault=f, detector=dstat.get(f, 'MISSING'), repair=rstat.get(f, 'MISSING'),
+                            solved=dstat.get(f) == 'PASS' and rstat.get(f) == 'PASS') for f in FAULTS])
+v1s = sol_df[sol_df.fault.isin(V1_FAULTS)]
+n_det, n_rep, n_sol = int((v1s.detector == 'PASS').sum()), int((v1s.repair == 'PASS').sum()), int(v1s.solved.sum())
+clean_row = [r for r in CLOSED if r['fault'] == 'NONE' and r['policy'] == f'crc_alpha_{GATES["ALPHA"]}']
+VERDICT = dict(detectors_pass=n_det, repairs_pass=n_rep, solved_both=n_sol, of=len(V1_FAULTS),
+               new_faults={f: dict(detector=dstat.get(f), repair=rstat.get(f)) for f in NEW_FAULTS},
+               family_repairs=FAMG, loop_gates=dict(L1=GUARANTEE['L1'], L2=GUARANTEE['L2']),
+               verdict='ADOPTED' if n_rep >= GATES['REPAIR_TARGET'] and n_det >= GATES['DETECT_TARGET'] else 'NOT_ADOPTED',
+               clean_net_hit_change=clean_row[0]['clean_net_hit_change'] if clean_row else None,
+               guarantee=GUARANTEE, policies=POLICY, natural=NAT, unseen_mean_closure=float(np.mean([r['closure'] for r in UNSEEN])) if UNSEEN else None,
+               not_solved=v1s[~v1s.solved].fault.tolist(), device=DEV, reranker=CFG['RERANKER'], protocol=json.load(open(PROTO)))
+json.dump(VERDICT, open(os.path.join(OUT, 'VERDICT.json'), 'w'), indent=1, default=str); sol_df.to_csv(os.path.join(OUT, 'solved.csv'), index=False)
+log('VERDICT', {k_: v_ for k_, v_ in VERDICT.items() if k_ != 'protocol'})
+pol_df, nat_df, uns_df, fam_df = pd.DataFrame(POLICY), pd.DataFrame(NAT), pd.DataFrame(UNSEEN), pd.DataFrame(FAMG)
+for name, df_ in [('episodes_summary', gen_df), ('detector_gates', det_df), ('repair_gates', rep_df), ('closed_loop', loop_df),
+                  ('policies', pol_df), ('natural_arms', nat_df), ('unseen_faults', uns_df), ('family_repairs', fam_df)]:
+    df_.to_csv(os.path.join(OUT, f'{name}.csv'), index=False)
+with open(os.path.join(OUT, 'data_verification.json'), 'w') as fh:
+    json.dump(dict(files=VERIFY, purity=PUR, cfg=CFG, tau_none=TAU_NONE, tau_c2=TAU_C2, ce_floor=CE_FLOOR[0],
+                   features=FEATS, webis_pairs=sum(map(len, WEBIS.values()))), fh, indent=1, default=J)
+with open(os.path.join(OUT, 'episodes.jsonl'), 'w') as fh:
+    for e in EPIS:
+        st = e['st']
+        fh.write(json.dumps(dict(fault=e['fault'], bid=e['bid'], split=e['split'], query=st['q'], tenant=st['tenant'], k=st['k'],
+                                 cfg={k_: v_ for k_, v_ in st['cfg'].items() if v_ != DEFAULT[k_] and k_ != 'emb_override'},
+                                 injected_docs=[dict(title=d['title'], content=d['content'][:400], access_scope=d.get('access_scope'),
+                                                     license_status=d.get('license_status')) for d in (st['ov']['docs'] if st['ov'] else [])],
+                                 gold=[DOCS[i]['doc_id'] for i in sorted(st['gold']) if i < N][:20], meta=e['meta'],
+                                 oracle_rescued=e.get('oracle_rescued'), feats=e['feats']), default=J) + '\n')
+md = ['# DiagRAG core-28 v2 judged run report', '', f'Device: {DEV}. Reranker: {CFG["RERANKER"]}. Last session runtime: {time.time()-T0:.0f}s.', '',
+      '## Verdict (gates fixed in JUDGED_PROTOCOL.json before results)', '', '```', json.dumps({k_: v_ for k_, v_ in VERDICT.items() if k_ != "protocol"}, indent=1, default=str), '```', '',
+      json.dumps(GATES, indent=1), '', sol_df.to_markdown(index=False), '',
+      '## Data verification', '', pd.DataFrame(VERIFY).T.to_markdown(), '', '## Purity', '', '```', json.dumps(PUR, indent=1, default=J), '```', '',
+      '## Episode generation (hard = clean succeeds, faulted fails)', '', gen_df.to_markdown(index=False), '',
+      f'## Detector gates (AUROC bar {GATES["AUROC_BAR"]}, min test positives {GATES["MIN_TEST_POS"]})', '', det_df.to_markdown(index=False, floatfmt='.4f'), '',
+      f'## Repair gates (Wilson lower bound >= {GATES["RESCUE_BAR_LB"]})', '', rep_df.to_markdown(index=False, floatfmt='.3f'), '',
+      '## Dispatch policies (held-out)', '', pol_df.to_markdown(index=False, floatfmt='.4f'), '',
+      '## Loop gates (L1 do-no-harm on held-out clean, L2 mean closure)', '', '```', json.dumps(GUARANTEE, indent=1), '```', '',
+      '## Family repairs, oracle-dispatched', '', fam_df.to_markdown(index=False, floatfmt='.3f'), '',
+      '## Natural-validation arms NA1-NA6 (no injection, never-examined queries)', '', nat_df.to_markdown(index=False, floatfmt='.4f'), '',
+      '## Unseen faults (leave-one-fault-out attributor)', '', uns_df.to_markdown(index=False, floatfmt='.3f'), '',
+      '## Closed loop per fault and policy (held-out split)', '', loop_df.to_markdown(index=False, floatfmt='.3f'), '']
+open(os.path.join(OUT, 'REPORT.md'), 'w').write('\n'.join(md))
+log('done. outputs in', OUT); print('\n'.join(md[-12:]))

@@ -1,0 +1,979 @@
+{
+ "folder": "kaggle/judged_gpu_v8_seed52",
+ "split": "test",
+ "seed": 52,
+ "J": 35,
+ "alpha": 0.05,
+ "n_cal": 3904,
+ "per_fault": {
+  "K03": {
+   "n": 50,
+   "true": "CONTENT",
+   "inv_correct": 0.58,
+   "lofo_correct": 0.32,
+   "seen_correct": 1.0,
+   "inv_flagged": 0.64,
+   "inv_top": [
+    [
+     "CONTENT",
+     29
+    ],
+    [
+     "None",
+     18
+    ],
+    [
+     "VECTORS",
+     3
+    ]
+   ],
+   "lofo_top": [
+    [
+     "None",
+     31
+    ],
+    [
+     "CONTENT",
+     16
+    ],
+    [
+     "QUERY",
+     3
+    ]
+   ]
+  },
+  "K04": {
+   "n": 50,
+   "true": "VECTORS",
+   "inv_correct": 0.88,
+   "lofo_correct": 0.86,
+   "seen_correct": 0.86,
+   "inv_flagged": 0.88,
+   "inv_top": [
+    [
+     "VECTORS",
+     44
+    ],
+    [
+     "None",
+     6
+    ]
+   ],
+   "lofo_top": [
+    [
+     "VECTORS",
+     43
+    ],
+    [
+     "None",
+     5
+    ],
+    [
+     "QUERY",
+     2
+    ]
+   ]
+  },
+  "K05": {
+   "n": 50,
+   "true": "CONTENT",
+   "inv_correct": 0.9,
+   "lofo_correct": 0.04,
+   "seen_correct": 1.0,
+   "inv_flagged": 0.98,
+   "inv_top": [
+    [
+     "CONTENT",
+     45
+    ],
+    [
+     "VECTORS",
+     4
+    ],
+    [
+     "None",
+     1
+    ]
+   ],
+   "lofo_top": [
+    [
+     "None",
+     42
+    ],
+    [
+     "SERVING",
+     3
+    ],
+    [
+     "CONTENT",
+     2
+    ]
+   ]
+  },
+  "K06": {
+   "n": 50,
+   "true": "CONTENT",
+   "inv_correct": 0.9,
+   "lofo_correct": 0.68,
+   "seen_correct": 0.98,
+   "inv_flagged": 0.98,
+   "inv_top": [
+    [
+     "CONTENT",
+     45
+    ],
+    [
+     "VECTORS",
+     4
+    ],
+    [
+     "None",
+     1
+    ]
+   ],
+   "lofo_top": [
+    [
+     "CONTENT",
+     34
+    ],
+    [
+     "None",
+     15
+    ],
+    [
+     "ENCODER",
+     1
+    ]
+   ]
+  },
+  "K07": {
+   "n": 50,
+   "true": "FILTERS",
+   "inv_correct": 0.96,
+   "lofo_correct": 0.0,
+   "seen_correct": 1.0,
+   "inv_flagged": 1.0,
+   "inv_top": [
+    [
+     "FILTERS",
+     48
+    ],
+    [
+     "VECTORS",
+     1
+    ],
+    [
+     "QUERY",
+     1
+    ]
+   ],
+   "lofo_top": [
+    [
+     "None",
+     34
+    ],
+    [
+     "CONTENT",
+     8
+    ],
+    [
+     "QUERY",
+     5
+    ]
+   ]
+  },
+  "K08": {
+   "n": 50,
+   "true": "CONTENT",
+   "inv_correct": 0.96,
+   "lofo_correct": 0.04,
+   "seen_correct": 0.98,
+   "inv_flagged": 1.0,
+   "inv_top": [
+    [
+     "CONTENT",
+     48
+    ],
+    [
+     "VECTORS",
+     2
+    ]
+   ],
+   "lofo_top": [
+    [
+     "None",
+     46
+    ],
+    [
+     "QUERY",
+     2
+    ],
+    [
+     "CONTENT",
+     2
+    ]
+   ]
+  },
+  "K09": {
+   "n": 50,
+   "true": "FILTERS",
+   "inv_correct": 0.92,
+   "lofo_correct": 0.0,
+   "seen_correct": 1.0,
+   "inv_flagged": 1.0,
+   "inv_top": [
+    [
+     "FILTERS",
+     46
+    ],
+    [
+     "VECTORS",
+     4
+    ]
+   ],
+   "lofo_top": [
+    [
+     "None",
+     49
+    ],
+    [
+     "QUERY",
+     1
+    ]
+   ]
+  },
+  "K11": {
+   "n": 50,
+   "true": "SERVING",
+   "inv_correct": 0.96,
+   "lofo_correct": 0.0,
+   "seen_correct": 1.0,
+   "inv_flagged": 1.0,
+   "inv_top": [
+    [
+     "SERVING",
+     48
+    ],
+    [
+     "VECTORS",
+     2
+    ]
+   ],
+   "lofo_top": [
+    [
+     "CONTENT",
+     45
+    ],
+    [
+     "None",
+     5
+    ]
+   ]
+  },
+  "K12": {
+   "n": 50,
+   "true": "CONTENT",
+   "inv_correct": 0.16,
+   "lofo_correct": 0.14,
+   "seen_correct": 0.94,
+   "inv_flagged": 0.16,
+   "inv_top": [
+    [
+     "None",
+     42
+    ],
+    [
+     "CONTENT",
+     8
+    ]
+   ],
+   "lofo_top": [
+    [
+     "None",
+     41
+    ],
+    [
+     "CONTENT",
+     7
+    ],
+    [
+     "FUSION",
+     1
+    ]
+   ]
+  },
+  "Q01": {
+   "n": 50,
+   "true": "QUERY",
+   "inv_correct": 0.0,
+   "lofo_correct": 0.14,
+   "seen_correct": 0.98,
+   "inv_flagged": 0.0,
+   "inv_top": [
+    [
+     "None",
+     50
+    ]
+   ],
+   "lofo_top": [
+    [
+     "None",
+     42
+    ],
+    [
+     "QUERY",
+     7
+    ],
+    [
+     "ENCODER",
+     1
+    ]
+   ]
+  },
+  "Q02": {
+   "n": 50,
+   "true": "QUERY",
+   "inv_correct": 0.98,
+   "lofo_correct": 0.02,
+   "seen_correct": 1.0,
+   "inv_flagged": 0.98,
+   "inv_top": [
+    [
+     "QUERY",
+     49
+    ],
+    [
+     "None",
+     1
+    ]
+   ],
+   "lofo_top": [
+    [
+     "None",
+     44
+    ],
+    [
+     "VECTORS",
+     2
+    ],
+    [
+     "BM25",
+     1
+    ]
+   ]
+  },
+  "Q03": {
+   "n": 50,
+   "true": "QUERY",
+   "inv_correct": 0.0,
+   "lofo_correct": 0.02,
+   "seen_correct": 0.02,
+   "inv_flagged": 0.0,
+   "inv_top": [
+    [
+     "None",
+     50
+    ]
+   ],
+   "lofo_top": [
+    [
+     "None",
+     48
+    ],
+    [
+     "FILTERS",
+     1
+    ],
+    [
+     "QUERY",
+     1
+    ]
+   ]
+  },
+  "Q04": {
+   "n": 50,
+   "true": "QUERY",
+   "inv_correct": 0.04,
+   "lofo_correct": 0.16,
+   "seen_correct": 0.82,
+   "inv_flagged": 0.08,
+   "inv_top": [
+    [
+     "None",
+     46
+    ],
+    [
+     "RERANK",
+     2
+    ],
+    [
+     "QUERY",
+     2
+    ]
+   ],
+   "lofo_top": [
+    [
+     "None",
+     40
+    ],
+    [
+     "QUERY",
+     8
+    ],
+    [
+     "RERANK",
+     1
+    ]
+   ]
+  },
+  "Q05": {
+   "n": 50,
+   "true": "QUERY",
+   "inv_correct": 0.0,
+   "lofo_correct": 0.02,
+   "seen_correct": 0.76,
+   "inv_flagged": 0.02,
+   "inv_top": [
+    [
+     "None",
+     49
+    ],
+    [
+     "RERANK",
+     1
+    ]
+   ],
+   "lofo_top": [
+    [
+     "None",
+     49
+    ],
+    [
+     "QUERY",
+     1
+    ]
+   ]
+  },
+  "Q07": {
+   "n": 50,
+   "true": "QUERY",
+   "inv_correct": 0.0,
+   "lofo_correct": 0.0,
+   "seen_correct": 1.0,
+   "inv_flagged": 0.0,
+   "inv_top": [
+    [
+     "None",
+     50
+    ]
+   ],
+   "lofo_top": [
+    [
+     "None",
+     50
+    ]
+   ]
+  },
+  "Q09": {
+   "n": 50,
+   "true": "QUERY",
+   "inv_correct": 0.08,
+   "lofo_correct": 0.06,
+   "seen_correct": 1.0,
+   "inv_flagged": 0.08,
+   "inv_top": [
+    [
+     "None",
+     46
+    ],
+    [
+     "QUERY",
+     4
+    ]
+   ],
+   "lofo_top": [
+    [
+     "None",
+     47
+    ],
+    [
+     "QUERY",
+     3
+    ]
+   ]
+  },
+  "R01": {
+   "n": 50,
+   "true": "VECTORS",
+   "inv_correct": 1.0,
+   "lofo_correct": 0.0,
+   "seen_correct": 1.0,
+   "inv_flagged": 1.0,
+   "inv_top": [
+    [
+     "VECTORS",
+     50
+    ]
+   ],
+   "lofo_top": [
+    [
+     "None",
+     46
+    ],
+    [
+     "QUERY",
+     2
+    ],
+    [
+     "RERANK",
+     2
+    ]
+   ]
+  },
+  "R03": {
+   "n": 50,
+   "true": "ENCODER",
+   "inv_correct": 0.96,
+   "lofo_correct": 0.52,
+   "seen_correct": 1.0,
+   "inv_flagged": 1.0,
+   "inv_top": [
+    [
+     "ENCODER",
+     48
+    ],
+    [
+     "QUERY",
+     2
+    ]
+   ],
+   "lofo_top": [
+    [
+     "ENCODER",
+     26
+    ],
+    [
+     "None",
+     18
+    ],
+    [
+     "QUERY",
+     4
+    ]
+   ]
+  },
+  "R05": {
+   "n": 50,
+   "true": "RERANK",
+   "inv_correct": 0.0,
+   "lofo_correct": 0.06,
+   "seen_correct": 1.0,
+   "inv_flagged": 0.0,
+   "inv_top": [
+    [
+     "None",
+     50
+    ]
+   ],
+   "lofo_top": [
+    [
+     "None",
+     46
+    ],
+    [
+     "RERANK",
+     3
+    ],
+    [
+     "QUERY",
+     1
+    ]
+   ]
+  },
+  "R06": {
+   "n": 50,
+   "true": "FILTERS",
+   "inv_correct": 0.0,
+   "lofo_correct": 0.0,
+   "seen_correct": 0.7,
+   "inv_flagged": 0.1,
+   "inv_top": [
+    [
+     "None",
+     45
+    ],
+    [
+     "RERANK",
+     4
+    ],
+    [
+     "VECTORS",
+     1
+    ]
+   ],
+   "lofo_top": [
+    [
+     "None",
+     46
+    ],
+    [
+     "VECTORS",
+     1
+    ],
+    [
+     "BM25",
+     1
+    ]
+   ]
+  },
+  "R07": {
+   "n": 50,
+   "true": "VECTORS",
+   "inv_correct": 1.0,
+   "lofo_correct": 0.98,
+   "seen_correct": 0.98,
+   "inv_flagged": 1.0,
+   "inv_top": [
+    [
+     "VECTORS",
+     50
+    ]
+   ],
+   "lofo_top": [
+    [
+     "VECTORS",
+     49
+    ],
+    [
+     "None",
+     1
+    ]
+   ]
+  },
+  "R10": {
+   "n": 50,
+   "true": "ENCODER",
+   "inv_correct": 1.0,
+   "lofo_correct": 1.0,
+   "seen_correct": 1.0,
+   "inv_flagged": 1.0,
+   "inv_top": [
+    [
+     "ENCODER",
+     50
+    ]
+   ],
+   "lofo_top": [
+    [
+     "ENCODER",
+     50
+    ]
+   ]
+  },
+  "R11": {
+   "n": 50,
+   "true": "ENCODER",
+   "inv_correct": 1.0,
+   "lofo_correct": 1.0,
+   "seen_correct": 1.0,
+   "inv_flagged": 1.0,
+   "inv_top": [
+    [
+     "ENCODER",
+     50
+    ]
+   ],
+   "lofo_top": [
+    [
+     "ENCODER",
+     50
+    ]
+   ]
+  },
+  "R13": {
+   "n": 50,
+   "true": "BM25",
+   "inv_correct": 0.0,
+   "lofo_correct": 0.0,
+   "seen_correct": 0.96,
+   "inv_flagged": 0.06,
+   "inv_top": [
+    [
+     "None",
+     47
+    ],
+    [
+     "RERANK",
+     2
+    ],
+    [
+     "CONTENT",
+     1
+    ]
+   ],
+   "lofo_top": [
+    [
+     "None",
+     48
+    ],
+    [
+     "CONTENT",
+     1
+    ],
+    [
+     "RERANK",
+     1
+    ]
+   ]
+  },
+  "R15": {
+   "n": 50,
+   "true": "ANN",
+   "inv_correct": 1.0,
+   "lofo_correct": 0.0,
+   "seen_correct": 1.0,
+   "inv_flagged": 1.0,
+   "inv_top": [
+    [
+     "ANN",
+     50
+    ]
+   ],
+   "lofo_top": [
+    [
+     "FILTERS",
+     50
+    ]
+   ]
+  },
+  "R19": {
+   "n": 50,
+   "true": "RERANK",
+   "inv_correct": 1.0,
+   "lofo_correct": 0.02,
+   "seen_correct": 1.0,
+   "inv_flagged": 1.0,
+   "inv_top": [
+    [
+     "RERANK",
+     50
+    ]
+   ],
+   "lofo_top": [
+    [
+     "None",
+     47
+    ],
+    [
+     "FILTERS",
+     2
+    ],
+    [
+     "RERANK",
+     1
+    ]
+   ]
+  },
+  "R22": {
+   "n": 50,
+   "true": "FUSION",
+   "inv_correct": 0.48,
+   "lofo_correct": 0.0,
+   "seen_correct": 0.78,
+   "inv_flagged": 0.48,
+   "inv_top": [
+    [
+     "None",
+     26
+    ],
+    [
+     "FUSION",
+     24
+    ]
+   ],
+   "lofo_top": [
+    [
+     "None",
+     43
+    ],
+    [
+     "QUERY",
+     5
+    ],
+    [
+     "CONTENT",
+     2
+    ]
+   ]
+  },
+  "R23": {
+   "n": 50,
+   "true": "SERVING",
+   "inv_correct": 0.0,
+   "lofo_correct": 0.0,
+   "seen_correct": 1.0,
+   "inv_flagged": 1.0,
+   "inv_top": [
+    [
+     "RERANK",
+     50
+    ]
+   ],
+   "lofo_top": [
+    [
+     "RERANK",
+     50
+    ]
+   ]
+  },
+  "R24": {
+   "n": 50,
+   "true": "RERANK",
+   "inv_correct": 0.0,
+   "lofo_correct": 0.0,
+   "seen_correct": 0.32,
+   "inv_flagged": 0.02,
+   "inv_top": [
+    [
+     "None",
+     49
+    ],
+    [
+     "CONTENT",
+     1
+    ]
+   ],
+   "lofo_top": [
+    [
+     "None",
+     47
+    ],
+    [
+     "FILTERS",
+     2
+    ],
+    [
+     "QUERY",
+     1
+    ]
+   ]
+  },
+  "R25": {
+   "n": 50,
+   "true": "VECTORS",
+   "inv_correct": 1.0,
+   "lofo_correct": 0.0,
+   "seen_correct": 1.0,
+   "inv_flagged": 1.0,
+   "inv_top": [
+    [
+     "VECTORS",
+     50
+    ]
+   ],
+   "lofo_top": [
+    [
+     "None",
+     48
+    ],
+    [
+     "FUSION",
+     1
+    ],
+    [
+     "FILTERS",
+     1
+    ]
+   ]
+  },
+  "R26": {
+   "n": 10,
+   "true": "FILTERS",
+   "inv_correct": 0.0,
+   "lofo_correct": 0.0,
+   "seen_correct": 0.8,
+   "inv_flagged": 1.0,
+   "inv_top": [
+    [
+     "ANN",
+     10
+    ]
+   ],
+   "lofo_top": [
+    [
+     "ANN",
+     10
+    ]
+   ]
+  }
+ },
+ "M1": {
+  "n_faults": 31,
+  "inv_macro": 0.5406451612903225,
+  "lofo_macro": 0.19612903225806452,
+  "seen_macro": 0.8993548387096775,
+  "diff": 0.34451612903225803,
+  "ci": [
+   0.19933870967741935,
+   0.5064516129032258
+  ]
+ },
+ "M2": {
+  "n_clean": 2508,
+  "false_alarm": 0.008771929824561403
+ },
+ "by_group": {
+  "Q": {
+   "inv": 0.15714285714285717,
+   "lofo": 0.06
+  },
+  "K": {
+   "inv": 0.8022222222222222,
+   "lofo": 0.23111111111111113
+  },
+  "R": {
+   "inv": 0.5626666666666666,
+   "lofo": 0.23866666666666667
+  }
+ },
+ "M3": {
+  "by_stratum": {
+   "KK": {
+    "all_components_flagged": 20,
+    "n": 20
+   },
+   "KR": {
+    "all_components_flagged": 9,
+    "n": 20
+   },
+   "QK": {
+    "all_components_flagged": 4,
+    "n": 20
+   },
+   "QQ": {
+    "all_components_flagged": 20,
+    "n": 20
+   },
+   "QR": {
+    "all_components_flagged": 8,
+    "n": 20
+   },
+   "RR": {
+    "all_components_flagged": 9,
+    "n": 20
+   },
+   "TRIPLE": {
+    "all_components_flagged": 5,
+    "n": 15
+   },
+   "WITHIN_FAMILY": {
+    "all_components_flagged": 1,
+    "n": 20
+   }
+  },
+  "total": {
+   "k": 76,
+   "n": 155
+  }
+ }
+}

@@ -1,0 +1,54 @@
+{
+ "detectors_pass": 28,
+ "repairs_pass": 27,
+ "solved_both": 27,
+ "of": 28,
+ "verdict": "ADOPTED",
+ "clean_net_hit_change": -0.010606060606060607,
+ "not_solved": [
+  "Q03"
+ ],
+ "device": "cpu",
+ "reranker": "cross-encoder/ms-marco-MiniLM-L-6-v2",
+ "protocol": {
+  "created_utc": "2026-11-14 06:18:59",
+  "gates": {
+   "detector": "held-out one-vs-rest AUROC >= 0.70 (point estimate) AND >= 20 held-out positives",
+   "repair": ">= 20 hard episodes AND Wilson 95% lower bound of rescue rate >= 0.50 AND <= 10% of clean successes lost when the repair is forced on them",
+   "solved": "detector PASS and repair PASS",
+   "targets": "ADOPTED if repairs PASS >= 24/28 AND detectors PASS >= 27/28, else NOT_ADOPTED",
+   "AUROC_BAR": 0.7,
+   "MIN_TEST_POS": 20,
+   "RESCUE_BAR_LB": 0.5,
+   "MIN_REPAIR_N": 20,
+   "MAX_HARM": 0.1,
+   "REPAIR_TARGET": 24,
+   "DETECT_TARGET": 27
+  },
+  "cfg": {
+   "SEED": 42,
+   "QUERY_DATE": "2026-11-14",
+   "K_FINAL": 5,
+   "DEPTH": 25,
+   "RRF_K": 60,
+   "CAND": 100,
+   "ENCODER": "BAAI/bge-base-en-v1.5",
+   "ENCODER_V1": "BAAI/bge-base-en",
+   "QPROMPT": "Represent this sentence for searching relevant passages: ",
+   "RERANKER": "cross-encoder/ms-marco-MiniLM-L-6-v2",
+   "CE_MAXLEN": 256,
+   "N_BASE_ESCI": 2400,
+   "N_HARD": 50,
+   "MAX_ATT": 2500,
+   "TEST_FRAC": 0.5,
+   "CLEAN_FPR": 0.05,
+   "IVF_NLIST": 1024,
+   "N_PRDC": 528,
+   "PROBE_K": 8,
+   "N_HARM": 20,
+   "TIME_BUDGET": 1480
+  },
+  "device": "cpu",
+  "code_sha256": "b60462fba3ebb5f94e08f0ff88d2cbf3e9586f2d268dcc7b8d976086897163ad"
+ }
+}

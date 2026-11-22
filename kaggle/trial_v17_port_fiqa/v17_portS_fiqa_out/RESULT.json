@@ -1,0 +1,41 @@
+{
+ "trial": true,
+ "role": "dev",
+ "dataset": "fiqa",
+ "seed": 60,
+ "code_sha256": "916c3864282b1d9c168cce6943340b52d8728334c3c960d33fcb0d2d4224294f",
+ "P": {
+  "POOL": 40,
+  "A": 10,
+  "B": 4,
+  "NDICT": 2,
+  "NDICT_RANDOM": 3,
+  "T": 3,
+  "EPS": 0.002,
+  "KAPPA": 3.0,
+  "NI": 1,
+  "NPAIR": 3,
+  "TRAFFIC": 6,
+  "PAIR_TRAFFIC": 4
+ },
+ "TAU": 0.11616138747830651,
+ "battery": {
+  "size": 14,
+  "random_part": 10,
+  "diagnostic_part": 4,
+  "undetected_faults": [
+   "K04"
+  ]
+ },
+ "summary": {
+  "singles": 3,
+  "harmful_singles": 3,
+  "detected": 1.0,
+  "family": 0.6666666666666666,
+  "verified": 1.0,
+  "effective_pairs": 2,
+  "pairs_both_family": 1.0,
+  "pairs_verified": 1.0,
+  "agg_both": 0.0
+ }
+}

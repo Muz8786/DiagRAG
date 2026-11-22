@@ -1,0 +1,36 @@
+{
+ "G": {
+  "L1": "PASS",
+  "L2": "PASS",
+  "U1": "FAIL",
+  "N1": "PASS",
+  "solved_28": "27/28",
+  "grounded": "20/22"
+ },
+ "D1": {
+  "closure_loop": 0.85875,
+  "closure_universal": 0.7493749999999999,
+  "clean_loss_loop": 0.0011961722488038277,
+  "clean_loss_universal": 0.014752791068580542,
+  "verdict": "PASS"
+ },
+ "D2": {
+  "paired_loop_minus_universal": {
+   "mean": 0.0012135922330097086,
+   "ci_lo": -0.007281553398058253,
+   "ci_hi": 0.009708737864077669,
+   "n": 1648
+  },
+  "mean_cost_loop": 4.893810679611651,
+  "verdict": "FAIL"
+ },
+ "D3": {
+  "paired_rules_minus_k12_always": {
+   "mean": 0.006067961165048544,
+   "ci_lo": 0.0006067961165048543,
+   "ci_hi": 0.012135922330097087,
+   "n": 1648
+  },
+  "verdict": "PASS"
+ }
+}

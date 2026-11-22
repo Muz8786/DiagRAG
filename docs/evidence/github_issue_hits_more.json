@@ -1,0 +1,711 @@
+{
+ "st_max_seq_length": [
+  {
+   "title": "Memory leak in SentenceTransformer.encode during the first ~10000 predictions",
+   "url": "https://github.com/huggingface/sentence-transformers/issues/1795",
+   "state": "open",
+   "comments": 32,
+   "created": "2022-12-23",
+   "body": "The following minimal example repeatedly calls `SentenceTransformer.encode` on random strings of fixed length (`12345`) and fixed number of strings (`200`), and it records the memory usage.\r\n\r\nFor the first ~50 calls (~10000 predictions), the memory usage grows enormously.\r\n\r\n```python3\r\n# memleak.py\r\n\r\nimport random\r\nimport string\r\n\r\nimport psutil\r\nfrom sentence_transformers import SentenceTransformer\r\n\r\nmodel = SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2')\r\n\r\n\r\ndef random_string(length: int) -> str:\r\n    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=length))\r\n\r\n\r\nprint('iteration,memory_usage_in_MiB', flush=True)\r\nfor iteration in range(99999999):\r\n    model.encode([random_string(12345) for _ in range(200)])\r\n    memory_usage_in_MiB = psutil.Process().memory_info().rss / (1024 * 1024)\r\n    print(f'{iteration},{memory_usage_in_MiB}', flush=True)\r\n```\r\n\r\nOutput:\r\n\r\n```\r\niteration,memory_usage_in_MiB\r\n0,1329.22265625\r\n1,1431.140625\r\n2,1509.2265625\r\n3,1641.55859375\r\n4,1699.109375\r\n5,1779.36328125\r\n[...]\r\n10,2250.69921875\r\n[...]\r\n20,3121.921875\r\n[...]\r\n30,4033.1875\r\n[...]\r\n40,4917.00390625\r\n41,5006.48046875\r\n42,5102.65625\r\n43,5186.4453125\r\n44,5276.37890625\r\n45,5378.58203125\r\n46,5486.60546875\r\n47,5546.50390625\r\n48,5648.64453125\r\n49,5731.9296875\r\n50,5749.0390625\r\n51,5765.81640625\r\n52,5776.52734375\r\n53,5752.5390625\r\n54,5752.39453125\r\n55,5765.01953125\r\n56,5783.08203125\r\n57,5758.75\r\n58,5752.390625\r\n59,5794.265625\r\n60,5752.83984375\r\n61,5776.914"
+  },
+  {
+   "title": "sentence bert model in onnx format",
+   "url": "https://github.com/huggingface/sentence-transformers/issues/46",
+   "state": "closed",
+   "comments": 29,
+   "created": "2019-11-04",
+   "body": "I would like to convert sentence bert model from pytorch to tensorflow use onnx, and tried to follow the standard onnx procedure for converting a pytorch model. But I'm having difficulty determining the onnx input arguments for sentence bert model, I encounter `TypeError: forward() takes 2 positional arguments but 4 were given.` Suggestions appreciated!\r\n`model = SentenceTransformer('output/continue_training_model')`\r\n `device = torch.device(\"cuda\" if torch.cuda.is_available() else \"cpu\")`\r\n `model.to(device)`\r\n `dummy_input0 = torch.LongTensor(batch_size, max_seq_length).to(device)`\r\n `dummy_input1 = torch.LongTensor(batch_size, max_seq_length).to(device)`\r\n `dummy_input2 = torch.LongTensor(batch_size, max_seq_length).to(device)`\r\n `torch.onnx.export(model,(dummy_input0, dummy_input1,dummy_input2), onnx_file_name, verbose=True)`"
+  },
+  {
+   "title": "Inputs are silently truncated at `max_seq_length` with no way for the caller to detect it",
+   "url": "https://github.com/huggingface/sentence-transformers/issues/4060",
+   "state": "open",
+   "comments": 11,
+   "created": "2026-09-21",
+   "body": "`SentenceTransformer.encode()` truncates inputs that exceed `max_seq_length` and gives the\ncaller no signal that it happened. The result is a valid-looking embedding of a document\nwhose tail never reached the encoder.\n\n**Why the usual safety net does not fire**\n\n_transformers_ does warn about over-long sequences, but only when `max_length` is not\npassed:\n\n```python\n# transformers/tokenization_utils_base.py\nif max_length is None and len(ids) > self.model_max_length and verbose and self.model_max_length != 0:\n    logger.warning(\"Token indices sequence length is longer than the specified maximum ...\")\n```\n\n`Transformer.preprocess()` always passes a `max_length` together with\n`truncation=\"longest_first\"`:\n\n```python\n# sentence_transformers/base/modules/transformer.py\nmodality_kwargs = {\n    \"text\": {\"padding\": True, \"truncation\": \"longest_first\"},\n    ...\n}\n...\nmodality_kwargs[\"text\"][\"max_length\"] = task_max_length\n```\n\nso that warning is disabled by construction, and Sentence Transformers does not emit one\nof its own. Grepping the package for truncation-related logging finds only the query\nexpansion warnings.\n\n**Minimal reproduction**\n\n```python\nimport numpy as np\nfrom sentence_transformers import SentenceTransformer\n\nmodel = SentenceTransformer(\"sentence-transformers/all-MiniLM-L6-v2\")\nprint(\"max_seq_length:\", model.max_seq_length)\n\ntext = \"alpha bravo charlie delta \" * 400   # far beyond the limit\n\na = model.encode(text)\nb = model.encode(text + text)              # twice the "
+  },
+  {
+   "title": "Pretrained multilingual model for sentence embedding with a Max Sequence Length > 128",
+   "url": "https://github.com/huggingface/sentence-transformers/issues/1476",
+   "state": "open",
+   "comments": 11,
+   "created": "2022-03-22",
+   "body": "Hi,\r\n\r\nis there any pretrained multilingual model (for sentence embedding) with a Max Sequence Length > 128 (e.g. 256 or 512)?\r\n\r\n`distiluse-base-multilingual-cased-v1`, `distiluse-base-multilingual-cased-v2`, `paraphrase-multilingual-MiniLM-L12-v2`\r\n and `paraphrase-multilingual-mpnet-base-v2` all have a Max Sequence Length of 128 tokens\r\n\r\nThanks"
+  },
+  {
+   "title": "CUDA error for long sentences?",
+   "url": "https://github.com/huggingface/sentence-transformers/issues/459",
+   "state": "closed",
+   "comments": 11,
+   "created": "2020-09-30",
+   "body": "Hello,\r\nI am using Sentence Transformers, specifically `distiluse-base-multilingual-cased`, to compute semantic similarity for a list of sentences. I have been getting CUDA errors (last of which was ```CUDA error: CUBLAS_STATUS_ALLOC_FAILED when calling `cublasCreate(handle)` ```) on a specific dataset, and after some investigation I realized this was due to a specific sentence of 2115 characters, which gets tokenized to 580 tokens. I am aware this is longer than the model `max_seq_length` (which I set to 512), but I was expecting the sentence to be automatically truncated to the maximum length with no error arising.\r\nAm I doing something wrong? \r\nI am running version 0.3.2 (transformers version 3.0.2)."
+  },
+  {
+   "title": "Not able to export sentence-transformers model to PyTorch.",
+   "url": "https://github.com/huggingface/sentence-transformers/issues/820",
+   "state": "open",
+   "comments": 8,
+   "created": "2021-03-18",
+   "body": "Hi,\r\n\r\nI would like to export sentence-transformers  model to PyTorch. However, I am not able to jit trace the **stsb-distilbert-base**  model.\r\nAny help is much appreciated.\r\nThanks,\r\n-s\r\n\r\n\r\nsentence-transformers  (Version: 0.4.1.2)\r\ntorch (version 1.8.0)\r\npython  3.6.7\r\n\r\n```\r\nfrom sentence_transformers import SentenceTransformer\r\nimport torch\r\n\r\nmodel = SentenceTransformer('stsb-distilbert-base', device='cpu')\r\n\r\nmodel.eval()\r\nbatch_size=1\r\nmax_seq_length=128\r\ndevice = torch.device(\"cpu\")\r\nmodel.to(device)\r\ninput_ids = torch.zeros(batch_size, max_seq_length, dtype=torch.long).to(device)\r\ninput_type_ids = torch.zeros(batch_size, max_seq_length, dtype=torch.long).to(device)\r\ninput_mask = torch.zeros(batch_size, max_seq_length, dtype=torch.long).to(device)\r\ninput_features = {'input_ids': input_ids, 'token_type_ids': input_type_ids, 'attention_mask': input_mask}\r\n\r\ntraced_model = torch.jit.trace(model, example_inputs=(input_ids, input_type_ids, input_mask, input_features))\r\n```\r\n\r\nTraceback (most recent call last):\r\n  File \"/Users/sivers/xformers/githubissue.py\", line 16, in <module>\r\n    traced_model = torch.jit.trace(model, example_inputs=(input_ids, input_type_ids, input_mask, input_features))\r\n  File \"/Users/sivers/xformers/nlpenv/lib/python3.6/site-packages/torch/jit/_trace.py\", line 742, in trace\r\n    _module_class,\r\n  File \"/Users/sivers/xformers/nlpenv/lib/python3.6/site-packages/torch/jit/_trace.py\", line 940, in trace_module\r\n    _force_outplace,\r\n  File \"/Users/siv"
+  },
+  {
+   "title": "How to encode pretokenized sentences?",
+   "url": "https://github.com/huggingface/sentence-transformers/issues/742",
+   "state": "closed",
+   "comments": 8,
+   "created": "2021-02-03",
+   "body": "Hey there,\r\n\r\nI was using the version 0.3.3 before, and I have a code that I use to encode just the first 510 tokens of the sentence. So, at first step I tokenize the sentence then encode it using 'is_pretokenized=True'. But, is_pretokenized parameter is now deprecated. How should I encode a vector of tokens? There is a new way to encode sentences truncating using the 'max_seq_length' value?\r\n\r\nMy current version now is 0.4.1.2.\r\n"
+  },
+  {
+   "title": "Tokenizer arguments not working",
+   "url": "https://github.com/huggingface/sentence-transformers/issues/1432",
+   "state": "open",
+   "comments": 7,
+   "created": "2022-02-19",
+   "body": "Tokenizer arguments aren't working when passing it to Transformers **tokenizer_args**.\r\n\r\n```\r\nMAX_SEQ_LEN = 32\r\ntokenizer_params = {\"padding\": \"max_length\", \"truncation\": True, \"max_length\": MAX_SEQ_LEN}\r\nword_embedding_model = models.Transformer(TSDAE_MODEL_BASE_PATH, \r\n                                          max_seq_length=MAX_SEQ_LEN,\r\n                                          tokenizer_args=tokenizer_params)\r\npooling_model = models.Pooling(word_embedding_model.get_word_embedding_dimension(), 'mean')\r\nmodel = SentenceTransformer(modules=[word_embedding_model, pooling_model])\r\n\r\ninput_ids = model.tokenize([\"check tokens\"])[\"input_ids\"]\r\nprint(len(input_ids))\r\n```\r\nThe output isn't equal to MAX_SEQ_LEN.\r\n\r\nBut the following works \r\n```\r\ninput_ids = model.tokenizer.encode([\"check tokens\"], **tokenizer_params)[\"input_ids\"]\r\nprint(len(input_ids))\r\n```\r\nInternally, the first method is used for computing tokens.\r\nI wanted to create a tokenizer with the above config but tokenize method doesn't allow these configs to be passed as arguments. Static config of `padding=True, truncation='longest_first', return_tensors=\"pt\", max_length=self.max_seq_length` is used. \r\nPlease update this if possible, or guide me if I am missing something.\r\n"
+  }
+ ],
+ "st_prompt": [
+  {
+   "title": "Unstable Training Loss and Model Evaluation",
+   "url": "https://github.com/huggingface/sentence-transformers/issues/3041",
+   "state": "open",
+   "comments": 7,
+   "created": "2024-11-07",
+   "body": "![image](https://github.com/user-attachments/assets/77dd98ab-8a0c-4c40-933e-65f9f6e128f6)\r\n![image](https://github.com/user-attachments/assets/3f61c5dc-2ed9-48dd-895d-a4790c4a4e2c)\r\n\r\nDuring the training of the `multilingual-E5-base` model, I encountered an unstable loss pattern. Previously, I trained and had a stable loss function. I tried changing the model but encountered a similar issue. Could you help me understand what this problem might be?"
+  },
+  {
+   "title": "encode_document() never uses a \"passage\" or \"corpus\" prompt",
+   "url": "https://github.com/huggingface/sentence-transformers/issues/4090",
+   "state": "open",
+   "comments": 2,
+   "created": "2026-09-26",
+   "body": "`encode_document()` looks for a prompt named `\"document\"`, then `\"passage\"`, then `\"corpus\"`, and uses the first one that exists in `model.prompts`. But `SentenceTransformer`, `SparseEncoder` and `MultiVectorEncoder` inject `_default_prompts = {\"query\": None, \"document\": None}` into `model.prompts` at init, and `_validate_prompts` turns the `None` into `\"\"`. So `\"document\"` always exists (as an empty prompt), and `\"passage\"` / `\"corpus\"` are never used.\n\nThis is exactly the example the `prompts` docstring gives (the E5 convention), so documents are silently encoded without their prompt:\n\n```python\nimport numpy as np\nfrom sentence_transformers import SentenceTransformer\n\nmodel = SentenceTransformer(\n    \"sentence-transformers-testing/stsb-bert-tiny-safetensors\",\n    prompts={\"query\": \"query: \", \"passage\": \"passage: \"},\n)\nprint(model.prompts)  # {'query': 'query: ', 'document': '', 'passage': 'passage: '}\n\ndocs = [\"Paris is the capital of France.\"]\nprint(np.allclose(model.encode_document(docs), model.encode(docs, prompt_name=\"passage\")))  # False, expected True\nprint(np.allclose(model.encode_document(docs), model.encode(docs)))                          # True: no prompt used\n```\n\nCode (main @ 4a3b5cd6):\n- https://github.com/huggingface/sentence-transformers/blob/4a3b5cd6/sentence_transformers/sentence_transformer/model.py#L141 and [L529](https://github.com/huggingface/sentence-transformers/blob/4a3b5cd6/sentence_transformers/sentence_transformer/model.py#L529)\n- https://github."
+  }
+ ],
+ "st_normalize": [
+  {
+   "title": "In Batch Negatives",
+   "url": "https://github.com/huggingface/sentence-transformers/issues/3072",
+   "state": "open",
+   "comments": 26,
+   "created": "2024-11-19",
+   "body": "Hi,\r\nis there any way to disable in-batch negatives during training in Sentence Transformers?\r\n\r\nThanks\r\n@tomaarsen "
+  },
+  {
+   "title": "Set a reasonable batch size in the `encode` method",
+   "url": "https://github.com/huggingface/sentence-transformers/issues/2551",
+   "state": "closed",
+   "comments": 17,
+   "created": "2024-03-20",
+   "body": "See my analysis here...\r\n\r\nhttps://github.com/michaelfeil/infinity/discussions/160#discussioncomment-8856128\r\n\r\nEspecially with the larger models, unless a programmer specifies the ```encode kwargs``` - e.g. using ```HuggingFaceEmbeddings``` a default of 32 leads to huge inefficiencies."
+  },
+  {
+   "title": "Encode using FP16",
+   "url": "https://github.com/huggingface/sentence-transformers/issues/822",
+   "state": "open",
+   "comments": 16,
+   "created": "2021-03-18",
+   "body": "Hi,\r\n\r\nIs it possible to encode a text and store it in FP16? I need to store a large number of encoded vectors, taking approx. 2gb in memory and disk so it would be great to be able to reduce that.\r\n\r\nUsing .half() on my vectors result on this error \"clamp_min_cpu\" not implemented for 'Half'"
+  },
+  {
+   "title": "Mixing modalities in `encode()` doesn't work for CLIP",
+   "url": "https://github.com/huggingface/sentence-transformers/issues/3722",
+   "state": "open",
+   "comments": 12,
+   "created": "2026-04-13",
+   "body": "I'm trying to get CLIP to work with the new multimodal setup, and it seems that it misinterprets lists containing multiple modalities as messages:\n\n```python\nfrom datasets import load_dataset\nfrom sentence_transformers import SentenceTransformer\n\nds = load_dataset(\"nbadrinath/ikea_dataset_5.0\", split=\"train[:1000]\")\nimages = list(ds[\"image\"])\ntexts = list(ds[\"desc\"])\nprint(images[0], texts[0])\n# <PIL.JpegImagePlugin.JpegImageFile image mode=RGB size=512x512 at 0x7818178354C0>  Product: Small Outdoor Balcony Set...\n\ninputs = images + texts\nencoder = SentenceTransformer(\"clip-ViT-B-32\")\nencoder.encode(inputs)\n```\n\n```\nValueError                                Traceback (most recent call last)\nCell In[61], line 1\n----> 1 encoder.encode(inputs)\n\nFile ~/.conda/envs/turftopic/lib/python3.12/site-packages/torch/utils/_contextlib.py:120, in context_decorator.<locals>.decorate_context(*args, **kwargs)\n    117 @functools.wraps(func)\n    118 def decorate_context(*args, **kwargs):\n    119     with ctx_factory():\n--> 120         return func(*args, **kwargs)\n\nFile ~/.conda/envs/turftopic/lib/python3.12/site-packages/sentence_transformers/util/decorators.py:41, in deprecated_kwargs.<locals>.decorator.<locals>.wrappe\nr(*args, **kwargs)\n     39         else:\n     40             kwargs.pop(old_name)\n---> 41 return func(*args, **kwargs)\n\nFile ~/.conda/envs/turftopic/lib/python3.12/site-packages/sentence_transformers/sentence_transformer/model.py:644, in SentenceTransformer.encode(self, inputs,\n"
+  },
+  {
+   "title": "Inconsistent encodings with different batch sizes",
+   "url": "https://github.com/huggingface/sentence-transformers/issues/3197",
+   "state": "open",
+   "comments": 11,
+   "created": "2025-01-25",
+   "body": "### Description\nWhen using the `SentenceTransformer.encode()` method, the resulting embeddings appear to be inconsistent depending on the batch_size parameter used. The same input sentences produce different encodings when processed with different batch sizes, which suggests unexpected behavior that could impact downstream applications.\n\n### Minimal Reproducible Example\n```python\nfrom sentence_transformers import SentenceTransformer\n\n# Initialize model\nmodel = SentenceTransformer(\"all-MiniLM-L6-v2\")\n\n# Create identical test sentences\nsentences = [\"test test\"] * 100\n\n# Encode with different batch sizes\nencodings_batch_64 = model.encode(sentences, batch_size=64)\nencodings_batch_1 = model.encode(sentences, batch_size=1)\n\n# Check if encodings are identical\nassert (encodings_batch_64 == encodings_batch_1).all()  # AssertionError\n```\n\n### Expected Behavior\nThe encodings should be identical regardless of the batch size used, as the same model is processing the same input sentences.\n\n### Actual Behavior\nThe encodings differ when using different batch sizes, suggesting that the batch processing might be affecting the model's output in an unexpected way.\n\n### Environment Information\n- sentence-transformers version: 3.4.0\n- Python version: 3.12.5\n- Operating System: Windows\n- Model: all-MiniLM-L6-v2\n\n### Additional Notes\n- This behavior could potentially impact applications where consistent embeddings are crucial, such as similarity search or clustering.\n- The issue appears to be reprod"
+  },
+  {
+   "title": "Constantly zero (or near zero) elements of the vectors of some of the older models",
+   "url": "https://github.com/huggingface/sentence-transformers/issues/2662",
+   "state": "closed",
+   "comments": 8,
+   "created": "2024-05-22",
+   "body": "Hey team,\r\n\r\nwe noticed that some of the vectors of older models contain only zeroes or near zeros at certain vector positions. For example:\r\n\r\n- `sentence-transformers/all-mpnet-base-v2` - elements 34, 555, 688 and 756\r\n- `sentence-transformers/all-distilroberta-v1` - element 494\r\n- `sentence-transformers/all-MiniLM-L12-v2` - elements 223 and 319\r\n- `sentence-transformers/all-MiniLM-L6-v2` - elements 127, 223, 319\r\n\r\nI just wanted to check if that behaviour is known/expected. \r\n\r\nCode to reproduce:\r\n```\r\nimport pandas as pd\r\nfrom sentence_transformers import SentenceTransformer\r\n\r\nsentences = [\r\n    \"'To Kill a Mockingbird' is a novel by Harper Lee published in 1960. It was immediately successful, winning the Pulitzer Prize, and has become a classic of modern American literature.\",\r\n    \"The novel 'Moby-Dick' was written by Herman Melville and first published in 1851. It is considered a masterpiece of American literature and deals with complex themes of obsession, revenge, and the conflict between good and evil.\",\r\n    \"Harper Lee, an American novelist widely known for her novel 'To Kill a Mockingbird', was born in 1926 in Monroeville, Alabama. She received the Pulitzer Prize for Fiction in 1961.\",\r\n    \"Jane Austen was an English novelist known primarily for her six major novels, which interpret, critique and comment upon the British landed gentry at the end of the 18th century.\",\r\n    \"The 'Harry Potter' series, which consists of seven fantasy novels written by British aut"
+  },
+  {
+   "title": "[CLIP]  'clip-ViT-B-32' can we not change the max_seq_lenght?",
+   "url": "https://github.com/huggingface/sentence-transformers/issues/1269",
+   "state": "closed",
+   "comments": 7,
+   "created": "2021-11-19",
+   "body": "Hi,\r\n\r\nI am playing with the clip model. Can not we change the maximum sequence length of the clip model? I was trying to encode quora_duplicate_questions (that have some \"long\" sentences > 77). I borrowed the code from [here](https://github.com/UKPLab/sentence-transformers/blob/master/examples/applications/semantic-search/semantic_search_quora_hnswlib.py)\r\n\r\nThe code to reproduce the issues:\r\n<details>\r\n  <summary>Click to expand!</summary>\r\n  \r\n  <p>\r\n\r\n```\r\nfrom sentence_transformers import SentenceTransformer, util\r\nimport os\r\nimport csv\r\nimport pickle\r\nimport time\r\nimport hnswlib\r\n\r\n\r\nmodel_name = 'clip-ViT-B-32'\r\nmodel = SentenceTransformer(model_name)\r\nmodel.max_seq_length = 512\r\n\r\nurl = \"http://qim.fs.quoracdn.net/quora_duplicate_questions.tsv\"\r\ndataset_path = \"quora_duplicate_questions.tsv\"\r\nmax_corpus_size = 100000\r\n\r\nembedding_cache_path = 'quora-embeddings-{}-size-{}.pkl'.format(\r\n    model_name.replace('/', '_'), max_corpus_size)\r\n\r\n\r\nembedding_size = 512  # Size of embeddings\r\ntop_k_hits = 10  # Output k hits\r\n\r\n# Check if embedding cache path exists\r\nif not os.path.exists(embedding_cache_path):\r\n    # Check if the dataset exists. If not, download and extract\r\n    # Download dataset if needed\r\n    if not os.path.exists(dataset_path):\r\n        print(\"Download dataset\")\r\n        util.http_get(url, dataset_path)\r\n\r\n    # Get all unique sentences from the file\r\n    corpus_sentences = set()\r\n    with open(dataset_path, encoding='utf8') as fIn:\r\n        reader = csv.D"
+  },
+  {
+   "title": "Changing Encoding Precision Yields error.",
+   "url": "https://github.com/huggingface/sentence-transformers/issues/3121",
+   "state": "closed",
+   "comments": 7,
+   "created": "2024-12-06",
+   "body": "When I run the following code, I get an error \"RuntimeError: linalg.vector_norm: Expected a floating point or complex tensor as input. Got Char\" I do not understand how this can be, since the output is a number, and not a char...\r\n\r\n\r\n```python\r\nfrom sentence_transformers import SentenceTransformer\r\nfrom datasets import Dataset\r\nimport json, os, torch\r\n\r\n\r\ndevice = torch.device(\"cuda\" if torch.cuda.is_available() else \"cpu\")\r\nmodel = SentenceTransformer('multi-qa-mpnet-base-cos-v1')\r\nprint('start encoding')\r\nsentences = [\r\n    \"The weather is so nice!\",\r\n    \"It's so sunny outside.\",\r\n    \"He's driving to the movie theater.\",\r\n    \"She's going to the cinema.\",\r\n]\r\n\r\nembeddings = model.encode(sentences, show_progress_bar=True, \r\n        precision='int8')\r\nprint(embeddings)\r\nprint(type(embeddings))\r\nprint(model.similarity(embeddings, embeddings))\r\n\r\n```"
+  }
+ ],
+ "st_fp16": [
+  {
+   "title": "In Batch Negatives",
+   "url": "https://github.com/huggingface/sentence-transformers/issues/3072",
+   "state": "open",
+   "comments": 26,
+   "created": "2024-11-19",
+   "body": "Hi,\r\nis there any way to disable in-batch negatives during training in Sentence Transformers?\r\n\r\nThanks\r\n@tomaarsen "
+  },
+  {
+   "title": "How to reproduce ms marco dense embeddings models?",
+   "url": "https://github.com/huggingface/sentence-transformers/issues/705",
+   "state": "closed",
+   "comments": 18,
+   "created": "2021-01-20",
+   "body": "Hi,\r\n\r\nRecently, you have pushed by a large margin the MRR score of Ms Marco dense embeddings scores.\r\nThere is a script to train the model in this repo (https://github.com/UKPLab/sentence-transformers/blob/master/examples/training/ms_marco/train_bi-encoder.py) and I am wondering if there are other things you use to push results?\r\n\r\nI am asking as I work on a large private dataset (700K q/a), I am using the scripts here (bi and cross), cross encoder provides an accuracy score 12 points better than bi-encoder. In end to end setup, Elasticsearch (no boost, no trick, just stemming) + cross encoding provides much better results than dense embedding + cross encoding (with brute force search, so no issue with approx search).\r\n\r\nI have tried tricks to increase the batch size of the bi-encoder (24Gb GPU RAM), for instance with \"gradient checkpointing\", I can go from 48 to 256 examples per batch (btw it would be a nice add it to the bi encoder script, training will be around 20-30% slower but who cares :-) ), it provides some improvement (+3 points of classification accuracy), but it does not seem enough to come close to cross encoding results. I am quite sure that the new release of [deepspeed](https://github.com/microsoft/DeepSpeed/) can help to increase batch size, probably around 400 something examples by off loading stuff to the host memory, but I am also quite sure that it won't be enough to provide what is required to be useful in end to end setup. Same with playing with the le"
+  },
+  {
+   "title": "Find the closest 5 sentences of the corpus for each query sentence based on cosine similarity",
+   "url": "https://github.com/huggingface/sentence-transformers/issues/852",
+   "state": "open",
+   "comments": 14,
+   "created": "2021-04-02",
+   "body": "Hi there,\r\n\r\nI want to exploit semantic search through cosine similarity and to do so, I have prepared the following datasets:\r\n\r\n> Queries: <class 'list'> 179435\r\n> Corpus embeddings: <class 'numpy.ndarray'> (31257735, 128)\r\n> Corpus: <class 'list'> 31257735\r\n\r\n \r\nAlthough I could run the same code on Google Colab (different embedding size: 768), pytorch_cos_sim stuck and threw the following error on the server:\r\n```\r\n---------------------------------------------------------------------------\r\nRuntimeError                              Traceback (most recent call last)\r\n<ipython-input-18-9f8d1c8ab6d4> in <module>\r\n      5 \r\n      6     # We use cosine-similarity and torch.topk to find the highest 5 scores\r\n----> 7     cos_scores = util.pytorch_cos_sim(query_embedding, corpus_embeddings)[0]\r\n      8     top_results = torch.topk(cos_scores, k=top_k)\r\n      9 \r\n\r\n~/anaconda3/envs/method2/lib/python3.8/site-packages/sentence_transformers/util.py in pytorch_cos_sim(a, b)\r\n     19     :return: Matrix with res[i][j]  = cos_sim(a[i], b[j])\r\n     20     \"\"\"\r\n---> 21     return cos_sim(a, b)\r\n     22 \r\n     23 def cos_sim(a: Tensor, b: Tensor):\r\n\r\n~/anaconda3/envs/method2/lib/python3.8/site-packages/sentence_transformers/util.py in cos_sim(a, b)\r\n     40     a_norm = torch.nn.functional.normalize(a, p=2, dim=1)\r\n     41     b_norm = torch.nn.functional.normalize(b, p=2, dim=1)\r\n---> 42     return torch.mm(a_norm, b_norm.transpose(0, 1))\r\n     43 \r\n     44 \r\n\r\nRuntimeError: Tensor for a"
+  },
+  {
+   "title": "Fine-tuning StaticEmbedding model with multilingual dataset is unexpectedly slow",
+   "url": "https://github.com/huggingface/sentence-transformers/issues/3281",
+   "state": "closed",
+   "comments": 14,
+   "created": "2025-03-24",
+   "body": "I'm observing unexpected performance degradation when fine-tuning a StaticEmbedding model on a multilingual dataset compared to a single-language dataset. Training time increases dramatically beyond what would be expected from the dataset size increase alone.\n\n## Details\n\n- Single language: Training on only the German dataset takes ~0.5 hours for one epoch\n- All languages: Training on all 7 languages takes ~24 hours for one epoch\n- Expected behavior: Given the relative sizes of the datasets, I would expect a roughly linear increase in training time\nActual behavior: The training time for the multilingual dataset is disproportionately longer\n\n## Environment\n\n- StaticEmbedding model: `intfloat/multilingual-e5-large`\n- Training infrastructure: Nvidia Tesla T4\n- Training and code inspired by issue: #2982 \n\n## Questions\n\nIs this performance degradation expected when using multiple languages?\nAre there any recommended optimizations for multilingual fine-tuning?\nCould there be a specific bottleneck in the processing pipeline when handling multiple languages?\n\n## Additional Information\n\nThats my dataset dict structure:\n```\n{'de': Dataset({\n    features: ['anchor', 'positive'],\n    num_rows: 5731565\n}), 'pl': Dataset({\n    features: ['anchor', 'positive'],\n    num_rows: 545976\n}), 'ch_fr': Dataset({\n    features: ['anchor', 'positive'],\n    num_rows: 236071\n}), 'sk': Dataset({\n    features: ['anchor', 'positive'],\n    num_rows: 468963\n}), 'hu': Dataset({\n    features: ['anchor', 'posit"
+  },
+  {
+   "title": "sentence-transformers does not pick torch_dtype from model config",
+   "url": "https://github.com/huggingface/sentence-transformers/issues/2579",
+   "state": "closed",
+   "comments": 11,
+   "created": "2024-04-06",
+   "body": "Hi,\r\n\r\nSentenceTransformers does not use the torch_dtype specified in the model config. New models like [e5-mistral-7b-instruct](https://huggingface.co/intfloat/e5-mistral-7b-instruct) are larger in size and use FP16 as the dtype. However, when loaded using SentenceTransformers, the model is loaded with FP32 dtype. \r\n\r\nThis is because HF transformers uses FP32 as the default unless torch_dtype='auto' is passed, as mentioned [here](https://huggingface.co/docs/transformers/en/main_classes/model#transformers.PreTrainedModel.from_pretrained.torch_dtype).\r\n\r\nI've tried to fix the issue in https://github.com/UKPLab/sentence-transformers/pull/2578.\r\n\r\nThank you"
+  },
+  {
+   "title": "Has the inference been speed-up already?",
+   "url": "https://github.com/huggingface/sentence-transformers/issues/628",
+   "state": "closed",
+   "comments": 9,
+   "created": "2020-12-16",
+   "body": "Hi, I'd like to ask when using `model.encode` (the code is shown below), if the inference process is speed-up\uff1fIf it is, is it with tensorFT or other methods? \r\n\r\nAlso, what is the approximate max QPS when we are doing inference on the production environment\uff1fThank you in advance!\r\n\r\n```\r\nmodel = SentenceTransformer('xlm-r-distilroberta-base-paraphrase-v1')\r\nsentence_embeddings = model.encode(text)\r\n```"
+  },
+  {
+   "title": "Tuning two models",
+   "url": "https://github.com/huggingface/sentence-transformers/issues/3239",
+   "state": "open",
+   "comments": 8,
+   "created": "2025-02-18",
+   "body": "Hello!\n\nWhat would be the easiest way to train two models with MultipleNegativesRankingLoss?\n\nI would like to use two models, one for anchors, one for positives. I'm currently training a single model for both, and I wonder if I could increase the performance by splitting into two.\n\nWould I have to write a custom trainer?\n\nMany thanks!"
+  },
+  {
+   "title": "Gradual slowdown of training in bigger batch sizes",
+   "url": "https://github.com/huggingface/sentence-transformers/issues/3050",
+   "state": "open",
+   "comments": 7,
+   "created": "2024-11-11",
+   "body": "I am facing a very weird issue here. \r\n\r\n### Issue\r\n- The training speed slows down with time for batch sizes 64 and 128. For batch size 32 it seems to be staying fairly constant.\r\n- The tensorboard graph for epoch/time (batch size based on color: yellow - 32, purple - 64, green - 128):\r\n<img width=\"481\" alt=\"image\" src=\"https://github.com/user-attachments/assets/471391be-4814-45dd-b480-95e58674f36a\">\r\n\r\nAs you can see the training slows down for larger batches.\r\n\r\n### Experiment Details\r\n- I am training a Stella-400M model on MNR loss\r\n- Using 4 A100 to train, using Deepspeed Zero- Stage 2\r\n\r\n### Training Code\r\n```import logging\r\nimport traceback\r\nfrom datetime import datetime\r\n# from accelerate.logging import get_logger\r\n# logging = get_logger(__name__, log_level=\"INFO\")\r\n\r\n\r\nfrom datasets import Dataset, load_dataset\r\nfrom datasets.utils.logging import disable_progress_bar, enable_progress_bar\r\nenable_progress_bar()\r\n# disable_progress_bar()\r\n\r\nfrom peft import LoraConfig, get_peft_model\r\nfrom peft import PeftConfig, PeftModel\r\n\r\nfrom transformers import AutoModel, AutoTokenizer, AutoConfig, TrainerCallback, get_linear_schedule_with_warmup\r\n\r\nfrom sentence_transformers import SentenceTransformer\r\nfrom sentence_transformers.models import Transformer, Pooling\r\nfrom sentence_transformers.evaluation import SentenceEvaluator\r\nfrom sentence_transformers.losses import MultipleNegativesRankingLoss, GISTEmbedLoss\r\nfrom sentence_transformers.trainer import SentenceTransformerTrainer"
+  }
+ ],
+ "st_crossencoder_trunc": [
+  {
+   "title": "TypeError: __call__() got multiple values for argument 'padding'",
+   "url": "https://github.com/huggingface/sentence-transformers/issues/1044",
+   "state": "open",
+   "comments": 3,
+   "created": "2021-07-02",
+   "body": "@nreimers While training of cross encoder I am getting this error. Training is completed and while evaluation starts this error pops up. What is the solution to this?\r\n"
+  },
+  {
+   "title": "CrossEncoder RuntimeError during torch.jit.trace: Cannot insert a Tensor that requires grad as a constant",
+   "url": "https://github.com/huggingface/sentence-transformers/issues/3012",
+   "state": "open",
+   "comments": 3,
+   "created": "2024-10-23",
+   "body": "I encountered an issue when attempting to trace a CrossEncoder model using torch.jit.trace. The error occurs during the tracing process when calling the forward method. Below is a minimal reproducible code example and the error message.\r\n\r\n```\r\nimport torch\r\nimport onnx \r\nimport torch.nn.functional as F\r\nfrom torch import nn\r\n\r\nfrom sentence_transformers import CrossEncoder\r\n\r\nclass CategoryMatcher(nn.Module):\r\n    def __init__(self, path_to_weights, encoder_max_lengths):\r\n        super().__init__()\r\n        self.model = CrossEncoder(path_to_weights, max_length=encoder_max_lengths)\r\n\r\n    def forward(self, input_ids, attention_mask):\r\n        with torch.no_grad():\r\n            output = self.model.model(input_ids=input_ids, attention_mask=attention_mask)\r\n\r\n        return torch.sigmoid(output.logits)\r\n        \r\n    \r\ncategory_matcher = CategoryMatcher(\"/Users/a.mitrokhin/work/baga/category-matcher/1/category-matcher\", 512)\r\ncategory_matcher.eval()\r\n\r\ncategory_name = \"Winter\"\r\ngood_name = \"Winter is comming\"\r\ntexts=[(category_name, good_name)]\r\n\r\nencoded_input = category_matcher.model.tokenizer(texts, return_tensors=\"pt\", padding=True, truncation=True)\r\ninput_ids = encoded_input[\"input_ids\"].detach()\r\nattention_mask = encoded_input[\"attention_mask\"].detach()\r\n\r\nscripted_model = torch.jit.trace(category_matcher, example_inputs=(input_ids, attention_mask))\r\ntorch.jit.save(scripted_model, \"./category-matcher.pt\")\r\n```\r\n\r\n```\r\nTraceback (most recent call last):\r\n  File \"/Users/a.mi"
+  },
+  {
+   "title": "using cross-encoder",
+   "url": "https://github.com/huggingface/sentence-transformers/issues/772",
+   "state": "open",
+   "comments": 2,
+   "created": "2021-02-23",
+   "body": "Hi,\r\nin using cross-encoder for predicting, I got this :\r\n\r\nAsking to truncate to max_length but no maximum length is provided and the model has no predefined maximum length. Default to no truncation.\r\n\r\nhow can I avoid this?"
+  },
+  {
+   "title": "Should there be a scaling method for MarginMSE?",
+   "url": "https://github.com/huggingface/sentence-transformers/issues/3540",
+   "state": "open",
+   "comments": 1,
+   "created": "2025-10-05",
+   "body": "Hi, @tomaarsen \nI was wondering if there should be a scaling trick for using MarginMSE Loss.\n\nWhile I was trying the knowledge distillation from cross-encoder (Qwen3-Reranker-0.6B) to a SPLADE model, I found that due to `activation_fn` the scores get scaled between 0 and 1.\n```python\nimport torch\nfrom transformers import AutoModel, AutoTokenizer, AutoModelForCausalLM\n\ndef format_instruction(instruction, query, doc):\n    if instruction is None:\n        instruction = 'Given a web search query, retrieve relevant passages that answer the query'\n    output = \"<Instruct>: {instruction}\\n<Query>: {query}\\n<Document>: {doc}\".format(instruction=instruction,query=query, doc=doc)\n    return output\n\ndef process_inputs(pairs):\n    inputs = tokenizer(\n        pairs, padding=False, truncation='longest_first',\n        return_attention_mask=False, max_length=max_length - len(prefix_tokens) - len(suffix_tokens)\n    )\n    for i, ele in enumerate(inputs['input_ids']):\n        inputs['input_ids'][i] = prefix_tokens + ele + suffix_tokens\n    inputs = tokenizer.pad(inputs, padding=True, return_tensors=\"pt\", max_length=max_length)\n    for key in inputs:\n        inputs[key] = inputs[key].to(model.device)\n    return inputs\n\n\ndef compute_logits(inputs, **kwargs):\n    batch_scores = model(**inputs).logits[:, -1, :]\n    true_vector = batch_scores[:, token_true_id]\n    false_vector = batch_scores[:, token_false_id]\n    batch_scores = torch.stack([false_vector, true_vector], dim=1)\n    batch_scores = torch"
+  },
+  {
+   "title": "TypeError: Cant convert sample to PyBool Using MultipleNegativeRankingLoss ",
+   "url": "https://github.com/huggingface/sentence-transformers/issues/1359",
+   "state": "closed",
+   "comments": 0,
+   "created": "2022-01-05",
+   "body": "I have trainexamples in the folowing shape: \r\n[\r\nInputExample(texts=[A1,P1,N1], \r\nInputExample(texts=[A2,P2,N2],\r\n... \u200b\r\nInputExample(texts=[An,Pn,Nn]\r\n]\r\n\r\nThe  following code produce\r\n\r\n```\r\nmodel = CrossEncoder('cross-encoder/stsb-roberta-base', device='cuda')\r\ntrain_dataloader = DataLoader(train_examples, shuffle=True)\r\n\r\nmodel.fit(\r\n   \u200btrain_dataloader=train_dataloader,\r\n   \u200bepochs=10,\r\n   \u200bloss_fct = MultipleNegativesRankingLoss,\r\n   )\r\n\r\n```\r\nTypeError                                 Traceback (most recent call last)\r\n<ipython-input-178-1c61f3f44cd3> in <module>()\r\n      6     train_dataloader=train_dataloader,\r\n      7     epochs=10,\r\n----> 8     loss_fct = MultipleNegativesRankingLoss,\r\n      9 )\r\n\r\n10 frames\r\n/usr/local/lib/python3.7/dist-packages/transformers/tokenization_utils_fast.py in _batch_encode_plus(self, batch_text_or_text_pairs, add_special_tokens, padding_strategy, truncation_strategy, max_length, stride, is_split_into_words, pad_to_multiple_of, return_tensors, return_token_type_ids, return_attention_mask, return_overflowing_tokens, return_special_tokens_mask, return_offsets_mapping, return_length, verbose)\r\n    410             batch_text_or_text_pairs,\r\n    411             add_special_tokens=add_special_tokens,\r\n--> 412             is_pretokenized=is_split_into_words,\r\n    413         )\r\n    414 \r\n\r\nTypeError: Can't convert ['Institution: SANFORD ABERDEEN MED CENTER Subtype: Hospitals (non-federal) including pharmacy, departments, clinics & doctors at "
+  }
+ ],
+ "weaviate_hybrid": [
+  {
+   "title": "BM25",
+   "url": "https://github.com/weaviate/weaviate/issues/1798",
+   "state": "closed",
+   "comments": 15,
+   "created": "2022-01-24",
+   "body": "This issue is a WIP!\r\n\r\n## Background\r\n\r\nThis issue is not about any user-facing features of BM25. The general idea is that we want to develop user-facing features that make use of BM25 and therefore being able to perform BM25 searches becomes a requirement. This issue is about creating this functionality.\r\n\r\n## Overview\r\n\r\nLooking at the Lucene implementation we can see that to calculate the score we need to following values:\r\n```\r\n\u201ctf, computed as freq / (freq + k1 * (1 \u2014 b + b * dl / avgdl)) from:\u201d\r\n\u201cidf, computed as log(1 + (N \u2014 n + 0.5) / (n + 0.5)) from:\u201d\r\n```\r\n\r\nLooking at the individual parameters they are defined as follows:\r\n\r\n| param | Explanation | Source |\r\n|---|---|---|\r\n| `freq` | Frequency of term in each doc | \u2705 analysis at import time, contained in inverted index result array element |\r\n| `k1` | Static parameter to control | :x: default value from schema |\r\n| `b` | Static parameter to control | :x: default value from schema |\r\n| `dl` | Document / field length | :x: |\r\n| `avgdl` | Mean document length | :x: |\r\n| `N` | Number of total docs in the index | :x: |\r\n| `n` | Number of matching docs for a particular term | \u2705 len of inverted index result array | \r\n\r\nAnything marked with a :x: is something that's not currently present in Weaviate and needs to be added, see below.\r\n\r\n## Requirements\r\n\r\n### Static parameters `k1` and `b`\r\nThe assumption is that they rarely change. ~During development, they could be fixed in the code and eventually made part of the schema"
+  },
+  {
+   "title": "RelativeScoreFusion not working with BM25 results in hybrid search",
+   "url": "https://github.com/weaviate/weaviate/issues/3243",
+   "state": "closed",
+   "comments": 8,
+   "created": "2023-07-10",
+   "body": "When i try to do a hybrid search with a relativeScoreFusion, an alpha of 0.5 and a autocut of 1. Only vector results are returned in the result set. But i also want to have all the keyword results. Is this a bug or is this done on purpose?\r\n\r\nFor example:\r\n\r\nAlpha: 0.5\r\nfusionType: rankedFusion\r\nquery: \"Example 1\"\r\nresults set 1:\r\n- Example 1 (BM25)\r\n- Example 2 (Vector)\r\n- Example 3 (Vector)\r\n- Example 4 (Vector)\r\n- Example 5 (Vector)\r\n- Example 6 (Vector)\r\n\r\nAlpha: 0.5\r\nfusionType: relativeScoreFusion\r\nquery: \"Example 1\"\r\nresults set 1:\r\n- Example 2 (Vector)\r\n- Example 3 (Vector)\r\n- Example 4 (Vector)"
+  },
+  {
+   "title": "Expose structured hybrid fusion score components",
+   "url": "https://github.com/weaviate/weaviate/issues/13690",
+   "state": "open",
+   "comments": 4,
+   "created": "2026-10-30",
+   "body": "### Describe your feature request\n\n### Problem\n\nHybrid search returns a combined `score` and an optional `explainScore`, but the latter is a formatted string rather than structured data.\n\nThis means applications that want to understand how BM25 and vector search contributed to a result have to parse the explanation string. That's fragile and makes it harder to use this information for metrics, debugging, or ranking analysis.\n\n### Proposed feature\n\nExpose optional structured metadata with the contribution of each search branch to the final hybrid score.\n\nFor each branch, the metadata should show whether the result was present in that branch's result set and how much that branch contributed to the fused score.\n\nThe values should reflect the actual fusion algorithm:\n- `FusionRanked`: the weighted reciprocal-rank contribution, not the original BM25 or vector score.\n- `FusionRelativeScore`: the normalized branch score after applying its weight.\n\nThe two algorithms have different scoring semantics, so the metadata should make that distinction clear rather than exposing a generic score field with different meanings.\n\n### Expected behavior\n\n- Branch contributions should add up to the score produced by fusion, within floating-point precision.\n- Contributions should represent the fusion result before any subsequent reranking or boosts.\n- A result missing from one branch should be distinguishable from one that was present but contributed zero.\n- Existing `score` and `explainScore` behav"
+  },
+  {
+   "title": "Proposal: Named Vector Properties",
+   "url": "https://github.com/weaviate/weaviate/issues/3501",
+   "state": "closed",
+   "comments": 4,
+   "created": "2023-09-05",
+   "body": "This proposal is to allow Named Vector Properties.\r\n\r\nA named vector property acts like a normal property and has `dataType = vector`.\r\nTwo main use-cases are anticipated:\r\n\r\n1. A user has multiple versions of vectors and wants to avoid creating multiple classes.\r\n2. A user has different vectors relating to a single object (such a title vector and a content vector).\r\n\r\nThis proposal does not cover the multi-dimensional vector case (for instance an array of text chunks relating to one large document).\r\n\r\n### Object operations\r\n\r\n`/v1/schema` creation will be modified for a new `vector` dataType:\r\n\r\n```bash\r\ncurl \\\r\n    -X POST \\\r\n    -H \"Content-Type: application/json\" \\\r\n    -d '{\r\n        \"class\": \"Article\",\r\n        \"properties\": [\r\n            {\r\n                \"dataType\": [\r\n                    \"vector\"\r\n                ],\r\n                \"name\": \"titleVec\"\r\n            },\r\n            {\r\n                \"dataType\": [\r\n                    \"vector\"\r\n                ],\r\n                \"name\": \"contentVec\"\r\n            },\r\n            {\r\n                \"dataType\": [\r\n                    \"text\"\r\n                ],\r\n                \"name\": \"content\"\r\n            }\r\n        ]\r\n    }' \\\r\n    http://localhost:8080/v1/schema\r\n```\r\n\r\n`/v1/objects` Will still allow the root vector as normal and will validate `vector` types as float point arrays.\r\n\r\n```bash\r\ncurl \\\r\n    -X POST \\\r\n    -H \"Content-Type: application/json\" \\\r\n    -d '{\r\n      \"class\": \"Article\",\r\n      \"vector\": [0."
+  },
+  {
+   "title": "Hybrid search filters seem ineffective for strict pre-filtering",
+   "url": "https://github.com/weaviate/weaviate/issues/7681",
+   "state": "closed",
+   "comments": 3,
+   "created": "2025-03-29",
+   "body": "### How to reproduce this bug?\n\n1.  **Setup:**\n    *   Weaviate Server Version: 1.28.3 (also observed on 1.24.1)\n    *   Client: Python `weaviate-client` v4.x (e.g., 4.10.2)\n    *   Schema: A collection (e.g., \"Document\") with properties like `content` (text) and `source` (text, tokenization=keyword).\n        ```json\n        {\n          \"class\": \"Document\",\n          \"properties\": [\n            {\"name\": \"content\", \"dataType\": [\"text\"]},\n            {\"name\": \"source\", \"dataType\": [\"text\"], \"tokenization\": \"keyword\"}\n          ],\n          \"vectorizer\": \"text2vec-openai\" \n        }\n        ```\n2.  **Data:** Add documents where some share content relevant to a query but have different `source` values.\n    ```python\n    docs_to_index = [\n        {\"content\": \"Document A about filtering, from 2023.\", \"properties\": {\"source\": \"source-A\"}},\n        {\"content\": \"Document B also about filtering, from 2024.\", \"properties\": {\"source\": \"source-B\"}},\n        {\"content\": \"Document C from source A, useful for filtering tests.\", \"properties\": {\"source\": \"source-A\"}},\n    ]\n    # ... code to insert docs ...\n    ```\n3.  **Query:** Run a hybrid search with a filter for `source == \"source-A\"`.\n    ```python\n    import weaviate.classes.query as wvc\n\n    collection = client.collections.get(\"Document\") \n    query_text = \"filtering\"\n    query_embedding = # ... get embedding for query_text ...\n    weaviate_filter = wvc.Filter.by_property(\"source\").equal(\"source-A\")\n    \n    response = collection.query"
+  },
+  {
+   "title": "Mismatch in Vector Dimensions During Hybrid Search vs Vector Search",
+   "url": "https://github.com/weaviate/weaviate/issues/6873",
+   "state": "closed",
+   "comments": 3,
+   "created": "2025-01-10",
+   "body": "### How to reproduce this bug?\n\nPerforming a hybrid search triggers a vector dimension mismatch error despite the fact that same query on Vector Search does not.\r\n\r\n`Error: vector search: knn search: distance between entrypoint and query node: 3072 vs 1536: vector lengths don't match`\r\n\r\n**Steps to reproduce**\r\n\r\n- Running nearText() Search:\r\n\r\n```\r\nfrom weaviate.classes.query import MetadataQuery\r\n\r\n\r\ncol = client.collections.get(\"<COL>\").with_tenant(\"<TENANT>\")\r\nresponse = col.query.near_text(\r\n    query=\"<Query>\",\r\n    limit=2,\r\n    return_metadata=MetadataQuery(distance=True)\r\n)\r\n\r\nfor o in response.objects:\r\n    print(o.properties)\r\n    print(o.metadata.distance)\r\n\r\n```\r\n\r\nThis query executes successfully and retrieves results without errors.\r\n\r\n- Running hybrid() Search:\r\n\r\n```\r\n\r\nfrom weaviate.classes.query import MetadataQuery, HybridFusion\r\ncol = client.collections.get(\"<COL>\").with_tenant(\"<TENANT>\")\r\nresponse = col.query.hybrid(\r\n    query=\"<QUERY>\",\r\n    alpha=0.3,\r\n    fusion_type=HybridFusion.RANKED\r\n)\r\n\r\nfor o in response.objects:\r\n    print(o.properties)\r\n    print(o.metadata.distance)\r\n```\r\n\r\nThis triggers the dimension mismatch error mentioned above. Despite in above near_text it works without error on same collection and tenant!\r\n\r\n**Weaviate Client Version: 4.10.2\r\nWeaviate Server Version: 1.28.2**\r\n\r\nSchema Validation:\r\n\r\nThe schema configuration was checked, and the vectorizer configuration (Vectorizer Config) is correct with 3072 dimensions.\r\n<img width"
+  },
+  {
+   "title": "Hybrid Search Scoring improvements with small limits (Overfetching)",
+   "url": "https://github.com/weaviate/weaviate/issues/3317",
+   "state": "closed",
+   "comments": 3,
+   "created": "2023-07-31",
+   "body": "With small limits, minor changes to the limit can lead to differences in Hybrid scoring and therefore different results and scores. With the new oversearch capability for Hybrid Search the internal search limit is higher than the user-specified one and results are cut-off at the end. This stabilizes results when limits change."
+  },
+  {
+   "title": "BM25 results are merged incorrectly into hybrid search results",
+   "url": "https://github.com/weaviate/weaviate/issues/10350",
+   "state": "open",
+   "comments": 2,
+   "created": "2026-01-20",
+   "body": "## TL;DR: \nHybrid search: BM25 results not returned with any `alpha`, even though pure BM25 finds exact match\n\n## Summary\nWhen using hybrid search with a small `max_vector_distance` and any `alpha`, BM25 results are not returned, even though:\n\n- Pure BM25 search returns an exact match for the same query and property.\n- Hybrid search with a larger `max_vector_distance` does return that same object. \n\n## Environment\nWeaviate version: 4.19\nDeployment: semitechnologies/weaviate:1.31.3\nClient: Python, 3.11\n\n## Expected behavior (based on docs)\nAccording to the hybrid search documentation:\n\n- Hybrid search runs vector search and BM25 in parallel, then fuses the results.\n- `max_vector_distance`  \"applies only to the vector search component of the hybrid search\u201d \n\nTherefore, even if the vector component returns no candidates due to a strict `max_vector_distance`, BM25 should still be able to contribute its own candidates (e.g., an exact match on field_name) to the fused hybrid result set.\n\n## To reproduce\n- create a small test data set, with fields you expect to return easily \n- you can trigger this by playing with the value:\n   - reducing `alpha` to 0.0 which is pure bm25 search,\n   - reduce `max_vector_distance=0.0` so that no results are accidentally merged in by vector similiarity \n   \n```\nhybrid_result = my_collection.query.hybrid(\n            vector=query_embedding,\n            query=\"MY_EXACT_FIELD_NAME\",\n            bm25_operator=BM25Operator.or_(minimum_match=1),\n           "
+  }
+ ],
+ "weaviate_missing": [
+  {
+   "title": "Runtime Property Reindex",
+   "url": "https://github.com/weaviate/weaviate/issues/10675",
+   "state": "open",
+   "comments": 39,
+   "created": "2026-03-05",
+   "body": "## Goal\n\nTurn property reindexing into a fully runtime operation \u2014 no shard restart required. Then generalize beyond the current Map\u2192Blockmax case.\n\n## How it works today (requires restart)\n\n1. Register double-write callbacks so new writes go to both main and ingest buckets\n2. Background goroutine iterates all objects, writes to a `__reindex` bucket\n3. When done, trigger a **shard restart** (`IncomingReinitShard`)\n4. On restart: merge reindex segments into ingest, swap ingest\u2192main via dir renames, clean up\n\n## How it should work (runtime, no restart)\n\nSteps 1\u20132 stay the same. Then instead of restarting:\n\n3. Merge reindex segments into the ingest bucket at runtime (`PrependSegmentsFromBucket`)\n4. Atomically swap the ingest bucket into the main bucket's slot (`SwapBucketPointer`)\n5. Deregister the double-write callbacks (no longer needed)\n6. Clean up temporary buckets, write sentinel files for crash recovery\n7. On next restart (whenever it happens): finalize directory names, remove backups\n\n## Progress\n\n### Runtime swap (Map\u2192Blockmax)\n\n- [x] Runtime segment prepend \u2014 `PrependSegmentsFromBucket` #10666\n- [x] Runtime bucket swap \u2014 `SwapBucketPointer` + `FinalizeBucketSwap` #10667\n- [x] Callback deregistration \u2014 copy-on-write callback slices #10684\n- [ ] Crash-during-swap edge cases (sentinel files, recovery logic)\n- [ ] Make sure sentinel files are included in backups\n- [x] Wire it together \u2014 update the migrator to perform merge\u2192swap\u2192cleanup at runtime instead of returning `reloa"
+  },
+  {
+   "title": "[Feature Request] Add \"Not\" operator in filter to support \"Not Like\" etc. in Get queries",
+   "url": "https://github.com/weaviate/weaviate/issues/3683",
+   "state": "closed",
+   "comments": 37,
+   "created": "2023-10-27",
+   "body": "It looks like a previously faulty not operator was removed: https://github.com/weaviate/weaviate/pull/3360\r\n\r\nBut I can't see any way to filter a search by excluding some matching criteria. For example, I want to exclude embedded chunks that are from a particular domain name, so I want to essentially invert this Like:\r\n\r\n```\r\nconst response = await client.graphql\r\n  .get()\r\n  .withClassName('Snippet')\r\n  .withFields('text')\r\n  .withWhere({\r\n    path: ['url'],\r\n    operator: 'Like',\r\n    valueText: 'https://example.org*',\r\n  })\r\n  .do();\r\nconsole.log(response);\r\n```\r\n\r\nSo we'd be able to add a Not operator like this:\r\n\r\n```\r\nconst response = await client.graphql\r\n  .get()\r\n  .withClassName('Snippet')\r\n  .withFields('text')\r\n  .withWhere({\r\n                operator: 'Not',\r\n                operands: [{\r\n                    path: ['url'],\r\n                    operator: 'Like',\r\n                    valueText: 'https://example.org*',\r\n                }],\r\n            })\r\n  .do();\r\nconsole.log(response);\r\n```\r\n\r\nGiven the implementation of Like etc. (https://github.com/weaviate/weaviate/blob/b5490142fa6cea9a6212e77055db7479e69760b7/adapters/repos/db/inverted/row_reader.go#L194C24-L194C24) it might actually be easier to implement as a new operator called NotLike, rather than a general purpose Not? I haven't looked too far into it.\r\n\r\nIn any case, it might be worth adding a note to the [filter documentation](https://weaviate.io/developers/weaviate/api/graphql/filters) to say that a N"
+  },
+  {
+   "title": "Add pagination to \"list tenants\" endpoint",
+   "url": "https://github.com/weaviate/weaviate/issues/4234",
+   "state": "open",
+   "comments": 32,
+   "created": "2024-02-15",
+   "body": "### Describe your feature request\n\nWhen retrieving the tenant list from: \"/v1/schema/\" + collection + \"/tenants\" include some optional parameters to page over the list (potentially a limit and a last returned tenant or an offset).  This may require some natural ordering of the underlying shards.\r\n\r\nThe use-case is some operation that needs to iterate over all the tenants (when the list is very big and changing) and wants to handle a chunk at a time.\r\n\r\nAlso, this may overlap with some of the MT observability functionality like a tenant count (including hot/cold counts).\r\n\n\n### Code of Conduct\n\n- [X] I have read and agree to the Weaviate's [Contributor Guide](https://weaviate.io/developers/contributor-guide) and [Code of Conduct](https://weaviate.io/service/code-of-conduct)"
+  },
+  {
+   "title": "BM25 returns no results in some situations (Original title: BM25/Tokenizer not working properly)",
+   "url": "https://github.com/weaviate/weaviate/issues/3517",
+   "state": "closed",
+   "comments": 27,
+   "created": "2023-09-08",
+   "body": "Hi \u2013\r\n\r\nI have an **Article** class, which contains many french legal articles.\r\n\r\nHere is the class initiation : \r\n```\r\nclass_obj = {\r\n    \"class\": \"Article\",\r\n    \"description\": \"Articles des diff\u00e9rentes codes de la loi.\",\r\n    \"invertedIndexConfig\": {\r\n        \"stopwords\": {\r\n            \"preset\": \"none\",\r\n            #\"additions\": stopwords_fr\r\n        }\r\n    },\r\n    \"vectorizer\": \"text2vec-transformers\",\r\n    \"properties\": [\r\n        {\r\n            \"name\": \"article_id\",\r\n            \"description\": \"Id unique de l'article.\",\r\n            \"dataType\": [\r\n                \"text\"\r\n            ],\r\n            \"indexFilterable\": True,\r\n            \"indexSearchable\": False, \r\n        },\r\n        {\r\n            \"name\": \"source\",\r\n            \"description\": \"Titre de la source juridique (code, loi ou ordonnance) contenant l'article.\",\r\n            \"dataType\": [\r\n                \"text\"\r\n            ],\r\n            \"tokenization\": \"lowercase\",\r\n            \"indexFilterable\": True,\r\n            \"indexSearchable\": True, \r\n        },\r\n        {\r\n            \"name\": \"titre\",\r\n            \"description\": \"Le titre de l'article.\",\r\n            \"dataType\": [\r\n                \"text\"\r\n            ],\r\n            \"indexFilterable\": True,\r\n            \"indexSearchable\": True, \r\n            \"tokenization\": \"lowercase\"\r\n        },\r\n        {\r\n            \"name\": \"texte\",\r\n            \"description\": \"Le texte de l'article, en html.\",\r\n            \"dataType\": [\r\n                \"text\"\r\n            ]"
+  },
+  {
+   "title": "NearVector Search Returns Non-Existing Objects",
+   "url": "https://github.com/weaviate/weaviate/issues/3868",
+   "state": "closed",
+   "comments": 24,
+   "created": "2023-12-07",
+   "body": "### How to reproduce this bug?\n\nUnfortunately I cannot tell how to reproduce this generally.\r\nIn my setup however, I noticed that search with `nearVector` returns objects, which are not existing anymore. They existed formerly, but were deleted already some while ago.\n\n### What is the expected behavior?\n\nWhen starting a search using `nearVector`, e.g. \r\n```\r\n{\r\n\tGet {\r\n\t\tKnowledgeStoreObject(\r\n\t\t\tnearVector: {\r\n\t\t\t\tvector: [ <- 1536 -> ] -> shortened\r\n\t\t\t}\r\n\t\t\tlimit: 10\r\n\t\t) {\r\n\t\t\ttext\r\n\t\t\tcleanser_version\r\n\t\t\t_additional {\r\n\t\t\t\tid\r\n\t\t\t}\r\n\t\t}\r\n\t}\r\n}\r\n```\r\nEach resulting object has to be present in the store. When retrieving an object from the result set by ID using REST API the object has to be retrieved. Searching with `where` filter for certain unique properties (like `cleanser_version` in my case) of those objects should retrieve these objects.\n\n### What is the actual behavior?\n\nIn my search I get several objects back which exist, and others which were already deleted some while ago.\r\nI can detect those objects which were already deleted, by custom property `cleanser_version`: All entries should have value `2`, as all entries with value `1` have already been deleted.\r\nSearch result (shortened):\r\n```\r\n{\r\n\t\"data\": {\r\n\t\t\"Get\": {\r\n\t\t\t\"KnowledgeStoreObject\": [\r\n\t\t\t\t{\r\n\t\t\t\t\t\"_additional\": {\r\n\t\t\t\t\t\t\"id\": \"d3a5fb05-ce87-4aff-938f-84513192702d\"\r\n\t\t\t\t\t},\r\n\t\t\t\t\t\"cleanser_version\": 2,\r\n\t\t\t\t\t\"text\": \"{\\\"Header 1\\\":\\\"Available Plans in the Kyma Environment\\\"}\\nDepending on your global ac"
+  },
+  {
+   "title": "Proposal: Partitioning feature for Multi-Tenancy supporting millions of tenants",
+   "url": "https://github.com/weaviate/weaviate/issues/2970",
+   "state": "closed",
+   "comments": 17,
+   "created": "2023-04-30",
+   "body": "# Proposal: Partitioning for Multi-Tenancy\r\n\r\nA multi-tenancy solution that keeps each tenant\u2019s data separate and allows for scaling to millions of tenants. Each tenant uses a dedicated partition.\r\n\r\n\r\n## Highlights:\r\n\r\n\r\n\r\n* supports millions of partitions overall, with up to 100,000 partitions per node\r\n* easy to use, new partitions will be created automatically \r\n* full isolation between partitions, easy offboarding of entire partitions\r\n* partitions can be vastly different: Some very small and others very large without performance penalties or other drawbacks\r\n* Weaviate automatically manages the distribution of partitions in the cluster\r\n\r\n\r\n## Key design features:\r\n\r\n* **Non-breaking to existing users**\r\n    * Partitioning is an optional feature. If not used, Weaviate behaves exactly as before.\r\n* **Strong isolation**\r\n    * When using partitioning, Weaviate creates one partition per tenant. A partition (internally a shard) is an isolation unit that is scheduled on exactly one node.\r\n* **Self-contained partitions for efficient queries**\r\n    * Each shard is fully self-contained. No filters are required to isolate queries to a shard. This allows tenants of different sizes to co-exist on the same nodes without performance penalties.\r\n* **Various Compliance Features**\r\n    * Weaviate prevents access across tenants; any action is always scoped to exactly one partition. \r\n    * Offboarding a tenant is simple and computationally trivial. It simply drops files. No indexes need"
+  },
+  {
+   "title": "Replication consistency issue in Docker Multi node setup",
+   "url": "https://github.com/weaviate/weaviate/issues/3267",
+   "state": "closed",
+   "comments": 16,
+   "created": "2023-07-17",
+   "body": "## Overview\r\n1. The attribute isConsistent seems to be unreliable.\r\n2. `repair-on-read` doesn't seem to work as expected.\r\n\r\nThe script to reproduce the issue can be found [here](https://github.com/weaviate/weaviate/files/12068630/file_for_weaviate_issue_reproduce.zip).\r\n\r\n## Issue\r\nI'm trying to test replication in Docker multi node setup. So I have started 3 containers and performed the following actions:\r\n\r\n1. With all the container running, I imported the data with consistency_level=weaviate.data.replication.ConsistencyLevel.QUORUM. Then I queried every docker container.\r\nfor the query:\r\nclient.query.get(class_name=\"Books\", properties=[\"title\"]) \\\r\n    .with_consistency_level(weaviate.data.replication.ConsistencyLevel.QUORUM) \\\r\n    .with_additional([\"isConsistent\"]) \\\r\n    .with_limit(3).do()\r\noutput:\r\n{'data': {'Get': {'Books': [{'_additional': {'isConsistent': True},\r\n     'title': 'Harry Potter and the Half-Blood Prince (Harry Potter#6)'},\r\n    {'_additional': {'isConsistent': True},\r\n     'title': 'Harry Potter Boxed Set  Books 1-5 (Harry Potter#1-5)'},\r\n    {'_additional': {'isConsistent': True},\r\n     'title': 'Molly Hatchet - 5 of the Best'}]}}}\r\n\r\nBut,\r\nfor the query:\r\nclient.query.get(class_name=\"Books\", properties=[\"title\"]) \\\r\n    .with_consistency_level(weaviate.data.replication.ConsistencyLevel.QUORUM) \\\r\n    .with_additional([\"isConsistent\"]) \\\r\n    .with_near_vector({\"vector\": query_book_vector}) \\\r\n    .with_limit(3).do()\r\noutput:\r\n{'data': {'Get': {'Book"
+  },
+  {
+   "title": "BM25 Index Corruption / BM25 not crash-resistant",
+   "url": "https://github.com/weaviate/weaviate/issues/4125",
+   "state": "closed",
+   "comments": 12,
+   "created": "2024-02-02",
+   "body": "### How to reproduce this bug?\n\nNot known yet - working on reproduction. Few independent sightings\n\n### What is the expected behavior?\n\nBM25 index is crash-resistant\n\n### What is the actual behavior?\n\nUsers occasionally see panics like the following:\r\n\r\n```\r\npanic: runtime error: index out of range [16] with length 16\r\n\r\ngoroutine 50113 [running]:\r\ngithub.com/weaviate/weaviate/adapters/repos/db/inverted.(*BM25Searcher).createTerm(0xc09dd078c0, 0x413b3f1f00000000, {0x0, 0x0}, {0xc002f08edd, 0xe}, {0xc002a2ef00, 0xe, 0x10?}, 0xc03bb94fc0?, ...)\r\n\t/go/src/github.com/weaviate/weaviate/adapters/repos/db/inverted/bm25_searcher.go:431 +0x126e\r\ngithub.com/weaviate/weaviate/adapters/repos/db/inverted.(*BM25Searcher).wand.func1()\r\n```\n\n### Supporting information\n\nWe are aware and investigating. If you have a reliable way to reproduce this (from scratch), please do let us know.\n\n### Server Version\n\nSpotted on 1.22.x and 1.23.x\n\n### Code of Conduct\n\n- [X] I have read and agree to the Weaviate's [Contributor Guide](https://weaviate.io/developers/contributor-guide) and [Code of Conduct](https://weaviate.io/service/code-of-conduct)"
+  }
+ ],
+ "opensearch_normalization": [
+  {
+   "title": "[RFC] Improving Search relevancy through Generic Reranker interfaces",
+   "url": "https://github.com/opensearch-project/neural-search/issues/485",
+   "state": "closed",
+   "comments": 53,
+   "created": "2023-11-03",
+   "body": "# Problem statement\r\n\r\nAddresses #248 \r\n\r\nReranking the top search results with a cross-encoder has been shown to improve search relevance rather dramatically. We\u2019d like to do that. Furthermore, we\u2019d like to do that inside of OpenSearch, for a couple reasons: 1/ it belongs there - it\u2019s a technique to make your search engine search better, and 2/ it needs to precede RAG to integrate with it - the retrieval that augments the generation needs to be as good as possible - and succeed the initial retrieval, obviously - so it should be in OpenSearch.\r\n\r\n## Goals\r\n\r\n- Users will be able to create reranking search pipelines in OpenSearch to rerank search results using a cross encoder.\r\n- Users will be able to upload, deploy, and predict with cross-encoder models with ml-commons (https://github.com/opensearch-project/ml-commons/issues/1164)\r\n\r\n## Non-goals\r\n\r\n- Query plans\r\n- recursive reranking\r\n- remote LLM-based reranking\r\n- prompt engineer your cross-encoder\r\n\r\n# Proposed solution\r\n\r\nReranking will be implemented as a search response processor, similar to RAG. Cross-Encoders will be introduced into ml-commons to support this.\r\n\r\n### Architecture / Rerank Search Path\r\n\r\n![RerankerArchitecture](https://github.com/opensearch-project/neural-search/assets/10053824/8f601898-ce91-46e9-8d5c-3a273fe5b909)\r\n\r\n\r\n### Rest APIs\r\n\r\n**Create Rerank Pipeline**\r\n\r\n```jsx\r\nPUT /_search/rerank_pipeline\r\n{\r\n  \"response_processors\": [\r\n    {\r\n      \"rerank\": {\r\n        \"ml_opensearch\": {\r\n          \"mo"
+  },
+  {
+   "title": "[BUG] IndexOutOfBoundsException in Hybrid search for some queries only",
+   "url": "https://github.com/opensearch-project/neural-search/issues/497",
+   "state": "closed",
+   "comments": 37,
+   "created": "2023-11-21",
+   "body": "### What is the bug?\r\nI'm using Hybrid search in Opensearch version 2.11, and I'm getting the following error in some queries:\r\n```\r\n{\r\n    \"error\": {\r\n        \"root_cause\": [\r\n            {\r\n                \"type\": \"index_out_of_bounds_exception\",\r\n                \"reason\": null\r\n            }\r\n        ],\r\n        \"type\": \"search_phase_execution_exception\",\r\n        \"reason\": \"all shards failed\",\r\n        \"phase\": \"query\",\r\n        \"grouped\": true,\r\n        \"failed_shards\": [\r\n            {\r\n                \"shard\": 0,\r\n                \"index\": \"index-name\",\r\n                \"node\": \"2aLNPmEjQ8OYCuCFyEyI-Q\",\r\n                \"reason\": {\r\n                    \"type\": \"index_out_of_bounds_exception\",\r\n                    \"reason\": null\r\n                }\r\n            }\r\n        ],\r\n        \"caused_by\": {\r\n            \"type\": \"index_out_of_bounds_exception\",\r\n            \"reason\": null,\r\n            \"caused_by\": {\r\n                \"type\": \"index_out_of_bounds_exception\",\r\n                \"reason\": null\r\n            }\r\n        }\r\n    },\r\n    \"status\": 500\r\n}\r\n```\r\nI get these logs:\r\n```\r\n2023-11-21 16:53:16 org.opensearch.action.search.SearchPhaseExecutionException: all shards failed\r\n2023-11-21 16:53:16     at org.opensearch.action.search.AbstractSearchAsyncAction.onPhaseFailure(AbstractSearchAsyncAction.java:706) [opensearch-2.11.0.jar:2.11.0]\r\n2023-11-21 16:53:16     at org.opensearch.action.search.AbstractSearchAsyncAction.executeNextPhase(AbstractSearchAsyncAction.java:379) "
+  },
+  {
+   "title": "Improving Search relevancy through Generic Second stage reranker ",
+   "url": "https://github.com/opensearch-project/neural-search/issues/248",
+   "state": "closed",
+   "comments": 33,
+   "created": "2023-08-08",
+   "body": "Issue Description:\r\nWe are currently utilizing a neural retriever based on the bi-encoder vector search method. However, it has come to our attention that the performance of the bi-encoder approach is suboptimal when compared to the cross-encoder method, as highlighted in the referenced research paper ([link](https://arxiv.org/abs/1908.10084)).\r\n\r\nDesired Solution:\r\nWe propose the integration of both Cross-Encoder and Bi-Encoder methods to enhance retrieval performance, particularly in scenarios involving large datasets. Cross-Encoders demonstrate superior performance, but they encounter scalability challenges with extensive datasets. To address this, a hybrid approach can be employed in scenarios like Information Retrieval and Semantic Search. Here's the suggested process:\r\n\r\nInitiate retrieval using an efficient Bi-Encoder to identify the top 100 most similar sentences for a given query.\r\nSubsequently, employ a Cross-Encoder to re-rank the initial 100 matches. This involves computing scores for each (query, hit) pairing.\r\nBy incorporating a Cross-Encoder-based re-ranker after the initial retrieval, a notable enhancement in final results for users can be achieved.\r\n\r\nConsidered Alternatives:\r\nWe have evaluated several alternative solutions and features in pursuit of improved retrieval performance. However, none have proven as effective as the combined Cross-Encoder and Bi-Encoder approach proposed above.\r\n\r\nAdditional Context:\r\nFor a more comprehensive understanding, any sup"
+  },
+  {
+   "title": "[RFC] High Level Approach and Design For Normalization and Score Combination",
+   "url": "https://github.com/opensearch-project/neural-search/issues/126",
+   "state": "closed",
+   "comments": 26,
+   "created": "2023-02-28",
+   "body": "## Introduction\r\n\r\nThis issue talks about the various high level directions which are being proposed for Score combination and Normalization techniques to improve Semantic Search/Neural Search Queries in OpenSearch(META ISSUE: https://github.com/opensearch-project/neural-search/issues/123). The proposals tries to use already created extensions in OpenSearch as much as possible. Also, we try to make sure that directions we are choosing are long term; provides different level of customizations for users to tweak the Semantics Search as per their needs. The document also proposes phased design and implementation plan which will help us to improve and add new feature with every phase.\r\n\r\nFor information how normalization improves the overall Quality of Results please refer this OpenSearch Blog for Science Benchmarks: https://opensearch.org/blog/semantic-science-benchmarks/\r\n\r\n## Current Architecture\r\n\r\nFor simplicity, let's us consider a 3 node OpenSearch cluster, where we have 2 data nodes and 1 coordinator node. The data node stores the data and coordinator node helps in running the request. This is how OpenSearch works on a very high level.\r\n\r\n1. Request lands on a Coordinator node and this node will rewrite the queries and send out the request to all the required shards as part of Query Phase.\r\n2. The shards then use that query and pass it to Lucene(Index Search) along with all the relevant Collectors. Lucene then again rewrite the query and start performing the leaf queries "
+  },
+  {
+   "title": "[BUG] Unexpected Ranking Behavior in Hybrid Query with Min-Max Normalization and Arithmetic Mean Combination",
+   "url": "https://github.com/opensearch-project/neural-search/issues/910",
+   "state": "closed",
+   "comments": 25,
+   "created": "2024-09-13",
+   "body": "**Opensearch Version**: 2.15  \r\n**Environment**: AWS OpenSearch\r\n\r\n### Issue Description\r\n\r\nI am executing hybrid queries with three sub-queries on a large dataset containing tens to hundreds of thousands of documents. The queries are weighted as follows: `[0.9998, 0.0001, 0.0001]`, with the first query having the highest weight. However, I am seeing unexpected results where a document with a high score from the first query is missing from the top results in the final ranking, while documents with lower scores from the same query are included.\r\n\r\n#### Example:\r\n\r\n- **Documents**: A, B, C, D\r\n- **Query 1 Scores (when run independently)**:\r\n  - Document A: 1200\r\n  - Document B: 1000\r\n  - Document C: 300\r\n  - Document D: 100\r\n\r\nHowever, in the hybrid query, Document B does not appear in the top results, but Document C does, despite the heavily skewed weighting toward the first query (0.9998). \r\n\r\n#### Pipeline Configuration:\r\n\r\n```json\r\n{\r\n  \"phase_results_processors\": [\r\n    {\r\n      \"normalization-processor\": {\r\n        \"combination\": {\r\n          \"parameters\": {\r\n            \"weights\": [\r\n              0.9998,\r\n              0.0001,\r\n              0.0001\r\n            ]\r\n          },\r\n          \"technique\": \"arithmetic_mean\"\r\n        },\r\n        \"normalization\": {\r\n          \"technique\": \"min_max\"\r\n        }\r\n      }\r\n    }\r\n  ]\r\n}\r\n```\r\n\r\n### Observations:\r\n<img width=\"717\" alt=\"Screenshot 2024-09-12 at 5 31 17\u202fPM\" src=\"https://github.com/user-attachments/assets/b6d1d48d-2bbd"
+  },
+  {
+   "title": "Hybrid search scoring is dependent on number of results requested",
+   "url": "https://github.com/opensearch-project/neural-search/issues/325",
+   "state": "closed",
+   "comments": 20,
+   "created": "2023-09-14",
+   "body": "### What is the bug?\r\nDocuments that would not get surfaced by individual subqueries in the hybrid query, but which would have good hybrid scores, do not get surfaced unless the \"size\" parameter is sufficiently large. \r\n\r\nFor example, say I execute a hybrid query `=[q1, q2]` with `size=2`.\r\nq1's top docs are `A C E`.\r\nq2's top docs are `B D E`.\r\n\r\nThe hybrid top doc should probably be `E`, but since the subqueries only surface `A`, `B`, `C`, and `D`, `E` does not get returned.\r\n\r\n### How can one reproduce the bug?\r\nHere's a query I ran against a simple wikipedia index\r\n```\r\nPOST wiki-demo/_search?search_pipeline=weighted_hybrid_pipeline\r\n{\r\n  \"_source\": [\"title\", \"text\"], \r\n  \"query\": {\r\n    \"hybrid\": {\r\n      \"queries\": [\r\n        {\r\n          \"match\": {\r\n            \"text\":  \"Was Abraham Lincoln a good politician?\"\r\n          }\r\n        },\r\n        {\r\n          \"neural\": {\r\n            \"text_vector\": {\r\n              \"query_text\": \"Was Abraham Lincoln a good politician?\",\r\n              \"k\": 100,\r\n              \"model_id\": \"iZRSiooBR0erHedANRfZ\"\r\n            }\r\n          }\r\n        }\r\n      ]\r\n    }\r\n  },\r\n  \"size\": 10\r\n}\r\n```\r\nwith this pipeline \r\n```\r\nPUT /_search/pipeline/weighted_hybrid_pipeline\r\n{\r\n  \"description\": \"Hybrid Search Pipeline\",\r\n  \"phase_results_processors\": [\r\n    {\r\n      \"normalization-processor\": {\r\n        \"normalization\": {\r\n  \t  \"technique\": \"min_max\"\r\n        },\r\n  \t\"combination\": {\r\n  \t  \"technique\": \"arithmetic_mean\",\r\n  \t  \"parameters\": {\r\n  \t  "
+  },
+  {
+   "title": "[FEATURE] Add options to configure minimal score and single match score for normalization processor for Hybrid search",
+   "url": "https://github.com/opensearch-project/neural-search/issues/299",
+   "state": "closed",
+   "comments": 19,
+   "created": "2023-09-07",
+   "body": "### Is your feature request related to a problem?\r\nThere is no way of setting min score for a hit in the final result list from Hybrid query, as well as it's not possible to set a score that will be returned in case there is only one match from all sub-queries for a min-max normalization technique. That may affect relevance of the result. \r\n\r\n### What solution would you like?\r\nFor min score: set the minimal score a part of the configuration for normalization processor. Possible request can look like:\r\n\r\n```\r\n{\r\n    \"description\": \"Post processor for hybrid search\",\r\n    \"phase_results_processors\": [\r\n        {\r\n            \"normalization-processor\": {\r\n                \"normalization\": {\r\n                    \"technique\": \"l2\",\r\n                    \"parameters\" : { \r\n                          \"min_score\" : 0.001 \r\n                    }\r\n                },\r\n                \"combination\": {\r\n                    \"technique\": \"arithmetic_mean\",\r\n                    \"parameters\" : { \r\n                          \"min_score\" : 0.001 \r\n                    }\r\n                }\r\n            }\r\n        }\r\n    ]\r\n}\r\n```\r\n\r\nFor a single match score: set the single match score as a parameter for normalization technique. For techniques that do not support such parameter is will be ignored. Possible request can look like:\r\n\r\n```\r\n{\r\n    \"description\": \"Post processor for hybrid search\",\r\n    \"phase_results_processors\": [\r\n        {\r\n            \"normalization-processor\": {\r\n                \"nor"
+  },
+  {
+   "title": "[FEATURE] Hybrid request does not return inner_hits for nested objects.",
+   "url": "https://github.com/opensearch-project/neural-search/issues/718",
+   "state": "closed",
+   "comments": 18,
+   "created": "2024-04-30",
+   "body": "### Is your feature request related to a problem?\r\nYes, I'm experiencing a problem when I use the hybrid search plugin in OpenSearch v2.11.0. Specifically, when I include the \"inner_hits\" parameter in my query for nested objects, I do not receive any inner hits in the response. This is causing frustration as my system requires this level of detail for optimal operation.\r\n\r\n### What solution would you like?\r\nI would like the hybrid search plugin to be updated to include the functionality to correctly return inner hits from nested queries. Ideally, this would function seamlessly as it does in standard OpenSearch queries. This improvement would allow me and other users to fully utilize the power of the hybrid search plugin."
+  }
+ ],
+ "es_knn_num_candidates": [
+  {
+   "title": "Make k and num_candidates optional in the knn section",
+   "url": "https://github.com/elastic/elasticsearch/issues/97533",
+   "state": "closed",
+   "comments": 35,
+   "created": "2023-07-10",
+   "body": "### Description\n\n`k` and `num_candidates` are required parameters of the knn section. Could they have sensible defaults instead? E.g. could we default `k` to `size` and `num_candidates` to a value that would yield a sensible latency/recall trade-off depending on `k`?"
+  },
+  {
+   "title": "Recurring searches with the same request for dense_vector exhibit consistency issues in the results.",
+   "url": "https://github.com/elastic/elasticsearch/issues/119180",
+   "state": "closed",
+   "comments": 22,
+   "created": "2024-12-20",
+   "body": "### Elasticsearch Version\n\n8.17.0\n\n### Installed Plugins\n\n_No response_\n\n### Java Version\n\nopenjdk version \"23\" 2024-09-17 OpenJDK Runtime Environment (build 23+37-2369) OpenJDK 64-Bit Server VM (build 23+37-2369, mixed mode, sharing)\n\n### OS Version\n\nLinux debian-002 6.1.0-18-amd64 #1 SMP PREEMPT_DYNAMIC Debian 6.1.76-1 (2024-02-01) x86_64 GNU/Linux\n\n### Problem Description\n\nIn an index without replicas, with no data being written, some vector requests, when repeated, yield inconsistent results.\nThis issue is reproducible in versions 8.13.4, 8.15.1, and 8.17.0, but cannot be reproduced in version 8.7.0, indicating that there is no bug in 8.7.0.\n\n\n\n### Steps to Reproduce\n\nHere are the steps to reproduce the issue:\n\n1. Create index\n\n```\ncurl --location --request PUT 'http://elasticsearch:9200/vector_test' \\\n--header 'Content-Type: application/json' \\\n--data '{\n    \"mappings\": {\n        \"dynamic\": \"strict\",\n        \"properties\": {\n            \"vector\": {\n                \"type\": \"dense_vector\",\n                \"dims\": 1024,\n                \"index\": true,\n                \"similarity\": \"cosine\",\n                \"index_options\": {\n                    \"type\": \"hnsw\",\n                    \"m\": 16,\n                    \"ef_construction\": 100\n                }\n            }\n        }\n    },\n    \"settings\": {\n        \"index\": {\n            \"routing\": {\n                \"allocation\": {\n                    \"include\": {\n                        \"_tier_preference\": \"data_content\"\n              "
+  },
+  {
+   "title": "IVF kNN prunes rescore candidates when segments resolve different oversample values",
+   "url": "https://github.com/elastic/elasticsearch/issues/164821",
+   "state": "closed",
+   "comments": 15,
+   "created": "2026-11-05",
+   "body": "### Elasticsearch Version\n\nmain (9.7.0-SNAPSHOT, 99c5e08e2822), 9.5.6\n\n### Installed Plugins\n\nNone (default distribution)\n\n### Java Version\n\n_bundled_\n\n### OS Version\n\nN/A\n\n### Problem Description\n\nA `bbq_disk` kNN search with `auto_calibrate` enabled silently drops candidates from the shard's rescore window when the segments of one shard resolve rescore oversample values that differ by more than 2x.\nThere is no error and the hit count looks normal; recall drops.\n\n**Expected:** each segment's search keeps every candidate that could rank within the shard's merge budget, `ceil(k * max_segment_oversample)`.\n\n**Actual:** a segment with a low oversample publishes a score threshold that is only valid for its own smaller budget, and the other segments use it to skip candidates that belong in the merge window.\n\n**Root cause:**\n`AbstractIVFKnnVectorQuery#rewrite` ([L175-L210](https://github.com/elastic/elasticsearch/blob/99c5e08e2822745dccf018ab0a047dd83a0e2bde/server/src/main/java/org/elasticsearch/search/vectors/AbstractIVFKnnVectorQuery.java#L175-L210)) resolves an oversample per segment.\nIt sizes each segment's collector with `IvfSegmentConfig#leafCollectorBudget` = `round(2 * k * max(1, o_segment))`, but merges to `IvfSegmentConfig#shardMergeBudget` = `ceil(k * max(1, o_max))` ([L219-L226](https://github.com/elastic/elasticsearch/blob/99c5e08e2822745dccf018ab0a047dd83a0e2bde/server/src/main/java/org/elasticsearch/index/codec/vectors/diskbbq/IvfSegmentConfig.java#L219-L226)).\nAll "
+  },
+  {
+   "title": "Vector efficient math operations for KNN distance functions ",
+   "url": "https://github.com/elastic/elasticsearch/issues/92260",
+   "state": "closed",
+   "comments": 12,
+   "created": "2022-12-10",
+   "body": "### Description\n\nThank you very much for the diversity of choices when it comes to dense vector search operations \ud83d\ude4f\ud83c\udffb \r\n\r\nIn my private measures on float32 768 vector dimensions, somehow, Elasticsearch exact KNN cosine similarity function search is slower than in OpenSearch project _(apologies if that comparison is inappropriate here, mainly want Elasticsearch to improve to capture NLP cases wave in AWS cloud)_.\r\n\r\nKNN Dense Vector uses Lucene [VectorUtil.dot_product](https://github.com/apache/lucene/blob/798c02dd70d684917405d735804ccc0dada20d2e/lucene/core/src/java/org/apache/lucene/util/VectorUtil.java#L30) calculation for [cosine distance function](https://github.com/elastic/elasticsearch/blob/f9c5cad260ff35d380b5fea882ca3521e5f8fdc2/server/src/main/java/org/elasticsearch/script/field/vectors/KnnDenseVector.java#L109), which seems to take into account one of the possible optimizations \ud83d\udcaa\ud83c\udffb \r\n\r\nI wonder if cosine and other distance computation functions in Elasticsearch can benefit from java support of vector optimal operations?\r\nhttps://openjdk.org/jeps/417\r\n\r\nThank you!\r\n\r\n"
+  },
+  {
+   "title": "Integrate ANN search",
+   "url": "https://github.com/elastic/elasticsearch/issues/78473",
+   "state": "closed",
+   "comments": 12,
+   "created": "2021-09-29",
+   "body": "### Background\r\nCurrently Elasticsearch supports storing vectors through the `dense_vector` field type and using them when scoring documents. This allows users to perform an exact k-nearest neighbors (kNN) search by scanning all documents. This work builds on that functionality to support fast, approximate nearest neighbor search (ANN). The implementation will use Lucene's new ANN support, which is based on the [HNSW algorithm](https://arxiv.org/abs/1603.09320). Since Lucene will ship ANN in its upcoming 9.0 release, this feature will only target Elasticsearch 8.x.\r\n \r\nOur plan is to extend the `dense_vector` field type to support adding vectors to an ANN index. We'll then add a new REST endpoint focused on kNN search. This new endpoint will be marked 'experimental' in the first release, as we expect to make API improvements in response to feedback. At first the endpoint will only perform kNN, but we'll follow-up with support for filtering, hybrid retrieval, aggregations, and more. We are really looking forward to everyone's feedback, which will help define the feature and set its direction.\r\n \r\n### Implementation Plan\r\n \r\n#### Phase 0: Help prepare Lucene's HNSW implementation\r\n- [x] Run benchmarks to more deeply understand performance (https://issues.apache.org/jira/browse/LUCENE-9937)\r\n- [x] Ensure Lucene API has required features and plugin points\r\n   * https://issues.apache.org/jira/browse/LUCENE-9905\r\n   * https://issues.apache.org/jira/browse/LUCENE-9908\r\n   * https://"
+  },
+  {
+   "title": "Top-level knn search unconditionally forces DFS_QUERY_THEN_FETCH, doubling coordinator fan-out for pure kNN searches that gain nothing from it",
+   "url": "https://github.com/elastic/elasticsearch/issues/158423",
+   "state": "open",
+   "comments": 7,
+   "created": "2026-09-02",
+   "body": "**Title:** Top-level `knn` runs a redundant query phase for pure kNN searches (DFS \u2192 query \u2192 fetch), doubling coordinator fan-out for no observable benefit\n\n### Description\n\n`TransportSearchAction.adjustSearchType` promotes every search containing a top-level `knn` section to `DFS_QUERY_THEN_FETCH`, unconditionally:\n\n```java\nstatic void adjustSearchType(SearchRequest searchRequest, boolean singleShard) {\n    // if there's a kNN search, always use DFS_QUERY_THEN_FETCH\n    if (searchRequest.hasKnnSearch()) {\n        searchRequest.searchType(DFS_QUERY_THEN_FETCH);\n        return;\n    }\n    ...\n```\n\nFor top-level `knn` the DFS round is the mechanism that implements the **global-k contract** of the top-level `knn` element: every shard runs HNSW and returns its local top-k (`DfsPhase.executeKnnVectorQuery`); the coordinator merges them to exactly k (`DfsQueryPhase`, `TopDocs.merge(k, \u2026)`); then the query phase runs on each shard with the `knn` section replaced by a `KnnScoreDocQueryBuilder` that matches only that shard's survivors (`SearchDfsQueryThenFetchAsyncAction.rewriteShardSearchRequest`). That is what makes the matched set \u2014 the thing `hits.total`, aggregations, `post_filter`, `collapse`, field `sort`, and pagination all operate on \u2014 exactly k documents rather than k \u00d7 shards. When a text query is also present, the same round doubles as the BM25 statistics pass for hybrid scoring.\n\nThe three phases for a top-level `knn` search:\n\n| Phase | What it does for top-level `knn` | N"
+  },
+  {
+   "title": "Add oversampling & rescoring options to `knn` query",
+   "url": "https://github.com/elastic/elasticsearch/issues/109646",
+   "state": "closed",
+   "comments": 4,
+   "created": "2024-06-12",
+   "body": "### Description\n\nWith int8 & int4 and any further quantization schemes we will provide, it is possible that to achieve adequate recall, some oversampling & rescoring with the raw float32 vectors might be required.\r\n\r\nJust like `num_candidates`, these oversampling & rescoring parameters will need to be configurable at search time, but also provide empirically driven defaults.\r\n\r\nI am not 100% sure what the API should look like. \r\n\r\n\r\nOne may say: \"Why not just use the rescore query & scripts or some new 'brute-force' query there\"? \r\n\r\nWhile this is nice and flexible as it is, it disallows us to only rerank the vector portion of a hybrid query and it does not allow us to have good default behavior (e.g., we may decide that certain quantization schemes require reranking & oversampling). "
+  },
+  {
+   "title": "Add symmetric sub-byte dot product native functions (1 bit and 2 bits)",
+   "url": "https://github.com/elastic/elasticsearch/issues/145410",
+   "state": "closed",
+   "comments": 2,
+   "created": "2026-04-01",
+   "body": "At our level of oversampling and such, single bit queries work incredibly well against higher dimensionality vectors (1024+), and Jina models. For example, in our competitive benchmarks, we are getting the exact same recall for our dbpedia-openai-1M-1536-angular data set when only using single bit queries.\n\nWe are still not sure how we will expose these options (if ever) to the user, or we just \"pick\" the right thing; for starter, and for the scope of this task, we want to create and expose native functions for single bit to single bit, and 2 bits to 2 bits, and benchmark them (Operations benchmarks).\n\nA PoC for single bit to single bit can be found at https://github.com/benwtrent/elasticsearch/tree/single-bit-queries-hack\n\n## 4Bit queries (not native, for comparison)\n```\nindex_name                                             index_type  visit_percentage(%)  latency(ms)  net_cpu_time(ms)  avg_cpu_count      QPS  recall    visited  filter_selectivity  filter_cached  oversampling_factor  num_candidates  early_termination\n-----------------------------------------------------  ----------  -------------------  -----------  ----------------  -------------  -------  ------  ---------  ------------------  -------------  -------------------  --------------  -----------------\ntarget/knn_index/wiki1024en.train-ivf-384-128-1.index         ivf                1.000         0.52              0.00           0.00  1923.08    0.76   20338.11                1.00           true                 0"
+  }
+ ],
+ "vespa_rank": [
+  {
+   "title": "Add support for filtering on a mapped dimension of a tensor field during nearest neighbor search",
+   "url": "https://github.com/vespa-engine/vespa/issues/29587",
+   "state": "closed",
+   "comments": 15,
+   "created": "2023-12-07",
+   "body": "**Is your feature request related to a problem? Please describe.**\r\nWe have tensor fields with two mapped dimensions and one indexed dimension `tensor<float>(p{}, q{}, x[384])`. We would like to be able to search within one or more specific `p` dimension values.\r\n\r\n**Describe the solution you'd like**\r\nThe nearest neighbor search operator to support one or more values for a mapped dimension. e.g., \r\n\r\n```\r\nnearestNeighbor(tensor_field, query_vector, p=('value1', 'value2', 'value3'))\r\n```\r\n\r\nso that the search will only considers vectors where mapped dimension `p` has one of the values `value1`, `value2` or `value3`.\r\n\r\n**Describe alternatives you've considered**\r\nAlternatively the nearest neighbor operator can accept only a single value for the mapped dimension, and for multiple values the query will have to consist of a disjunction of multiple nearest neighbor operators. \r\n\r\n**Additional context**\r\nN/A\r\n"
+  },
+  {
+   "title": "model.filter/filter is ignored with yql while recall works as expected",
+   "url": "https://github.com/vespa-engine/vespa/issues/28769",
+   "state": "closed",
+   "comments": 3,
+   "created": "2023-10-03",
+   "body": "## Using `recall` in combination with YQL\r\n\r\nUsing [recall](https://docs.vespa.ai/en/reference/query-api-reference.html#recall)\r\n\r\n>This is identical to [filter](https://docs.vespa.ai/en/reference/query-api-reference.html#model.filter), except that recall terms are not exposed to the ranking framework and thus not ranked. As such, one can not use unprefixed terms; they must either be positive or negative\r\n\r\n```\r\n{'yql': 'select id,title,text from sources * where {targetHits:10}nearestNeighbor(embedding, q)', 'query': 'how does the coronavirus respond to changes in the weather', 'ranking.profile': 'dense', 'presentation.format.tensors': 'short-value', 'hits': 3, 'language': 'en', 'timeout': '15s', 'presentation.timing': 'true', 'input.query(q)': 'embed(bge, \"Represent this sentence for searching relevant passages: how does the coronavirus respond to changes in the weather\")', 'recall': '+text:ARIMA +text:\"novel coronavirus illness\"', 'tracelevel': 3}\r\n```\r\nGives the following correct query tree\r\n\r\n```\r\n{'message': 'sc0.num0 search to dispatch: query=[AND NEAREST_NEIGHBOR {field=embedding,queryTensorName=q,hnsw.exploreAdditionalHits=0,distanceThreshold=Infinity,approximate=true,targetHits=10} |text:arima |text:\"novel coronaviru illness\"] timeout=14977ms offset=0 hits=3 rankprofile[dense]\r\n```\r\nWhich is the expected query tree. filter (not highlight), and ranking is disabled. \r\n\r\n## Using `model.filter` in combination with YQL \r\n\r\n```\r\n{'yql': 'select id,title,text from sources "
+  },
+  {
+   "title": "Parse query-time WordDelimiterGraph into phrase alternatives in Lucene Linguistics",
+   "url": "https://github.com/vespa-engine/vespa/issues/37760",
+   "state": "open",
+   "comments": 0,
+   "created": "2026-09-02",
+   "body": "**Is your feature request related to a problem? Please describe.**\n\nWe index classifieds. Sellers write product tokens in mixed spellings: `T-Shirt` / `T Shirt` / `Tshirt`, `PS5` / `PS 5`, `32GB` / `32 GB` / `iPhone32GB`.\n\nAt index time we split on delimiters and on letter/digit boundaries (`wordDelimiterGraph` with `generateNumberParts` and `catenateWords`). That is required for recall. A search for `32GB` must find both \"iPhone 32 GB\" (space) and \"iPhone32GB\" (one word).\n\nAt query time the same split, without graph awareness, becomes independent terms. Then:\n\n- `T-Shirt` becomes `t AND shirt` and also matches \"Shirt rot mit T Aufdruck\" (`t` and `shirt` occur, but not next to each other)\n- `PS5` becomes `ps AND 5` and also matches \"Ford Focus 125 PS Euro 5\" (`ps` and `5` occur, but not next to each other)\n\nWe need: accept either of N alternative spellings / word groupings for one query term, and still run the field's normal linguistics (German stemming, germanNormalization) on each alternative.\n\nElasticsearch does this without extra query logic. Search analyzer:\n\n```\nword_delimiter_graph\n  generate_number_parts: true\n  catenate_words: true\n  preserve_original: true\n```\n\nThat filter emits a token graph: split parts as sequential tokens (`t`, then `shirt`), a catenated token that spans those positions (`tshirt`, `positionLength = 2`), optionally the original token. We query with `query_string` and that analyzer. Lucene `QueryBuilder` walks the graph. With `auto_generate_synony"
+  }
+ ],
+ "pgvector_nan": [
+  {
+   "title": "bit Jaccard distance returns 1.0 for identical all-zero bit vectors",
+   "url": "https://github.com/pgvector/pgvector/issues/1043",
+   "state": "open",
+   "comments": 3,
+   "created": "2026-10-20",
+   "body": "## Summary\n\nFor `bit` values compared with pgvector\u2019s Jaccard distance operator `<%>`, two identical all-zero bit vectors return distance `1.0`. Under the common set-distance convention `d(A, B) = 1 - |A \u2229 B| / |A \u222a B|` with `d(\u2205, \u2205) = 0`, the identical empty set should have distance `0` from itself. Hamming distance for the same pair returns `0`, so the anomaly is specific to Jaccard.\n\n## Steps to reproduce\n\nRun `reproduce.py` against PostgreSQL with pgvector enabled. It creates four `bit(8)` rows and queries with `00000000`:\n\n```sql\nSELECT id, b <%> '00000000'::bit(8) AS jaccard, b <~> '00000000'::bit(8) AS hamming\nFROM codex_pgvector_bit_jaccard\nORDER BY b <%> '00000000'::bit(8), id;\n```\n\n[reproduce.py](https://github.com/user-attachments/files/33697916/reproduce.py)\n\n## Expected behavior\n\nThe row with `b = '00000000'` is identical to the query. Its Jaccard distance should be `0.0` if empty-empty is treated as identical, matching the identity-of-indiscernibles MR.\n\n## Actual behavior\n\nThe row with `b = '00000000'` returns Jaccard distance `1.0`, while Hamming distance is `0.0`.\n\n## Metamorphic relation\n\nIdentity under self-query: for any stored vector `x`, querying with `x` should give the self row a distance of `0` for a distance operator, unless the operator explicitly rejects the input. This fails for the all-zero `bit` vector under Jaccard.\n\n## Environment\n\nObserved with pgvector in the local test environment used by `artifacts/codex-260925/independent10/probe_edge_sem"
+  },
+  {
+   "title": "`<=>` returns NaN for small nonzero vectors due to float32 squared-norm underflow",
+   "url": "https://github.com/pgvector/pgvector/issues/1033",
+   "state": "closed",
+   "comments": 3,
+   "created": "2026-09-29",
+   "body": "## What happens?\n\n`v <=> v` returns `NaN` for finite, nonzero `vector` values once their component magnitude becomes sufficiently small.\n\nFor example, with `vector(2)` values `[n, 0]`:\n\n| `n` | `v <=> v` | expected |\n|---:|---:|---:|\n| `0.1` | `0` | `0` |\n| `1e-12` | `0` | `0` |\n| `1e-19` | `0` | `0` |\n| `1e-20` | `0` | `0` |\n| `1e-25` | **`NaN`** | `0` |\n| `1e-30` | **`NaN`** | `0` |\n| `1e-38` | **`NaN`** | `0` |\n| `1e-45` | **`NaN`** | `0` |\n\nThese inputs are nonzero and their components are representable as single-precision values. For `[1e-25, 0]`, the mathematical norm is `1e-25`, but the squared term `1e-25 * 1e-25 = 1e-50` is below the `float4` subnormal range.\n\nThe documented `<=>` operator is cosine distance, so a nonzero vector compared with itself should have distance `0`.\n\nThe behavior appears to come from the cosine implementation accumulating the dot product and squared norms in `float`:\n\n```c\nfloat similarity = 0.0;\nfloat norma = 0.0;\nfloat normb = 0.0;\n```\n\nbefore converting the accumulated values to `double` for the final division. For sufficiently small values, the squared terms underflow before that conversion occurs.\n\n## What do you expect?\n\nFor finite, nonzero vectors accepted by the `vector` type, self cosine distance should remain finite and equal to `0`, regardless of positive scaling, or the unsupported numeric range should be explicitly rejected/documented.\n\nOne possible implementation direction would be to accumulate the dot product and squared norm"
+  },
+  {
+   "title": "Server crash,  signal 11: Segmentation fault",
+   "url": "https://github.com/pgvector/pgvector/issues/151",
+   "state": "closed",
+   "comments": 3,
+   "created": "2023-06-08",
+   "body": "When trying to create an index on table 128 dimensions, the Postgres server crashes (within about a ~30 seconds) with:\r\n\r\n```\r\n2023-06-08 16:54:25.371 UTC [50287] LOG:  server process (PID 50540) was terminated by signal 11: Segmentation fault\r\n2023-06-08 16:54:25.371 UTC [50287] DETAIL:  Failed process was running: CREATE INDEX ON bigann.items USING ivfflat (embedding vector_l2_ops) WITH (lists = 2000)\r\n```\r\n\r\nThe data loaded is from the big-ann benchmarks, specifically the bigann dataset.  The data can be downloaded from: https://big-ann-benchmarks.com/ and details about the data can be found here: http://corpus-texmex.irisa.fr/\r\nI loaded the first 10M records from that dataset, but the crash also happens with even just 2k records.   (I can provide data export if needed).\r\n\r\nTable create:\r\n\r\n`CREATE TABLE bigann.items (id int, embedding vector(128));`\r\n\r\nIndex create:\r\n\r\n`CREATE INDEX ON bigann.items USING ivfflat (embedding vector_l2_ops) WITH (lists = 2000);`\r\n\r\ndmesg record:\r\n\r\n```\r\n[1374129.564771] postgres[50540]: segfault at 7f1ce6312e48 ip 00007f1d19fe2f4b sp 00007ffdf3b3f000 error 4 in vector.so[7f1d19fdd000+d000]\r\n[1374129.572591] Code: 40 0f 93 c7 41 08 f8 0f 84 32 07 00 00 48 83 f9 0f 0f 86 28 07 00 00 48 83 bd 70 ff ff ff 0e 0f 86 72 07 00 00 31 ff 45 31 c0 <62> f1 7c 48 10 04 3a 49 83 c0 01 62 d1 7c 48 58 04 39 62 f1 7c 48\r\n```\r\n\r\npgvector was compiled from source\r\n\r\n```\r\nbigann=# SELECT * FROM pg_extension WHERE extname = 'vector';\r\n  oid   | extname | extowne"
+  },
+  {
+   "title": "Cosine distance returns NaN or incorrect finite values for finite nonzero vectors",
+   "url": "https://github.com/pgvector/pgvector/issues/1057",
+   "state": "closed",
+   "comments": 1,
+   "created": "2026-11-04",
+   "body": "## Summary\n\nThe cosine distance operator `<=>` returns `NaN` or an incorrect finite distance for finite, nonzero `vector` inputs with large or small magnitudes.\n\nThe issue reproduces with direct SQL expressions, without HNSW or IVFFlat indexes.\n\n## Environment\n\n- PostgreSQL: 17.11\n- pgvector: 0.8.7\n- Docker image: `pgvector/pgvector:0.8.7-pg17`\n- Vector type: `vector` (float32 components)\n\nThese results were observed on the versions above. I have not verified the current development branch.\n\n## Steps to reproduce\n\nEnable the extension:\n\n```sql\nCREATE EXTENSION IF NOT EXISTS vector;\n```\n\nRun the following queries:\n\n```sql\n-- Large finite vector compared with itself\nSELECT '[1e20,0]'::vector <=> '[1e20,0]'::vector\n    AS large_self_distance;\n\n-- Two finite nonzero vectors pointing in the same direction\nSELECT '[1e20,0]'::vector <=> '[1,0]'::vector\n    AS same_direction_distance;\n\n-- Small finite nonzero vector compared with itself\nSELECT '[1e-30,0]'::vector <=> '[1e-30,0]'::vector\n    AS small_self_distance;\n```\n\n## Actual results\n\n| Query | Actual cosine distance |\n|---|---:|\n| `[1e20,0]` compared with itself | `NaN` |\n| `[1e20,0]` compared with `[1,0]` | `1` |\n| `[1e-30,0]` compared with itself | `NaN` |\n\nAll input components are finite and representable as nonzero float32 values. None of these vectors is a zero vector.\n\n## Expected results\n\nAll three queries should return a cosine distance of `0`, within normal floating-point tolerance.\n\nFor nonzero vectors:\n\n```text\ncosine_"
+  },
+  {
+   "title": "sparsevec `<=>` returns NaN self-distance and 1.0 for a collinear pair",
+   "url": "https://github.com/pgvector/pgvector/issues/1044",
+   "state": "closed",
+   "comments": 1,
+   "created": "2026-10-21",
+   "body": "## Description\n\nFor the finite sparse vector `{1:3e19,2:4e19}/2` (each value legal float4;\nsquared norm `25e38` overflows float4):\n\n- self cosine distance `v <=> v` \u2192 `NaN` (0/0 after norm overflow)\n- cosine distance to the collinear normal vector `{1:3,2:4}/2` \u2192 `1.0`\n  (maximum distance) instead of `0`\n\nNormal-scale control (`{1:3,2:4}/2 <=> {1:3,2:4}/2`) is exactly `0`.\nA NaN self-distance also poisons ordering: it sorts inconsistently and\nbreaks `ORDER BY v <=> q` result expectations.\n\n## Environment\n\n- pgvector 0.8.6 on PostgreSQL 18; deterministic;\n\n## Steps to reproduce\n\n```sql\nSELECT '{1:3,2:4}/2'::sparsevec <=> '{1:3,2:4}/2'::sparsevec;                -- 0 (control)\nSELECT '{1:3e19,2:4e19}/2'::sparsevec <=> '{1:3e19,2:4e19}/2'::sparsevec;    -- NaN\nSELECT '{1:3e19,2:4e19}/2'::sparsevec <=> '{1:3,2:4}/2'::sparsevec;          -- 1.0 (true 0)\n```\n\n[reproduce.py](https://github.com/user-attachments/files/33769334/reproduce.py)\n\n\n## Expected behavior\n\n`0` and `0` (compute norms in float8, or pre-scale).\n\n## Actual behavior\n\n`NaN` and `1.0`.\n"
+  },
+  {
+   "title": "[Bug] Sparse scalar distances overflow on finite `sparse",
+   "url": "https://github.com/pgvector/pgvector/issues/1052",
+   "state": "closed",
+   "comments": 1,
+   "created": "2026-10-31",
+   "body": "## Describe the bug\n\npgvector 0.8.7 returns `Infinity` or `NaN` from sparsevec scalar distance\nfunctions for finite nonzero elements whose exact result is representable by\n`double precision`.\n\n## Reproduce\n\nRun `testcase.py` against PostgreSQL with pgvector 0.8.7:\n\n```powershell\npython testcase.py\n```\n\nThe testcase compares two finite `sparsevec(2)` values with opposite `1e38`\ncomponents and computes L1, L2, and self cosine distance.\n\n[testcase.py](https://github.com/user-attachments/files/34213348/testcase.py)\n\n## Expected behavior\n\nThe expected results are finite: approximately `4e38`, `2.828427e38`, and `0`\nfor self cosine distance.\n\n## Actual behavior\n\nThe affected release returns:\n\n```text\nInfinity, Infinity, NaN\n```\n\nThe sparsevec implementation accumulates intermediate values in `float` before\nreturning `double precision`.\n\n## Impact\n\nFinite sparse vectors can produce non-finite or invalid distances, breaking\nordering, thresholds, and scalar correctness checks.\n\n## Environment\n\n- pgvector 0.8.7\n- PostgreSQL 18\n- `sparsevec(2)` values\n\n`vector.c` report because the SQL type and implementation path differ.\n"
+  },
+  {
+   "title": "[Bug] Dense scalar distances overflow on finite `vector` inputs",
+   "url": "https://github.com/pgvector/pgvector/issues/1051",
+   "state": "closed",
+   "comments": 1,
+   "created": "2026-10-31",
+   "body": "## Describe the bug\n\npgvector 0.8.7 returns `Infinity` or `NaN` from dense `vector` scalar distance\nfunctions for finite input values whose exact result is still representable as\n`double precision`.\n\n## Reproduce\n\nRun `testcase.py` against PostgreSQL with pgvector 0.8.7:\n\n```powershell\npython testcase.py\n```\n\nThe query evaluates `l1_distance`, `l2_distance`, and `cosine_distance` on\nfinite dense vectors containing `1e38` and `1e20`.\n\n[testcase.py](https://github.com/user-attachments/files/34213300/testcase.py)\n\n## Expected behavior\n\nAll results should be finite. For the selected values, the expected results are\napproximately `4e38`, `2.828427e38`, and `0` for the identical cosine input.\n\n## Actual behavior\n\nThe affected release returns:\n\n```text\nInfinity, Infinity, NaN\n```\n\nThe dense implementation accumulates intermediate values in `float` before\nconverting the result to the declared `double precision` return type.\n\n## Impact\n\nFinite vectors can produce non-finite scalar distances, breaking ordering,\nthreshold checks, and any oracle requiring finite non-negative distances.\n\n## Environment\n\n- pgvector 0.8.7\n- PostgreSQL 18\n- dense `vector(2)` values\n"
+  },
+  {
+   "title": "Expected output does not match test",
+   "url": "https://github.com/pgvector/pgvector/issues/541",
+   "state": "closed",
+   "comments": 1,
+   "created": "2024-05-03",
+   "body": "It seems that in a Makefile with this directory structure, installcheck uses the file to create the extension as test SQL\r\n\r\ntest file\r\n```\r\ncat test/sql/vector.sql | head\r\nSELECT '[1,2,3]'::vector;\r\nSELECT '[-1,-2,-3]'::vector;\r\nSELECT '[1.,2.,3.]'::vector;\r\nSELECT ' [ 1,  2 ,    3  ] '::vector;\r\nSELECT '[1.23456]'::vector;\r\nSELECT '[hello,1]'::vector;\r\nSELECT '[NaN,1]'::vector;\r\nSELECT '[Infinity,1]'::vector;\r\nSELECT '[-Infinity,1]'::vector;\r\nSELECT '[1.5e38,-1.5e38]'::vector;\r\n```\r\n\r\nin the expected output\r\n```\r\ncat results/vector.out\r\n-- complain if script is sourced in psql, rather than via CREATE EXTENSION\r\n\\echo Use \"CREATE EXTENSION vector\" to load this file. \\quit\r\nUse \"CREATE EXTENSION vector\" to load this file.\r\n```\r\n"
+  }
+ ],
+ "faiss_nan": [
+  {
+   "title": "Search returns low recall even with small data",
+   "url": "https://github.com/facebookresearch/faiss/issues/600",
+   "state": "closed",
+   "comments": 11,
+   "created": "2018-09-26",
+   "body": "# Summary\r\n\r\n<!-- Facebook has a bounty program for the safe disclosure of security bugs. In\r\nthose cases, please go through the process outlined on that page and do not\r\nfile a public issue. -->\r\n\r\nfaiss search return low recall even with database with 100 vectors with brute-force option `IndexFlatL2`\r\n\r\n# Platform\r\n\r\n<!-- if the question/problem is not platform-specific, please ignore this -->\r\n\r\nOS: <!-- e.g. macOS 10.13.3 -->\r\n\r\nFaiss version: <!-- git commit, e.g. 56383610bcb982d6591e2e2bea3516cb7723e04a -->\r\n\r\nFaiss compilation options: <!-- e.g. using MKL with compile flags ... -->\r\n\r\nRunning on:\r\n- [x ] CPU\r\n- [ ] GPU\r\n\r\nInterface: \r\n- [ ] C++\r\n- [ x] Python\r\n\r\n# Reproduction instructions\r\n## 1. Low recall\r\nDownload xb.dat, xq.dat https://drive.google.com/drive/folders/1OKM9QjqzxZWUci8l91dROuwGRX_UVAto?usp=sharing\r\n<!-- Please provide specific and comprehensive instructions to reproduce the\r\ndescribed behavior. -->\r\n```\r\nimport numpy as np\r\nimport faiss\r\n\r\nxb = np.load('xb.dat')\r\nxq = np.load('xq.dat')\r\nindex = faiss.IndexFlatL2(d)\r\nindex.train(xb)\r\nindex.add(xb)\r\nindex.nprobe = 1              # default nprobe is 1, try a few more\r\n\r\nt0 = time.time()\r\nD, I = index.search(xq, 10)\r\nt1 = time.time()\r\n\r\nks = [1,10]\r\nfor k in ks: \r\n    recall_at_1 = (I[:, :k] == gt[:, :k]).sum() / float(nq) / k\r\n    print(\"\\t %7.3f ms per query, R@%-2d %.4f\" % (\r\n    (t1 - t0) * 1000.0 / nq, k, recall_at_1))\r\n```\r\n\r\nThe result will be\r\n```\r\n0.054 ms per query, R@1  0.8000\r\n0.054 ms per que"
+  },
+  {
+   "title": "get different results every time I use faiss.kmeans to search",
+   "url": "https://github.com/facebookresearch/faiss/issues/3818",
+   "state": "closed",
+   "comments": 3,
+   "created": "2024-09-02",
+   "body": "# Summary\r\n\r\nWhen I use `faiss.kmeans` to cluster a 1M sample, I find that I get different results when using different data slices. The details are as follows:\r\n\r\n```python\r\n# npdata.shape: (1M, 2048)\r\nclsterFunc = faiss.Kmeans(npdata.shape[1], 850, niter=20, verbose=True, gpu=True)\r\nclsterFunc.train(npdata)\r\n_, _preds = clsterFunc.index.search(npdata, 1)\r\n_preds = _preds.flatten()\r\nprint(f'the result of sample0 is: {_preds[0]}')  # 511\r\n_, _preds = clsterFunc.index.search(npdata[:100], 1)\r\n_preds = _preds.flatten()\r\nprint(f'the result of sample0 is: {_preds[0]}')  # 493\r\n_, _preds = clsterFunc.index.search(npdata[0].reshape(1, -1), 1)\r\nprint(f'the result of sample0 is: {_preds[0]}')  # 498\r\n```\r\n\r\nAdditionally, if I use the full dataset to search the clustering results, I find that almost all the samples are assigned to a single cluster, specifically cluster 511.\r\n\r\n```\r\nthe clustering results: Counter({511: 1341172, 203: 16})\r\n```\r\n\r\n# Platform\r\n\r\n\r\nOS: CentOS Linux release 7.6 (Final)\r\n\r\nFaiss version: faiss-gpu 1.7.2\r\n\r\nInstalled from: pip \r\n\r\nRunning on:\r\n- [ ] CPU\r\n- [x] GPU\r\n\r\nInterface: \r\n- [ ] C++\r\n- [x] Python\r\n"
+  },
+  {
+   "title": "METRIC_Canberra produces NaN for shared-zero dimensions, causing valid neighbors to be dropped",
+   "url": "https://github.com/facebookresearch/faiss/issues/5557",
+   "state": "closed",
+   "comments": 1,
+   "created": "2026-09-02",
+   "body": "## Summary\n\n`METRIC_Canberra` produces `NaN` when a query vector and a database vector are both zero in the same dimension.\n\nUnder the standard Canberra distance definition, a dimension where both values are zero contributes `0`. Faiss currently performs the raw `0/0` floating-point division instead, causing the entire vector distance to become `NaN`.\n\nDuring `IndexFlat` search, a `NaN` distance cannot pass the result-heap comparison, so the corresponding candidate is silently dropped. If every candidate has at least one shared-zero dimension with the query, the search returns only the empty-result sentinels:\n\n```text\ndistance = FLT_MAX\nlabel    = -1\n```\n\nAs a result, a zero-containing vector may not even retrieve itself.\n\nThis is a functional correctness issue, not a crash, security, liveness, or performance report.\n\n## Environment\n\n* Faiss: `faiss-cpu==1.15.0`\n* Interface: Python\n* Device: CPU\n* Index: `IndexFlat`\n* Metric: `METRIC_Canberra`\n\n## Minimal reproduction\n\n```python\nimport faiss\nimport numpy as np\n\nxb = np.array(\n    [\n        [0.0, 0.0],\n        [1.0, 0.0],\n        [0.0, 2.0],\n    ],\n    dtype=\"float32\",\n)\nxq = np.array([[0.0, 0.0]], dtype=\"float32\")\n\n# Directly expose the metric-level result.\npairwise = faiss.pairwise_distances(\n    xq,\n    xb,\n    faiss.METRIC_Canberra,\n)\n\nindex = faiss.IndexFlat(2, faiss.METRIC_Canberra)\nindex.add(xb)\nD, I = index.search(xq, 3)\n\nprint(\"pairwise:\", pairwise)\nprint(\"distances:\", D)\nprint(\"labels:\", I)\n\n# Expected Canberra dista"
+  },
+  {
+   "title": "IndexRefine range_search can return results outside the radius after refinement",
+   "url": "https://github.com/facebookresearch/faiss/issues/5367",
+   "state": "closed",
+   "comments": 1,
+   "created": "2026-07-01",
+   "body": "## Summary\n\n`IndexRefine::range_search` can return vectors whose final reported distance is outside the requested radius.\n\nThe public contract of `Index::range_search` says that it should return vectors with distance `< radius`. However, when using `IndexRefineFlat`, the final result can contain a vector whose returned refined distance is greater than the radius.\n\nThis leads to an incorrect range-search result: the result set contains a label that should have been excluded.\n\n## Bug Type\n\nIncorrect result\n\n## Environment\n\n```text\nFAISS version: 1.14.2\nPython version: 3.13.9\nOS: Windows 11\nBuild method: pip faiss-cpu\n```\n\n## Reproducer\n\n```python\nimport faiss\nimport numpy as np\nimport platform\nimport sys\n\nprint(\"faiss version:\", getattr(faiss, \"__version__\", \"unknown\"))\nprint(\"python:\", sys.version.split()[0])\nprint(\"os:\", platform.platform())\n\nxtrain = np.array([[0.0], [1.0]], dtype=\"float32\")\nxb = np.array([[0.49]], dtype=\"float32\")\nxq = np.array([[0.0]], dtype=\"float32\")\nradius = np.float32(0.23769901)\n\nbase = faiss.IndexScalarQuantizer(\n    1, faiss.ScalarQuantizer.QT_6bit, faiss.METRIC_L2\n)\nbase.train(xtrain)\n\nindex = faiss.IndexRefineFlat(base)\nindex.add(xb)\n\nexact_distance = np.sum((xq[0] - xb[0]) ** 2).astype(\"float32\")\nprint(\"radius:\", float(radius))\nprint(\"exact squared L2 distance:\", float(exact_distance))\nprint(\"expected labels because exact distance >= radius:\", [])\n\nlims, D, I = index.range_search(xq, float(radius))\nprint(\"actual lims:\", lims.tolist())\nprint(\"actu"
+  },
+  {
+   "title": "IndexFlatL2 silently drops rows containing non-finite components from search results (-1 slots) without any error (1.15.0)",
+   "url": "https://github.com/facebookresearch/faiss/issues/5684",
+   "state": "open",
+   "comments": 0,
+   "created": "2026-09-29",
+   "body": "## Current Behavior\n\n`IndexFlatL2::add` accepts vectors containing NaN / +Inf without error, and `search` then silently OMITS those rows from results: with k=3 over a 3-row index, only 1 result is returned and the remaining slots are padded with -1.\n\n```\nrows: 0 = [NaN, 1], 1 = [Inf, 1], 2 = [0.5, 1]; query = [0.5, 1]\nsearch(q, k=3) -> I = [2, -1, -1], D = [0.0, FLT_MAX, FLT_MAX]\n```\n\nThe true nearest row is correct; the two non-finite rows are neither returned with an inf/NaN distance nor flagged in any way. A caller cannot distinguish \"fewer than k valid rows exist\" from \"rows were discarded\", and the effective k silently shrinks depending on data values.\n\n## Expected Behavior\n\nAt minimum, one of:\n\n1. reject non-finite components at `add` time with a clear error (ecosystem precedent: pgvector rejects with \"NaN not allowed in vector\"; Qdrant treats API-boundary rejection as the correct policy in #9378), or\n2. return the rows with inf/NaN distances and let the caller filter.\n\nSilently shrinking the result set is the most dangerous of the options because it corrupts exact-search contracts (min(k, n) results) without any signal.\n\n## Steps to Reproduce\n\n`reproduce.py --output observed.json` (Python 3 + faiss + numpy only). Adds the three rows, searches k=3, prints ids/distances, and exits non-zero unless 3 rows come back with no -1 slot. Deterministic; `observed.json` is from an actual run, executed twice with identical results.\n\n```python\nimport numpy as np, faiss\nidx = faiss.I"
+  }
+ ],
+ "hnswlib_recall_deleted": [],
+ "lc_multi_tenant": [
+  {
+   "title": "Feature Request: Encrypted Memory Backends for LangChain",
+   "url": "https://github.com/langchain-ai/langchain/issues/34953",
+   "state": "closed",
+   "comments": 2,
+   "created": "2026-02-01",
+   "body": "### Checked other resources\n\n- [x] This is a feature request, not a bug report or usage question.\n- [x] I added a clear and descriptive title that summarizes the feature request.\n- [x] I used the GitHub search to find a similar feature request and didn't find it.\n- [x] I checked the LangChain documentation and API reference to see if this feature already exists.\n- [x] This is not related to the langchain-community package.\n\n### Package (Required)\n\n- [ ] langchain\n- [ ] langchain-openai\n- [ ] langchain-anthropic\n- [ ] langchain-classic\n- [x] langchain-core\n- [ ] langchain-model-profiles\n- [ ] langchain-tests\n- [ ] langchain-text-splitters\n- [ ] langchain-chroma\n- [ ] langchain-deepseek\n- [ ] langchain-exa\n- [ ] langchain-fireworks\n- [ ] langchain-groq\n- [ ] langchain-huggingface\n- [ ] langchain-mistralai\n- [ ] langchain-nomic\n- [ ] langchain-ollama\n- [ ] langchain-perplexity\n- [ ] langchain-prompty\n- [ ] langchain-qdrant\n- [ ] langchain-xai\n- [x] Other / not sure / general\n\n# Encrypted Chat Memory for LangChain  \n### Feature Proposal\n\n## Feature Description\n\nIntroduce first-class encrypted memory backends to LangChain for secure, PII-safe chat history storage across Redis, MongoDB, and other datastores.  \nThis enables LangChain to be safely used in healthcare, finance, enterprise, and any production environment requiring encrypted data-at-rest.\n\n---\n\n## Use Case\n\nExisting LangChain memory backends (such as `RedisChatMessageHistory` and `MongoDBChatMessageHistory`) store all me"
+  },
+  {
+   "title": "`InMemoryVectorStore` stores and returns metadata by reference: out-of-store mutation silently rewrites stored documents",
+   "url": "https://github.com/langchain-ai/langchain/issues/41218",
+   "state": "closed",
+   "comments": 1,
+   "created": "2026-10-12",
+   "body": "### Submission checklist\n\n- [x] This is a bug, not a usage question.\n- [x] I added a clear and descriptive title that summarizes this issue.\n- [x] I used the GitHub search to find a similar question and didn't find it.\n- [x] I am sure that this is a bug in LangChain rather than my code.\n- [x] The bug is not resolved by updating to the latest stable version of LangChain (or the specific integration package).\n- [x] This is not related to the langchain-community package.\n- [x] I posted a self-contained, minimal, reproducible example. A maintainer can copy it and run it AS IS.\n\n### Package (Required)\n\n- [ ] langchain\n- [ ] langchain-openai\n- [ ] langchain-anthropic\n- [ ] langchain-classic\n- [x] langchain-core\n- [ ] langchain-model-profiles\n- [ ] langchain-tests\n- [ ] langchain-text-splitters\n- [ ] langchain-chroma\n- [ ] langchain-deepseek\n- [ ] langchain-exa\n- [ ] langchain-fireworks\n- [ ] langchain-groq\n- [ ] langchain-huggingface\n- [ ] langchain-mistralai\n- [ ] langchain-nomic\n- [ ] langchain-ollama\n- [ ] langchain-openrouter\n- [ ] langchain-perplexity\n- [ ] langchain-qdrant\n- [ ] langchain-typesafe\n- [ ] langchain-xai\n- [ ] Other / not sure / general\n\n### Related Issues / PRs\n\n(1 WebSearch + 8 GitHub query variants, including a full title scan of `InMemoryVectorStore` issues) \u2014 no record for this root cause. Closest: PR #17612 (a sibling vector store got `copy.deepcopy` for metadata, with a regression test \u2014 that merge establishes the practice this issue asks to apply here) an"
+  }
+ ],
+ "lc_parent_retriever": [
+  {
+   "title": "Issue: ParentDocumentRetriever is slow with FAISS because add_documents uses embed_query without batching",
+   "url": "https://github.com/langchain-ai/langchain/issues/9929",
+   "state": "closed",
+   "comments": 9,
+   "created": "2023-08-29",
+   "body": "### Issue you'd like to raise.\n\nI wanted to use the new `ParentDocumentRetriever` but found the indexing extremely slow. I think the reason\r\nis this line here https://github.com/langchain-ai/langchain/blob/e80834d783c6306a68df54e6251d9fc307aee87c/libs/langchain/langchain/retrievers/parent_document_retriever.py#L112\r\n\r\nthe `add_documents` for FAISS calls the `embed_texts` function in a list comprehension here https://github.com/langchain-ai/langchain/blob/e80834d783c6306a68df54e6251d9fc307aee87c/libs/langchain/langchain/vectorstores/faiss.py#L166\r\n\r\nThis only embeds a single chunk of text at a time which is really slow, especially when using OpenAIEmbeddings. Replacing this with a call to OpenAIEmbeddings.embed_documents(docs) would result in a huge speedup as it batches things up per API call (default batch size of a 1000). \r\n\r\nI replaced the `self.vectorstore.add_documents(docs)` with \r\n\r\n```python\r\ntexts = [doc.page_content for doc in docs]\r\nmetadatas = [doc.metadata for doc in docs]\r\nembeddings = OpenAIEmbeddings().embed_documents([doc.page_content for doc in docs])\r\nself.vectorstore._FAISS__add(texts, embeddings, metadatas)\r\n```\r\n\r\nBut a more general solution would be needed where because on initialisation only the `embed_function` is stored and not the underlying embedding model itself.\r\n\n\n### Suggestion:\n\n_No response_"
+  },
+  {
+   "title": "ParentDocumentRetriever doesn't implement BaseRetriever._aget_relevant_documents",
+   "url": "https://github.com/langchain-ai/langchain/issues/9707",
+   "state": "closed",
+   "comments": 5,
+   "created": "2023-08-24",
+   "body": "### System Info\n\nLangChain Version: 0.0.271, Python 3.11\r\n\r\nLike the title says, _aget_relevant_documents isn't implemented in ParentDocumentRetriever so async calls are not working.  It throws an NotImplementedError in BaseRetriever:\r\n```\r\n    async def _aget_relevant_documents(\r\n        self, query: str, *, run_manager: AsyncCallbackManagerForRetrieverRun\r\n    ) -> List[Document]:\r\n        \"\"\"Asynchronously get documents relevant to a query.\r\n        Args:\r\n            query: String to find relevant documents for\r\n            run_manager: The callbacks handler to use\r\n        Returns:\r\n            List of relevant documents\r\n        \"\"\"\r\n        raise NotImplementedError()\r\n```\r\n        \n\n### Who can help?\n\n@hwchase17 @agola11 \n\n### Information\n\n- [ ] The official example notebooks/scripts\n- [X] My own modified scripts\n\n### Related Components\n\n- [ ] LLMs/Chat Models\n- [ ] Embedding Models\n- [ ] Prompts / Prompt Templates / Prompt Selectors\n- [ ] Output Parsers\n- [ ] Document Loaders\n- [X] Vector Stores / Retrievers\n- [ ] Memory\n- [ ] Agents / Agent Executors\n- [ ] Tools / Toolkits\n- [ ] Chains\n- [ ] Callbacks/Tracing\n- [ ] Async\n\n### Reproduction\n\nJust do a chain.acall from a chain using documents, (like a ConverstionalRetrievalChain), and it should trigger this error.\n\n### Expected behavior\n\nShould be able to call the chain async when using ParentDocumentRetriever."
+  },
+  {
+   "title": "Issue: document_variable_name context was not found in llm_chain input_variables:",
+   "url": "https://github.com/langchain-ai/langchain/issues/15528",
+   "state": "closed",
+   "comments": 4,
+   "created": "2024-01-04",
+   "body": "### Issue you'd like to raise.\n\nbelow is my code where I am  implementing Memory with Prompt Template\r\ndef generate_custom_prompt(query=None,name=None,not_uuid=None,chroma_db_path=None):  \r\n    check = query.lower() \r\n    embedding = OpenAIEmbeddings()\r\n    vectordb = Chroma(persist_directory=chroma_db_path, embedding_function=embedding)\r\n    retriever = vectordb.as_retriever(search_kwargs={\"k\": 2})\r\n    relevant_document = retriever.get_relevant_documents(query)\r\n    print(relevant_document,\"*****************************************\")\r\n    context_text=\"\\n\\n---\\n\\n\".join([doc.page_content for doc in relevant_document])\r\n    # print(context_text,\"context_text\")\r\n    user_experience_inst = UserExperience.objects.get(not_uuid=not_uuid)\r\n    greetings = ['hi', 'hello', 'hey', 'hui', 'hiiii', 'hii', 'hiii', 'heyyy']\r\n    if check in greetings:\r\n        custom_prompt_template = f\"\"\"\r\n        Just simply reply with \"Hello {name}! How can I assist you today?\"\r\n        \"\"\"\r\n    elif check not in greetings and user_experience_inst.custom_prompt:\r\n        custom_prompt_template = f\"\"\"Answer the question based only on following context: ```{context_text} ```\r\n        You are a chatbot designed to provide answers to User's Questions:```{check}```, delimited by triple backticks.\r\n        Generate your answer to match the user's requirements: {user_experience_inst.custom_prompt}\r\n        If you encounter a question for which you don't know the answer, please respond with 'I don't know' and"
+  },
+  {
+   "title": "Bug: Weaviate raise doc_id error using with ParentDocumentRetriever ",
+   "url": "https://github.com/langchain-ai/langchain/issues/13563",
+   "state": "closed",
+   "comments": 2,
+   "created": "2023-11-18",
+   "body": "### System Info\r\n\r\nLangChain Version: 0.0.337\r\nPython: 3.10\r\n\r\n### Who can help?\r\n\r\n@hwchase17 \r\n\r\nNote: I am facing this issue with Weaviate, when I use the Chroma Vector Store it's working fine.\r\n\r\nI am trying to use \"Weaviate Vector DB\" with  ParentDocumentRetriever and I am getting this error during the pipeline:\r\n\r\n```\r\n---------------------------------------------------------------------------\r\nKeyError                                  Traceback (most recent call last)\r\nCell In[13], line 1\r\n----> 1 retriever.get_relevant_documents(\"realization\")\r\n\r\nFile ~/miniconda3/envs/docs_qa/lib/python3.10/site-packages/langchain/schema/retriever.py:211, in BaseRetriever.get_relevant_documents(self, query, callbacks, tags, metadata, run_name, **kwargs)\r\n    209 except Exception as e:\r\n    210     run_manager.on_retriever_error(e)\r\n--> 211     raise e\r\n    212 else:\r\n    213     run_manager.on_retriever_end(\r\n    214         result,\r\n    215         **kwargs,\r\n    216     )\r\n\r\nFile ~/miniconda3/envs/docs_qa/lib/python3.10/site-packages/langchain/schema/retriever.py:204, in BaseRetriever.get_relevant_documents(self, query, callbacks, tags, metadata, run_name, **kwargs)\r\n    202 _kwargs = kwargs if self._expects_other_args else {}\r\n    203 if self._new_arg_supported:\r\n--> 204     result = self._get_relevant_documents(\r\n    205         query, run_manager=run_manager, **_kwargs\r\n    206     )\r\n    207 else:\r\n    208     result = self._get_relevant_documents(query, **_kwargs)\r\n\r\nFile ~/mi"
+  }
+ ]
+}

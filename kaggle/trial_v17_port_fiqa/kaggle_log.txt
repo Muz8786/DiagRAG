@@ -1,0 +1,54 @@
+[{"stream_name":"stderr","time":6.892271347,"data":"/usr/local/lib/python3.13/dist-packages/nbformat/validator.py:434: MissingIDFieldWarning: Cell is missing an id field, this will become a hard error in future nbformat versions. You may want to use `normalize()` on your notebooks before validations (available since nbformat 5.1.4). Previous versions of nbformat are fixing this issue transparently, and will stop doing so in the future.\n"}
+,{"stream_name":"stderr","time":6.89232541,"data":"  _validate(nbdict, ref, version, version_minor, relax_add_props)\n"}
+,{"stream_name":"stderr","time":7.829321579,"data":"0.00s - Debugger warning: It seems that frozen modules are being used, which may\n"}
+,{"stream_name":"stderr","time":7.829355993,"data":"0.00s - make the debugger miss breakpoints. Please pass -Xfrozen_modules=off\n"}
+,{"stream_name":"stderr","time":7.829359405,"data":"0.00s - to python to disable frozen modules.\n"}
+,{"stream_name":"stderr","time":7.829361878,"data":"0.00s - Note: Debugging will proceed. Set PYDEVD_DISABLE_FILE_VALIDATION=1 to disable this validation.\n"}
+,{"stream_name":"stderr","time":8.4246316,"data":"0.00s - Debugger warning: It seems that frozen modules are being used, which may\n"}
+,{"stream_name":"stderr","time":8.4246658,"data":"0.00s - make the debugger miss breakpoints. Please pass -Xfrozen_modules=off\n"}
+,{"stream_name":"stderr","time":8.424671495,"data":"0.00s - to python to disable frozen modules.\n"}
+,{"stream_name":"stderr","time":8.424676197,"data":"0.00s - Note: Debugging will proceed. Set PYDEVD_DISABLE_FILE_VALIDATION=1 to disable this validation.\n"}
+,{"stream_name":"stdout","time":9.746893396,"data":"ok v17_port_selftest.py 0f740497bf246c41\n"}
+,{"stream_name":"stdout","time":9.746926004,"data":"ok diagrag_port5.py 916c3864282b1d9c\n"}
+,{"stream_name":"stdout","time":10.089535399,"data":"staged /kaggle/input/datasets/sqmuzammil/diagrag-v13-data-fiqa/corpus-webis-qspell-17.zip.bin\n"}
+,{"stream_name":"stdout","time":10.089565876,"data":"staged /kaggle/input/datasets/sqmuzammil/diagrag-v13-data-fiqa/fiqa.zip.bin\n"}
+,{"stream_name":"stdout","time":10.194026181,"data":"judged fiqa run, seed 60\n"}
+,{"stream_name":"stdout","time":221.268108474,"data":"[      5s] verify {'fiqa': {'bytes': 17948027, 'sha256': '32c7df99ed21252fdfb2cf3f5673502a8d245ee0c44c4a133570d92ce2b3ad02'}, 'qspell': {'bytes': 2285705, 'sha256': 'f13bd165544ab2ac75d63de4334feb86d74d1b3dfbe48d79423133552b5054e4'}} purity {'docs': 57638, 'unique_ids': 57638, 'empty': 38, 'exact_dup_rows': 39, 'queries_with_qrels': Counter({'test': 1257, 'train': 1243})}\n"}
+,{"stream_name":"stdout","time":221.268150136,"data":"[     26s] embedding corpus\n"}
+,{"stream_name":"stdout","time":221.268194432,"data":"[     46s] HNSW built 57638\n"}
+,{"stream_name":"stdout","time":221.268200919,"data":"[     47s] clean runs 2500\n"}
+,{"stream_name":"stdout","time":221.268205709,"data":"[     48s] clean Hit@5 {'train': 0.5599356395816573, 'test': 0.5354017501988863} HNSW@128 recall@10 vs exact 0.8634999999999999\n"}
+,{"stream_name":"stdout","time":221.268211513,"data":"[    90s] setup done\n"}
+,{"stream_name":"stdout","time":221.268216306,"data":"[   138s] pool 40 traffic 6 TAU 0.11616138747830651\n"}
+,{"stream_name":"stdout","time":221.268220785,"data":"[   174s] dictionary {'R01': 0.117, 'R03': 0.375, 'R05': 0.575, 'R07': 0.058, 'R10': 0.275, 'R11': 0.325, 'R13': 0.058, 'R15': 0.188, 'R19': 0.05, 'R22': 0.2, 'R23': 0.212, 'R24': 0.45, 'R25': 0.575, 'K04': 0.033}\n"}
+,{"stream_name":"stdout","time":221.268225716,"data":"[   174s] battery {'size': 14, 'random_part': 10, 'diagnostic_part': 4, 'undetected_faults': ['K04']}\n"}
+,{"stream_name":"stdout","time":221.268231368,"data":"[   181s] single R01 {'harmful': True, 'detected': True, 'named': ['R19'], 'verified': True}\n"}
+,{"stream_name":"stdout","time":221.268245666,"data":"[   186s] single R03 {'harmful': True, 'detected': True, 'named': ['R03'], 'verified': True}\n"}
+,{"stream_name":"stdout","time":221.268250077,"data":"[   191s] single R05 {'harmful': True, 'detected': True, 'named': ['R05'], 'verified': True}\n"}
+,{"stream_name":"stdout","time":221.26825427,"data":"[   196s] pair R07 R23 {'effective': False, 'named': ['R23', 'R07'], 'both_family': True, 'verified': True}\n"}
+,{"stream_name":"stdout","time":221.268258627,"data":"[   200s] pair R03 R23 {'effective': True, 'named': ['R03', 'R23'], 'both_family': True, 'verified': True}\n"}
+,{"stream_name":"stdout","time":221.268262651,"data":"[   206s] pair R11 R24 {'effective': True, 'named': ['R11', 'R24'], 'both_family': True, 'verified': True}\n"}
+,{"stream_name":"stdout","time":221.268267102,"data":"[   206s] summary {'singles': 3, 'harmful_singles': 3, 'detected': 1.0, 'family': 0.6666666666666666, 'verified': 1.0, 'effective_pairs': 2, 'pairs_both_family': 1.0, 'pairs_verified': 1.0, 'agg_both': 0.0}\n"}
+,{"stream_name":"stdout","time":221.268282565,"data":"[   206s] done\n"}
+,{"stream_name":"stdout","time":221.268288684,"data":"\n"}
+,{"stream_name":"stdout","time":221.268292422,"data":"Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.\n"}
+,{"stream_name":"stdout","time":221.268297165,"data":"\n"}
+,{"stream_name":"stdout","time":221.268301281,"data":"Loading weights:   0%|          | 0/199 [00:00\u003c?, ?it/s]\n"}
+,{"stream_name":"stdout","time":221.268308499,"data":"Loading weights: 100%|██████████| 199/199 [00:00\u003c00:00, 2728.08it/s]\n"}
+,{"stream_name":"stdout","time":221.26831358,"data":"\n"}
+,{"stream_name":"stdout","time":221.268317159,"data":"Loading weights:   0%|          | 0/199 [00:00\u003c?, ?it/s]\n"}
+,{"stream_name":"stdout","time":221.268320961,"data":"Loading weights: 100%|██████████| 199/199 [00:00\u003c00:00, 2747.34it/s]\n"}
+,{"stream_name":"stdout","time":221.268325029,"data":"\n"}
+,{"stream_name":"stdout","time":221.268328521,"data":"Loading weights:   0%|          | 0/105 [00:00\u003c?, ?it/s]\n"}
+,{"stream_name":"stdout","time":221.268332605,"data":"Loading weights: 100%|██████████| 105/105 [00:00\u003c00:00, 2763.93it/s]\n"}
+,{"stream_name":"stdout","time":221.268336581,"data":"\n"}
+,{"stream_name":"stdout","time":221.277606512,"data":"peak RSS children (GB): 2.37\n"}
+,{"stream_name":"stderr","time":223.750976253,"data":"/usr/local/lib/python3.13/dist-packages/mistune.py:435: SyntaxWarning: invalid escape sequence '\\|'\n"}
+,{"stream_name":"stderr","time":223.751003969,"data":"  cells[i][c] = re.sub('\\\\\\\\\\|', '|', cell)\n"}
+,{"stream_name":"stderr","time":223.894198774,"data":"/usr/local/lib/python3.13/dist-packages/nbconvert/filters/filter_links.py:36: SyntaxWarning: invalid escape sequence '\\_'\n"}
+,{"stream_name":"stderr","time":223.894225599,"data":"  text = re.sub(r'_', '\\_', text) # Escape underscores in display text\n"}
+,{"stream_name":"stderr","time":224.639455618,"data":"[NbConvertApp] Converting notebook __notebook__.ipynb to notebook\n"}
+,{"stream_name":"stderr","time":224.713963015,"data":"[NbConvertApp] Writing 41151 bytes to __notebook__.ipynb\n"}
+,{"stream_name":"stderr","time":227.232410454,"data":"[NbConvertApp] Converting notebook __notebook__.ipynb to html\n"}
+,{"stream_name":"stderr","time":227.728311595,"data":"[NbConvertApp] Writing 326818 bytes to __results__.html\n"}
+]

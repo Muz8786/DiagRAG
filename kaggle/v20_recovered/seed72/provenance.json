@@ -1,0 +1,15 @@
+{
+  "seed": 72,
+  "source_episode_path": "/kaggle/input/notebooks/sqmuzammil/diagrag-v14-seed72/diagrag_out/episodes.jsonl",
+  "started_utc": "2026-11-21T16:57:30.002023+00:00",
+  "python": "3.13.18",
+  "sklearn": "1.6.1",
+  "sha256": {
+    "/kaggle/input/notebooks/sqmuzammil/diagrag-v14-seed72/diagrag_out/episodes.jsonl": "e88f532d22f9a2dd2210f41f2ab8ae0e8fc5664269a6f1edcf8977cb4835ec2e",
+    "/kaggle/input/notebooks/sqmuzammil/diagrag-v14-seed72/diagrag_out/JUDGED_PROTOCOL.json": "f62ab80f7fcc4507aad6091da052627f2f71b2ed9e2754f9fbb93cc3972aa0c0",
+    "/kaggle/working/code/v20_ablation.py": "d2924da345eb71312d9a06255374d82e457b93e51591f241d7238ab0f13a5a0b",
+    "/kaggle/working/code/v20_feature_manifest.json": "84c988c244d0892f09c7e413f36b94131ddfb8c5b1582118a4918656f1d17f60"
+  },
+  "change": "Launcher recovery only: unique directory and seed filter. Frozen analysis unchanged.",
+  "completed_utc": "2026-11-21T17:12:38.367332+00:00"
+}

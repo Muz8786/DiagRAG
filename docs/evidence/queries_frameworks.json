@@ -1,0 +1,17 @@
+{
+ "lc_duplicate_docs": "repo:langchain-ai/langchain duplicate documents retriever",
+ "lc_embedding_mismatch": "repo:langchain-ai/langchain different embedding model query documents",
+ "lc_score_threshold": "repo:langchain-ai/langchain similarity_score_threshold wrong scores",
+ "lc_ensemble_weights": "repo:langchain-ai/langchain EnsembleRetriever weights",
+ "lc_chunk_overlap": "repo:langchain-ai/langchain text splitter chunk_overlap lost text",
+ "li_stale_index": "repo:run-llama/llama_index refresh index stale documents",
+ "li_reranker": "repo:run-llama/llama_index reranker truncation max_length",
+ "li_metadata_filter": "repo:run-llama/llama_index metadata filter ignored retriever",
+ "li_embed_dim": "repo:run-llama/llama_index embedding dimension mismatch vector store",
+ "hay_join_scores": "repo:deepset-ai/haystack DocumentJoiner scores",
+ "hay_bm25_tokenizer": "repo:deepset-ai/haystack BM25 tokenization",
+ "st_max_seq_length": "repo:UKPLab/sentence-transformers max_seq_length truncated silently",
+ "st_prompt_instruction": "repo:UKPLab/sentence-transformers query instruction prompt missing",
+ "st_normalize": "repo:UKPLab/sentence-transformers normalize_embeddings cosine dot",
+ "bge_instruction": "repo:FlagOpen/FlagEmbedding query instruction without"
+}

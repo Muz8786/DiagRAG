@@ -1,0 +1,47 @@
+{
+ "trial": false,
+ "role": "dev",
+ "dataset": "fiqa",
+ "seed": 60,
+ "code_sha256": "916c3864282b1d9c168cce6943340b52d8728334c3c960d33fcb0d2d4224294f",
+ "probes": 100,
+ "screen": 40,
+ "traffic": 100,
+ "TAU": 0.11616138747830651,
+ "M_points": {
+  "total": 380,
+  "covered": 220,
+  "covered_by_half": {
+   "dev": 115,
+   "heldout": 105
+  },
+  "by_fn": {
+   "bm25_scores": 14,
+   "enc_q": 10,
+   "ce_scores": 11,
+   "topn": 14,
+   "run": 171
+  }
+ },
+ "clean_stage_changes": {
+  "D": 0,
+  "S": 0,
+  "F": 0,
+  "O": 0,
+  "V": 0
+ },
+ "M": {
+  "evaluated": 115,
+  "status": {
+   "crash": 21,
+   "harmless": 73,
+   "harmful": 17,
+   "subtle": 4
+  },
+  "harmful": 17,
+  "detected_selftest": 1.0,
+  "detected_telemetry": 0.8823529411764706,
+  "component_ok": 1.0,
+  "n_component_scored": 16
+ }
+}

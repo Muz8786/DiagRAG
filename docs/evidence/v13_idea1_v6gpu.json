@@ -1,0 +1,935 @@
+{
+ "folder": "kaggle/judged_gpu_v6_seed50",
+ "split": "test",
+ "seed": 50,
+ "J": 35,
+ "alpha": 0.05,
+ "n_cal": 3904,
+ "per_fault": {
+  "K03": {
+   "n": 50,
+   "true": "CONTENT",
+   "inv_correct": 0.64,
+   "lofo_correct": 0.26,
+   "seen_correct": 1.0,
+   "inv_flagged": 0.76,
+   "inv_top": [
+    [
+     "CONTENT",
+     32
+    ],
+    [
+     "None",
+     12
+    ],
+    [
+     "VECTORS",
+     6
+    ]
+   ],
+   "lofo_top": [
+    [
+     "None",
+     34
+    ],
+    [
+     "CONTENT",
+     13
+    ],
+    [
+     "QUERY",
+     2
+    ]
+   ]
+  },
+  "K04": {
+   "n": 50,
+   "true": "VECTORS",
+   "inv_correct": 0.76,
+   "lofo_correct": 0.34,
+   "seen_correct": 0.76,
+   "inv_flagged": 0.78,
+   "inv_top": [
+    [
+     "VECTORS",
+     38
+    ],
+    [
+     "None",
+     11
+    ],
+    [
+     "QUERY",
+     1
+    ]
+   ],
+   "lofo_top": [
+    [
+     "None",
+     31
+    ],
+    [
+     "VECTORS",
+     17
+    ],
+    [
+     "ENCODER",
+     1
+    ]
+   ]
+  },
+  "K05": {
+   "n": 50,
+   "true": "CONTENT",
+   "inv_correct": 0.96,
+   "lofo_correct": 0.1,
+   "seen_correct": 0.96,
+   "inv_flagged": 0.96,
+   "inv_top": [
+    [
+     "CONTENT",
+     48
+    ],
+    [
+     "None",
+     2
+    ]
+   ],
+   "lofo_top": [
+    [
+     "None",
+     41
+    ],
+    [
+     "CONTENT",
+     5
+    ],
+    [
+     "FUSION",
+     2
+    ]
+   ]
+  },
+  "K06": {
+   "n": 50,
+   "true": "CONTENT",
+   "inv_correct": 0.94,
+   "lofo_correct": 0.92,
+   "seen_correct": 1.0,
+   "inv_flagged": 1.0,
+   "inv_top": [
+    [
+     "CONTENT",
+     47
+    ],
+    [
+     "VECTORS",
+     2
+    ],
+    [
+     "QUERY",
+     1
+    ]
+   ],
+   "lofo_top": [
+    [
+     "CONTENT",
+     46
+    ],
+    [
+     "None",
+     4
+    ]
+   ]
+  },
+  "K07": {
+   "n": 50,
+   "true": "FILTERS",
+   "inv_correct": 0.98,
+   "lofo_correct": 0.0,
+   "seen_correct": 1.0,
+   "inv_flagged": 1.0,
+   "inv_top": [
+    [
+     "FILTERS",
+     49
+    ],
+    [
+     "VECTORS",
+     1
+    ]
+   ],
+   "lofo_top": [
+    [
+     "None",
+     34
+    ],
+    [
+     "CONTENT",
+     14
+    ],
+    [
+     "ENCODER",
+     1
+    ]
+   ]
+  },
+  "K08": {
+   "n": 50,
+   "true": "CONTENT",
+   "inv_correct": 0.84,
+   "lofo_correct": 0.02,
+   "seen_correct": 0.94,
+   "inv_flagged": 0.94,
+   "inv_top": [
+    [
+     "CONTENT",
+     42
+    ],
+    [
+     "VECTORS",
+     5
+    ],
+    [
+     "None",
+     3
+    ]
+   ],
+   "lofo_top": [
+    [
+     "None",
+     47
+    ],
+    [
+     "QUERY",
+     2
+    ],
+    [
+     "CONTENT",
+     1
+    ]
+   ]
+  },
+  "K09": {
+   "n": 50,
+   "true": "FILTERS",
+   "inv_correct": 0.98,
+   "lofo_correct": 0.0,
+   "seen_correct": 1.0,
+   "inv_flagged": 1.0,
+   "inv_top": [
+    [
+     "FILTERS",
+     49
+    ],
+    [
+     "VECTORS",
+     1
+    ]
+   ],
+   "lofo_top": [
+    [
+     "None",
+     47
+    ],
+    [
+     "QUERY",
+     3
+    ]
+   ]
+  },
+  "K11": {
+   "n": 50,
+   "true": "SERVING",
+   "inv_correct": 0.98,
+   "lofo_correct": 0.0,
+   "seen_correct": 1.0,
+   "inv_flagged": 1.0,
+   "inv_top": [
+    [
+     "SERVING",
+     49
+    ],
+    [
+     "VECTORS",
+     1
+    ]
+   ],
+   "lofo_top": [
+    [
+     "CONTENT",
+     45
+    ],
+    [
+     "None",
+     5
+    ]
+   ]
+  },
+  "K12": {
+   "n": 50,
+   "true": "CONTENT",
+   "inv_correct": 0.18,
+   "lofo_correct": 0.24,
+   "seen_correct": 0.96,
+   "inv_flagged": 0.22,
+   "inv_top": [
+    [
+     "None",
+     39
+    ],
+    [
+     "CONTENT",
+     9
+    ],
+    [
+     "VECTORS",
+     2
+    ]
+   ],
+   "lofo_top": [
+    [
+     "None",
+     36
+    ],
+    [
+     "CONTENT",
+     12
+    ],
+    [
+     "QUERY",
+     2
+    ]
+   ]
+  },
+  "Q01": {
+   "n": 50,
+   "true": "QUERY",
+   "inv_correct": 0.0,
+   "lofo_correct": 0.22,
+   "seen_correct": 0.92,
+   "inv_flagged": 0.02,
+   "inv_top": [
+    [
+     "None",
+     49
+    ],
+    [
+     "ENCODER",
+     1
+    ]
+   ],
+   "lofo_top": [
+    [
+     "None",
+     39
+    ],
+    [
+     "QUERY",
+     11
+    ]
+   ]
+  },
+  "Q02": {
+   "n": 50,
+   "true": "QUERY",
+   "inv_correct": 0.94,
+   "lofo_correct": 0.0,
+   "seen_correct": 1.0,
+   "inv_flagged": 0.94,
+   "inv_top": [
+    [
+     "QUERY",
+     47
+    ],
+    [
+     "None",
+     3
+    ]
+   ],
+   "lofo_top": [
+    [
+     "None",
+     45
+    ],
+    [
+     "RERANK",
+     3
+    ],
+    [
+     "BM25",
+     1
+    ]
+   ]
+  },
+  "Q03": {
+   "n": 50,
+   "true": "QUERY",
+   "inv_correct": 0.02,
+   "lofo_correct": 0.0,
+   "seen_correct": 0.0,
+   "inv_flagged": 0.04,
+   "inv_top": [
+    [
+     "None",
+     48
+    ],
+    [
+     "CONTENT",
+     1
+    ],
+    [
+     "QUERY",
+     1
+    ]
+   ],
+   "lofo_top": [
+    [
+     "None",
+     48
+    ],
+    [
+     "ENCODER",
+     1
+    ],
+    [
+     "FUSION",
+     1
+    ]
+   ]
+  },
+  "Q04": {
+   "n": 50,
+   "true": "QUERY",
+   "inv_correct": 0.0,
+   "lofo_correct": 0.2,
+   "seen_correct": 0.74,
+   "inv_flagged": 0.04,
+   "inv_top": [
+    [
+     "None",
+     48
+    ],
+    [
+     "RERANK",
+     2
+    ]
+   ],
+   "lofo_top": [
+    [
+     "None",
+     40
+    ],
+    [
+     "QUERY",
+     10
+    ]
+   ]
+  },
+  "Q05": {
+   "n": 50,
+   "true": "QUERY",
+   "inv_correct": 0.04,
+   "lofo_correct": 0.1,
+   "seen_correct": 0.92,
+   "inv_flagged": 0.04,
+   "inv_top": [
+    [
+     "None",
+     48
+    ],
+    [
+     "QUERY",
+     2
+    ]
+   ],
+   "lofo_top": [
+    [
+     "None",
+     44
+    ],
+    [
+     "QUERY",
+     5
+    ],
+    [
+     "FILTERS",
+     1
+    ]
+   ]
+  },
+  "Q07": {
+   "n": 50,
+   "true": "QUERY",
+   "inv_correct": 0.0,
+   "lofo_correct": 0.04,
+   "seen_correct": 0.92,
+   "inv_flagged": 0.0,
+   "inv_top": [
+    [
+     "None",
+     50
+    ]
+   ],
+   "lofo_top": [
+    [
+     "None",
+     48
+    ],
+    [
+     "QUERY",
+     2
+    ]
+   ]
+  },
+  "Q09": {
+   "n": 50,
+   "true": "QUERY",
+   "inv_correct": 0.06,
+   "lofo_correct": 0.0,
+   "seen_correct": 1.0,
+   "inv_flagged": 0.06,
+   "inv_top": [
+    [
+     "None",
+     47
+    ],
+    [
+     "QUERY",
+     3
+    ]
+   ],
+   "lofo_top": [
+    [
+     "None",
+     50
+    ]
+   ]
+  },
+  "R01": {
+   "n": 50,
+   "true": "VECTORS",
+   "inv_correct": 0.98,
+   "lofo_correct": 0.0,
+   "seen_correct": 1.0,
+   "inv_flagged": 1.0,
+   "inv_top": [
+    [
+     "VECTORS",
+     49
+    ],
+    [
+     "QUERY",
+     1
+    ]
+   ],
+   "lofo_top": [
+    [
+     "None",
+     46
+    ],
+    [
+     "ENCODER",
+     1
+    ],
+    [
+     "RERANK",
+     1
+    ]
+   ]
+  },
+  "R03": {
+   "n": 50,
+   "true": "ENCODER",
+   "inv_correct": 0.98,
+   "lofo_correct": 0.76,
+   "seen_correct": 0.98,
+   "inv_flagged": 1.0,
+   "inv_top": [
+    [
+     "ENCODER",
+     49
+    ],
+    [
+     "QUERY",
+     1
+    ]
+   ],
+   "lofo_top": [
+    [
+     "ENCODER",
+     38
+    ],
+    [
+     "None",
+     7
+    ],
+    [
+     "QUERY",
+     3
+    ]
+   ]
+  },
+  "R05": {
+   "n": 50,
+   "true": "RERANK",
+   "inv_correct": 0.02,
+   "lofo_correct": 0.08,
+   "seen_correct": 1.0,
+   "inv_flagged": 0.02,
+   "inv_top": [
+    [
+     "None",
+     49
+    ],
+    [
+     "RERANK",
+     1
+    ]
+   ],
+   "lofo_top": [
+    [
+     "None",
+     44
+    ],
+    [
+     "RERANK",
+     4
+    ],
+    [
+     "QUERY",
+     2
+    ]
+   ]
+  },
+  "R06": {
+   "n": 50,
+   "true": "FILTERS",
+   "inv_correct": 0.0,
+   "lofo_correct": 0.0,
+   "seen_correct": 0.76,
+   "inv_flagged": 0.1,
+   "inv_top": [
+    [
+     "None",
+     45
+    ],
+    [
+     "RERANK",
+     5
+    ]
+   ],
+   "lofo_top": [
+    [
+     "None",
+     24
+    ],
+    [
+     "ENCODER",
+     19
+    ],
+    [
+     "QUERY",
+     4
+    ]
+   ]
+  },
+  "R07": {
+   "n": 50,
+   "true": "VECTORS",
+   "inv_correct": 1.0,
+   "lofo_correct": 1.0,
+   "seen_correct": 1.0,
+   "inv_flagged": 1.0,
+   "inv_top": [
+    [
+     "VECTORS",
+     50
+    ]
+   ],
+   "lofo_top": [
+    [
+     "VECTORS",
+     50
+    ]
+   ]
+  },
+  "R10": {
+   "n": 50,
+   "true": "ENCODER",
+   "inv_correct": 0.98,
+   "lofo_correct": 1.0,
+   "seen_correct": 1.0,
+   "inv_flagged": 1.0,
+   "inv_top": [
+    [
+     "ENCODER",
+     49
+    ],
+    [
+     "QUERY",
+     1
+    ]
+   ],
+   "lofo_top": [
+    [
+     "ENCODER",
+     50
+    ]
+   ]
+  },
+  "R11": {
+   "n": 50,
+   "true": "ENCODER",
+   "inv_correct": 1.0,
+   "lofo_correct": 1.0,
+   "seen_correct": 1.0,
+   "inv_flagged": 1.0,
+   "inv_top": [
+    [
+     "ENCODER",
+     50
+    ]
+   ],
+   "lofo_top": [
+    [
+     "ENCODER",
+     50
+    ]
+   ]
+  },
+  "R13": {
+   "n": 50,
+   "true": "BM25",
+   "inv_correct": 0.0,
+   "lofo_correct": 0.0,
+   "seen_correct": 1.0,
+   "inv_flagged": 0.02,
+   "inv_top": [
+    [
+     "None",
+     49
+    ],
+    [
+     "RERANK",
+     1
+    ]
+   ],
+   "lofo_top": [
+    [
+     "None",
+     48
+    ],
+    [
+     "QUERY",
+     2
+    ]
+   ]
+  },
+  "R15": {
+   "n": 50,
+   "true": "ANN",
+   "inv_correct": 1.0,
+   "lofo_correct": 0.0,
+   "seen_correct": 1.0,
+   "inv_flagged": 1.0,
+   "inv_top": [
+    [
+     "ANN",
+     50
+    ]
+   ],
+   "lofo_top": [
+    [
+     "FILTERS",
+     50
+    ]
+   ]
+  },
+  "R19": {
+   "n": 50,
+   "true": "RERANK",
+   "inv_correct": 1.0,
+   "lofo_correct": 0.02,
+   "seen_correct": 1.0,
+   "inv_flagged": 1.0,
+   "inv_top": [
+    [
+     "RERANK",
+     50
+    ]
+   ],
+   "lofo_top": [
+    [
+     "None",
+     46
+    ],
+    [
+     "QUERY",
+     3
+    ],
+    [
+     "RERANK",
+     1
+    ]
+   ]
+  },
+  "R22": {
+   "n": 50,
+   "true": "FUSION",
+   "inv_correct": 0.52,
+   "lofo_correct": 0.0,
+   "seen_correct": 0.88,
+   "inv_flagged": 0.56,
+   "inv_top": [
+    [
+     "FUSION",
+     26
+    ],
+    [
+     "None",
+     22
+    ],
+    [
+     "RERANK",
+     1
+    ]
+   ],
+   "lofo_top": [
+    [
+     "None",
+     45
+    ],
+    [
+     "QUERY",
+     3
+    ],
+    [
+     "ENCODER",
+     1
+    ]
+   ]
+  },
+  "R23": {
+   "n": 50,
+   "true": "SERVING",
+   "inv_correct": 0.0,
+   "lofo_correct": 0.0,
+   "seen_correct": 1.0,
+   "inv_flagged": 1.0,
+   "inv_top": [
+    [
+     "RERANK",
+     50
+    ]
+   ],
+   "lofo_top": [
+    [
+     "RERANK",
+     50
+    ]
+   ]
+  },
+  "R24": {
+   "n": 50,
+   "true": "RERANK",
+   "inv_correct": 0.0,
+   "lofo_correct": 0.0,
+   "seen_correct": 0.48,
+   "inv_flagged": 0.0,
+   "inv_top": [
+    [
+     "None",
+     50
+    ]
+   ],
+   "lofo_top": [
+    [
+     "None",
+     49
+    ],
+    [
+     "QUERY",
+     1
+    ]
+   ]
+  },
+  "R25": {
+   "n": 50,
+   "true": "VECTORS",
+   "inv_correct": 1.0,
+   "lofo_correct": 0.0,
+   "seen_correct": 1.0,
+   "inv_flagged": 1.0,
+   "inv_top": [
+    [
+     "VECTORS",
+     50
+    ]
+   ],
+   "lofo_top": [
+    [
+     "None",
+     46
+    ],
+    [
+     "QUERY",
+     3
+    ],
+    [
+     "CONTENT",
+     1
+    ]
+   ]
+  },
+  "R26": {
+   "n": 10,
+   "true": "FILTERS",
+   "inv_correct": 0.0,
+   "lofo_correct": 0.0,
+   "seen_correct": 0.8,
+   "inv_flagged": 1.0,
+   "inv_top": [
+    [
+     "ANN",
+     10
+    ]
+   ],
+   "lofo_top": [
+    [
+     "ANN",
+     10
+    ]
+   ]
+  }
+ },
+ "M1": {
+  "n_faults": 31,
+  "inv_macro": 0.5419354838709677,
+  "lofo_macro": 0.2032258064516129,
+  "seen_macro": 0.9038709677419354,
+  "diff": 0.3387096774193548,
+  "ci": [
+   0.18709677419354842,
+   0.5012903225806451
+  ]
+ },
+ "M2": {
+  "n_clean": 2508,
+  "false_alarm": 0.007177033492822967
+ },
+ "by_group": {
+  "Q": {
+   "inv": 0.15142857142857144,
+   "lofo": 0.08
+  },
+  "K": {
+   "inv": 0.8066666666666666,
+   "lofo": 0.2088888888888889
+  },
+  "R": {
+   "inv": 0.5653333333333334,
+   "lofo": 0.2573333333333333
+  }
+ }
+}

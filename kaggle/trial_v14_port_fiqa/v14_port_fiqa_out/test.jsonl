@@ -1,0 +1,40 @@
+{"fault": "NONE", "strat": "common", "s": 0.009703999590002343, "top": "Q05", "ok_rep": false, "ok_univ": false, "h5": false, "fixers": [], "random_success": 0.0, "nqc": 0.08937419607921583, "wig": 1.142044533700522, "ce1": 1.6163674592971802, "s_att": 0.009703999590002343}
+{"fault": "NONE", "strat": "common", "s": 0.054218558042891885, "top": "R13", "ok_rep": true, "ok_univ": true, "h5": true, "nqc": 0.19472778621968284, "wig": 2.225892860750656, "ce1": -0.691260039806366, "s_att": 0.054218558042891885}
+{"fault": "NONE", "strat": "common", "s": 0.0073692955851877295, "top": "K04", "ok_rep": false, "ok_univ": false, "h5": false, "fixers": [], "random_success": 0.0, "nqc": 0.1563044818450241, "wig": 1.509630097263784, "ce1": 0.980911910533905, "s_att": 0.0073692955851877295}
+{"fault": "NONE", "strat": "common", "s": 0.003477140989424199, "top": "R07", "ok_rep": true, "ok_univ": true, "h5": true, "nqc": 0.10188861610889204, "wig": 1.2183562787373858, "ce1": 1.6699090003967285, "s_att": 0.003477140989424199}
+{"fault": "NONE", "strat": "common", "s": 0.0033210534332603903, "top": "K04", "ok_rep": false, "ok_univ": false, "h5": false, "fixers": [], "random_success": 0.0, "nqc": 0.18953822898760314, "wig": 2.1964178511174444, "ce1": 2.557149887084961, "s_att": 0.0033210534332603903}
+{"fault": "NONE", "strat": "common", "s": 0.005124090300954953, "top": "K04", "ok_rep": true, "ok_univ": true, "h5": true, "nqc": 0.23643742969098008, "wig": 3.65085759360896, "ce1": 5.031693458557129, "s_att": 0.005124090300954953}
+{"fault": "NONE", "strat": "common", "s": 0.007541189017710059, "top": "R24", "ok_rep": false, "ok_univ": true, "h5": false, "fixers": ["K05", "R19", "UNIV"], "random_success": 0.14285714285714285, "nqc": 0.1363198095774368, "wig": 1.630974096118043, "ce1": -2.312208890914917, "s_att": 0.007541189017710059}
+{"fault": "NONE", "strat": "common", "s": 0.011701684768465115, "top": "R24", "ok_rep": true, "ok_univ": true, "h5": true, "nqc": 0.18145486874125874, "wig": 2.718259005359198, "ce1": 2.283304214477539, "s_att": 0.011701684768465115}
+{"fault": "NONE", "strat": "common", "s": 0.07203458749671976, "top": "R22", "ok_rep": false, "ok_univ": false, "h5": false, "fixers": [], "random_success": 0.0, "nqc": 0.12021587896024712, "wig": 1.2545776086721416, "ce1": 2.9862468242645264, "s_att": 0.07203458749671976}
+{"fault": "NONE", "strat": "common", "s": 0.0017228605205182879, "top": "K04", "ok_rep": false, "ok_univ": false, "h5": false, "fixers": [], "random_success": 0.0, "nqc": 0.08617817070716274, "wig": 0.9827925071353767, "ce1": -1.5529887676239014, "s_att": 0.0017228605205182879}
+{"fault": "NONE", "strat": "common", "s": 0.008750703182523245, "top": "R07", "ok_rep": false, "ok_univ": false, "h5": false, "fixers": [], "random_success": 0.0, "nqc": 0.13250494022123174, "wig": 2.2352706132164073, "ce1": 2.985886573791504, "s_att": 0.008750703182523245}
+{"fault": "NONE", "strat": "common", "s": 0.0007363372326761874, "top": "R05", "ok_rep": true, "ok_univ": true, "h5": true, "nqc": 0.09840914934386022, "wig": 1.3356930619681362, "ce1": 5.485713481903076, "s_att": 0.0007363372326761874}
+{"fault": "NONE", "strat": "common", "s": 0.04649071476899791, "top": "K04", "ok_rep": false, "ok_univ": false, "h5": false, "fixers": [], "random_success": 0.0, "nqc": 0.0795979143761734, "wig": 0.9738154339211073, "ce1": 1.4877759218215942, "s_att": 0.04649071476899791}
+{"fault": "NONE", "strat": "common", "s": 0.013928311837781648, "top": "R07", "ok_rep": false, "ok_univ": false, "h5": false, "fixers": [], "random_success": 0.0, "nqc": 0.11881037538194876, "wig": 1.362652008161551, "ce1": 2.98679518699646, "s_att": 0.013928311837781648}
+{"fault": "NONE", "strat": "common", "s": 0.013995462184951402, "top": "K04", "ok_rep": true, "ok_univ": true, "h5": true, "nqc": 0.2245664334300805, "wig": 3.1517670106887823, "ce1": 7.22013521194458, "s_att": 0.013995462184951402}
+{"fault": "NONE", "strat": "common", "s": 0.001136973115186457, "top": "K04", "ok_rep": true, "ok_univ": true, "h5": true, "nqc": 0.0930922924514184, "wig": 1.3828901857477933, "ce1": 5.850414276123047, "s_att": 0.001136973115186457}
+{"fault": "NONE", "strat": "common", "s": 0.00024317591288958162, "top": "Q05", "ok_rep": true, "ok_univ": true, "h5": true, "nqc": 0.20013070776505107, "wig": 2.7553112824757893, "ce1": 4.334681987762451, "s_att": 0.00024317591288958162}
+{"fault": "NONE", "strat": "common", "s": 0.013231809704376207, "top": "K04", "ok_rep": false, "ok_univ": false, "h5": false, "fixers": [], "random_success": 0.0, "nqc": 0.08665955417901637, "wig": 1.1474899052901832, "ce1": 3.217162847518921, "s_att": 0.013231809704376207}
+{"fault": "NONE", "strat": "common", "s": 0.006086064566256821, "top": "R07", "ok_rep": false, "ok_univ": false, "h5": false, "fixers": [], "random_success": 0.0, "nqc": 0.09624172927138286, "wig": 1.3973126188005123, "ce1": 5.166871070861816, "s_att": 0.006086064566256821}
+{"fault": "NONE", "strat": "common", "s": 0.030346630681706066, "top": "K04", "ok_rep": true, "ok_univ": true, "h5": true, "nqc": 0.0947160554451867, "wig": 1.3566401179685295, "ce1": 9.295862197875977, "s_att": 0.030346630681706066}
+{"fault": "Q01", "strat": "rare", "s": 0.9989650944921504, "top": "Q01", "ok_rep": true, "ok_univ": true, "h5": false}
+{"fault": "Q01", "strat": "rare", "s": 0.9999361723812343, "top": "Q01", "ok_rep": true, "ok_univ": true, "h5": false}
+{"fault": "Q01", "strat": "rare", "s": 0.9997464852715506, "top": "Q01", "ok_rep": true, "ok_univ": true, "h5": false}
+{"fault": "Q01", "strat": "rare", "s": 0.9999235092065637, "top": "Q01", "ok_rep": true, "ok_univ": true, "h5": false}
+{"fault": "Q01", "strat": "common", "s": 0.9934999096401381, "top": "Q01", "ok_rep": true, "ok_univ": true, "h5": false}
+{"fault": "Q01", "strat": "rare", "s": 0.9990084015719237, "top": "Q01", "ok_rep": true, "ok_univ": true, "h5": false}
+{"fault": "Q01", "strat": "rare", "s": 0.9996386393716331, "top": "Q01", "ok_rep": true, "ok_univ": true, "h5": false}
+{"fault": "Q01", "strat": "rare", "s": 0.9995148002133963, "top": "Q01", "ok_rep": false, "ok_univ": true, "h5": false}
+{"fault": "Q01", "strat": "rare", "s": 0.9990316903359923, "top": "Q01", "ok_rep": false, "ok_univ": true, "h5": false}
+{"fault": "Q01", "strat": "rare", "s": 0.9998910446837039, "top": "Q01", "ok_rep": true, "ok_univ": true, "h5": false}
+{"fault": "Q01", "strat": "rare", "s": 0.999406101579071, "top": "Q01", "ok_rep": true, "ok_univ": true, "h5": false}
+{"fault": "Q01", "strat": "rare", "s": 0.999295959093239, "top": "Q01", "ok_rep": true, "ok_univ": true, "h5": false}
+{"fault": "Q01", "strat": "rare", "s": 0.9993015611146456, "top": "Q01", "ok_rep": true, "ok_univ": true, "h5": false}
+{"fault": "Q01", "strat": "rare", "s": 0.9996787918965869, "top": "Q01", "ok_rep": true, "ok_univ": true, "h5": false}
+{"fault": "Q01", "strat": "rare", "s": 0.9987326759722681, "top": "Q01", "ok_rep": true, "ok_univ": true, "h5": false}
+{"fault": "Q01", "strat": "rare", "s": 0.9983583531490213, "top": "Q01", "ok_rep": true, "ok_univ": true, "h5": false}
+{"fault": "Q01", "strat": "rare", "s": 0.9999041022150953, "top": "Q01", "ok_rep": true, "ok_univ": true, "h5": false}
+{"fault": "Q01", "strat": "common", "s": 0.9993883983066836, "top": "Q01", "ok_rep": false, "ok_univ": false, "h5": false}
+{"fault": "Q01", "strat": "rare", "s": 0.9998081569883006, "top": "Q01", "ok_rep": true, "ok_univ": false, "h5": false}
+{"fault": "Q01", "strat": "rare", "s": 0.9992616377122668, "top": "Q01", "ok_rep": true, "ok_univ": true, "h5": false}

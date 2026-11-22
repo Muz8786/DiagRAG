@@ -1,0 +1,158 @@
+{
+ "stored_detector_gates": {
+  "v6_gpu_seed50|Q03": {
+   "auroc": 0.64234375,
+   "lo": 0.5619124683813502,
+   "hi": 0.7177586606417513,
+   "n_pos_test": 50,
+   "status": "FAIL"
+  },
+  "v6_gpu_seed50|C2": {
+   "auroc": 0.7512941762070683,
+   "lo": 0.6563259832953703,
+   "hi": 0.8473411466203749,
+   "n_pos_test": 50,
+   "status": "PASS"
+  },
+  "v8_gpu_seed52|Q03": {
+   "auroc": 0.6184274193548387,
+   "lo": 0.5384436017143877,
+   "hi": 0.6908605806593048,
+   "n_pos_test": 50,
+   "status": "FAIL"
+  },
+  "v8_gpu_seed52|C2": {
+   "auroc": 0.6812195121951219,
+   "lo": 0.5788990429039417,
+   "hi": 0.7856651783388384,
+   "n_pos_test": 50,
+   "status": "FAIL"
+  }
+ },
+ "C2_v6_vs_v8": {
+  "auroc_v6": 0.7512941762070683,
+  "auroc_v8": 0.6812195121951219,
+  "diff": 0.0700746640119464,
+  "z": 0.9758375441804819,
+  "two_sided_p_normal_approx": 0.3291449763148343,
+  "half_width_95_v6": 0.09550758166250228,
+  "half_width_95_v8": 0.10338306771744837,
+  "n_pos_test": [
+   50,
+   50
+  ],
+  "reading": "difference is within sampling noise"
+ },
+ "Q03_v6_vs_v8": {
+  "auroc_v6": 0.64234375,
+  "auroc_v8": 0.6184274193548387,
+  "diff": 0.0239163306451613,
+  "z": 0.4300778754168055,
+  "two_sided_p_normal_approx": 0.6671389934429894,
+  "half_width_95_v6": 0.07792309613020054,
+  "half_width_95_v8": 0.07620848947245856,
+  "n_pos_test": [
+   50,
+   50
+  ],
+  "reading": "difference is within sampling noise"
+ },
+ "v6_gpu_seed50": {
+  "n_train_fit": 3442,
+  "Q03_n_test": 50,
+  "Q03_predicted_as": [
+   [
+    "NONE",
+    48
+   ],
+   [
+    "R03",
+    1
+   ],
+   [
+    "R22",
+    1
+   ]
+  ],
+  "Q03_called_clean": 0.96,
+  "Q03_exact": 0.0,
+  "Q03_mean_p_of_true_class": 0.027405420576331344,
+  "C2_n_test": 50,
+  "C2_attributor_top_classes": [
+   [
+    "R10",
+    8
+   ],
+   [
+    "R19",
+    8
+   ],
+   [
+    "K04",
+    5
+   ],
+   [
+    "R05",
+    4
+   ],
+   [
+    "Q02",
+    4
+   ],
+   [
+    "Q04",
+    4
+   ]
+  ],
+  "C2_called_clean": 0.08
+ },
+ "v8_gpu_seed52": {
+  "n_train_fit": 3442,
+  "Q03_n_test": 50,
+  "Q03_predicted_as": [
+   [
+    "NONE",
+    48
+   ],
+   [
+    "R06",
+    1
+   ],
+   [
+    "Q07",
+    1
+   ]
+  ],
+  "Q03_called_clean": 0.96,
+  "Q03_exact": 0.0,
+  "Q03_mean_p_of_true_class": 0.013795912359312275,
+  "C2_n_test": 50,
+  "C2_attributor_top_classes": [
+   [
+    "R19",
+    9
+   ],
+   [
+    "K04",
+    6
+   ],
+   [
+    "R10",
+    5
+   ],
+   [
+    "R05",
+    5
+   ],
+   [
+    "Q04",
+    5
+   ],
+   [
+    "Q05",
+    4
+   ]
+  ],
+  "C2_called_clean": 0.04
+ }
+}

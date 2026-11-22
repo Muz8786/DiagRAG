@@ -1,0 +1,9 @@
+cff-version: 1.2.0
+message: "If you use this repository, please cite it as below. The code was written by an AI assistant (Claude, Anthropic) under the repository owner's direction; disclose that in any paper."
+title: "DiagRAG: telemetry-based diagnosis and repair of silent retrieval failures in RAG pipelines"
+type: software
+authors:
+  - family-names: Quadri
+    given-names: Syed Muzammil
+repository-code: "https://github.com/Muz8786/DiagRAG"
+license: Apache-2.0

@@ -1,0 +1,88 @@
+{
+ "trial": false,
+ "seed": "76",
+ "bugs": [
+  {
+   "id": "B1",
+   "src": "langgenius/dify#6097; intfloat/e5 model card FAQ",
+   "what": "query instruction prefix not sent to the encoder",
+   "stage": "DENSE",
+   "fn": "enc_q"
+  },
+  {
+   "id": "B2",
+   "src": "dorianbrown/rank_bm25#50; mem0ai/mem0#4884; mastra-ai/mastra#25928",
+   "what": "query tokenized differently from the index (whitespace split, no normalization)",
+   "stage": "BM25",
+   "fn": "q_terms"
+  },
+  {
+   "id": "B3",
+   "src": "langchain-ai/langchain#37046",
+   "what": "rank fusion accumulates the scores of chunks sharing one source id",
+   "stage": "FUSION",
+   "fn": "run"
+  },
+  {
+   "id": "B4",
+   "src": "milvus-io/milvus#53672",
+   "what": "reranker scores assigned to the wrong documents when one document is not answered",
+   "stage": "RERANK",
+   "fn": "run"
+  },
+  {
+   "id": "B5",
+   "src": "getzep/graphiti#1720",
+   "what": "reranked list sorted ascending instead of descending",
+   "stage": "RERANK",
+   "fn": "run"
+  },
+  {
+   "id": "B6",
+   "src": "castorini/pygaggle#67",
+   "what": "reranker runs but its order is not applied",
+   "stage": "RERANK",
+   "fn": "run"
+  },
+  {
+   "id": "B7",
+   "src": "run-llama/llama_index QueryFusionRetriever cache issue (reported 2026-10-03)",
+   "what": "shared state: scores of the previous query reused by the next query",
+   "stage": "DENSE",
+   "fn": "run"
+  },
+  {
+   "id": "B8",
+   "src": "facebookresearch/faiss#600",
+   "what": "IVF index searched with the default nprobe = 1",
+   "stage": "DENSE",
+   "cfg": {
+    "nprobe": 1
+   },
+   "designed": "R15"
+  },
+  {
+   "id": "B9",
+   "src": "jenkinsci/resources-ai-chatbot-plugin#542",
+   "what": "BM25 and cosine scores added on their raw scales",
+   "stage": "FUSION",
+   "cfg": {
+    "fusion": "raw"
+   },
+   "designed": "R22"
+  }
+ ],
+ "summary": {
+  "bugs": 9,
+  "harmful": 7,
+  "detected": 0.8571428571428571,
+  "localized": 1.0,
+  "verified": 1.0,
+  "telemetry": 0.42857142857142855,
+  "broken": 487,
+  "restored": 480,
+  "loop_fixed": 98,
+  "universal_fixed": 113,
+  "harm_after_repair": 7
+ }
+}
