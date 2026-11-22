@@ -1,0 +1,58 @@
+{
+ "judged_cpu_run_v4_seed47": {
+  "stack": "cpu",
+  "pins": [
+   "1.9.1",
+   "2.4.6"
+  ],
+  "result": "31 of 31 detector AUROCs reproduced within 0.005; largest difference 0.0000"
+ },
+ "judged_cpu_run_v5_seed49": {
+  "stack": "cpu",
+  "pins": [
+   "1.9.1",
+   "2.4.6"
+  ],
+  "result": "31 of 31 detector AUROCs reproduced within 0.005; largest difference 0.0000"
+ },
+ "judged_cpu_run_v6_seed50": {
+  "stack": "cpu",
+  "pins": [
+   "1.9.1",
+   "2.4.6"
+  ],
+  "result": "31 of 31 detector AUROCs reproduced within 0.005; largest difference 0.0000"
+ },
+ "judged_cpu_run_v7_seed50": {
+  "stack": "cpu",
+  "pins": [
+   "1.9.1",
+   "2.4.6"
+  ],
+  "result": "31 of 31 detector AUROCs reproduced within 0.005; largest difference 0.0000"
+ },
+ "judged_gpu_v3_seed46": {
+  "stack": "gpu",
+  "pins": [
+   "1.6.1",
+   "2.1.3"
+  ],
+  "result": "31 of 31 detector AUROCs reproduced within 0.005; largest difference 0.0000"
+ },
+ "judged_gpu_v4_seed48": {
+  "stack": "gpu",
+  "pins": [
+   "1.6.1",
+   "2.1.3"
+  ],
+  "result": "31 of 31 detector AUROCs reproduced within 0.005; largest difference 0.0000"
+ },
+ "judged_gpu_v6_seed50": {
+  "stack": "gpu",
+  "pins": [
+   "1.6.1",
+   "2.1.3"
+  ],
+  "result": "31 of 31 detector AUROCs reproduced within 0.005; largest difference 0.0000"
+ }
+}

@@ -1,0 +1,37 @@
+{
+ "A integrity": {
+  "ok": true,
+  "seconds": 13.1,
+  "note": ""
+ },
+ "B detector re-fit": {
+  "ok": true,
+  "seconds": 274.2,
+  "note": ""
+ },
+ "C stored results": {
+  "ok": true,
+  "seconds": 0.8,
+  "note": ""
+ },
+ "D QML comparison": {
+  "ok": true,
+  "seconds": 156.3,
+  "note": ""
+ },
+ "E benchmark quickstart": {
+  "ok": true,
+  "seconds": 51.9,
+  "note": ""
+ },
+ "F v6 judged run (skipped)": {
+  "ok": true,
+  "seconds": 0.0,
+  "note": ""
+ },
+ "G composed-fault arm (v7) (skipped)": {
+  "ok": true,
+  "seconds": 0.0,
+  "note": ""
+ }
+}

@@ -31,8 +31,11 @@ R['B3_budget_frontier'] = dict(
     n_pairs=len(act), unique_probes_per_battery=sorted(set(bats.tolist())),
     active_probe_executions=dict(min=int(runs.min()), median=float(np.median(runs)), mean=float(runs.mean()), p90=float(np.percentile(runs, 90)), max=int(runs.max())),
     active_named_any_budget=float(ok.mean()), rows=rows,
+    active_metric='completed_success_within_budget; intermediate predictions unavailable',
+    exact_cost_matched=False, adaptive_passive_measured=False,
+    causal_intervention_effect_identified=False,
     same_unique_probes=dict(active=float(ok.mean()), passive_pass_fail=float(np.mean([bool(p['pf']['all']) for p in pas])), passive_stage=float(np.mean([bool(p['st']['all']) for p in pas]))),
-    reading=('Rows compare active success among cases using at most B executions with passive decoding using the largest saved random-probe prefix no longer than B (up to 100), or the full 102-103 probe battery once B covers it. These are execution-budget ceilings, not exact-cost matched pairs. '
+    reading=('Rows compare active success among cases using at most B executions with passive decoding using the largest saved random-probe prefix no longer than B (up to 100), or the full 102-103 probe battery once B covers it. Active values count successful completed runs divided by all eligible pairs; runs exceeding the ceiling count as zero. Intermediate predictions at interruption were not saved, so these values do not measure a budget-stopped active policy. These are execution-budget ceilings, not exact-cost matched pairs. '
              'The same-unique-probe comparison is reported separately. Passive decoding with as many unique probes as the active executions was not measured.'))
 # ---------------- C5: failure audit with trace ids (ids are md5 of run, fault, base-query id; base-query ids are real ESCI queries, nothing is invented)
 C = json.load(open(os.path.join(K, '..', 'docs', 'evidence', 'diagnosis_confusion_v6cpu.json')))

@@ -1,0 +1,17 @@
+{
+  "kernel": "smuzammilq/diagrag-a-to-z-cpu-checks",
+  "version": 1,
+  "observed_status": "COMPLETE",
+  "source_commit": "ab68e981168aa489b70ad27e358e14b83f554ff4",
+  "source_notebook": "kaggle/DiagRAG_A_to_Z_kaggle.ipynb",
+  "dataset": "smuzammilq/diagrag-a-to-z-lite-private",
+  "sha256": {
+    "DiagRAG_A_to_Z_RESULTS.zip": "5b9f5d60a8f6fd9e77182fcc2b71d4db49535f49dc72e1e3eb73f5e0705c99b0",
+    "STATUS.json": "e9a10f4d0c6f241f584e462c324a642382771fab801b47aca5a3c4f2e022a4d8",
+    "all_runs_matrix.md": "125fcb262ed4b5d9d6fea24838096f0256a9a21cd86b0da2bb222605d987fe67",
+    "dev_pred.csv": "fdabb38a7f94bb70ec821bd5fa8c5c32f2ba6fdca6cb87c5fec9cd4a5271bed8",
+    "qml_result.json": "892580e323290528fae162e5cb63f2beb0ca04f894abe66d289fa47786a93c4f",
+    "refit.json": "a2bcd5c04579b968f3725737190051c474446722058c0aaba1b7fe68fc7e78fe",
+    "v7_regression.json": "520cc69fc3a552bfa6c90e5519b54084bd5a8bc91c346fc3d4d7794a0a1a5677"
+  }
+}
