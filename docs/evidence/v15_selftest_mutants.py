@@ -1,7 +1,7 @@
 """v15 S (diagnostic self-test) and M (blind code-mutant faults); docs/evidence/v15_selftest_mutants_protocol.md.
 Executed INSIDE the Kaggle notebook after the frozen v6 code has run up to its U1 stage on a resumed judged checkpoint; `G` is that namespace.
 ROLE = 'dev' (seed 55, development draws, dev mutant half) or 'heldout' (seeds 71-73, held-out draws, held-out mutant half). TRIAL=1 limits the work.
-Nothing in the frozen pipeline is changed except, temporarily and one at a time, the mutated retrieval function (restored after each mutant)."""
+Nothing in the frozen pipeline is changed except, temporarily and one at a time, the mutated retrieval function (restored after each mutant). The repair search and acceptance use the same finite probe battery; `verified` means that battery passed only, not that population harm is bounded. Traffic-harm metrics are empirical on the separately sampled traffic queries."""
 import ast, collections, hashlib, itertools, json, math, os, random, signal, time
 import numpy as np
 
@@ -109,7 +109,7 @@ def main(G, OUT, TRIAL, ROLE, RUN=('S', 'M')):
     A_ = GATES['ALPHA']; ESCI_PART, PARTS = G['ESCI_PART'], G['PARTS']
     rnd = lambda *tag: random.Random('|'.join(map(str, tag)))
     m = lambda xs, k: (float(np.mean([bool(x[k]) for x in xs])) if xs else None)
-    R = dict(trial=bool(TRIAL), role=ROLE, run_parts=list(RUN), seed=str(G['CFG']['SEED']), params=dict(P), note='frozen v6 executed on a judged checkpoint; measurements only')
+    R = dict(trial=bool(TRIAL), role=ROLE, run_parts=list(RUN), seed=str(G['CFG']['SEED']), params=dict(P), note='frozen v6 executed on a judged checkpoint; measurements only', repair_harm_inference='EMPIRICAL_ONLY: repair search and probe acceptance reuse the same battery; no fixed-candidate 95% certificate')
 
     def sys_cfg(f, r):
         if f == 'R01': return dict(mask=(0.3, r.randrange(10**6), ()))

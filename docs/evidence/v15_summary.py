@@ -22,11 +22,11 @@ if Sd:
     h_s, h_p = tr(HT, 'traffic', 'harm', 'selftest'), tr(EP, 'traffic', 'harm', 'selftest')
     S1, S2 = m(HS, 'detected'), m(HS, 'family'); S3 = (m(HS, 'verified'), m(EP, 'verified')); S4 = m(EG, 'both_family')
     rule = {'S-1 detection >= 0.95': bool(S1 is not None and S1 >= 0.95), 'S-2 family >= 0.90': bool(S2 is not None and S2 >= 0.90),
-            'S-3 verified >= 0.95 (singles, pairs)': bool(S3[0] is not None and S3[1] is not None and min(S3) >= 0.95),
+            'S-3 finite probe battery pass >= 0.95 (singles, pairs)': bool(S3[0] is not None and S3[1] is not None and min(S3) >= 0.95),
             'S-4 same-group pairs both named >= 0.70 and above aggregated dispatcher': bool(S4 is not None and S4 >= 0.70 and d4 and d4['ci'][0] > 0),
             'S-5 closure >= 0.95 and above loop, harm <= 0.5%': bool(None not in (c_s, c_p, l_s, l_p, h_s, h_p) and min(c_s, c_p) >= 0.95 and c_s > l_s and c_p > l_p and max(h_s, h_p) <= 0.005)}
-    R['S'] = dict(n_singles=len(S), harmful_singles=len(HS), effective_pairs=len(EP), effective_same_group=len(EG), S1_detection=S1, S2_family=S2, exact=m(HS, 'exact'),
-                  S3_verified=dict(singles=S3[0], pairs=S3[1]), S4_both_family_same_group=S4, both_family_all_effective=m(EP, 'both_family'),
+    R['S'] = dict(repair_harm_interpretation='EMPIRICAL_ONLY; repair search and acceptance reuse the probe battery; no 95% fixed-candidate certificate', n_singles=len(S), harmful_singles=len(HS), effective_pairs=len(EP), effective_same_group=len(EG), S1_detection=S1, S2_family=S2, exact=m(HS, 'exact'),
+                  S3_probe_battery_pass=dict(singles=S3[0], pairs=S3[1]), S4_both_family_same_group=S4, both_family_all_effective=m(EP, 'both_family'),
                   agg_dispatcher_same_group=m(EG, 'agg_dispatcher_both'), S4_diff_vs_aggregated=d4,
                   S5=dict(closure_singles=dict(selftest=c_s, loop=l_s, universal=tr(HT, 'traffic', 'closure', 'universal')),
                           closure_pairs=dict(selftest=c_p, loop=l_p, universal=tr(EP, 'traffic', 'closure', 'universal')),

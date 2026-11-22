@@ -1,4 +1,4 @@
-"""v20 B3 (matched intervention budget) and C5 (failure-case audit), from stored outputs only (file reading and arithmetic).
+"""v20 B3 (bounded execution-budget comparison) and C5 (failure-case audit), from stored outputs only (file reading and arithmetic).
 usage: python docs/evidence/v20_budget_audit.py <kaggle_dir> <out.json>"""
 import hashlib, json, os, sys
 import numpy as np
@@ -6,7 +6,7 @@ import numpy as np
 K, OUT = sys.argv[1:3]; rd = lambda p: [json.loads(l) for l in open(os.path.join(K, p))]
 tid = lambda *x: hashlib.md5('|'.join(map(str, x)).encode()).hexdigest()[:12]
 R = {}
-# ---------------- B3: matched budget, effective same-group pairs, held-out seeds 71-73
+# ---------------- B3: execution-budget frontier, effective same-group pairs, held-out seeds 71-73
 act, pas = [], []
 for s in (71, 72, 73):
     bat = json.load(open(os.path.join(K, f'heldout_v15_S_seed{s}', 'RESULT.json')))['battery']['size']
@@ -20,21 +20,20 @@ runs = np.array([a['runs'] for a in act]); ok = np.array([a['ok'] for a in act])
 Bs = [1, 5, 20, 100, 200, 300, 400, 500, 750, 1000, 1500, int(runs.max())]
 def pas_at(B, ch):
     keys = [1, 2, 3, 5, 10, 20, 40, 60, 100]
-    if B >= 100: return float(np.mean([bool(p[ch]['all']) for p in pas])), 'full battery (no more unique probes in the data)'
-    k = max(x for x in keys if x <= B); return float(np.mean([p[ch][str(k)] for p in pas])), f'{k} random probes'
+    if B >= int(bats.max()): return float(np.mean([bool(p[ch]['all']) for p in pas])), f'full battery ({int(bats.min())}-{int(bats.max())} executions)'
+    k = max(x for x in keys if x <= min(B, 100)); return float(np.mean([p[ch][str(k)] for p in pas])), f'{k} random probes ({k} executions)'
 rows = []
 for B in Bs:
     pf, how = pas_at(B, 'pf'); st, _ = pas_at(B, 'st')
     rows.append(dict(budget_executions=B, active_named_within_budget=float(np.mean(ok & (runs <= B))), passive_pass_fail=pf, passive_stage=st, passive_basis=how,
-                     passive_measured=bool(B <= int(bats.min()))))
-R['B3_matched_budget'] = dict(
+                     passive_measured=bool(B <= 100 or B >= int(bats.max()))))
+R['B3_budget_frontier'] = dict(
     n_pairs=len(act), unique_probes_per_battery=sorted(set(bats.tolist())),
     active_probe_executions=dict(min=int(runs.min()), median=float(np.median(runs)), mean=float(runs.mean()), p90=float(np.percentile(runs, 90)), max=int(runs.max())),
     active_named_any_budget=float(ok.mean()), rows=rows,
     same_unique_probes=dict(active=float(ok.mean()), passive_pass_fail=float(np.mean([bool(p['pf']['all']) for p in pas])), passive_stage=float(np.mean([bool(p['st']['all']) for p in pas]))),
-    reading=('At budgets up to one battery (about 100 executions) the active self-test cannot retest, so it is not better than passive decoding there. '
-             'Its gain needs more executions of the same probes (median shown). With the same unique probes, active names both causes far more often; '
-             'whether passive decoding with as many UNIQUE probes as the active executions would close the gap was not measured.'))
+    reading=('Rows compare active success among cases using at most B executions with passive decoding using the largest saved random-probe prefix no longer than B (up to 100), or the full 102-103 probe battery once B covers it. These are execution-budget ceilings, not exact-cost matched pairs. '
+             'The same-unique-probe comparison is reported separately. Passive decoding with as many unique probes as the active executions was not measured.'))
 # ---------------- C5: failure audit with trace ids (ids are md5 of run, fault, base-query id; base-query ids are real ESCI queries, nothing is invented)
 C = json.load(open(os.path.join(K, '..', 'docs', 'evidence', 'diagnosis_confusion_v6cpu.json')))
 per = C['A_attributor']['per_fault']
